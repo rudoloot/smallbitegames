@@ -6,7 +6,7 @@
   const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
   class Game {
     constructor(seed=Date.now()) {
-      this.version=D.VERSION; this.seed=seed>>>0; this.rng=this.seed||1; this.time=0; this.wave=0; this.nextWave=D.WAVE_INTERVAL;
+      this.version=D.VERSION; this.seed=seed>>>0; this.rng=this.seed||1; this.time=0; this.wave=0; this.nextWave=D.FIRST_WAVE_DELAY;
       this.resources={iron:1000,uranium:0,crystal:0,research:0}; this.buildings=[]; this.enemies=[]; this.rocks=[]; this.deposits=[];
       this.id=1; this.kills=0; this.leaks=0; this.status='playing'; this.paused=false; this.speed=1; this.unlocked={};
       this.owned=[]; this.equipped=[]; this.events=[]; this.weather=[]; this.pending=[]; this.revision=0; this.scanned=false;
@@ -87,7 +87,7 @@
       const impact=this.demolitionImpact(b);this.removeBuilding(b);this.add('iron',amount);this.recalculate();return impact;
     }
     removeBuilding(b){this.buildings=this.buildings.filter(v=>v.id!==b.id);this.touchMap();for(const k of ['iron','uranium','crystal'])this.resources[k]=Math.min(this.resources[k],this.capacity());}
-    powerRadius(b){return b.type==='relay'?(b.level===2?3:2):2;}
+    powerRadius(b){return b.type==='relay'&&b.level===2?3.5:2.5;}
     recalculate(dt=0){
       for(const b of this.buildings){b.powered=false;b.reason='';}
       const nodes=this.buildings.filter(b=>['solar','reactor','relay'].includes(b.type)&&b.disabledUntil<=this.time);

@@ -22,3 +22,5 @@ body:not(.in-game) .game-controls{left:auto;right:3%}
 .hearts-wrap{position:absolute;right:0;bottom:0;height:44px;align-items:center}
 #hearts{font-size:clamp(23px,2.1cqw,34px)}
 @media(max-height:540px){.game-controls .icon-button{width:34px;height:34px;font-size:17px}.game-controls{gap:8px}.play-footer{min-height:34px}.hearts-wrap{height:34px}}
+#shell:fullscreen{width:100vw;height:100svh;aspect-ratio:auto;border:0;border-radius:0;box-shadow:none}
+#fullscreen{font-size:24px}

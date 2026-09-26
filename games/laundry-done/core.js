@@ -93,19 +93,24 @@
   // actual crease axes, with a deterministic order independent of draw order.
   function canonicalAxis(axis) {
     let a=axis.a.slice(),b=axis.b.slice();
-    if(b[1]<a[1]-1e-8||(Math.abs(b[1]-a[1])<1e-8&&b[0]<a[0]))[a,b]=[b,a];
+    // Choose direction by the dominant axis: a nearly horizontal line must not
+    // reverse its normal just because its endpoints differ by a fraction of a pixel.
+    if(Math.abs(b[1]-a[1])>Math.abs(b[0]-a[0])?b[1]<a[1]:b[0]<a[0])[a,b]=[b,a];
     const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
     return {a,b,angle:Math.atan2(dx,dy),offset:(-dy*a[0]+dx*a[1])/length};
   }
   function foldAxes(item,axes) {
     let polys=triangulate(item.outline);
-    const sorted=axes.map(canonicalAxis).sort((a,b)=>Math.abs(a.angle)-Math.abs(b.angle)||Math.abs(a.offset)-Math.abs(b.offset)||a.offset-b.offset||a.angle-b.angle);
+    // Buckets affect scheduling only, never the actual crease coordinates.
+    // Parallel folds stay in a stable spatial order under small drawing errors.
+    const order=op=>[Math.round(Math.abs(op.angle)/(Math.PI/6)),Math.round(Math.abs(op.offset)/8),Math.round(op.offset/8)];
+    const sorted=axes.map(canonicalAxis).sort((a,b)=>{const x=order(a),y=order(b);return x[0]-y[0]||x[1]-y[1]||x[2]-y[2]||a.offset-b.offset||a.angle-b.angle;});
     for(const op of sorted){
       const positive=polys.reduce((sum,p)=>sum+Math.abs(area(clip(p,op.a,op.b,1))),0);
       const negative=polys.reduce((sum,p)=>sum+Math.abs(area(clip(p,op.a,op.b,-1))),0);
       if(Math.min(positive,negative)<1e-6)continue;
       const dx=op.b[0]-op.a[0],dy=op.b[1]-op.a[1];
-      const side=Math.abs(positive-negative)<1e-5?(Math.abs(dx)>=Math.abs(dy)?1:-1):(positive<negative?1:-1);
+      const side=Math.abs(positive-negative)<(positive+negative)*.05?(Math.abs(dx)>=Math.abs(dy)?1:-1):(positive<negative?1:-1);
       polys=fold(polys,{...op,side});
     }
     return polys;

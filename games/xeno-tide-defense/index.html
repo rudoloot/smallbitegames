@@ -7,7 +7,7 @@
   <meta name="description" content="외계 군체에 맞서는 마지막 전초기지. 채굴, 연구, 건설로 30번의 습격을 막아내는 모바일 디펜스 게임.">
   <title>XenoTide Defense — 마지막 방어선</title>
   <link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=f1940471c0">
+  <link rel="stylesheet" href="styles.css?v=453ed2a29a">
 </head>
 <body>
   <div class="page-grain" aria-hidden="true"></div>
@@ -30,12 +30,12 @@
       <div class="mission-hud" id="mission-hud" hidden>
         <div class="wave-kicker"><span class="live-dot"></span><span id="phase-label">DEPLOYMENT</span></div>
         <div class="wave-title">WAVE <strong id="wave">00</strong><span>/ 30</span></div>
-        <div class="wave-line"><span id="wave-name">방어 시설을 배치하세요</span><span id="countdown">120s</span></div>
+        <div class="wave-line"><span id="wave-name">방어 시설을 배치하세요</span><span id="countdown">30s</span></div>
         <div class="wave-progress"><i id="wave-progress"></i></div>
       </div>
       <div class="integrity" id="integrity" hidden><span>방어선 돌파</span><strong id="leaks">00<span> / 20</span></strong><div id="integrity-ticks"></div></div>
       <div class="weather-label" id="weather-label" hidden></div>
-      <div class="pause-badge" id="pause-badge" hidden>Ⅱ 일시 정지 <small>건설·수리·거래 가능</small></div>
+
       <div class="start-screen" id="start-screen">
         <div class="start-top"><span>TRANSMISSION 0001</span><span class="status-online">● ONLINE</span></div>
         <div class="start-content"><div class="eyebrow">COLONIAL DEFENSE / OUTPOST 07</div><h2>XENO<span>TIDE</span><small>DEFENSE</small></h2><div class="start-divider"><span>마지막 방어선</span><i></i><span>2186</span></div><p>지평선 너머, 군체가 다가온다.<br>자원을 확보하고 방어 시설을 구축하라.<br>30번의 습격. 이곳을 지켜낼 지휘관은 당신이다.</p><div class="start-specs"><span><b>07 × 12</b>전술 구역</span><span><b>30</b>적 습격</span><span><b>20</b>돌파 한계</span></div><button id="continue-button" class="primary wide" hidden>이전 작전 이어하기 <span>↗</span></button><button id="start-button" class="primary wide">작전 개시 <span>↗</span></button><button id="briefing-button" class="text-button">작전 브리핑 읽기 <span>→</span></button></div>
@@ -50,7 +50,7 @@
     <footer class="command-bar" id="command-bar">
       <div class="command-label" id="idle-label"><span class="live-dot"></span> 지휘관 접속 대기</div>
       <div class="command-tools" id="command-tools" hidden>
-        <button class="icon-button" id="pause-button" aria-label="일시 정지">Ⅱ</button>
+        <div class="pause-control"><span class="pause-badge" id="pause-badge" hidden>일시 정지</span><button class="icon-button" id="pause-button" aria-label="일시 정지">Ⅱ</button></div>
         <button class="speed-button" id="speed-button" aria-label="배속 변경">1<span>×</span></button>
         <button class="launch-button" id="launch-button">웨이브 출발 <span>▸</span></button>
       </div>
@@ -63,6 +63,6 @@
     <div class="field-notes"><div class="eyebrow">FIELD MANUAL / 001</div><h2>살아남기 위한<br>세 가지 원칙.</h2><article><span>01</span><div><h3>확보하라</h3><p>광맥 위에 채굴기를 설치하고<br>전력을 연결하세요.</p></div></article><article><span>02</span><div><h3>구축하라</h3><p>길을 설계하고 포탑을 배치해<br>군체의 진격을 늦추세요.</p></div></article><article><span>03</span><div><h3>진화하라</h3><p>연구와 업그레이드로<br>다가올 습격에 대비하세요.</p></div></article></div>
     <div class="signal"><div class="signal-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span>UPLINK ESTABLISHED <b>●</b></span></div>
   </aside>
-  <script src="js/data.js?v=7ba0e8ff4f"></script><script src="js/core.js?v=76d17af7ae"></script><script src="js/render.js?v=1e12aa9d1a"></script><script src="js/app.js?v=b55fe714ea"></script>
+  <script src="js/data.js?v=e909032af4"></script><script src="js/core.js?v=34286a3482"></script><script src="js/render.js?v=329a777c97"></script><script src="js/app.js?v=12282e7557"></script>
 </body>
 </html>

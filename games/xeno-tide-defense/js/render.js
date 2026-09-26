@@ -128,7 +128,7 @@
       c.fillStyle='#bac399';c.font='9px Consolas,monospace';c.textAlign='center';c.fillText('HOSTILE APPROACH',280,68);
       const top=this.point(0,0),end=this.point(7,12);
       c.fillStyle='#18271d50';c.fillRect(22,94,516,656);c.fillStyle='#4b5036';c.fillRect(top.x,top.y,490,648);
-      for(let y=0;y<12;y++)for(let x=0;x<7;x++){const p=this.point(x,y),n=Math.sin(x*78.23+y*37.79+game.seed);c.fillStyle=n>.4?'#5a59401c':n<-.4?'#222e241e':'#89956d08';c.fillRect(p.x,p.y,70,54);c.strokeStyle='#b2b5890e';c.lineWidth=.7;c.strokeRect(p.x,p.y,70,54);
+      for(let y=1;y<12;y++)for(let x=0;x<7;x++){const p=this.point(x,y),n=Math.sin(x*78.23+y*37.79+game.seed);c.fillStyle=n>.4?'#5a59401c':n<-.4?'#222e241e':'#89956d08';c.fillRect(p.x,p.y,70,54);c.strokeStyle='#b2b5890e';c.lineWidth=.7;c.strokeRect(p.x,p.y,70,54);
         if((x*3+y)%7===0){line(c,p.x+17,p.y+25,p.x+22,p.y+23,'#292d201c');line(c,p.x+22,p.y+23,p.x+26,p.y+25,'#292d201c');}}
       for(let y=0;y<12;y++){const p=this.point(0,y);c.fillStyle='#344330';c.fillRect(15,p.y+1,12,49);c.fillRect(533,p.y+1,12,49);line(c,17,p.y+2,25,p.y+2,'#88916a',1);line(c,535,p.y+2,543,p.y+2,'#88916a',1);c.fillStyle=y%3===0?'#d9c586':'#81916a';c.fillRect(19,p.y+21,4,7);c.fillRect(537,p.y+21,4,7);}
       c.font='8px Consolas';c.textAlign='center';c.fillStyle='#bbc59d66';for(let x=0;x<7;x++)c.fillText(String.fromCharCode(65+x),this.point(x+.5,0).x,91);

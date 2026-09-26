@@ -11,7 +11,7 @@
   const practiceButton=document.createElement('button');practiceButton.textContent='실전 시작 →';practiceButton.className='text-button';practiceButton.hidden=true;practiceButton.style.pointerEvents='auto';$('play-footer').prepend(practiceButton);
   const finishPractice=document.createElement('button');finishPractice.textContent='결과 확인';finishPractice.className='text-button';finishPractice.hidden=true;finishPractice.style.pointerEvents='auto';$('play-footer').prepend(finishPractice);
   const targetCache=new Map(C.clothes.map(item=>[item.name,C.folded(item)]));
-  function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);const box=$('shell').getBoundingClientRect();H=document.body.classList.contains('in-game')?Math.round(W*box.height/box.width):810;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);for(const e of state.entities){e.floor=H+210;e.apex=H*(e.type==='iron'?.31:.44);}}
+  function resize(){const dpr=Math.min(window.devicePixelRatio||1,2);const box=$('shell').getBoundingClientRect();H=(document.body.classList.contains('in-game')||document.fullscreenElement=== $('shell'))?Math.round(W*box.height/box.width):810;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);for(const e of state.entities)layoutFlight(e);}
   resize();window.addEventListener('resize',resize);
   function text(s,x,y,size=16,color='#65765c',weight=400,align='left'){ctx.font=`${weight} ${size}px "Malgun Gothic",system-ui,sans-serif`;ctx.fillStyle=color;ctx.textAlign=align;ctx.fillText(s,x,y);}
   function rounded(x,y,w,h,r,fill,strokeColor){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill();}if(strokeColor){ctx.strokeStyle=strokeColor;ctx.lineWidth=1;ctx.stroke();}}
@@ -29,13 +29,24 @@
     if(state.practice&&e.type==='cloth'){const dy=e.release===undefined?0:Math.pow(Math.min(1,(state.time-e.release)/.6),2)*(H*.55+220);return {x:870,y:H*.45+dy,scale,angle};}
     return {...C.position(e,state.time),scale,angle};
   }
-  function makeCloth(item,x,drift,apex){return {id:++state.id,type:'cloth',item,x,drift,apex:apex*H/810,floor:H+210,wave:state.wave,born:state.time,color:C.COLORS[(state.id-1)%C.COLORS.length],inputs:[],scale:1.5,angle:state.practice?0:(Math.random()-.5)*Math.PI*.8,spin:state.practice?0:(Math.random()-.5)*.55,interval:C.interval(state.stage)};}
+  function layoutFlight(e){
+    if(e.type==='iron'){e.floor=H+140;e.apex=H*.27;return;}
+    const angle=(e.angle||0)+(e.spin||0)*C.FLIGHT/2,pose={x:0,y:0,scale:e.scale,angle};
+    const top=Math.min(...e.item.outline.map(p=>C.toWorld(p,pose)[1]));
+    const radius=Math.max(...e.item.outline.map(p=>Math.hypot(...p)))*e.scale;
+    e.floor=H+radius+28;
+    e.apex=Math.max(H*e.apexRatio,24-top);
+  }
+  function makeCloth(item,x,drift,apex){
+    const e={id:++state.id,type:'cloth',item,x,drift,apexRatio:apex/810-.1,wave:state.wave,born:state.time,color:C.COLORS[(state.id-1)%C.COLORS.length],inputs:[],scale:item.folds.length>=3?2:1.5,angle:state.practice?0:(Math.random()-.5)*Math.PI*.8,spin:state.practice?0:(Math.random()-.5)*.55,interval:C.interval(state.stage)};
+    layoutFlight(e);return e;
+  }
   function spawn(){
     if(!state.practice){state.pendingLevels ||= C.composition(state.stage);if(state.entities.filter(e=>e.type==='cloth').length+state.pendingLevels.length>3)return;}
     state.wave=(state.wave||0)+1;state.results=[];
     if(state.practice){const names=['손수건','수건','반팔티','원피스'];const item=C.clothes.find(c=>c.name===names[state.practiceIndex%names.length]);state.entities=[makeCloth(item,870,0,367)];state.practiceIndex++;state.nextSpawn=Infinity;return;}
     const levels=state.pendingLevels;state.pendingLevels=null;state.entities.push(...levels.map((level,i)=>makeCloth(C.pick(C.clothes.filter(item=>item.level===level)),levels.length===1?865:(i===0?630:1130),levels.length===1?(Math.random()<.5?520:-520):(i===0?350:-350),levels.length===1?335:(i===0?355:395))));
-    if(Math.random()<.1)state.entities.push({id:++state.id,type:'iron',born:state.time,x:levels.length===1?1180:870,drift:Math.random()<.5?200:-200,apex:H*.31,floor:H+210,wave:state.wave,scale:1.5,angle:(Math.random()-.5)*.7,spin:(Math.random()-.5)*.4,hit:false});
+    if(Math.random()<.1)state.entities.push({id:++state.id,type:'iron',born:state.time,x:levels.length===1?1180:870,drift:Math.random()<.5?200:-200,apex:H*.27,floor:H+140,wave:state.wave,scale:1.5,angle:(Math.random()-.5)*.7,spin:(Math.random()-.5)*.4,hit:false});
     state.nextSpawn=state.time+C.interval(state.stage);
   }
   function start(practice=false){
@@ -208,8 +219,19 @@
   finishPractice.onclick=()=>{const e=state.entities.find(e=>e.type==='cloth'&&e.release===undefined);if(e)e.release=state.time;};
   canvas.addEventListener('pointercancel',()=>{stroke=null;});canvas.addEventListener('lostpointercapture',()=>{stroke=null;});
   $('start').onclick=()=>start();$('practice').onclick=()=>start(true);practiceButton.onclick=()=>start();$('restart').onclick=()=>start();$('pause').onclick=pause;$('resume').onclick=resume;$('back-home').onclick=home;$('over-home').onclick=home;
+  function syncFullscreen(){
+    const active=document.fullscreenElement===$('shell'),button=$('fullscreen');
+    button.textContent=active?'⊡':'⛶';button.setAttribute('aria-pressed',String(active));
+    button.setAttribute('aria-label',active?'전체화면 끄기':'전체화면 켜기');button.title=button.getAttribute('aria-label');
+    stroke=null;resize();
+  }
+  $('fullscreen').onclick=async()=>{
+    try{if(document.fullscreenElement)await document.exitFullscreen();else await $('shell').requestFullscreen();}
+    catch{toast('이 브라우저에서는 전체화면을 사용할 수 없어요.',2);}
+  };
+  document.addEventListener('fullscreenchange',syncFullscreen);
   $('sound').onclick=()=>{state.muted=!state.muted;$('sound').textContent=state.muted?'♩':'♫';$('sound').setAttribute('aria-label',state.muted?'소리 켜기':'소리 끄기');$('sound').title=state.muted?'소리 켜기':'소리 끄기';};
-  window.addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(state.mode==='playing')pause();else if(state.mode==='paused')resume();}});
+  window.addEventListener('keydown',e=>{if(e.code==='Escape'&&document.fullscreenElement)return;if(e.code==='Escape'||e.code==='KeyP'){if(state.mode==='playing')pause();else if(state.mode==='paused')resume();}});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
   function frame(now){const dt=Math.min(.05,(now-lastFrame)/1000);lastFrame=now;tick(dt);draw();requestAnimationFrame(frame);}requestAnimationFrame(frame);
   // Explicit test mode only: deterministic browser checks without production cheats.
