@@ -6,7 +6,7 @@
   const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
   class Game {
     constructor(seed=Date.now()) {
-      this.version=D.VERSION; this.seed=seed>>>0; this.rng=this.seed||1; this.time=0; this.wave=0; this.nextWave=60;
+      this.version=D.VERSION; this.seed=seed>>>0; this.rng=this.seed||1; this.time=0; this.wave=0; this.nextWave=D.WAVE_INTERVAL;
       this.resources={iron:1000,uranium:0,crystal:0,research:0}; this.buildings=[]; this.enemies=[]; this.rocks=[]; this.deposits=[];
       this.id=1; this.kills=0; this.leaks=0; this.status='playing'; this.paused=false; this.speed=1; this.unlocked={};
       this.owned=[]; this.equipped=[]; this.events=[]; this.weather=[]; this.pending=[]; this.revision=0; this.scanned=false;
@@ -16,11 +16,14 @@
     }
     random(){let t=this.rng+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);this.rng>>>=0;return ((t^t>>>14)>>>0)/4294967296;}
     generateMap(){
-      const slots=[{x:0,y:2},{x:5,y:2},{x:0,y:5},{x:5,y:5},{x:0,y:8},{x:5,y:8}];
+      // One resource per tile; keep every site separated, including the two surface iron sites.
+      const slots=[];
+      for(let y=2;y<10;y++)for(let x=0;x<7;x++)if(x!==3||y!==7)slots.push({x,y});
       for(let i=slots.length-1;i>0;i--){const j=Math.floor(this.random()*(i+1));[slots[i],slots[j]]=[slots[j],slots[i]];}
-      ['iron','iron','uranium','iron','uranium'].forEach((resource,i)=>{
-        for(let dx=0;dx<2;dx++) this.deposits.push({x:slots[i].x+dx,y:slots[i].y,resource,deep:i>=3});
-      });
+      for(const [i,resource]of ['iron','iron','uranium','iron','uranium'].entries()){
+        const site=slots.find(p=>this.deposits.every(d=>dist(p,d)>=(i===1?3:2)));
+        this.deposits.push({...site,resource,deep:i>=3});
+      }
       const candidates=[];
       for(let y=2;y<10;y++)for(const x of [0,1,5,6])if(!this.depositAt(x,y))candidates.push({x,y});
       for(let n=0;n<2;n++){const i=Math.floor(this.random()*candidates.length);this.rocks.push(candidates.splice(i,1)[0]);}
@@ -45,7 +48,6 @@
       if(this.pickup?.x===x&&this.pickup?.y===y)return '먼저 보급품을 회수하세요.';
       const d=this.depositAt(x,y);
       if(type==='mine'&&(!d||(d.deep&&!this.scanned)))return '발견된 철 또는 우라늄 광맥에 설치하세요.';
-      if(type!=='mine'&&d&&(!d.deep||this.scanned))return '광맥은 채굴기를 위해 비워두세요.';
       if(this.enemies.some(e=>Math.abs(e.x-(x+.5))<(e.size==='large'?1.45:.75)&&Math.abs(e.y-(y+.5))<(e.size==='large'?1.45:.75)))return '적이 지나가는 위치입니다.';
       if(this.resources.iron<def.cost[0])return '철이 부족합니다.';
       return '';
@@ -130,8 +132,8 @@
     }
     collect(){if(!this.pickup||this.status!=='playing')return {error:'회수할 보급품이 없습니다.'};const id=this.pickup.artifact;if(!this.owned.includes(id))this.owned.push(id);this.pickup=null;if(this.equipped.length<3&&!this.has(id))this.equip(id);return {artifact:A.find(a=>a.id===id)};}
     startWave(){if(this.wave>=30||this.status!=='playing')return false;
-      this.wave++;this.nextWave=this.time+60;const def=W[this.wave-1];
-      for(let i=0;i<def.count;i++)this.pending.push({at:this.time+i*.5,wave:this.wave});
+      this.wave++;const def=W[this.wave-1];this.nextWave=this.time+D.WAVE_INTERVAL;
+      for(let i=0;i<def.count;i++)this.pending.push({at:this.time+i*def.spawnInterval,wave:this.wave});
       if(this.has('bank'))for(const r of ['iron','uranium','crystal'])this.add(r,Math.floor(this.resources[r]*.05));
       if(this.has('repair'))for(const b of this.buildings)b.hp=Math.min(this.maxHP(b),b.hp+this.maxHP(b)*.1);
       if([5,15,25].includes(this.wave))for(let i=1;i<=4;i++)this.weather.push({kind:'meteor',at:this.time+15*i});
@@ -176,7 +178,7 @@
       if(length<=travel){e.x=target.x;e.y=target.y;e.path.shift();}else{e.x+=dx/length*travel;e.y+=dy/length*travel;}if(length>.001)e.angle=Math.atan2(dy,dx);
       if(e.y>=12.5){e.escaped=true;this.leaks++;this.emit('leak',{x:e.x,y:11.8});if(this.leaks>=20){this.status='lost';this.emit('end',{status:'lost'});}}
     }
-    hit(e,damage){if(e.hp<=0||e.escaped)return;e.hp-=damage;this.stats.damage+=damage;if(e.hp<=0){this.kills++;const reward=Math.floor(e.reward*(this.has('magnet')?1.1:1));this.add('crystal',reward);this.stats.earned+=reward;this.emit('death',{x:e.x,y:e.y,size:e.size});}}
+    hit(e,damage){if(e.hp<=0||e.escaped)return;e.hp-=damage;this.stats.damage+=damage;if(e.hp<=0){this.kills++;const reward=e.reward*(this.has('magnet')?1.1:1);this.add('crystal',reward);this.stats.earned+=reward;this.emit('death',{x:e.x,y:e.y,size:e.size});}}
     protected(b,kind){return this.buildings.some(s=>s.type==='shield'&&s.powered&&(kind==='meteor'||s.level>=2)&&dist(s,b)<=2+.001);}
     updateWeather(dt){
       for(const weather of this.weather){if(weather.kind==='meteor'&&weather.at<=this.time){const x=Math.floor(this.random()*7),y=Math.floor(this.random()*12);for(const b of this.buildings)if(Math.abs(b.x-x)+Math.abs(b.y-y)<=1&&!this.protected(b,'meteor'))b.disabledUntil=Math.max(b.disabledUntil,this.time+5);weather.done=true;this.emit('meteor',{x:x+.5,y:y+.5});}

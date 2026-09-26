@@ -61,23 +61,51 @@
     c.save();const scale=e.size==='large'?1.8:e.size==='small'?.66:1;c.scale(scale,scale);
     c.fillStyle='#060b0655';c.beginPath();c.ellipse(3,5,17,10,0,0,Math.PI*2);c.fill();
     c.rotate(Math.atan2(Math.sin(e.angle)*.78,Math.cos(e.angle))-Math.PI/2);
-    const palette=[['#6a7047','#a5a264'],['#767446','#b1aa61'],['#777a63','#c0b382'],['#6a6153','#bc9c6e'],['#605c43','#9f9862'],['#434d3e','#a4b776']];
-    const [base,light]=palette[Math.min(5,Math.floor((e.wave-1)/5))];const phase=t*8+e.id,feature=D.waves[e.wave-1].feature;
-    if(['wings','queen','stinger'].includes(feature))for(const s of [-1,1])for(let i=0;i<3;i++){c.fillStyle='#c6ceb92d';c.strokeStyle='#b7c8a044';c.lineWidth=1;c.beginPath();c.ellipse(s*(12+i*3),-8+i*6,17,5,s*(.4-i*.35),0,Math.PI*2);c.fill();c.stroke();}
-    if(['tail','stinger','segments','abdomen','queen'].includes(feature)){poly(c,[[-7,-10],[-5,-23],[4,-30],[8,-22],[5,-12]],base,'#24321f');for(let i=0;i<3;i++)line(c,-4,-15-i*4,5,-17-i*4,light,2);if(feature==='stinger')poly(c,[[4,-29],[13,-35],[10,-24]],'#ccbd87');}
-    for(let i=0;i<3;i++)for(const s of [-1,1]){const y=-8+i*8,wobble=Math.sin(phase+i*1.7)*3;const elbow={x:s*(18+Math.abs(i-1)*2),y:y+wobble-6};line(c,s*6,y,elbow.x,elbow.y,'#252d21',4);line(c,elbow.x,elbow.y,s*23,y+9+wobble,'#252d21',3);line(c,s*6,y,elbow.x,elbow.y,light,2);line(c,elbow.x,elbow.y,s*23,y+9+wobble,base,1.5);}
-    c.fillStyle=base;c.strokeStyle='#232d22';c.lineWidth=2;c.beginPath();c.ellipse(0,-5,10,15,0,0,Math.PI*2);c.fill();c.stroke();
-    for(let i=0;i<4;i++){poly(c,[[-8,-12+i*6],[0,-16+i*6],[8,-12+i*6],[5,-6+i*6],[0,-4+i*6],[-5,-6+i*6]],i%2?base:light,'#3d4931');}
-    if(['spines','armor'].includes(feature))for(let i=0;i<4;i++)for(const s of [-1,1])poly(c,[[s*7,-12+i*6],[s*(feature==='spines'?16:12),-18+i*6],[s*9,-7+i*6]],light,'#35432a');
-    if(feature==='sacs')for(const s of [-1,1]){c.fillStyle='#c9b25a88';c.beginPath();c.ellipse(s*9,-8,6,11,0,0,Math.PI*2);c.fill();c.strokeStyle='#968442';c.stroke();}
-    if(['core','queen'].includes(feature)){c.fillStyle='#b9806477';c.beginPath();c.ellipse(0,-4,6,9,0,0,Math.PI*2);c.fill();c.fillStyle='#ecc182';c.beginPath();c.arc(0,-5,3,0,Math.PI*2);c.fill();}
-    if(['jaw','claws','tusks','frill'].includes(feature))for(const s of [-1,1])poly(c,[[s*7,4],[s*19,9],[s*15,23],[s*13,13],[s*4,10]],feature==='frill'?'#a47c59':light,'#303e24');
-    if(feature==='antenna')for(const s of [-1,1]){line(c,s*5,14,s*10,29,'#bac68c',1);line(c,s*10,29,s*16,33,'#bac68c',1);}
-    if(feature==='horn')poly(c,[[-5,13],[0,30],[5,13]],'#d4c596','#38452a');
-    if(['jumper','spinner'].includes(feature))for(const s of [-1,1]){line(c,s*7,-12,s*26,-20,light,3);line(c,s*26,-20,s*29,8,base,2);}
-    poly(c,[[-8,7],[0,4],[8,7],[6,15],[0,18],[-6,15]],light,'#293623');
-    for(const s of [-1,1]){poly(c,[[s*4,12],[s*11,21],[s*5,25],[s*7,20],[s*1,15]],'#c1b682','#393f2c');c.fillStyle='#eaa153';c.fillRect(s*4-1,11,2,3);}
-    if(e.boss){for(const s of [-1,1]){poly(c,[[s*7,-13],[s*17,-24],[s*11,-5]],'#b09a59','#35452b');}line(c,0,-18,0,12,'#ddd098',2);}
+    // Local +Y is the head. Each wave has its own anatomy, not a shared beetle body.
+    const phase=t*8+e.id,w=e.wave;
+    const base=w>=25?'#202d32':w>=19?'#5d6555':w>=14?'#887463':w>=10?'#547e78':w>=3&&w<=6?'#9a754b':'#766b58';
+    const light=w>=25?'#81e9d2':w>=19?'#c8bb82':w>=14?'#d4aa98':w>=10?'#b3ece0':'#cbbb8e';
+    const oval=(x,y,rx,ry,color=base,angle=0)=>{c.fillStyle=color;c.strokeStyle='#202d25';c.lineWidth=1.2;c.beginPath();c.ellipse(x,y,rx,ry,angle,0,Math.PI*2);c.fill();c.stroke();};
+    const shape=(pts,color=light)=>poly(c,pts,color,'#29372c');
+    const legs=(pairs,width,length,thick=2)=>{for(let i=0;i<pairs;i++)for(const side of [-1,1]){const y=-12+i*24/Math.max(1,pairs-1),step=Math.sin(phase+i*1.5)*2;line(c,side*width,y,side*(width+length*.6),y-7+step,light,thick);line(c,side*(width+length*.6),y-7+step,side*(width+length),y+7+step,base,thick);}};
+    const eyes=(x,y,r=2)=>{for(const side of [-1,1])oval(side*x,y,r,r,'#ffd797');};
+    const jaws=(width,y,length,thick=4)=>{for(const side of [-1,1])shape([[side*width,y],[side*(width+thick),y+length*.5],[side*(width-2),y+length],[side*(width-5),y+length-3],[side*(width+thick-3),y+length*.4],[side*(width-4),y]]);};
+    const plates=(count,width,from,step)=>{for(let i=0;i<count;i++)shape([[-width,from+i*step],[-width*.6,from+i*step-5],[0,from+i*step-7],[width*.6,from+i*step-5],[width,from+i*step],[0,from+i*step+4]],i%2?base:light);};
+    const wings=(count=3)=>{for(const side of [-1,1])for(let i=0;i<count;i++){oval(side*(17+i*2),-8+i*7,22,5,'#c4eee76b',side*(.55-i*.45+Math.sin(phase)*.06));line(c,side*4,-6+i*5,side*37,-15+i*15,'#c8e7d388');}};
+    const tail=(length,split=false)=>{shape([[-5,-9],[-3,-length],[0,-length-7],[4,-length],[5,-9]],base);if(split)for(const side of [-1,1])shape([[0,-length+3],[side*13,-length-8],[side*4,-length+6]]);};
+    const sacs=(x,y,rx,ry,color='#d9bf6899')=>{for(const side of [-1,1]){oval(side*x,y,rx,ry,color);line(c,side*x,y-ry*.6,side*(x+2),y+ry*.5,'#efdeb299',1);}};
+    switch(w){
+      case 1: legs(3,8,12,3);oval(0,-3,10,17);oval(0,15,5,11,light);for(let i=0;i<5;i++)shape([[-3,-17+i*6],[0,-23+i*6],[3,-17+i*6]]);eyes(5,10);eyes(5,16,1.5);for(const side of [-1,1])for(let i=0;i<3;i++)shape([[side*4,18+i*3],[side*7,20+i*3],[side*4,21+i*3]],'#ece2bf');break;
+      case 2: legs(3,15,9,4);oval(0,-3,20,12);for(let i=0;i<7;i++)shape([[-14+i*4,-5],[-17+i*5,-24],[-9+i*4,-5]],'#4b453b');oval(0,11,14,9,light);jaws(11,13,17,5);jaws(5,14,13,3);plates(2,10,4,6);eyes(7,13);break;
+      case 3: legs(3,7,9,4);oval(0,-10,11,11);oval(0,8,14,12,light);jaws(12,13,14,6);eyes(7,11);break;
+      case 4: legs(3,5,10,2);oval(0,-5,8,20);plates(5,7,-19,6);oval(0,12,5,4);for(const side of [-1,1])shape([[side*5,5],[side*24,13],[side*22,25],[side*19,21],[side*16,26],[side*13,21],[side*10,24]],'#c5a878');break;
+      case 5: legs(3,10,12,5);oval(0,0,15,16);sacs(12,-6,9,13);oval(0,13,8,6,light);eyes(5,15);break;
+      case 6: legs(6,12,5,2);oval(0,-9,16,25,'#b2a06d');for(let i=0;i<7;i++){c.beginPath();c.ellipse(0,-27+i*5,14,4,0,0,Math.PI);c.stroke();}oval(0,18,7,6,base);jaws(5,20,6);break;
+      case 7: legs(2,8,9,3);oval(0,-3,13,17);for(const side of [-1,1]){oval(side*16,10,10,9,'#77786b');for(let i=0;i<4;i++)shape([[side*(10+i*4),13],[side*(12+i*4),26],[side*(14+i*4),13]],'#ded0a6');}for(let i=0;i<10;i++)oval(Math.sin(i*8)*9,-12+i*2,2,2,'#555b4c');break;
+      case 8: legs(3,8,8,2);oval(0,0,15,16,'#657b7b');for(let i=0;i<12;i++){const a=i*Math.PI/6,x=Math.cos(a),y=Math.sin(a);shape([[x*10-y*4,y*10+x*4],[x*28,y*28],[x*10+y*4,y*10-x*4]],'#b0dcceaa');}oval(0,17,5,4);break;
+      case 9: legs(3,11,13,5);oval(0,-5,15,20);oval(0,6,20,12,'#797c66');for(const side of [-1,1])for(let i=0;i<2;i++){oval(side*(16+i*8),5+i*9,7,10);for(let j=0;j<3;j++)shape([[side*(12+i*8+j*3),12+i*9],[side*(14+i*8+j*3),25+i*7],[side*(16+i*8+j*3),11+i*9]]);}plates(4,13,-20,7);eyes(6,15);break;
+      case 10: legs(3,10,25,1.5);oval(0,0,14,7);for(const side of [-1,1]){line(c,side*4,5,side*12,36,light,1);line(c,side*12,36,side*23,42,light,1);line(c,side*10,-4,0,5,'#afffd3',2);}break;
+      case 11: legs(2,4,9,1.5);for(const side of [-1,1]){line(c,side*4,-6,side*25,-24,light,6);line(c,side*25,-24,side*20,17,base,3);shape([[side*4,-7],[side*14,-14],[side*8,3]],'#a4c7a7');}oval(0,-1,6,12);shape([[-6,10],[0,25],[6,10]]);break;
+      case 12: wings();tail(34);oval(0,-2,4,15);oval(0,12,8,6);eyes(5,14,4);for(let i=0;i<5;i++)oval(0,-15-i*4,2,1,'#bafce6');break;
+      case 13: for(const side of [-1,1]){shape([[side*3,12],[side*33,-19],[side*30,15],[side*14,22]],'#939eae');oval(side*21,7,7,6,'#40385b');oval(side*21,7,3,4,'#f1ce91');for(let j=0;j<2;j++){line(c,side*(3+j*3),11,side*(9+j*9),30,light,1);for(let k=0;k<4;k++)line(c,side*(7+j*5+k),16+k*3,side*(12+j*6+k),16+k*3,light);}line(c,side*3,-12,side*9,-38,light);}oval(0,0,5,19);eyes(3,15);break;
+      case 14: tail(24,true);legs(2,8,13,2);oval(0,0,10,13,'#b3aa91');for(const side of [-1,1])for(let i=0;i<3;i++)line(c,side*20,15,side*(16+i*5),23,light,1.5);oval(0,12,7,6);eyes(4,15);break;
+      case 15: legs(2,8,10,3);oval(0,-9,10,23);for(const side of [-1,1]){shape([[0,15],[side*25,15],[side*22,-7],[side*7,-1]],'#b37264');for(let i=0;i<4;i++)line(c,0,10,side*(12+i*4),12-i*6,'#de9890',1);}oval(0,14,8,7);jaws(8,17,14,2);break;
+      case 16: legs(3,14,7,2);oval(0,0,21,13);plates(3,20,-7,7);oval(0,8,7,7,'#bd6b83');oval(0,8,3,4,'#ffe0b0');break;
+      case 17: tail(33);legs(3,8,11,3);oval(0,-4,10,22);for(let i=0;i<6;i++)shape([[-4,-13-i*4],[0,-22-i*4],[4,-13-i*4]],light);sacs(6,-5,3,12,'#bb7788');oval(0,15,14,6);jaws(12,16,8);for(const side of [-1,1])oval(side*16,10,6,10);break;
+      case 18: legs(3,12,12,6);oval(0,-8,15,18);shape([[-21,5],[-18,20],[0,24],[18,20],[21,5],[0,-5]],light);for(const x of [-13,0,13])shape([[x-3,17],[x,36-Math.abs(x)*.4],[x+3,17]],'#e2d5aa');oval(0,11,8,8,'#b75274');for(const side of [-1,1])line(c,0,11,side*13,20,'#ed829b',2);break;
+      case 19: legs(2,6,14,2);oval(0,-9,8,18);for(const side of [-1,1]){shape([[side*5,3],[side*22,-1],[side*27,25],[side*13,17],[side*23,18],[side*17,5]],'#c8c497');for(let i=0;i<4;i++)shape([[side*22,7+i*3],[side*17,10+i*3],[side*23,10+i*3]]);}shape([[-8,10],[0,21],[8,10]]);eyes(4,13);break;
+      case 20: legs(3,12,8,4);oval(0,-8,13,14);shape([[-23,5],[-15,19],[0,24],[15,19],[23,5],[0,-7]],'#929c7b');shape([[-5,17],[0,37],[5,17]],'#e4d6a2');break;
+      case 21: legs(3,6,10,2);sacs(10,-13,12,16,'#baa15c');oval(0,-13,4,12,'#ffba69');shape([[-6,-24],[-11,-36],[11,-36],[6,-24]],'#5a5b43');oval(0,7,7,11);eyes(4,14);break;
+      case 22: legs(4,9,25,1.5);shape([[-15,-10],[0,-28],[15,-10],[12,8],[0,13],[-12,8]],'#9d939f');oval(0,14,7,5);for(const side of [-1,1]){line(c,side*33,-8,side*27,15,'#d7dfc899');line(c,side*27,15,side*12,0,'#d7dfc899');}for(let i=-1;i<=1;i++)line(c,i*3,-13,i*4,-25,light,2);break;
+      case 23: legs(8,7,10,2);for(let i=0;i<8;i++)oval(Math.sin(i*.5)*3,-30+i*7,8+i*.5,5,i%2?base:light);oval(0,18,13,8);jaws(12,22,12,4);break;
+      case 24: legs(4,10,9,3);oval(0,0,13,17);plates(4,12,-12,7);for(const side of [-1,1]){line(c,side*8,5,side*23,15,base,5);oval(side*24,19,10,9);shape([[side*18,20],[side*16,34],[side*25,26],[side*32,33],[side*31,17]]);}line(c,0,-14,12,-30,light,7);line(c,12,-30,22,-17,light,6);oval(22,-13,6,9,'#b1d282aa');shape([[19,-8],[16,7],[26,-9]]);break;
+      case 25: legs(3,4,26,2);oval(0,-4,5,16);line(c,-4,-16,-4,8,light,2);line(c,4,-16,4,8,light,2);oval(0,12,7,6);jaws(8,15,14,4);break;
+      case 26: oval(0,0,19,21,'#273c3f');for(let i=0;i<6;i++){c.beginPath();c.ellipse(0,-12+i*5,18-Math.abs(i-2)*2,8,0,0,Math.PI);c.strokeStyle=i%2?light:'#557c7c';c.lineWidth=3;c.stroke();}break;
+      case 27: legs(2,12,10,2);oval(0,-3,19,11);sacs(15,-4,4,13,'#88bfa3aa');for(const side of [-1,1]){line(c,side*11,6,side*26,19,light,4);line(c,side*26,19,side*12,13,base,4);}shape([[-3,10],[0,31],[3,10]],'#dbdac2');eyes(6,9);break;
+      case 28: legs(3,9,10,3);oval(0,-10,10,16);plates(2,14,0,8);jaws(14,10,29,8);for(const side of [-1,1])for(let i=0;i<3;i++)shape([[side*15,20+i*5],[side*9,23+i*5],[side*16,25+i*5]]);eyes(7,10);break;
+      case 29: wings();oval(0,-17,9,23);plates(6,8,-32,6);shape([[-4,-35],[0,-52],[4,-35]],light);oval(0,6,3,9);oval(0,17,8,7);eyes(5,18);legs(3,4,12,1.5);break;
+      case 30: legs(3,13,20,5);oval(0,-15,21,26,'#354a48');for(const side of [-1,1])shape([[side*3,-37],[side*20,-28],[side*25,-6],[side*10,7],[side*7,-19]],base);for(let i=0;i<5;i++)oval(Math.sin(i*2)*9,-29+i*7,4,3,'#b5f9ba');shape([[-12,10],[0,-6],[12,10],[8,24],[-8,24]],'#87b2a2');oval(0,24,9,7);for(let i=-2;i<=2;i++)shape([[i*3,26],[i*10,40-Math.abs(i)*3],[i*3+3,26]],'#c7e6a5');eyes(5,26);break;
+    }
     if(e.slowUntil>t){c.strokeStyle='#9ce3f5';c.lineWidth=1;c.strokeRect(-13,-19,26,38);}
     if(e.burnUntil>t){c.fillStyle='#ffb55288';c.beginPath();c.arc(0,0,13,0,Math.PI*2);c.fill();}
     c.restore();
@@ -108,7 +136,7 @@
       for(let x=0;x<7;x++){const p=this.point(x,12);poly(c,[[p.x, p.y+7],[p.x+30,p.y+7],[p.x+18,p.y+17],[p.x-12,p.y+17]],'#a89d5366');}
       line(c,35,end.y+3,525,end.y+3,'#c4bb7888',2);c.fillStyle='#bdc397';c.font='9px Consolas';c.fillText('DEFENSE PERIMETER  /  DO NOT CROSS',280,end.y+42);
       c.fillStyle='#73866466';c.font='8px Consolas';c.fillText('SECTOR 07 • GRID 7 × 12 • 10m / CELL',280,825);
-      for(const d of game.deposits){if(d.deep&&!game.scanned)continue;const p=this.point(d.x+.5,d.y+.5);c.save();c.translate(p.x,p.y);c.fillStyle=d.resource==='iron'?'#533b26aa':'#344b28aa';c.beginPath();c.ellipse(0,4,23,14,0,0,Math.PI*2);c.fill();
+      for(const d of game.deposits){if(d.deep&&!game.scanned)continue;const tile=this.point(d.x,d.y);c.fillStyle=d.resource==='iron'?'#a8804f':'#718447';c.fillRect(tile.x+1,tile.y+1,68,52);c.strokeStyle=d.resource==='iron'?'#e4c08a':'#cadb8d';c.lineWidth=2;c.strokeRect(tile.x+2,tile.y+2,66,50);const p=this.point(d.x+.5,d.y+.5);c.save();c.translate(p.x,p.y);c.fillStyle=d.resource==='iron'?'#533b26aa':'#344b28aa';c.beginPath();c.ellipse(0,4,23,14,0,0,Math.PI*2);c.fill();
         for(let i=0;i<5;i++){const x=-15+i*7,y=(i%2)*7;poly(c,[[x-5,y],[x-2,y-10-i%3*3],[x+5,y-5],[x+7,y+5],[x,y+8]],d.resource==='iron'?(i%2?'#c4965a':'#a8804f'):(i%2?'#acbb64':'#718447'),'#303826');}
         c.font='7px Consolas';c.textAlign='center';c.fillStyle=d.resource==='iron'?'#e4c08a':'#cadb8d';c.fillText(d.deep?'DEEP / LV2':d.resource==='iron'?'Fe':'U',0,23);c.restore();}
       for(const r of game.rocks){const p=this.point(r.x+.5,r.y+.5);c.save();c.translate(p.x,p.y);poly(c,[[-27,8],[-25,-9],[-13,-24],[11,-22],[26,-6],[25,11],[1,20]],'#4e5541','#313c2d');poly(c,[[-25,-9],[-13,-24],[11,-22],[6,-4],[-7,3]],'#778068');poly(c,[[6,-4],[11,-22],[26,-6],[25,11]],'#616950');line(c,-13,-24,-8,-9,'#a0a28666');c.restore();}

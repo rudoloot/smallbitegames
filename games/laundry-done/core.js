@@ -4,7 +4,7 @@
   else root.LaundryCore = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const FLIGHT = 2;
+  const FLIGHT = 2.5;
   const COLORS = ['#9eaf8b','#dfad85','#92acb5','#c3afd0','#d4be7e','#d29585','#91b7a4'];
   const rect = (x,y,w,h) => [[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
   const V = (x, y1, y2, side=1, guide=null) => ({a:[x,y1],b:[x,y2],side,guide:guide || [[x,y1],[x,y2]]});
@@ -119,8 +119,8 @@
     for(let y=Math.floor(bb.minY);y<=bb.maxY;y+=2)for(let x=Math.floor(bb.minX);x<=bb.maxX;x+=2){const p=[x+.5,y+.5],ia=a.some(poly=>inside(p,poly)),ib=b.some(poly=>inside(p,poly));if(ia||ib)union++;if(ia&&ib)intersection++;}
     return union?intersection/union:0;
   }
-  const grade = accuracy => accuracy>=.9?'Perfect':accuracy>=.8?'Great':accuracy>=.7?'Good':'Bad';
-  function evaluate(item,inputs) {if(!inputs.length)return null;const target=folded(item),result=foldAxes(item,inputs),accuracy=similarity(target,result);return {target,result,accuracy,grade:grade(accuracy),score:accuracy>=.7?Math.floor(100*accuracy+1e-8):0};}
+  const grade = accuracy => accuracy>=.9?'Perfect':accuracy>=.7?'Great':accuracy>=.5?'Good':'Bad';
+  function evaluate(item,inputs) {if(!inputs.length)return null;const target=folded(item),result=foldAxes(item,inputs),accuracy=similarity(target,result);return {target,result,accuracy,grade:grade(accuracy),score:accuracy>=.5?Math.floor(100*accuracy+1e-8):0};}
   function stageAt(time){return Math.min(6,Math.floor(time/30)+1);}
   function interval(stage){return stage<=2?3:stage<=4?2.5:2;}
   function composition(stage,rng=Math.random) {if(stage===1)return ['easy'];if(stage===6)return ['hard','hard'];if(stage<=3)return rng()<.5?['easy','easy']:['medium'];return rng()<.5?['hard']:['medium','medium'];}
@@ -144,7 +144,7 @@
   function toLocal(point,pose){const dx=point[0]-pose.x,dy=point[1]-pose.y,c=Math.cos(pose.angle||0),s=Math.sin(pose.angle||0),scale=pose.scale||1;return [(dx*c+dy*s)/scale,(-dx*s+dy*c)/scale];}
   function toWorld(point,pose){const c=Math.cos(pose.angle||0),s=Math.sin(pose.angle||0),scale=pose.scale||1;return [pose.x+scale*(point[0]*c-point[1]*s),pose.y+scale*(point[0]*s+point[1]*c)];}
   function distanceToSegment(p,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/(dx*dx+dy*dy||1)));return Math.hypot(p[0]-a[0]-t*dx,p[1]-a[1]-t*dy);}
-  function position(entity,time) {const p=Math.max(0,Math.min(1,(time-entity.born)/FLIGHT));return {x:entity.x+entity.drift*(p-.5),y:920-(920-entity.apex)*4*p*(1-p)};}
+  function position(entity,time) {const p=Math.max(0,Math.min(1,(time-entity.born)/FLIGHT));return {x:entity.x+entity.drift*(p-.5),y:(entity.floor||920)-((entity.floor||920)-entity.apex)*4*p*(1-p)};}
   const stackGroups=items=>Array.from({length:Math.ceil(items.length/10)},(_,i)=>items.slice(i*10,i*10+10));
   return {FLIGHT,COLORS,clothes,rect,inside,triangulate,fold,folded,foldAxes,bounds,centered,similarity,grade,evaluate,stageAt,interval,composition,pick,strokeAxis,toLocal,toWorld,distanceToSegment,position,stackGroups};
 });
