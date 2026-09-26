@@ -42,3 +42,12 @@
 .card-copy{height:50px;padding:3px 12px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
 .card-copy strong{font-size:clamp(17px,2vw,19px);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card-meta{font-size:clamp(12px,1.5vw,14px);line-height:1.15;white-space:nowrap;overflow:hidden}
+
+.game-entry{position:relative;height:200px}
+.game-entry[hidden]{display:none}
+.game-entry .card-copy{padding-right:56px}
+.favorite-button{position:absolute;right:5px;bottom:3px;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:white;color:#8993b3}
+.favorite-button svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:fill .15s ease,color .15s ease}
+.favorite-button[aria-pressed="true"]{color:#ed4e95}
+.favorite-button[aria-pressed="true"] svg{fill:#ed4e95}
+.favorite-button:focus-visible{outline:3px solid #8648f4;outline-offset:2px}

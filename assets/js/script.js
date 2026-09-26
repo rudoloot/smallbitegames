@@ -4,23 +4,63 @@ const categoryOptions = [...document.querySelectorAll('.category-option')];
 const searchInput = document.querySelector('#game-search');
 const searchTrigger = document.querySelector('#search-trigger');
 const searchField = document.querySelector('.search-field');
-const cards = [...document.querySelectorAll('.game-card')];
+const entries = [...document.querySelectorAll('.game-entry')];
+const cards = entries.map((entry) => entry.querySelector('.game-card'));
 const emptyState = document.querySelector('#empty-state');
 const dialog = document.querySelector('#info-dialog');
+const favoritesStorageKey = 'smallbitegames:favorites:v1';
+let favorites = new Set();
 let category = 'all';
+
+try {
+  const saved = JSON.parse(localStorage.getItem(favoritesStorageKey) || '[]');
+  if (Array.isArray(saved)) favorites = new Set(saved.filter((id) => typeof id === 'string'));
+} catch {
+  // 저장소를 사용할 수 없어도 이 페이지에서 즐겨찾기는 작동합니다.
+}
+
+function updateFavoriteButton(entry) {
+  const button = entry.querySelector('.favorite-button');
+  const gameName = entry.querySelector('.game-card').dataset.name;
+  const selected = favorites.has(entry.dataset.gameId);
+  button.setAttribute('aria-pressed', String(selected));
+  button.setAttribute('aria-label', `${gameName} 즐겨찾기 ${selected ? '해제' : '추가'}`);
+  button.title = `즐겨찾기 ${selected ? '해제' : '추가'}`;
+}
 
 function updateGames() {
   const query = searchInput.value.trim().toLocaleLowerCase('ko');
   let visible = 0;
-  cards.forEach((card) => {
-    const matchesCategory = category === 'all' || card.dataset.category === category;
+  entries.forEach((entry) => {
+    const card = entry.querySelector('.game-card');
+    const matchesCategory = category === 'all' ||
+      (category === 'favorites' ? favorites.has(entry.dataset.gameId) : card.dataset.category === category);
     const matchesSearch = `${card.dataset.name} ${card.textContent}`.toLocaleLowerCase('ko').includes(query);
     const show = matchesCategory && matchesSearch;
-    card.hidden = !show;
+    entry.hidden = !show;
     if (show) visible += 1;
   });
   emptyState.hidden = visible !== 0;
+  emptyState.textContent = query ? '검색 결과가 없어요. 다른 이름으로 검색해 보세요.' :
+    category === 'favorites' ? '즐겨찾기한 게임이 없어요. 카드의 하트를 눌러 추가해 보세요.' :
+    '등록된 게임이 없어요.';
 }
+
+entries.forEach((entry) => {
+  updateFavoriteButton(entry);
+  entry.querySelector('.favorite-button').addEventListener('click', () => {
+    const id = entry.dataset.gameId;
+    if (favorites.has(id)) favorites.delete(id);
+    else favorites.add(id);
+    try {
+      localStorage.setItem(favoritesStorageKey, JSON.stringify([...favorites]));
+    } catch {
+      // 저장이 차단된 브라우저에서는 현재 페이지에만 상태를 유지합니다.
+    }
+    updateFavoriteButton(entry);
+    updateGames();
+  });
+});
 
 function closeCategoryMenu() {
   categoryMenu.hidden = true;

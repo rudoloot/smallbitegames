@@ -13,21 +13,26 @@ games/
 홈페이지 `index.html`에서 게임 카드를 추가하거나 기존 카드를 수정합니다.
 
 ```html
-<button class="game-card" type="button"
+<div class="game-entry" data-game-id="my-game">
+  <button class="game-card" type="button"
         data-name="새 게임" data-category="single"
         data-description="게임 소개"
         data-href="games/my-game/index.html">
-  <span class="art art-standalone">
-    <img src="games/my-game/thumbnail.png" alt="새 게임 화면" />
-  </span>
-  <span class="card-copy">
-    <strong>새 게임</strong>
-    <span class="card-meta">게임 장르 | 게임 소개</span>
-  </span>
-</button>
+    <span class="art art-standalone">
+      <img src="games/my-game/thumbnail.png" alt="새 게임 화면" />
+    </span>
+    <span class="card-copy">
+      <strong>새 게임</strong>
+      <span class="card-meta">게임 장르 | 게임 소개</span>
+    </span>
+  </button>
+  <button class="favorite-button" type="button" aria-label="새 게임 즐겨찾기 추가" aria-pressed="false" title="즐겨찾기 추가">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5 3.6 12.7C1.9 11.1 2 8.3 3.6 6.7a4.5 4.5 0 0 1 6.4 0L12 8.6l2-1.9a4.5 4.5 0 0 1 6.4 0c1.6 1.6 1.7 4.4 0 6L12 20.5Z" /></svg>
+  </button>
+</div>
 ```
 
-`data-category`는 `single` 또는 `multi`로 지정합니다. `data-href`가 있으면 카드를 눌렀을 때 게임으로 이동하고, 없으면 준비 중 안내가 표시됩니다. 새 게임에는 `art-standalone`과 독립된 썸네일을 사용하세요.
+`data-game-id`는 게임마다 고유하고 바뀌지 않는 값으로 지정합니다. 이 값을 브라우저의 즐겨찾기 저장에 사용합니다. `data-category`는 `single` 또는 `multi`로 지정합니다. `data-href`가 있으면 카드를 눌렀을 때 게임으로 이동하고, 없으면 준비 중 안내가 표시됩니다. 새 게임에는 `art-standalone`과 독립된 썸네일을 사용하세요.
 
 사이트에서 게임을 열 때 전달하는 `returnTo` 주소와 게임의 종료 처리 방식은 [게임 실행·복귀 규약](../GAME_LAUNCH_CONTRACT.md)을 따릅니다.
 

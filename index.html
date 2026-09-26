@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#f7f9ff" />
     <meta name="description" content="SmallBiteGames에서 가볍게 즐기는 HTML 게임을 만나보세요." />
     <title>SmallBiteGames</title>
-    <link rel="stylesheet" href="assets/css/styles.css?v=6cb3e38" />
-    <script src="assets/js/script.js" defer></script>
+    <link rel="stylesheet" href="assets/css/styles.css?v=favorites-1" />
+    <script src="assets/js/script.js?v=favorites-1" defer></script>
   </head>
   <body>
     <svg class="icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
@@ -29,6 +29,7 @@
               <svg class="icon" aria-hidden="true"><use href="#icon-grid" /></svg><span id="selected-category">카테고리</span><span class="chevron" aria-hidden="true"></span>
             </button>
             <div class="category-menu" id="category-menu" hidden>
+              <button type="button" class="category-option" data-category="favorites">즐겨찾기</button>
               <button type="button" class="category-option active" data-category="all">전체 게임</button>
               <button type="button" class="category-option" data-category="single">싱글 게임</button>
               <button type="button" class="category-option" data-category="multi">멀티 게임</button>
@@ -48,10 +49,15 @@
       <main>
         <h1 class="visually-hidden">SmallBiteGames 게임 목록</h1>
         <div class="game-list" id="game-list">
-          <button class="game-card" type="button" data-name="마인런" data-category="single" data-description="숫자를 읽고 지뢰를 피해 달려라!" data-href="games/mine-run/index.html">
-            <span class="art art-standalone"><img src="assets/images/mine-run-thumbnail.svg" alt="숫자와 지뢰 사이를 달리는 로봇, 마인런" /></span>
-            <span class="card-copy"><strong>마인런</strong><span class="card-meta"><svg class="meta-icon" aria-hidden="true"><use href="#icon-puzzle" /></svg>퍼즐 러닝 <span class="divider">|</span> 숫자를 읽고 지뢰를 피해 달려라!</span></span>
-          </button>
+          <div class="game-entry" data-game-id="mine-run">
+            <button class="game-card" type="button" data-name="마인런" data-category="single" data-description="숫자를 읽고 지뢰를 피해 달려라!" data-href="games/mine-run/index.html">
+              <span class="art art-standalone"><img src="assets/images/mine-run-thumbnail.svg" alt="숫자와 지뢰 사이를 달리는 로봇, 마인런" /></span>
+              <span class="card-copy"><strong>마인런</strong><span class="card-meta"><svg class="meta-icon" aria-hidden="true"><use href="#icon-puzzle" /></svg>퍼즐 러닝 <span class="divider">|</span> 숫자를 읽고 지뢰를 피해 달려라!</span></span>
+            </button>
+            <button class="favorite-button" type="button" aria-label="마인런 즐겨찾기 추가" aria-pressed="false" title="즐겨찾기 추가">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5 3.6 12.7C1.9 11.1 2 8.3 3.6 6.7a4.5 4.5 0 0 1 6.4 0L12 8.6l2-1.9a4.5 4.5 0 0 1 6.4 0c1.6 1.6 1.7 4.4 0 6L12 20.5Z" /></svg>
+            </button>
+          </div>
         </div>
         <p class="empty-state" id="empty-state" hidden>검색 결과가 없어요. 다른 이름으로 검색해 보세요.</p>
       </main>
