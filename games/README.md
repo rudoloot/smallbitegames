@@ -27,7 +27,7 @@ games/
 </button>
 ```
 
-`data-category`는 `single` 또는 `multi`로 지정합니다. `data-href`가 있으면 카드를 눌렀을 때 게임으로 이동하고, 없으면 준비 중 안내가 표시됩니다. 기존 카드의 이미지는 원본 시안을 잘라 보여주므로, 새 게임에는 `art-standalone`과 독립된 썸네일을 사용하세요.
+`data-category`는 `single` 또는 `multi`로 지정합니다. `data-href`가 있으면 카드를 눌렀을 때 게임으로 이동하고, 없으면 준비 중 안내가 표시됩니다. 새 게임에는 `art-standalone`과 독립된 썸네일을 사용하세요.
 
 사이트에서 게임을 열 때 전달하는 `returnTo` 주소와 게임의 종료 처리 방식은 [게임 실행·복귀 규약](../GAME_LAUNCH_CONTRACT.md)을 따릅니다.
 
