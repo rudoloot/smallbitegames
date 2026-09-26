@@ -73,7 +73,10 @@ function showDialog(title, description, note) {
 
 cards.forEach((card) => card.addEventListener('click', () => {
   if (card.dataset.href) {
-    window.location.href = card.dataset.href;
+    const gameUrl = new URL(card.dataset.href, window.location.href);
+    const returnUrl = new URL('index.html', window.location.href);
+    gameUrl.searchParams.set('returnTo', returnUrl.href);
+    window.location.assign(gameUrl.href);
     return;
   }
   showDialog(card.dataset.name, card.dataset.description, '게임은 현재 준비 중이에요. 곧 이곳에서 즐길 수 있습니다!');
