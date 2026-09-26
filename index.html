@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f9ff" />
+    <meta name="description" content="SmallBiteGames에서 가볍게 즐기는 HTML 게임을 만나보세요." />
+    <title>SmallBiteGames</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <script src="assets/js/script.js" defer></script>
+  </head>
+  <body>
+    <svg class="icon-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="7" height="7" rx="1.5"/><rect x="14.5" y="2.5" width="7" height="7" rx="1.5"/><rect x="2.5" y="14.5" width="7" height="7" rx="1.5"/><rect x="14.5" y="14.5" width="7" height="7" rx="1.5"/></symbol>
+      <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7.3"/><path d="m16.3 16.3 5 5"/></symbol>
+      <symbol id="icon-gamepad" viewBox="0 0 24 24"><path d="M7.2 7h9.6c2 0 3.2 1 3.8 3l1.1 6.6c.5 2.9-2.1 4.5-4.3 2.7l-2.2-1.8H8.8l-2.2 1.8c-2.2 1.8-4.8.2-4.3-2.7L3.4 10c.6-2 1.8-3 3.8-3Z"/><path d="M6.5 12.3h5M9 9.8v5M16.8 11.3h.1M19 13.5h.1"/></symbol>
+      <symbol id="icon-puzzle" viewBox="0 0 24 24"><path d="M9 3h3v2.2a2.4 2.4 0 1 0 4.8 0V3H21v6h-2.2a2.4 2.4 0 1 0 0 4.8H21V21h-6v-2.2a2.4 2.4 0 1 0-4.8 0V21H3v-6h2.2a2.4 2.4 0 1 0 0-4.8H3V3h6Z"/></symbol>
+      <symbol id="icon-run" viewBox="0 0 24 24"><circle cx="16.7" cy="3.7" r="2"/><path d="m10 10 4-3 3 2 3 1M13.5 8l-1 5 4 2-1 6M12.5 13 8 16l-2 5M8 7l2.5-1 3.5 1"/></symbol>
+      <symbol id="icon-cup" viewBox="0 0 24 24"><path d="M3 5h15v10a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V5ZM18 7h2a3 3 0 0 1 0 6h-2"/></symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5 19 19M19 5 5 19"/></symbol>
+    </svg>
+
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="wordmark" href="index.html" aria-label="SmallBiteGames 홈">SmallBite<span>Games</span></a>
+        <div class="header-actions">
+          <div class="category-control">
+            <button class="category-toggle" id="category-toggle" type="button" aria-expanded="false" aria-controls="category-menu">
+              <svg class="icon" aria-hidden="true"><use href="#icon-grid" /></svg><span id="selected-category">카테고리</span><span class="chevron" aria-hidden="true"></span>
+            </button>
+            <div class="category-menu" id="category-menu" hidden>
+              <button type="button" class="category-option active" data-category="all">전체 게임</button>
+              <button type="button" class="category-option" data-category="single">싱글 게임</button>
+              <button type="button" class="category-option" data-category="multi">멀티 게임</button>
+            </div>
+          </div>
+          <button class="search-trigger" id="search-trigger" type="button" aria-label="검색 열기" aria-expanded="false" aria-controls="game-search">
+            <svg class="icon" aria-hidden="true"><use href="#icon-search" /></svg>
+          </button>
+          <label class="search-field">
+            <svg class="icon" aria-hidden="true"><use href="#icon-search" /></svg>
+            <input id="game-search" type="search" placeholder="검색" aria-label="게임 검색" autocomplete="off" />
+          </label>
+          <button class="profile-button" id="profile-button" type="button" aria-label="내 계정 정보"><span class="profile-head"></span><span class="profile-body"></span></button>
+        </div>
+      </header>
+
+      <main>
+        <h1 class="visually-hidden">SmallBiteGames 게임 목록</h1>
+        <div class="game-list" id="game-list">
+          <button class="game-card" type="button" data-name="버섯의 모험" data-category="single" data-description="작지만 용감한 버섯의 모험!">
+            <span class="art art-mushroom"><img src="assets/images/home-reference.png" alt="푸른 숲과 코인 사이를 달리는 귀여운 버섯 캐릭터" style="--crop-start:4.78%" /></span>
+            <span class="card-copy"><strong>버섯의 모험</strong><span class="card-meta"><svg class="meta-icon" aria-hidden="true"><use href="#icon-gamepad" /></svg>플랫포머 <span class="divider">|</span> 작지만 용감한 버섯의 모험!</span></span>
+          </button>
+          <button class="game-card" type="button" data-name="블록 팡팡" data-category="single" data-description="멈출 수 없는 블록의 중독!">
+            <span class="art art-blocks"><img src="assets/images/home-reference.png" alt="우주 배경에 알록달록 쌓인 네온 블록" style="--crop-start:24.22%" /></span>
+            <span class="card-copy"><strong>블록 팡팡</strong><span class="card-meta"><svg class="meta-icon" aria-hidden="true"><use href="#icon-puzzle" /></svg>퍼즐 <span class="divider">|</span> 멈출 수 없는 블록의 중독!</span></span>
+          </button>
+          <button class="game-card" type="button" data-name="냥코 달리기" data-category="single" data-description="달리고, 점프하고, 1등!">
+            <span class="art art-cat"><img src="assets/images/home-reference.png" alt="꽃이 핀 들판을 함께 달리는 고양이와 친구들" style="--crop-start:42.22%" /></span>
+            <span class="card-copy"><strong>냥코 달리기</strong><span class="card-meta"><svg class="meta-icon" aria-hidden="true"><use href="#icon-run" /></svg>러닝 <span class="divider">|</span> 달리고, 점프하고, 1등!</span></span>
+          </button>
+          <button class="game-card" type="button" data-name="미니 서바이벌" data-category="multi" data-description="끝까지 살아남아라!">
+            <span class="art art-survival"><img src="assets/images/home-reference.png" alt="좀비들에게 둘러싸인 군인이 싸우는 게임 장면" style="--crop-start:59.69%" /></span>
+            <span class="card-copy"><strong>미니 서바이벌</strong><span class="card-meta"><svg class="meta-icon" aria-hidden="true"><use href="#icon-gamepad" /></svg>액션 <span class="divider">|</span> 끝까지 살아남아라!</span></span>
+          </button>
+          <button class="game-card" type="button" data-name="행복한 카페" data-category="single" data-description="나만의 힐링 카페를 꾸며요!">
+            <span class="art art-cafe"><img src="assets/images/home-reference.png" alt="따뜻한 카페에서 음료를 준비하는 캐릭터" style="--crop-start:75%" /></span>
+            <span class="card-copy"><strong>행복한 카페</strong><span class="card-meta"><svg class="meta-icon" aria-hidden="true"><use href="#icon-cup" /></svg>시뮬레이션 <span class="divider">|</span> 나만의 힐링 카페를 꾸며요!</span></span>
+          </button>
+          <button class="game-card" type="button" data-name="스피드 레이서" data-category="multi" data-description="더 빠르게! 더 짜릿하게!">
+            <span class="art art-racer"><img src="assets/images/home-reference.png" alt="경주 트랙을 달리는 빨간색과 주황색 카트" style="--crop-start:88.1%" /></span>
+            <span class="card-copy"><strong>스피드 레이서</strong><span class="card-meta"><svg class="meta-icon" aria-hidden="true"><use href="#icon-gamepad" /></svg>레이싱 <span class="divider">|</span> 더 빠르게! 더 짜릿하게!</span></span>
+          </button>
+        </div>
+        <p class="empty-state" id="empty-state" hidden>검색 결과가 없어요. 다른 이름으로 검색해 보세요.</p>
+      </main>
+    </div>
+
+    <dialog class="info-dialog" id="info-dialog" aria-labelledby="dialog-title">
+      <button class="dialog-close" id="dialog-close" type="button" aria-label="닫기"><svg class="icon" aria-hidden="true"><use href="#icon-close" /></svg></button>
+      <p class="dialog-eyebrow" id="dialog-eyebrow">SMALLBITEGAMES</p>
+      <h2 id="dialog-title"></h2>
+      <p id="dialog-description"></p>
+      <p class="dialog-note" id="dialog-note"></p>
+      <button class="dialog-confirm" id="dialog-confirm" type="button">확인</button>
+    </dialog>
+  </body>
+</html>
+
