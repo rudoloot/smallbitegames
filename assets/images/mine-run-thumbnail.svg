@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-labelledby="title description">
+  <title id="title">마인런</title>
+  <desc id="description">어두운 지뢰찾기 격자 위에서 로봇이 안전한 길을 찾는 게임 배너</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1">
+      <stop stop-color="#0a1a1b"/>
+      <stop offset=".56" stop-color="#193d2c"/>
+      <stop offset="1" stop-color="#09272b"/>
+    </linearGradient>
+    <linearGradient id="route" x2="1" y2="0">
+      <stop stop-color="#78e8bc" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#aef6b9" stop-opacity=".55"/>
+    </linearGradient>
+    <pattern id="grid" width="76" height="76" patternUnits="userSpaceOnUse">
+      <rect x="3" y="3" width="69" height="69" rx="10" fill="#081b1b" fill-opacity=".65" stroke="#bbf8c0" stroke-opacity=".12" stroke-width="2"/>
+      <path d="M15 18v-6h7M61 58v6h-7" fill="none" stroke="#b6f8ca" stroke-opacity=".17" stroke-width="2"/>
+    </pattern>
+    <filter id="glow"><feGaussianBlur stdDeviation="9"/></filter>
+  </defs>
+  <rect width="1200" height="300" fill="url(#background)"/>
+  <rect width="1200" height="300" fill="url(#grid)"/>
+  <path d="M0 253C175 224 250 255 375 198s236-18 345-40 214-16 480-91" fill="none" stroke="#7af0ae" stroke-opacity=".28" stroke-width="24" filter="url(#glow)"/>
+  <path d="M0 253C175 224 250 255 375 198s236-18 345-40 214-16 480-91" fill="none" stroke="url(#route)" stroke-width="3" stroke-dasharray="11 12"/>
+  <g font-family="Arial, sans-serif" font-weight="800" text-anchor="middle">
+    <text x="130" y="173" font-size="42" fill="#b8f5c2" opacity=".8">1</text>
+    <text x="202" y="248" font-size="42" fill="#9ad5fa" opacity=".7">2</text>
+    <text x="1048" y="174" font-size="42" fill="#b8f5c2" opacity=".7">1</text>
+    <text x="1125" y="100" font-size="42" fill="#9ad5fa" opacity=".7">2</text>
+  </g>
+  <g transform="translate(786 46)">
+    <ellipse cx="84" cy="207" rx="74" ry="14" fill="#041315" opacity=".6"/>
+    <rect x="17" y="14" width="134" height="103" rx="25" fill="#d3e4e8" stroke="#698f9c" stroke-width="9"/>
+    <rect x="29" y="31" width="110" height="68" rx="17" fill="#092e3b"/>
+    <rect x="48" y="59" width="17" height="17" rx="5" fill="#69ebf2"/>
+    <rect x="103" y="59" width="17" height="17" rx="5" fill="#69ebf2"/>
+    <path d="M72 83q12 9 24 0" fill="none" stroke="#80f2e4" stroke-width="5" stroke-linecap="round"/>
+    <path d="M84 14V3" stroke="#9dc5cd" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="84" cy="3" r="8" fill="#9bf3ba"/>
+    <rect x="44" y="121" width="80" height="66" rx="17" fill="#acc4ca" stroke="#698f9c" stroke-width="8"/>
+    <rect x="69" y="139" width="30" height="24" rx="5" fill="#54d5df"/>
+    <path d="M44 139 16 153M124 139l28 14M61 185l-8 22M107 185l8 22" stroke="#91b4bf" stroke-width="13" stroke-linecap="round"/>
+    <path d="M39 208h27M102 208h27" stroke="#d7e9e8" stroke-width="13" stroke-linecap="round"/>
+  </g>
+  <text x="276" y="170" fill="#e4ffea" font-family="Arial, sans-serif" font-size="94" font-weight="900" letter-spacing="-5">MINE RUN</text>
+  <text x="281" y="213" fill="#a9e4be" font-family="Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="5">THINK FAST · RUN SAFE</text>
+</svg>
