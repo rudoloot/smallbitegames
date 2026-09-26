@@ -12,6 +12,16 @@ const favoritesStorageKey = 'smallbitegames:favorites:v1';
 let favorites = new Set();
 let category = 'all';
 
+document.querySelectorAll('.art-standalone').forEach((art) => {
+  const image = art.querySelector('img');
+  if (!image) return;
+  const backdrop = image.cloneNode(false);
+  backdrop.className = 'preview-backdrop';
+  backdrop.alt = '';
+  backdrop.setAttribute('aria-hidden', 'true');
+  art.prepend(backdrop);
+});
+
 try {
   const saved = JSON.parse(localStorage.getItem(favoritesStorageKey) || '[]');
   if (Array.isArray(saved)) favorites = new Set(saved.filter((id) => typeof id === 'string'));
