@@ -27,3 +27,18 @@
   .profile-button{width:31px;height:31px}
   .header-actions{gap:5px}
 }
+
+/* Keep every game card the same size while centering its source artwork. */
+.game-card{height:200px}
+.art,.art-standalone{height:150px;aspect-ratio:auto}
+.art img{top:50%;transform:translateY(calc(var(--crop-center) * -1));clip-path:inset(var(--crop-start) 0 var(--crop-end))}
+.art-mushroom img{--crop-center:12.29%;--crop-end:80.20%}
+.art-blocks img{--crop-center:31.07%;--crop-end:62.08%}
+.art-cat img{--crop-center:48.71%;--crop-end:44.80%}
+.art-survival img{--crop-center:65.13%;--crop-end:29.43%}
+.art-cafe img{--crop-center:79.49%;--crop-end:16.03%}
+.art-racer img{--crop-center:92.14%;--crop-end:3.83%}
+.art-standalone img{top:auto;clip-path:none;transform:none;object-position:center}
+.card-copy{height:50px;padding:3px 12px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.card-copy strong{font-size:clamp(17px,2vw,19px);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-meta{font-size:clamp(12px,1.5vw,14px);line-height:1.15;white-space:nowrap;overflow:hidden}
