@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 890 150" role="img" aria-labelledby="title desc">
+  <title id="title">XenoTide Defense</title>
+  <desc id="desc">외계 군체를 향해 포탑을 겨눈 어두운 녹색 전장</desc>
+  <defs>
+    <linearGradient id="sky" x2="1" y2="1"><stop stop-color="#111c18"/><stop offset=".55" stop-color="#253a2d"/><stop offset="1" stop-color="#57472a"/></linearGradient>
+    <radialGradient id="flare"><stop stop-color="#d6b66c" stop-opacity=".34"/><stop offset="1" stop-color="#d6b66c" stop-opacity="0"/></radialGradient>
+    <pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse"><path d="M34 0H0V34" fill="none" stroke="#b6c99c" stroke-opacity=".09"/></pattern>
+  </defs>
+  <rect width="890" height="150" fill="url(#sky)"/>
+  <rect width="890" height="150" fill="url(#grid)"/>
+  <ellipse cx="675" cy="76" rx="250" ry="125" fill="url(#flare)"/>
+  <path d="M0 126 86 112l75 11 91-13 108 16 98-15 92 18 101-15 113 13 126-15v38H0Z" fill="#101a16" opacity=".8"/>
+  <g transform="translate(650 21)" fill="none" stroke="#dfc27d" stroke-linejoin="round">
+    <path d="m50 0 42 24v47L50 98 8 71V24Z" stroke-width="5"/>
+    <path d="m27 28 23 20 23-20-12 28 13 17-24-10-24 10 13-17Z" fill="#d2af68" stroke-width="2"/>
+    <path d="m50 42 5 12-5 6-5-6Z" fill="#1a291f" stroke-width="2"/>
+  </g>
+  <g fill="#859d73" opacity=".65"><path d="m783 105 14-34 8 18 10-26 17 42-24-8Z"/><path d="m566 102 10-26 8 14 9-23 13 35-20-7Z"/></g>
+  <path d="M476 132v-26l20-11 20 11v26m-33-27V89h26v16m-13-16V76m-25 56h50" fill="#43583e" stroke="#b9be8b" stroke-width="3"/>
+  <path d="m496 77 67-27" stroke="#e5bd72" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="570" cy="47" r="5" fill="#f2d495"/>
+  <text x="36" y="75" fill="#f6f1d9" font-family="Arial, sans-serif" font-size="46" font-weight="800" letter-spacing="-2">XENOTIDE</text>
+  <text x="38" y="107" fill="#dfbf7a" font-family="Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="4">DEFENSE · 마지막 방어선</text>
+</svg>
