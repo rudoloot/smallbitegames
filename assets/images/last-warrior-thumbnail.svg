@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 890 150" role="img" aria-labelledby="title desc">
+  <title id="title">마지막 전사</title>
+  <desc id="desc">금빛 왕관과 교차한 검이 있는 어두운 경기장 배너</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1">
+      <stop stop-color="#101c26"/>
+      <stop offset=".55" stop-color="#28414b"/>
+      <stop offset="1" stop-color="#513a30"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop stop-color="#eac786" stop-opacity=".38"/>
+      <stop offset="1" stop-color="#eac786" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="42" height="42" patternUnits="userSpaceOnUse">
+      <path d="M42 0H0V42" fill="none" stroke="#e4d5ad" stroke-opacity=".07"/>
+    </pattern>
+  </defs>
+  <rect width="890" height="150" fill="url(#bg)"/>
+  <rect width="890" height="150" fill="url(#grid)"/>
+  <ellipse cx="706" cy="80" rx="224" ry="125" fill="url(#glow)"/>
+  <path d="M0 137Q160 102 310 134T618 126T890 127V150H0Z" fill="#0a151b" opacity=".65"/>
+  <g fill="none" stroke="#d7af70" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m680 25 70 89m-82-95 15 5-5 15m67 65 12 14" stroke-width="8"/>
+    <path d="m752 22-70 92m80-98-15 6 7 14m-67 69-12 13" stroke-width="8"/>
+    <path d="m686 25-12 10m71-8 12 10m-78 68-10 8m83-8 10 8" stroke-width="5"/>
+  </g>
+  <path d="m680 57 17 8 15-20 15 20 18-8-5 34h-55Z" fill="#edc37d" stroke="#fff0ca" stroke-width="2"/>
+  <circle cx="712" cy="74" r="5" fill="#714c37"/>
+  <path d="M685 97h55" stroke="#f7ddb0" stroke-width="5" stroke-linecap="round"/>
+  <text x="39" y="77" fill="#fff0d5" font-family="Arial, sans-serif" font-size="47" font-weight="800" letter-spacing="-2">마지막 전사</text>
+  <text x="42" y="110" fill="#e7c78d" font-family="Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="3">LAST WARRIOR · HOUSE WARS</text>
+</svg>
