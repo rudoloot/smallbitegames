@@ -69,9 +69,9 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   const CONFIG = Object.freeze({
     columns: 8,
     metresPerTile: 1,
-    baseSpeed: 1.0,
+    baseSpeed: 1.25,
     speedStepSeconds: 30,
-    speedIncrement: 0.1,
+    speedIncrement: 0.05,
     stageSeconds: 150,
     rowsPerGroup: 5,
     fastForwardMultiplier: 2,  // Hold the round button (or F): world + game clock.
@@ -86,12 +86,12 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     settingsKey: 'mine-run.v2.settings'
   });
   const THEMES = [
-    { name:'초원', time:0,   rowMax:3, minesPerGroup:5, accent:'#b2f7a1', bg:'#15261f', tile:'#294732', edge:'#466445', closed:'#11271f', mark:'#59725f', glow:'#85b467', deco:'#779560' },
-    { name:'사막', time:150, rowMax:3, minesPerGroup:6, accent:'#ffd293', bg:'#32291e', tile:'#735d3c', edge:'#a1875b', closed:'#3a3023', mark:'#8b7554', glow:'#e5b96e', deco:'#c5a26b' },
-    { name:'설원', time:300, rowMax:4, minesPerGroup:7, accent:'#b7e7ff', bg:'#162735', tile:'#395e73', edge:'#648599', closed:'#1b3343', mark:'#5f8398', glow:'#91d8f3', deco:'#aedced' },
-    { name:'화산', time:450, rowMax:4, minesPerGroup:8, accent:'#ffb18a', bg:'#24191c', tile:'#493438', edge:'#7c4a41', closed:'#291c22', mark:'#89554a', glow:'#ff7447', deco:'#c37652' },
-    { name:'사이버',time:600,rowMax:5, minesPerGroup:9, accent:'#8bf7e7', bg:'#0b1b25', tile:'#173846', edge:'#2f5f6b', closed:'#0b202e', mark:'#387d86', glow:'#42e6d3', deco:'#459d9e' },
-    { name:'우주', time:750, rowMax:5, minesPerGroup:10, accent:'#d5bcff', bg:'#101125', tile:'#2e2a49', edge:'#524b79', closed:'#19192e', mark:'#6a618d', glow:'#a68df2', deco:'#a294cc' }
+    { name:'초원', time:0,   difficulty:1.5, rowMax:3, minesPerGroup:5.5, accent:'#b2f7a1', bg:'#15261f', tile:'#294732', edge:'#466445', closed:'#11271f', mark:'#59725f', glow:'#85b467', deco:'#779560' },
+    { name:'사막', time:150, difficulty:2, rowMax:3, minesPerGroup:6, accent:'#ffd293', bg:'#32291e', tile:'#735d3c', edge:'#a1875b', closed:'#3a3023', mark:'#8b7554', glow:'#e5b96e', deco:'#c5a26b' },
+    { name:'설원', time:300, difficulty:2.5, rowMax:4, minesPerGroup:6.5, accent:'#b7e7ff', bg:'#162735', tile:'#395e73', edge:'#648599', closed:'#1b3343', mark:'#5f8398', glow:'#91d8f3', deco:'#aedced' },
+    { name:'화산', time:450, difficulty:3, rowMax:4, minesPerGroup:7, accent:'#ffb18a', bg:'#24191c', tile:'#493438', edge:'#7c4a41', closed:'#291c22', mark:'#89554a', glow:'#ff7447', deco:'#c37652' },
+    { name:'사이버',time:600,difficulty:3.5,rowMax:4, minesPerGroup:7.5, accent:'#8bf7e7', bg:'#0b1b25', tile:'#173846', edge:'#2f5f6b', closed:'#0b202e', mark:'#387d86', glow:'#42e6d3', deco:'#459d9e' },
+    { name:'우주', time:750, difficulty:4, rowMax:4, minesPerGroup:8, accent:'#d5bcff', bg:'#101125', tile:'#2e2a49', edge:'#524b79', closed:'#19192e', mark:'#6a618d', glow:'#a68df2', deco:'#a294cc' }
   ];
 // BEGIN LOGIC ENGINE
 /* MineRun v9 — original, deterministic, visible-information-only logic engine.
@@ -277,27 +277,52 @@ const MineGenerator = (() => {
   'use strict';
   const L=typeof MineLogic!=='undefined'?MineLogic:require('./logic.js');
   const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  // Half tiers alternate adjacent whole-tier batches, keeping every quota integral.
+  const DIFFICULTIES=Object.freeze([1.5,2,2.5,3,3.5,4]);
+  const MAX_BLANK_STREAK=6;
+  function targetFor(stage,group){
+    const difficulty=DIFFICULTIES[clamp(stage,0,5)];
+    const level=Math.floor(difficulty)+(difficulty%1&&group%2?1:0);
+    return {difficulty,level,minesPerGroup:level+4,rowMax:level<=2?3:4};
+  }
+  function hasZeroRoute(rows,first,last){
+    const queue=[],seen=new Set();
+    const zero=id=>!rows.get(L.rowOf(id))?.mines[L.colOf(id)]&&L.count(rows,id)===0;
+    for(let c=0;c<8;c++){const id=L.key(first,c);if(zero(id)){queue.push(id);seen.add(id);}}
+    for(let h=0;h<queue.length;h++){
+      const id=queue[h],r=L.rowOf(id),c=L.colOf(id);
+      if(r===last)return true;
+      for(const next of [r<last?id+8:null,c>0?id-1:null,c<7?id+1:null,r>first?id-8:null]){
+        if(next!==null&&!seen.has(next)&&zero(next)){seen.add(next);queue.push(next);}
+      }
+    }
+    return false;
+  }
   function candidate(g,first,groups,theme,stage,fallback=false){
     const rows=new Map();let path=g.path,hold=g.hold;
     const anchor=g.proofState?L.colOf(g.proofState.cursor):g.spawnCol;
     const centre=clamp(anchor,1,6);
+    const easyStart=clamp(anchor-2,0,2);
     for(let groupIndex=0;groupIndex<groups;groupIndex++){
       const buckets=[];
+      const target=targetFor(stage,Math.floor(first/5)+groupIndex);
+      const easy=target.level===1&&(g.blankStreak||0)<MAX_BLANK_STREAK;
       for(let i=0;i<5;i++){
         const r=first+groupIndex*5+i;
         if(--hold<=0){path=clamp(path+Math.floor(g.random()*3)-1,0,6);hold=2+Math.floor(g.random()*3);}
-        const row={index:r,group:Math.floor(r/5),stage,groupMineCount:theme.minesPerGroup,rowMax:theme.rowMax,path,
+        const row={index:r,group:Math.floor(r/5),stage,difficulty:target.difficulty,logicTarget:target.level,groupMineCount:target.minesPerGroup,rowMax:target.rowMax,path,
           mines:new Uint8Array(8),revealed:new Uint8Array(8),revealAt:new Float64Array(8)};
         rows.set(r,row);const cells=[];
         for(let c=0;c<8;c++){
           const spawnSafe=Math.abs(r-g.spawnRow)<=1&&Math.abs(c-g.spawnCol)<=1;
-          const reserved=fallback?Math.abs(c-centre)<=1:c===path||c===path+1;
+          const reserved=fallback==='wide'?Math.abs(c-centre)<=1:easy?c>=easyStart&&c<easyStart+6:
+            fallback?c===centre||c===centre+1:c===path||c===path+1;
           if(!spawnSafe&&!reserved)cells.push(c);
         }
         buckets.push({row,cells,placed:0});
       }
-      for(let k=0;k<theme.minesPerGroup;k++){
-        const eligible=buckets.filter(b=>b.placed<theme.rowMax&&b.cells.length);
+      for(let k=0;k<target.minesPerGroup;k++){
+        const eligible=buckets.filter(b=>b.placed<target.rowMax&&b.cells.length);
         if(!eligible.length)throw new Error('Mine quota has no valid placement');
         const b=eligible[Math.floor(g.random()*eligible.length)],j=Math.floor(g.random()*b.cells.length);
         const c=b.cells[j];b.cells[j]=b.cells[b.cells.length-1];b.cells.pop();b.row.mines[c]=1;b.placed++;
@@ -307,35 +332,56 @@ const MineGenerator = (() => {
   }
   function append(g,top,{themes,stageAt,viewRows,maxAttempts=48,timeBudgetMs=45}={}){
     while(g.nextRow<=top){
-      const first=g.nextRow,groups=first===0?Math.max(1,Math.ceil((top+1)/5)):1;
-      const stage=stageAt(g.time),theme=themes[stage],profile=L.PROFILES[stage];
+      const first=g.nextRow,groups=first===0?Math.max(1,Math.ceil((g.spawnRow+2)/5)):1;
+      const stage=stageAt(g.time),theme=themes[stage],target=targetFor(stage,Math.floor(first/5));
+      const profile={min:target.level,max:Math.ceil(target.difficulty)};
       const seed=g.proofState||{cursor:L.key(g.spawnRow,g.spawnCol),opened:[],camera:g.cameraOrigin};
       const guard=first+groups*5-1,started=performance.now();
-      let best=null,tries=0,fallback=false;
+      let best=null,tries=0,fallback=false,zeroRejected=0;
+      const requireNumbers=(g.blankStreak||0)>=MAX_BLANK_STREAK&&first>g.spawnRow+1;
+      const inspect=(c,allowBlank=false)=>{
+        const board=new Map([...g.rows,...c.rows]);
+        // Break long blank-only runs without making every batch a dense puzzle.
+        const blankGroups=new Map();
+        for(let f=first;f<=guard;f+=5)blankGroups.set(Math.floor(f/5),hasZeroRoute(board,f,f+4));
+        if(requireNumbers&&[...blankGroups.values()].some(Boolean)&&!allowBlank){zeroRejected++;return null;}
+        const proof=L.verify(board,seed,{level:profile.max,viewRows,guard});
+        return proof.ok?{...c,proof,blankGroups}:null;
+      };
       for(let attempt=0;attempt<maxAttempts;attempt++){
         tries++;
         const c=candidate(g,first,groups,theme,stage);
-        const board=new Map([...g.rows,...c.rows]);
-        const proof=L.verify(board,seed,{level:profile.max,viewRows,guard});
-        if(proof.ok&&(!best||proof.score>best.proof.score))best={...c,proof};
-        if(best&&best.proof.score>=profile.min)break;
+        const result=inspect(c);
+        if(result&&(!best||Math.abs(result.proof.score-profile.min)<Math.abs(best.proof.score-profile.min)))best=result;
+        if(best&&best.proof.score===profile.min)break;
         if(performance.now()-started>timeBudgetMs)break;
       }
       // Never let an attempt/time limit install an unchecked random chunk.
-      // The three-cell fallback stripe opens from the preceding certified entry.
+      // Retry a narrower stripe near the preceding entry, under the same checks.
       if(!best){
-        for(let i=0;i<16&&!best;i++){
+        for(let i=0;i<48&&!best;i++){
           tries++;const c=candidate(g,first,groups,theme,stage,true);
-          const proof=L.verify(new Map([...g.rows,...c.rows]),seed,{level:profile.max,viewRows,guard});
-          if(proof.ok){best={...c,proof};fallback=true;}
+          const result=inspect(c);
+          if(result){best=result;fallback=true;}
+        }
+      }
+      if(!best){
+        for(let i=0;i<64&&!best;i++){
+          tries++;const result=inspect(candidate(g,first,groups,theme,stage,'wide'),true);
+          if(result){best=result;fallback=true;}
         }
       }
       if(!best)throw new Error('No certified continuation; refusing an unverified map');
-      for(const [r,row]of best.rows){row.logicScore=best.proof.score;row.logicFallback=fallback||best.proof.score<profile.min;g.rows.set(r,row);}
+      for(const [r,row]of best.rows){row.logicScore=best.proof.score;row.logicFallback=fallback||best.proof.score<profile.min;row.blankFallback=requireNumbers&&best.blankGroups.get(row.group);g.rows.set(r,row);}
       g.nextRow=guard+1;g.path=best.path;g.hold=best.hold;g.proofState=best.proof.state;
-      if(!g.generationStats)g.generationStats={batches:0,attempts:0,easyFallbacks:0,maxMs:0,grades:[0,0,0,0,0,0],last:null};
+      if(!g.generationStats)g.generationStats={batches:0,attempts:0,easyFallbacks:0,blankFallbacks:0,blankBatches:0,zeroRejected:0,maxMs:0,grades:[0,0,0,0,0,0],last:null};
       const s=g.generationStats,ms=performance.now()-started;
       s.batches+=groups;s.attempts+=tries;s.easyFallbacks+=fallback||best.proof.score<profile.min?1:0;
+      s.zeroRejected+=zeroRejected;
+      for(const blank of best.blankGroups.values()){
+        g.blankStreak=blank?(g.blankStreak||0)+1:0;
+        s.blankBatches+=blank?1:0;s.blankFallbacks+=requireNumbers&&blank?1:0;
+      }
       s.maxMs=Math.max(s.maxMs,ms);s.grades[best.proof.score-1]+=groups;
       s.last={first,guard,stage,score:best.proof.score,target:[profile.min,profile.max],attempts:tries,ms,
         fallback:fallback||best.proof.score<profile.min,route:best.proof.route,proofs:best.proof.proofs};
@@ -343,7 +389,7 @@ const MineGenerator = (() => {
       if(g.proofLog){g.proofLog.push({first,guard,seed:structuredClone(seed),proof:best.proof});if(g.proofLog.length>8)g.proofLog.shift();}
     }
   }
-  return Object.freeze({candidate,append});
+  return Object.freeze({DIFFICULTIES,MAX_BLANK_STREAK,targetFor,hasZeroRoute,candidate,append});
 })();
 // END MAP GENERATOR
   const $ = id => document.getElementById(id);
