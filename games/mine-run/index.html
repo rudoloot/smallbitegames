@@ -20,6 +20,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .distance{position:absolute;z-index:20;top:calc(13px + env(safe-area-inset-top));right:calc(13px + env(safe-area-inset-right));display:flex;align-items:baseline;gap:5px;min-height:42px;padding:9px 13px;border:1px solid #e4fff018;border-radius:13px;background:#091519ce;box-shadow:0 4px 20px #0002;font-size:24px;line-height:1;font-weight:750;letter-spacing:-.8px;font-variant-numeric:tabular-nums;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);user-select:none}
 .distance:disabled{cursor:default;opacity:1}
 .distance small{font-size:12px;font-weight:500;letter-spacing:0;color:#c3d9cf}
+.menu-button{position:absolute;z-index:20;top:calc(13px + env(safe-area-inset-top));left:calc(13px + env(safe-area-inset-left));width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#091519ce;border:1px solid #e4fff035;box-shadow:0 4px 20px #0002;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.menu-button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;pointer-events:none}
 .overlay{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:#08141957;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);padding:24px}
 .panel{display:flex;flex-direction:column;gap:12px;width:210px}
 .result{text-align:center;padding:12px 6px 17px;text-shadow:0 3px 18px #0008}
@@ -30,7 +32,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .primary{color:#18251d;background:var(--accent);box-shadow:0 8px 28px #0004}
 .primary:active,.secondary:active{transform:scale(.98)}
 .secondary{min-height:45px;color:#e4eee8;font-weight:500;background:#162629ed;border:1px solid #d4f3e122;font-size:13px}
-@media(max-height:480px){.app{max-width:330px}.distance{top:9px;right:9px;font-size:20px;min-height:36px;padding:8px 11px}}
+@media(max-height:480px){.app{max-width:330px}.distance{top:9px;right:9px;font-size:20px;min-height:36px;padding:8px 11px}.menu-button{top:9px;left:9px;width:40px;height:40px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 .fast-forward{position:absolute;z-index:9;left:calc(18px + env(safe-area-inset-left));bottom:calc(20px + env(safe-area-inset-bottom));width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:#0a1b20e8;border:1.5px solid #d6f5e340;color:#e9f6ef;box-shadow:0 5px 22px #0004;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .fast-forward svg{width:31px;height:27px;fill:currentColor;pointer-events:none}
@@ -45,6 +47,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   <section class="world" id="world" aria-label="드래그 또는 방향키로 이동하는 지뢰찾기 러닝 게임">
     <canvas id="game" aria-label="로봇의 발밑 기준점이 칸에 들어가면 열려. 숫자로 안전한 길을 판단하고 지뢰를 피해."></canvas>
   </section>
+  <button class="menu-button" id="menuBtn" aria-label="메뉴 열기 및 일시정지" title="메뉴" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>
   <button class="distance" id="hudDistance" aria-label="이동 거리. 누르면 일시정지하거나 계속 달려."><span id="distance">0</span><small>m</small></button>
   <button class="fast-forward" id="fastForwardBtn" aria-label="누르는 동안 2배 빨리감기. F 키로도 조작." aria-pressed="false" title="누르는 동안 2배 빨리감기 · F" hidden><svg viewBox="0 0 32 28" aria-hidden="true"><path d="M3 4a1 1 0 0 1 1.5-.85l12 10a1.1 1.1 0 0 1 0 1.7l-12 10A1 1 0 0 1 3 24zM16 4a1 1 0 0 1 1.5-.85l12 10a1.1 1.1 0 0 1 0 1.7l-12 10A1 1 0 0 1 16 24z"/></svg></button>
   <section class="overlay" id="generationError" role="dialog" aria-modal="true" aria-label="지도 생성 중단" hidden><div class="panel"><p class="failure-note">검증된 경로를 만들지 못했어.<br>다시 시작해줘.</p><button class="primary" id="errorRetryBtn">다시 시작</button></div></section>
@@ -52,10 +55,10 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     <div class="panel"><button class="primary" id="startBtn">시작</button></div>
   </section>
   <section class="overlay" id="pause" role="dialog" aria-modal="true" aria-label="일시정지" hidden>
-    <div class="panel"><button class="primary" id="resumeBtn">계속하기</button><button class="secondary" id="restartBtn">처음부터</button></div>
+    <div class="panel"><button class="primary" id="resumeBtn">계속하기</button><button class="secondary" id="restartBtn">처음부터</button><button class="secondary" id="pauseExitBtn">종료하기</button></div>
   </section>
   <section class="overlay" id="gameover" role="dialog" aria-modal="true" aria-label="지뢰를 밟았어. 게임 종료." hidden>
-    <div class="panel"><div class="result" aria-label="이번 이동 거리"><span class="result-label">이동 거리</span><strong><span id="overDistance">0</span><small>m</small></strong></div><button class="primary" id="retryBtn">다시 시작</button></div>
+    <div class="panel"><div class="result" aria-label="이번 이동 거리"><span class="result-label">이동 거리</span><strong><span id="overDistance">0</span><small>m</small></strong></div><button class="primary" id="retryBtn">다시 시작</button><button class="secondary" id="overExitBtn">종료하기</button></div>
   </section>
 </main>
 <script>
@@ -409,6 +412,7 @@ const MineGenerator = (() => {
     for(const name of overlays)$(name).hidden=name!==id;
     canvas.setAttribute('aria-hidden',id?'true':'false');
     $('hudDistance').disabled=mode!=='playing'&&mode!=='paused';
+    $('menuBtn').hidden=mode!=='playing';
     $('fastForwardBtn').hidden=!!id||mode!=='playing';
     if(id)$(id).querySelector('button')?.focus({preventScroll:true});
     else if(document.activeElement?.closest('.overlay'))document.activeElement.blur();
@@ -599,10 +603,25 @@ const MineGenerator = (() => {
     mode='menu';run=makeRun(0,false,1048);ensureWorld(run);
     particles=[];flashes=[];resetInput();applyTheme(0,true);setOverlay('intro');updateHUD();
   }
+  function getReturnUrl(){
+    const raw=new URLSearchParams(window.location.search).get('returnTo');
+    if(!raw)return null;
+    try{
+      const target=new URL(raw);
+      if(target.protocol!=='https:'||target.origin!==window.location.origin)return null;
+      return target.href;
+    }catch{return null;}
+  }
+  function exitGame(){
+    const returnUrl=getReturnUrl();
+    if(returnUrl)window.location.replace(returnUrl);
+    else goHome();
+  }
   function gameOver(cell){
     if(mode!=='playing'||!run)return;
     mode='dead';run.alive=false;run.deathCell=cell;deadAge=0;resetInput();deathSound();
     $('hudDistance').disabled=true;
+    $('menuBtn').hidden=true;
     $('overDistance').textContent=fmt(run.scroll*CONFIG.metresPerTile);
     const px=(cell.c+.5)*S,py=(run.scroll+run.cameraOrigin-cell.r-.5)*S;
     for(let i=0;i<38;i++){
@@ -859,11 +878,13 @@ const MineGenerator = (() => {
   document.addEventListener('visibilitychange',()=>{if(document.hidden){releaseFastForward();pauseGame(true);}});
   window.addEventListener('blur',()=>{releaseFastForward();if(!testMode)pauseGame(true);});
   $('hudDistance').onclick=()=>{if(mode==='playing')pauseGame();else if(mode==='paused')resumeGame();};
+  $('menuBtn').onclick=pauseGame;
   $('startBtn').onclick=()=>startRun();
   $('resumeBtn').onclick=resumeGame;
   $('restartBtn').onclick=()=>startRun();
   $('retryBtn').onclick=()=>startRun();
   $('errorRetryBtn').onclick=()=>startRun();
+  for(const id of ['pauseExitBtn','overExitBtn'])$(id).onclick=exitGame;
   function frame(ms){const raw=lastFrame?(ms-lastFrame)/1000:0;lastFrame=ms;const dt=clamp(raw,0,CONFIG.maxFrameDelta);if(mode==='playing'&&raw>.5&&!testMode)pauseGame(true);if(mode!=='paused')visualClock+=dt*(mode==='playing'?timeScale(run):1);
     if(mode==='playing'){accumulator+=dt;let steps=0;while(accumulator>=CONFIG.fixedStep&&steps<16&&mode==='playing'){step(CONFIG.fixedStep);accumulator-=CONFIG.fixedStep;steps++;}}
     else accumulator=0;
