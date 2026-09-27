@@ -1,0 +1,180 @@
+{
+  "sheets": [
+    {
+      "path": "assets/generated/atlas-0.png",
+      "ids": [
+        "fire",
+        "water",
+        "air",
+        "earth",
+        "cloud",
+        "wind",
+        "rain",
+        "steam",
+        "lava",
+        "stone",
+        "sun",
+        "lightning",
+        "plant",
+        "mud",
+        "rainbow",
+        "life"
+      ]
+    },
+    {
+      "path": "assets/generated/atlas-1.png",
+      "ids": [
+        "animal",
+        "human",
+        "metal",
+        "tree",
+        "forest",
+        "mountain",
+        "sand",
+        "glass",
+        "crystal",
+        "magic",
+        "horse",
+        "bird",
+        "lizard",
+        "tool",
+        "wood",
+        "wheel"
+      ]
+    },
+    {
+      "path": "assets/generated/atlas-2.png",
+      "ids": [
+        "cart",
+        "sword",
+        "engine",
+        "machine",
+        "electricity",
+        "circuit",
+        "computer",
+        "screen",
+        "rail",
+        "armor",
+        "wheat",
+        "flour",
+        "dough",
+        "gold",
+        "gem",
+        "cake"
+      ]
+    },
+    {
+      "path": "assets/generated/atlas-3.png",
+      "ids": [
+        "bread",
+        "dog",
+        "bear",
+        "dinosaur",
+        "rabbit",
+        "fox",
+        "deer",
+        "fish",
+        "turtle",
+        "dragon",
+        "pegasus",
+        "unicorn",
+        "phoenix",
+        "sea_dragon",
+        "nine_tail_fox",
+        "forest_spirit"
+      ]
+    },
+    {
+      "path": "assets/generated/atlas-4.png",
+      "ids": [
+        "slime",
+        "wind_spirit",
+        "magic_sword",
+        "wand",
+        "philosopher_stone",
+        "crown",
+        "potion",
+        "crystal_ball",
+        "magic_shield",
+        "portal",
+        "robot",
+        "car",
+        "train",
+        "rocket",
+        "airplane",
+        "tank"
+      ]
+    },
+    {
+      "path": "assets/generated/atlas-5.png",
+      "ids": [
+        "console",
+        "fruit",
+        "milk",
+        "sugar",
+        "cocoa",
+        "ice",
+        "cream",
+        "cheese",
+        "honey",
+        "leather",
+        "cloth",
+        "lens",
+        "wing",
+        "battery",
+        "propeller",
+        "antenna"
+      ]
+    },
+    {
+      "path": "assets/generated/atlas-6.png",
+      "ids": [
+        "cookie",
+        "pizza",
+        "ice_cream",
+        "chocolate",
+        "pudding",
+        "candy",
+        "juice",
+        "donut",
+        "cat",
+        "penguin",
+        "griffin",
+        "carpet",
+        "spellbook",
+        "phone",
+        "drone",
+        "satellite"
+      ]
+    }
+  ],
+  "toySheets": [
+    {
+      "path": "assets/generated/toy-atlas.png",
+      "columns": 6,
+      "rows": 3,
+      "autoRows": true,
+      "toy": true,
+      "ids": [
+        "dog",
+        "pegasus",
+        "bear",
+        "cake",
+        "unicorn",
+        "wand",
+        "console",
+        "philosopher_stone",
+        "crown",
+        "robot",
+        "car",
+        "dragon",
+        "dinosaur",
+        "magic_sword",
+        "train",
+        "rocket",
+        "airplane",
+        "tank"
+      ]
+    }
+  ]
+}

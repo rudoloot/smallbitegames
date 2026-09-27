@@ -4,7 +4,19 @@
   const C=window.LaundryCore, $=id=>document.getElementById(id);
   const canvas=$('game'),ctx=canvas.getContext('2d'),W=1440;
   let H=810;
-  const state={mode:'home',time:0,score:0,hearts:3,stage:1,nextSpawn:.5,entities:[],results:[],history:[],id:0,practice:false,practiceIndex:0,toastUntil:0,muted:false};
+  const RESULT_HOLD=.75;
+  // Register trusted partner origins here; never infer a destination from history/referrer.
+  const allowedReturnOrigins=new Set([window.location.origin,'https://rudoloot.github.io']);
+  function getReturnUrl(){
+    const raw=new URLSearchParams(window.location.search).get('returnTo');
+    if(!raw)return null;
+    try{
+      const target=new URL(raw);
+      if(target.protocol!=='https:'||!allowedReturnOrigins.has(target.origin))return null;
+      return target.href;
+    }catch{return null;}
+  }
+  const state={mode:'home',time:0,score:0,hearts:3,stage:1,nextSpawn:.5,entities:[],results:[],history:[],id:0,practice:false,practiceIndex:0,toastUntil:0,muted:false,revealUntil:0,endingAt:0};
   let lastFrame=performance.now(),stroke=null,audio=null,best=0;
   try{best=Number(localStorage.getItem('laundrydone.best'))||0;}catch{}
   $('home-best').textContent=best.toLocaleString();
@@ -42,6 +54,8 @@
     layoutFlight(e);return e;
   }
   function spawn(){
+    // Every wave gets a visible comparison before the next wave replaces it.
+    if(state.endingAt||state.time<state.revealUntil||state.entities.some(e=>e.type==='cloth'))return;
     if(!state.practice){state.pendingLevels ||= C.composition(state.stage);if(state.entities.filter(e=>e.type==='cloth').length+state.pendingLevels.length>3)return;}
     state.wave=(state.wave||0)+1;state.results=[];
     if(state.practice){const names=['손수건','수건','반팔티','원피스'];const item=C.clothes.find(c=>c.name===names[state.practiceIndex%names.length]);state.entities=[makeCloth(item,870,0,367)];state.practiceIndex++;state.nextSpawn=Infinity;return;}
@@ -50,17 +64,25 @@
     state.nextSpawn=state.time+C.interval(state.stage);
   }
   function start(practice=false){
-    Object.assign(state,{mode:'playing',time:0,score:0,hearts:3,stage:1,nextSpawn:.4,entities:[],results:[],history:[],id:0,practice,practiceIndex:0,toastUntil:0,wave:0,pendingLevels:null});stroke=null;document.body.classList.add('in-game');resize();
+    Object.assign(state,{mode:'playing',time:0,score:0,hearts:3,stage:1,nextSpawn:.4,entities:[],results:[],history:[],id:0,practice,practiceIndex:0,toastUntil:0,wave:0,pendingLevels:null,revealUntil:0,endingAt:0});stroke=null;document.body.classList.add('in-game');resize();
     for(const id of ['home','over','pause-screen'])$(id).hidden=true;
     for(const id of ['score-block','pause','play-footer'])$(id).hidden=false;
     practiceButton.hidden=!practice;finishPractice.hidden=!practice;$('toast').classList.remove('visible');sync();sound('line');lastFrame=performance.now();
   }
   function home(){state.mode='home';state.entities=[];document.body.classList.remove('in-game');resize();stroke=null;for(const id of ['over','pause-screen','score-block','pause','play-footer'])$(id).hidden=true;$('home').hidden=false;$('toast').classList.remove('visible');$('home-best').textContent=best.toLocaleString();}
+  function saveBest(){best=Math.max(best,state.score);try{localStorage.setItem('laundrydone.best',String(best));}catch{}}
+  function exitGame(){
+    saveBest();
+    const returnUrl=getReturnUrl();
+    home();
+    if(returnUrl)window.location.replace(returnUrl);
+  }
   function pause(){if(state.mode!=='playing')return;state.mode='paused';stroke=null;$('pause-screen').hidden=false;$('pause').setAttribute('aria-label','일시정지됨');}
   function resume(){if(state.mode!=='paused')return;state.mode='playing';$('pause-screen').hidden=true;$('pause').setAttribute('aria-label','일시정지');lastFrame=performance.now();}
-  function lose(message,kind='fail'){if(state.practice)return;state.hearts=Math.max(0,state.hearts-1);sound(kind);toast(message);sync();if(state.hearts===0)gameOver();}
+  function lose(message,kind='fail'){if(state.practice)return;state.hearts=Math.max(0,state.hearts-1);sound(kind);toast(message);sync();if(state.hearts===0){state.endingAt=state.time+RESULT_HOLD;state.entities=[];stroke=null;}}
   function resolve(e){
     if(e.type!=='cloth')return;
+    state.revealUntil=Math.max(state.revealUntil,state.time+RESULT_HOLD);
     const result=C.evaluate(e.item,e.inputs);
     if(!result){if(e.wave===state.wave)state.results.push({id:e.id,name:e.item.name,color:e.color,miss:true,born:state.time,expires:state.time+e.interval,target:targetCache.get(e.item.name)});lose('앗, 놓쳤어요. 하트 −1');return;}
     const record={...result,id:e.id,name:e.item.name,color:e.color,born:state.time,expires:state.time+e.interval};
@@ -68,9 +90,9 @@
     if(result.grade==='Bad')lose('조금 삐뚤어졌어요. 하트 −1');else sound('result');sync();
   }
   function gameOver(){
-    state.mode='over';stroke=null;state.entities=[];document.body.classList.remove('in-game');resize();best=Math.max(best,state.score);try{localStorage.setItem('laundrydone.best',String(best));}catch{}
-    $('final-score').textContent=state.score.toLocaleString();$('final-count').innerHTML=`${state.history.length}<small>벌</small>`;$('final-best').textContent=best.toLocaleString();
-    $('over-caption').textContent=state.history.length?'작은 정성이 이만큼 쌓였어요.':'괜찮아요. 다음 빨래는 조금 더 가볍게!';
+    state.mode='over';stroke=null;state.entities=[];document.body.classList.remove('in-game');resize();saveBest();
+    $('final-score').innerHTML=`${state.score.toLocaleString()}<small>점</small>`;$('final-count').innerHTML=`${state.history.length}<small>개</small>`;$('final-best').textContent=best.toLocaleString();
+    $('over-caption').textContent=`총 ${state.history.length}개의 빨래를 접어 ${state.score.toLocaleString()}점을 얻었어요.`;
     renderStacks();$('over').hidden=false;for(const id of ['score-block','pause','play-footer'])$(id).hidden=true;$('toast').classList.remove('visible');$('toast').textContent='';$('restart').focus({preventScroll:true});
   }
   function renderStacks(){
@@ -94,6 +116,7 @@
   function tick(dt){
     if(state.mode!=='playing')return;
     state.time+=dt;
+    if(state.endingAt){if(state.time>=state.endingAt)gameOver();return;}
     const stage=C.stageAt(state.time);if(stage!==state.stage&&!state.practice){state.stage=stage;}
     // Resolve the old wave before spawning the next one, including at equal timestamps.
     finishPractice.disabled=!state.entities.some(e=>e.type==='cloth'&&e.release===undefined);
@@ -101,7 +124,7 @@
     if(stroke&&expired.length)commitStroke(expired);
     state.entities=state.entities.filter(e=>!expired.includes(e));
     for(const e of expired){if(state.mode!=='playing')break;resolve(e);if(state.practice)state.nextSpawn=state.time+1.5;}
-    if(state.mode!=='playing')return;
+    if(state.mode!=='playing'||state.endingAt)return;
     if(state.time>=state.nextSpawn)spawn();
     state.results=state.results.filter(r=>r.expires>state.time);
     if(state.time>state.toastUntil)$('toast').classList.remove('visible');sync();
@@ -196,7 +219,7 @@
     for(const e of state.entities){const pos=entityPosition(e),local=C.toLocal(p,pos);if(e.type==='cloth'){if(!stroke.local.has(e.id))stroke.local.set(e.id,[]);stroke.local.get(e.id).push(local);}else if(!e.hit){const prev=stroke.iron.get(e.id)||local;stroke.iron.set(e.id,local);if(C.distanceToSegment([0,0],prev,local)<52){e.hit=true;lose('깡! 다리미는 피해주세요.','iron');if(state.mode!=='playing')return;}}}
   }
   function commitStroke(entities=state.entities){
-    if(!stroke||state.mode!=='playing')return;
+    if(!stroke||state.mode!=='playing'||state.endingAt)return;
     let added=false;
     for(const e of entities){
       if(e.type!=='cloth'||e.release!==undefined||stroke.committed.has(e.id))continue;
@@ -207,7 +230,7 @@
   }
   // Listen beyond the canvas so a stroke may start outside the play area.
   window.addEventListener('pointerdown',e=>{
-    if(state.mode!=='playing'||stroke||e.button>0||e.target.closest?.('button,a'))return;
+    if(state.mode!=='playing'||state.endingAt||stroke||e.button>0||e.target.closest?.('button,a'))return;
     stroke={pointer:e.pointerId,screen:[],local:new Map(),iron:new Map(),committed:new Set()};
     canvas.setPointerCapture(e.pointerId);addPoint(screenPoint(e));e.preventDefault();
   });
@@ -218,7 +241,7 @@
   });
   finishPractice.onclick=()=>{const e=state.entities.find(e=>e.type==='cloth'&&e.release===undefined);if(e)e.release=state.time;};
   canvas.addEventListener('pointercancel',()=>{stroke=null;});canvas.addEventListener('lostpointercapture',()=>{stroke=null;});
-  $('start').onclick=()=>start();$('practice').onclick=()=>start(true);practiceButton.onclick=()=>start();$('restart').onclick=()=>start();$('pause').onclick=pause;$('resume').onclick=resume;$('back-home').onclick=home;$('over-home').onclick=home;
+  $('start').onclick=()=>start();$('practice').onclick=()=>start(true);practiceButton.onclick=()=>start();$('restart').onclick=()=>start();$('pause').onclick=pause;$('resume').onclick=resume;$('back-home').onclick=exitGame;$('over-home').onclick=exitGame;
   function syncFullscreen(){
     const active=document.fullscreenElement===$('shell'),button=$('fullscreen');
     button.textContent=active?'⊡':'⛶';button.setAttribute('aria-pressed',String(active));

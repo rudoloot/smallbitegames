@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#152b30"><title>DivineDrop · 작은 창조 공방</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css?v=4509759bc9">
+</head>
+<body>
+  <main id="app">
+    <section id="shelf-view" class="view">
+      <header class="shelf-header"><a class="brand" href="./" aria-label="DivineDrop 시작 화면"><span class="brand-mark">✦</span> divine<span>drop</span><small>아빠의 작은 창조 공방</small></a><div class="header-actions"><span id="total-count" class="pill">0 / 18</span><button id="book-button" class="icon-button" aria-label="조합 도감" title="조합 도감"></button><button id="settings-button" class="icon-button" aria-label="설정" title="설정"></button></div></header>
+      <div class="shelf-intro"><div><p class="eyebrow">MADE WITH LOVE</p><h1>작은 발견, 커다란 마음.</h1><p id="family-line">아빠, 오늘은 뭐 만들 거야?</p></div><div id="family" aria-label="아빠를 기다리는 남매"></div><button id="memory-note" class="memory-note" hidden aria-label="가족의 추억 보기"></button></div>
+      <nav id="categories" aria-label="컬렉션 카테고리"></nav>
+      <div class="shelf-area"><div id="shelf-grid" class="shelf-grid"></div></div>
+      <footer class="shelf-footer"><span id="shelf-caption">우리의 첫 장난감을 기다리는 중</span><button id="start-button" class="primary"><span>만들러 가기</span><span aria-hidden="true">↗</span></button></footer>
+    </section>
+    <section id="play-view" class="view" hidden>
+      <div id="game-stage">
+        <canvas id="game" tabindex="0" aria-label="조합 수조. 좌우 방향키로 위치 이동, 스페이스로 낙하"></canvas>
+        <div class="game-hud"><div class="score-area"><span class="tiny-label">SCORE</span><strong id="score">0</strong><small id="best-score">BEST 0</small></div><div class="supply"><div class="current-piece"><canvas id="current-icon" width="80" height="80"></canvas><span id="current-name">불</span></div><span class="queue-arrow" aria-hidden="true">←</span><div class="next-piece"><span class="tiny-label">NEXT</span><canvas id="next-icon" width="64" height="64"></canvas><span id="next-name" class="sr-only"></span></div></div><button id="pause-button" class="icon-button" aria-label="일시정지" title="일시정지"></button></div>
+        <div id="drop-hint">좌우로 움직여, 놓아 보세요</div><div id="merge-label" aria-live="polite"></div><div id="debug-badge" hidden>TEST · 기록 저장 안 함</div>
+      </div>
+    </section>
+    <div id="overlay" class="overlay" hidden><section id="dialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" tabindex="-1"></section></div>
+    <div id="rotate" class="rotate" hidden><span class="rotate-icon">▱ ↻</span><h2>가로로 돌려 주세요</h2><p>작은 공방이 더 넓게 보여요</p></div>
+    <div id="toast" role="status" hidden></div>
+    <div id="loading">작은 공방을 열고 있어요…</div>
+  </main>
+  <script src="vendor/matter.min.js?v=72d30be0f5"></script><script type="module" src="src/main.js?v=a739131d2e"></script>
+</body>
+</html>

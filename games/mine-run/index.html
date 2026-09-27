@@ -72,7 +72,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
     baseSpeed: 1.25,
     speedStepSeconds: 30,
     speedIncrement: 0.05,
-    stageSeconds: 150,
+    stageSeconds: 75,
     rowsPerGroup: 5,
     fastForwardMultiplier: 2,  // Hold the round button (or F): world + game clock.
     generationAttempts: 32,
@@ -87,11 +87,11 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
   });
   const THEMES = [
     { name:'초원', time:0,   difficulty:1.5, rowMax:3, minesPerGroup:5.5, accent:'#b2f7a1', bg:'#15261f', tile:'#294732', edge:'#466445', closed:'#11271f', mark:'#59725f', glow:'#85b467', deco:'#779560' },
-    { name:'사막', time:150, difficulty:2, rowMax:3, minesPerGroup:6, accent:'#ffd293', bg:'#32291e', tile:'#735d3c', edge:'#a1875b', closed:'#3a3023', mark:'#8b7554', glow:'#e5b96e', deco:'#c5a26b' },
-    { name:'설원', time:300, difficulty:2.5, rowMax:4, minesPerGroup:6.5, accent:'#b7e7ff', bg:'#162735', tile:'#395e73', edge:'#648599', closed:'#1b3343', mark:'#5f8398', glow:'#91d8f3', deco:'#aedced' },
-    { name:'화산', time:450, difficulty:3, rowMax:4, minesPerGroup:7, accent:'#ffb18a', bg:'#24191c', tile:'#493438', edge:'#7c4a41', closed:'#291c22', mark:'#89554a', glow:'#ff7447', deco:'#c37652' },
-    { name:'사이버',time:600,difficulty:3.5,rowMax:4, minesPerGroup:7.5, accent:'#8bf7e7', bg:'#0b1b25', tile:'#173846', edge:'#2f5f6b', closed:'#0b202e', mark:'#387d86', glow:'#42e6d3', deco:'#459d9e' },
-    { name:'우주', time:750, difficulty:4, rowMax:4, minesPerGroup:8, accent:'#d5bcff', bg:'#101125', tile:'#2e2a49', edge:'#524b79', closed:'#19192e', mark:'#6a618d', glow:'#a68df2', deco:'#a294cc' }
+    { name:'사막', time:75, difficulty:2, rowMax:3, minesPerGroup:6, accent:'#ffd293', bg:'#32291e', tile:'#735d3c', edge:'#a1875b', closed:'#3a3023', mark:'#8b7554', glow:'#e5b96e', deco:'#c5a26b' },
+    { name:'설원', time:150, difficulty:2.5, rowMax:4, minesPerGroup:6.5, accent:'#b7e7ff', bg:'#162735', tile:'#395e73', edge:'#648599', closed:'#1b3343', mark:'#5f8398', glow:'#91d8f3', deco:'#aedced' },
+    { name:'화산', time:225, difficulty:3, rowMax:4, minesPerGroup:7, accent:'#ffb18a', bg:'#24191c', tile:'#493438', edge:'#7c4a41', closed:'#291c22', mark:'#89554a', glow:'#ff7447', deco:'#c37652' },
+    { name:'사이버',time:300,difficulty:3.5,rowMax:4, minesPerGroup:7.5, accent:'#8bf7e7', bg:'#0b1b25', tile:'#173846', edge:'#2f5f6b', closed:'#0b202e', mark:'#387d86', glow:'#42e6d3', deco:'#459d9e' },
+    { name:'우주', time:375, difficulty:4, rowMax:4, minesPerGroup:8, accent:'#d5bcff', bg:'#101125', tile:'#2e2a49', edge:'#524b79', closed:'#19192e', mark:'#6a618d', glow:'#a68df2', deco:'#a294cc' }
   ];
 // BEGIN LOGIC ENGINE
 /* MineRun v9 — original, deterministic, visible-information-only logic engine.
@@ -706,7 +706,7 @@ const MineGenerator = (() => {
     const oldWorldY=g.scroll+g.cameraOrigin-p.y;
     const from=g.time;
     g.ticks+=timeScale(g);
-    // Integer simulation ticks avoid drift at exactly 30 / 150 seconds.
+    // Integer simulation ticks avoid drift at exactly 30 / 75 seconds.
     g.time=g.offset+g.ticks*CONFIG.fixedStep;
     g.steps=g.ticks*CONFIG.fixedStep;
     const scrollDistance=baseDistanceBetween(from,g.time);

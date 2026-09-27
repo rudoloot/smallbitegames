@@ -7,7 +7,7 @@
   <meta name="description" content="외계 군체에 맞서는 마지막 전초기지. 채굴, 연구, 건설로 30번의 습격을 막아내는 모바일 디펜스 게임.">
   <title>XenoTide Defense — 마지막 방어선</title>
   <link rel="icon" href="assets/emblem.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=453ed2a29a">
+  <link rel="stylesheet" href="styles.css?v=c42f314a71">
 </head>
 <body>
   <div class="page-grain" aria-hidden="true"></div>
@@ -18,11 +18,11 @@
   </aside>
   <main id="app" aria-label="XenoTide Defense 게임">
     <header class="resource-bar">
-      <div class="resource iron" title="철 / 자원별 최대 보유량"><span class="resource-label"><i>▰</i> 철</span><strong id="iron">1,000</strong></div>
-      <div class="resource uranium" title="우라늄"><span class="resource-label"><i>◉</i> 우라늄</span><strong id="uranium">0</strong></div>
-      <div class="resource crystal" title="결정"><span class="resource-label"><i>◆</i> 결정</span><strong id="crystal">0</strong></div>
-      <div class="resource science" title="연구 점수"><span class="resource-label"><i>⌘</i> 연구</span><strong id="research">0</strong></div>
-      <div class="resource energy" title="전력 수요 / 총 공급"><span class="resource-label"><i>ϟ</i> 전력</span><strong id="energy">0<span>/0</span></strong></div>
+      <button type="button" class="resource iron" title="철 / 자원별 최대 보유량 · 표시 켜기/끄기" data-overlay="iron" aria-pressed="false"><span class="resource-label"><i>▰</i> 철</span><strong id="iron">1,000</strong></button>
+      <button type="button" class="resource uranium" title="우라늄 · 표시 켜기/끄기" data-overlay="uranium" aria-pressed="false"><span class="resource-label"><i>◉</i> 우라늄</span><strong id="uranium">0</strong></button>
+      <button type="button" class="resource crystal" title="결정 · 표시 켜기/끄기" data-overlay="crystal" aria-pressed="false"><span class="resource-label"><i>◆</i> 결정</span><strong id="crystal">0</strong></button>
+      <button type="button" class="resource science" title="연구 점수 · 표시 켜기/끄기" data-overlay="research" aria-pressed="false"><span class="resource-label"><i>⌘</i> 연구</span><strong id="research">0</strong></button>
+      <button type="button" class="resource energy" title="전력 수요 / 총 공급 · 표시 켜기/끄기" data-overlay="power" aria-pressed="false"><span class="resource-label"><i>ϟ</i> 전력</span><strong id="energy">0<span>/0</span></strong></button>
       <button class="menu-button icon-button" id="menu-button" aria-label="메뉴 열기"><span></span><span></span><span></span></button>
     </header>
     <section class="battlefield" id="battlefield" aria-label="전장">
@@ -63,6 +63,6 @@
     <div class="field-notes"><div class="eyebrow">FIELD MANUAL / 001</div><h2>살아남기 위한<br>세 가지 원칙.</h2><article><span>01</span><div><h3>확보하라</h3><p>광맥 위에 채굴기를 설치하고<br>전력을 연결하세요.</p></div></article><article><span>02</span><div><h3>구축하라</h3><p>길을 설계하고 포탑을 배치해<br>군체의 진격을 늦추세요.</p></div></article><article><span>03</span><div><h3>진화하라</h3><p>연구와 업그레이드로<br>다가올 습격에 대비하세요.</p></div></article></div>
     <div class="signal"><div class="signal-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span>UPLINK ESTABLISHED <b>●</b></span></div>
   </aside>
-  <script src="js/data.js?v=e909032af4"></script><script src="js/core.js?v=34286a3482"></script><script src="js/render.js?v=329a777c97"></script><script src="js/app.js?v=12282e7557"></script>
+  <script src="js/data.js?v=e909032af4"></script><script src="js/core.js?v=18906ec53c"></script><script src="js/render.js?v=fb4f6ec159"></script><script src="js/app.js?v=b4c7463d1b"></script>
 </body>
 </html>

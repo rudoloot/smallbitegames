@@ -35,6 +35,14 @@
     maxHP(b){return this.def(b).hp[b.level-1]*(this.has('bolt')?1.25:1);}
     capacity(){return 5000+this.buildings.filter(b=>b.type==='storage').reduce((s,b)=>s+(b.level===1?2000:5000),0);}
     add(resource,amount){const cap=resource==='research'?1e9:this.capacity();this.resources[resource]=clamp(this.resources[resource]+amount,0,cap);}
+    production(b){
+      const deposit=b.type==='mine'?this.depositAt(b.x,b.y):null;
+      const resource=b.type==='lab'?'research':deposit?.resource;
+      if(!resource)return null;
+      const active=b.hp>0&&b.powered&&b.disabledUntil<=this.time&&(!deposit?.deep||(this.scanned&&b.level>=2));
+      return {resource,rate:active?this.def(b).rate[b.level-1]:0};
+    }
+    damageObject(object,amount){if(amount<=0||object.hp<=0)return;object.hp-=amount;if(!Number.isFinite(object.hitAt)||this.time-object.hitAt>=.3)object.hitAt=this.time;}
     depositAt(x,y){return this.deposits.find(d=>d.x===x&&d.y===y);}
     buildingAt(x,y){return this.buildings.find(b=>b.x===x&&b.y===y);}
     center(b){return {x:b.x+.5,y:b.y+.5};}
@@ -172,17 +180,17 @@
       let target=e.path[0];if(!target)return;
       const block=this.blockers(target.x,target.y,e.size).buildings[0];
       if(block){const range=e.size==='large'?1.7:.9;if(dist(e,this.center(block))<=range){
-        if(e.cooldown<=0){block.hp-=e.damage;e.cooldown=.5;this.emit('impact',{x:block.x+.5,y:block.y+.5,color:'#e8ad6d'});}return;
+        if(e.cooldown<=0){this.damageObject(block,e.damage);e.cooldown=.5;this.emit('impact',{x:block.x+.5,y:block.y+.5,color:'#e8ad6d'});}return;
       }}
       const dx=target.x-e.x,dy=target.y-e.y,length=Math.hypot(dx,dy),travel=.5*dt*(e.slowUntil>this.time?e.slow:1);
       if(length<=travel){e.x=target.x;e.y=target.y;e.path.shift();}else{e.x+=dx/length*travel;e.y+=dy/length*travel;}if(length>.001)e.angle=Math.atan2(dy,dx);
-      if(e.y>=12.5){e.escaped=true;this.leaks++;this.emit('leak',{x:e.x,y:11.8});if(this.leaks>=20){this.status='lost';this.emit('end',{status:'lost'});}}
+      if(e.y>=12.5){e.escaped=true;this.leaks++;this.emit('leak',{x:e.x,y:11.8});if(e.boss||this.leaks>=20){this.lossReason=e.boss?'boss':'leaks';this.status='lost';this.emit('end',{status:'lost'});}}
     }
-    hit(e,damage){if(e.hp<=0||e.escaped)return;e.hp-=damage;this.stats.damage+=damage;if(e.hp<=0){this.kills++;const reward=e.reward*(this.has('magnet')?1.1:1);this.add('crystal',reward);this.stats.earned+=reward;this.emit('death',{x:e.x,y:e.y,size:e.size});}}
+    hit(e,damage){if(e.hp<=0||e.escaped)return;this.damageObject(e,damage);this.stats.damage+=damage;if(e.hp<=0){this.kills++;const reward=e.reward*(this.has('magnet')?1.1:1);this.add('crystal',reward);this.stats.earned+=reward;this.emit('death',{x:e.x,y:e.y,size:e.size});}}
     protected(b,kind){return this.buildings.some(s=>s.type==='shield'&&s.powered&&(kind==='meteor'||s.level>=2)&&dist(s,b)<=2+.001);}
     updateWeather(dt){
       for(const weather of this.weather){if(weather.kind==='meteor'&&weather.at<=this.time){const x=Math.floor(this.random()*7),y=Math.floor(this.random()*12);for(const b of this.buildings)if(Math.abs(b.x-x)+Math.abs(b.y-y)<=1&&!this.protected(b,'meteor'))b.disabledUntil=Math.max(b.disabledUntil,this.time+5);weather.done=true;this.emit('meteor',{x:x+.5,y:y+.5});}
-        if(weather.kind==='acid'&&weather.at<=this.time&&weather.end>this.time)for(const b of this.buildings)if(!this.protected(b,'acid'))b.hp-=this.maxHP(b)*.01*dt;
+        if(weather.kind==='acid'&&weather.at<=this.time&&weather.end>this.time)for(const b of this.buildings)if(!this.protected(b,'acid'))this.damageObject(b,this.maxHP(b)*.01*dt);
       }this.weather=this.weather.filter(w=>!w.done&&(w.kind!=='acid'||w.end>this.time));
     }
     fire(b,dt){const d=this.def(b);b.cooldown=Math.max(0,b.cooldown-dt);if(!b.powered||!d.damage||b.cooldown>0)return;
@@ -203,8 +211,7 @@
       const spawning=this.pending.filter(p=>p.at<=this.time);this.pending=this.pending.filter(p=>p.at>this.time);for(const p of spawning)this.spawn(p.wave);
       this.recalculate(dt);this.updateWeather(dt);
       for(const b of [...this.buildings]){if(b.hp<=0){this.emit('destroy',{x:b.x+.5,y:b.y+.5});this.removeBuilding(b);continue;}
-        if(b.powered){if(b.type==='mine'){const deposit=this.depositAt(b.x,b.y);if(deposit&&(!deposit.deep||(this.scanned&&b.level>=2)))this.add(deposit.resource,this.def(b).rate[b.level-1]*dt);}
-          if(b.type==='lab')this.add('research',this.def(b).rate[b.level-1]*dt);this.fire(b,dt);}
+        if(b.powered){const production=this.production(b);if(production)this.add(production.resource,production.rate*dt);this.fire(b,dt);}
       }
       for(const e of this.enemies){if(this.status!=='playing')break;if(e.hp>0&&!e.escaped)this.moveEnemy(e,dt);}
       this.enemies=this.enemies.filter(e=>e.hp>0&&!e.escaped);
