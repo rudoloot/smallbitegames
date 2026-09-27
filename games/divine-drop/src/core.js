@@ -1,4 +1,4 @@
-import {SHELF_SET,shelfCount,shelfItems} from './collections.js';
+import {SHELF_SET,shelfCount,shelfItems} from './collections.js?v=3d43dea3bde5';
 export const WORLD=Object.freeze({left:224,right:1056,top:112,bottom:656,spawnY:156,dangerY:200,cameraX:192,cameraY:32,cameraW:896,cameraH:648});
 export const ELEMENTS=['fire','water','air','earth'];
 export const MILESTONES=[1,3,6,10,14,18];
@@ -38,10 +38,12 @@ export function unlocked(save,data){
 }
 export function recordMerge(save,item,recipeId,now=new Date().toISOString()){
   const firstDiscovery=!save.discoveredItemIds.includes(item.id);
+  const firstRecipe=!save.discoveredRecipeIds.includes(recipeId);
   if(firstDiscovery)save.discoveredItemIds.push(item.id);
   if(!save.discoveredRecipeIds.includes(recipeId))save.discoveredRecipeIds.push(recipeId);
   save.craftedCountByItem[item.id]=(save.craftedCountByItem[item.id]||0)+1;
   const firstCollection=SHELF_SET.has(item.id)&&!save.collectionFirstCreatedAt[item.id];
   if(firstCollection)save.collectionFirstCreatedAt[item.id]=now;
-  return {firstDiscovery,firstCollection};
+  return {firstDiscovery,firstCollection,firstRecipe};
 }
+export function knownRecipe(save,data,itemId){const recipe=data.byResult.get(itemId);return recipe&&save.discoveredRecipeIds.includes(recipe.id)?recipe:null;}

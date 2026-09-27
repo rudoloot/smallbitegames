@@ -1,5 +1,5 @@
-import {WORLD} from './core.js';
-import {sprite} from './art.js';
+import {WORLD} from './core.js?v=3d43dea3bde5';
+import {sprite} from './art.js?v=3d43dea3bde5';
 export class Renderer{
   constructor(canvas,data){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.data=data;this.effects=[];this.focus=null;}
   resize(width,height){const dpr=Math.min(devicePixelRatio||1,2);this.canvas.width=Math.round(width*dpr);this.canvas.height=Math.round(height*dpr);}

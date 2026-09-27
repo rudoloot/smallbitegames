@@ -1,7 +1,7 @@
 {
   "sheets": [
     {
-      "path": "assets/generated/atlas-0.png",
+      "path": "assets/generated/comic-atlas-0.png?v=3d43dea3bde5",
       "ids": [
         "fire",
         "water",
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "path": "assets/generated/atlas-1.png",
+      "path": "assets/generated/comic-atlas-1.png?v=3d43dea3bde5",
       "ids": [
         "animal",
         "human",
@@ -43,7 +43,7 @@
       ]
     },
     {
-      "path": "assets/generated/atlas-2.png",
+      "path": "assets/generated/comic-atlas-2.png?v=3d43dea3bde5",
       "ids": [
         "cart",
         "sword",
@@ -64,7 +64,7 @@
       ]
     },
     {
-      "path": "assets/generated/atlas-3.png",
+      "path": "assets/generated/comic-atlas-3.png?v=3d43dea3bde5",
       "ids": [
         "bread",
         "dog",
@@ -85,7 +85,7 @@
       ]
     },
     {
-      "path": "assets/generated/atlas-4.png",
+      "path": "assets/generated/comic-atlas-4.png?v=3d43dea3bde5",
       "ids": [
         "slime",
         "wind_spirit",
@@ -106,7 +106,7 @@
       ]
     },
     {
-      "path": "assets/generated/atlas-5.png",
+      "path": "assets/generated/comic-atlas-5.png?v=3d43dea3bde5",
       "ids": [
         "console",
         "fruit",
@@ -127,7 +127,7 @@
       ]
     },
     {
-      "path": "assets/generated/atlas-6.png",
+      "path": "assets/generated/comic-atlas-6.png?v=3d43dea3bde5",
       "ids": [
         "cookie",
         "pizza",
@@ -146,11 +146,30 @@
         "drone",
         "satellite"
       ]
+    },
+    {
+      "path": "assets/generated/comic-evolution.png?v=3d43dea3bde5",
+      "columns": 4,
+      "rows": 3,
+      "ids": [
+        "single_cell",
+        "algae",
+        "multicellular",
+        "fish_ancestor",
+        "tetrapod",
+        "amniote",
+        "reptile",
+        "dinosaur_lineage",
+        "primate",
+        "ape",
+        "animal",
+        "bird"
+      ]
     }
   ],
   "toySheets": [
     {
-      "path": "assets/generated/toy-atlas.png",
+      "path": "assets/generated/comic-toys.png?v=3d43dea3bde5",
       "columns": 6,
       "rows": 3,
       "autoRows": true,
