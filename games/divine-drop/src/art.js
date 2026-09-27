@@ -1,7 +1,7 @@
-import {extractAtlas,compactDimensions} from './atlas.js?v=3d43dea3bde5';
+import {extractAtlas,compactDimensions} from './atlas.js?v=c9080b881791';
 const objects=new Map(),toys=new Map(),ghosts=new Map();
 export async function prepareAssets(data){
-  const response=await fetch('assets/generated/manifest.json?v=3d43dea3bde5');if(!response.ok)throw Error('Missing sprite manifest');
+  const response=await fetch('assets/generated/manifest.json?v=c9080b881791');if(!response.ok)throw Error('Missing sprite manifest');
   const manifest=await response.json(),sheets=[...manifest.sheets,...manifest.toySheets];
   const images=await Promise.all(sheets.map(async sheet=>{const image=new Image();image.src=sheet.path;await image.decode();return image;}));
   for(let n=0;n<sheets.length;n++){
@@ -16,6 +16,10 @@ export async function prepareAssets(data){
       (sheet.toy?toys:objects).set(sheet.ids[i],out);
     }
   }
+  // Keep the legacy sun ID for saves, but represent heat as rising waves.
+  const heat=new Image();heat.src='assets/heat.svg';await heat.decode();
+  const heatCanvas=document.createElement('canvas');heatCanvas.width=heatCanvas.height=256;
+  heatCanvas.getContext('2d').drawImage(heat,0,0,256,256);objects.set('sun',heatCanvas);
   for(const item of data.items)if(!objects.has(item.id))throw Error('Missing comic sprite '+item.id);
 }
 export function sprite(item,{toy=false,ghost=false}={}){

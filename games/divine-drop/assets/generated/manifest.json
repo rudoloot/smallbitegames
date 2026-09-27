@@ -1,7 +1,7 @@
 {
   "sheets": [
     {
-      "path": "assets/generated/comic-atlas-0.png?v=3d43dea3bde5",
+      "path": "assets/generated/comic-atlas-0.png?v=c9080b881791",
       "ids": [
         "fire",
         "water",
@@ -22,7 +22,7 @@
       ]
     },
     {
-      "path": "assets/generated/comic-atlas-1.png?v=3d43dea3bde5",
+      "path": "assets/generated/comic-atlas-1.png?v=c9080b881791",
       "ids": [
         "animal",
         "human",
@@ -43,7 +43,7 @@
       ]
     },
     {
-      "path": "assets/generated/comic-atlas-2.png?v=3d43dea3bde5",
+      "path": "assets/generated/comic-atlas-2.png?v=c9080b881791",
       "ids": [
         "cart",
         "sword",
@@ -64,7 +64,7 @@
       ]
     },
     {
-      "path": "assets/generated/comic-atlas-3.png?v=3d43dea3bde5",
+      "path": "assets/generated/comic-atlas-3.png?v=c9080b881791",
       "ids": [
         "bread",
         "dog",
@@ -85,7 +85,7 @@
       ]
     },
     {
-      "path": "assets/generated/comic-atlas-4.png?v=3d43dea3bde5",
+      "path": "assets/generated/comic-atlas-4.png?v=c9080b881791",
       "ids": [
         "slime",
         "wind_spirit",
@@ -106,7 +106,7 @@
       ]
     },
     {
-      "path": "assets/generated/comic-atlas-5.png?v=3d43dea3bde5",
+      "path": "assets/generated/comic-atlas-5.png?v=c9080b881791",
       "ids": [
         "console",
         "fruit",
@@ -127,7 +127,7 @@
       ]
     },
     {
-      "path": "assets/generated/comic-atlas-6.png?v=3d43dea3bde5",
+      "path": "assets/generated/comic-atlas-6.png?v=c9080b881791",
       "ids": [
         "cookie",
         "pizza",
@@ -148,7 +148,7 @@
       ]
     },
     {
-      "path": "assets/generated/comic-evolution.png?v=3d43dea3bde5",
+      "path": "assets/generated/comic-evolution.png?v=c9080b881791",
       "columns": 4,
       "rows": 3,
       "ids": [
@@ -169,7 +169,7 @@
   ],
   "toySheets": [
     {
-      "path": "assets/generated/comic-toys.png?v=3d43dea3bde5",
+      "path": "assets/generated/comic-toys.png?v=c9080b881791",
       "columns": 6,
       "rows": 3,
       "autoRows": true,

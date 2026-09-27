@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "categories": [
     {
       "id": "food",
@@ -45,8 +45,8 @@
         "food",
         "animals",
         "myth",
-        "tech",
-        "magic"
+        "magic",
+        "tech"
       ]
     },
     {
@@ -58,8 +58,8 @@
       "category": "common",
       "radius": 44,
       "tags": [
-        "animals",
         "food",
+        "animals",
         "myth",
         "magic",
         "tech"
@@ -75,10 +75,10 @@
       "radius": 44,
       "tags": [
         "food",
-        "tech",
+        "magic",
         "myth",
-        "animals",
-        "magic"
+        "tech",
+        "animals"
       ]
     },
     {
@@ -90,11 +90,11 @@
       "category": "common",
       "radius": 44,
       "tags": [
+        "magic",
         "animals",
         "myth",
-        "magic",
-        "tech",
-        "food"
+        "food",
+        "tech"
       ]
     },
     {
@@ -123,10 +123,9 @@
       "radius": 48,
       "tags": [
         "myth",
-        "food",
-        "animals",
         "tech",
-        "magic"
+        "magic",
+        "food"
       ]
     },
     {
@@ -141,8 +140,7 @@
         "animals",
         "food",
         "magic",
-        "myth",
-        "tech"
+        "myth"
       ]
     },
     {
@@ -169,8 +167,8 @@
         "animals",
         "magic",
         "tech",
-        "myth",
-        "food"
+        "food",
+        "myth"
       ]
     },
     {
@@ -185,22 +183,22 @@
         "animals",
         "magic",
         "tech",
-        "myth",
-        "food"
+        "food",
+        "myth"
       ]
     },
     {
       "id": "sun",
-      "name": "태양",
+      "name": "열",
       "tier": 1,
       "score": 10,
       "kind": "material",
       "category": "common",
       "radius": 48,
       "tags": [
-        "magic",
-        "animals",
         "food",
+        "animals",
+        "magic",
         "myth",
         "tech"
       ]
@@ -215,10 +213,10 @@
       "radius": 52,
       "tags": [
         "myth",
-        "magic",
         "tech",
         "animals",
-        "food"
+        "food",
+        "magic"
       ]
     },
     {
@@ -231,22 +229,10 @@
       "radius": 48,
       "tags": [
         "animals",
+        "myth",
         "food",
         "magic",
-        "myth",
         "tech"
-      ]
-    },
-    {
-      "id": "rainbow",
-      "name": "무지개",
-      "tier": 3,
-      "score": 30,
-      "kind": "material",
-      "category": "common",
-      "radius": 56,
-      "tags": [
-        "magic"
       ]
     },
     {
@@ -293,8 +279,7 @@
         "animals",
         "food",
         "magic",
-        "myth",
-        "tech"
+        "myth"
       ]
     },
     {
@@ -401,8 +386,7 @@
         "animals",
         "myth",
         "food",
-        "magic",
-        "tech"
+        "magic"
       ]
     },
     {
@@ -415,7 +399,9 @@
       "radius": 56,
       "tags": [
         "magic",
-        "tech"
+        "tech",
+        "myth",
+        "animals"
       ]
     },
     {
@@ -427,7 +413,9 @@
       "category": "common",
       "radius": 56,
       "tags": [
-        "animals"
+        "food",
+        "animals",
+        "myth"
       ]
     },
     {
@@ -440,7 +428,9 @@
       "radius": 56,
       "tags": [
         "magic",
-        "tech"
+        "tech",
+        "myth",
+        "food"
       ]
     },
     {
@@ -453,7 +443,9 @@
       "radius": 60,
       "tags": [
         "magic",
-        "tech"
+        "tech",
+        "myth",
+        "food"
       ]
     },
     {
@@ -468,19 +460,6 @@
         "magic",
         "tech",
         "myth"
-      ]
-    },
-    {
-      "id": "magic",
-      "name": "마법",
-      "tier": 4,
-      "score": 40,
-      "kind": "material",
-      "category": "common",
-      "radius": 60,
-      "tags": [
-        "myth",
-        "magic"
       ]
     },
     {
@@ -523,6 +502,45 @@
       ]
     },
     {
+      "id": "tool",
+      "name": "도구",
+      "tier": 5,
+      "score": 50,
+      "kind": "material",
+      "category": "common",
+      "radius": 64,
+      "tags": [
+        "food",
+        "tech",
+        "magic",
+        "myth"
+      ]
+    },
+    {
+      "id": "wheel",
+      "name": "바퀴",
+      "tier": 6,
+      "score": 60,
+      "kind": "material",
+      "category": "common",
+      "radius": 68,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "cart",
+      "name": "수레",
+      "tier": 7,
+      "score": 70,
+      "kind": "material",
+      "category": "common",
+      "radius": 72,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
       "id": "sword",
       "name": "검",
       "tier": 4,
@@ -535,6 +553,18 @@
       ]
     },
     {
+      "id": "machine",
+      "name": "기계",
+      "tier": 6,
+      "score": 60,
+      "kind": "material",
+      "category": "common",
+      "radius": 68,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
       "id": "electricity",
       "name": "전기",
       "tier": 4,
@@ -543,6 +573,7 @@
       "category": "common",
       "radius": 60,
       "tags": [
+        "myth",
         "tech"
       ]
     },
@@ -554,6 +585,18 @@
       "kind": "material",
       "category": "common",
       "radius": 64,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "computer",
+      "name": "컴퓨터",
+      "tier": 6,
+      "score": 60,
+      "kind": "material",
+      "category": "common",
+      "radius": 68,
       "tags": [
         "tech"
       ]
@@ -571,6 +614,18 @@
       ]
     },
     {
+      "id": "rail",
+      "name": "철로",
+      "tier": 7,
+      "score": 70,
+      "kind": "material",
+      "category": "common",
+      "radius": 72,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
       "id": "armor",
       "name": "장갑판",
       "tier": 4,
@@ -579,6 +634,7 @@
       "category": "common",
       "radius": 60,
       "tags": [
+        "animals",
         "magic",
         "tech"
       ]
@@ -596,51 +652,16 @@
       ]
     },
     {
-      "id": "bear",
-      "name": "곰",
-      "tier": 10,
-      "score": 100,
-      "kind": "collection",
-      "category": "animals",
-      "radius": 88,
+      "id": "gem",
+      "name": "보석",
+      "tier": 6,
+      "score": 60,
+      "kind": "material",
+      "category": "common",
+      "radius": 68,
       "tags": [
-        "animals"
-      ]
-    },
-    {
-      "id": "dinosaur",
-      "name": "공룡",
-      "tier": 11,
-      "score": 110,
-      "kind": "collection",
-      "category": "animals",
-      "radius": 88,
-      "tags": [
-        "animals"
-      ]
-    },
-    {
-      "id": "fox",
-      "name": "여우",
-      "tier": 10,
-      "score": 100,
-      "kind": "collection",
-      "category": "animals",
-      "radius": 88,
-      "tags": [
-        "animals"
-      ]
-    },
-    {
-      "id": "fish",
-      "name": "물고기",
-      "tier": 7,
-      "score": 70,
-      "kind": "collection",
-      "category": "animals",
-      "radius": 88,
-      "tags": [
-        "animals"
+        "magic",
+        "myth"
       ]
     },
     {
@@ -656,34 +677,10 @@
       ]
     },
     {
-      "id": "dragon",
-      "name": "드래곤",
-      "tier": 11,
-      "score": 110,
-      "kind": "collection",
-      "category": "myth",
-      "radius": 88,
-      "tags": [
-        "myth"
-      ]
-    },
-    {
       "id": "pegasus",
       "name": "페가수스",
       "tier": 12,
       "score": 120,
-      "kind": "collection",
-      "category": "myth",
-      "radius": 88,
-      "tags": [
-        "myth"
-      ]
-    },
-    {
-      "id": "unicorn",
-      "name": "유니콘",
-      "tier": 11,
-      "score": 110,
       "kind": "collection",
       "category": "myth",
       "radius": 88,
@@ -704,123 +701,27 @@
       ]
     },
     {
-      "id": "sea_dragon",
-      "name": "해룡",
-      "tier": 11,
-      "score": 110,
+      "id": "robot",
+      "name": "로봇",
+      "tier": 7,
+      "score": 70,
       "kind": "collection",
-      "category": "myth",
+      "category": "tech",
       "radius": 88,
       "tags": [
-        "myth"
+        "tech"
       ]
     },
     {
-      "id": "nine_tail_fox",
-      "name": "구미호",
-      "tier": 10,
-      "score": 100,
+      "id": "console",
+      "name": "콘솔 게임기",
+      "tier": 7,
+      "score": 70,
       "kind": "collection",
-      "category": "myth",
+      "category": "tech",
       "radius": 88,
       "tags": [
-        "myth"
-      ]
-    },
-    {
-      "id": "slime",
-      "name": "슬라임",
-      "tier": 5,
-      "score": 50,
-      "kind": "collection",
-      "category": "myth",
-      "radius": 88,
-      "tags": [
-        "myth"
-      ]
-    },
-    {
-      "id": "wind_spirit",
-      "name": "바람 정령",
-      "tier": 5,
-      "score": 50,
-      "kind": "collection",
-      "category": "myth",
-      "radius": 88,
-      "tags": [
-        "myth"
-      ]
-    },
-    {
-      "id": "magic_sword",
-      "name": "마법검",
-      "tier": 5,
-      "score": 50,
-      "kind": "collection",
-      "category": "magic",
-      "radius": 88,
-      "tags": [
-        "magic"
-      ]
-    },
-    {
-      "id": "philosopher_stone",
-      "name": "현자의 돌",
-      "tier": 4,
-      "score": 40,
-      "kind": "collection",
-      "category": "magic",
-      "radius": 88,
-      "tags": [
-        "magic"
-      ]
-    },
-    {
-      "id": "potion",
-      "name": "마법 물약",
-      "tier": 5,
-      "score": 50,
-      "kind": "collection",
-      "category": "magic",
-      "radius": 88,
-      "tags": [
-        "magic"
-      ]
-    },
-    {
-      "id": "crystal_ball",
-      "name": "수정구",
-      "tier": 5,
-      "score": 50,
-      "kind": "collection",
-      "category": "magic",
-      "radius": 88,
-      "tags": [
-        "magic"
-      ]
-    },
-    {
-      "id": "magic_shield",
-      "name": "마법 방패",
-      "tier": 5,
-      "score": 50,
-      "kind": "collection",
-      "category": "magic",
-      "radius": 88,
-      "tags": [
-        "magic"
-      ]
-    },
-    {
-      "id": "portal",
-      "name": "차원문",
-      "tier": 5,
-      "score": 50,
-      "kind": "collection",
-      "category": "magic",
-      "radius": 88,
-      "tags": [
-        "magic"
+        "tech"
       ]
     },
     {
@@ -839,14 +740,15 @@
     {
       "id": "ice",
       "name": "얼음",
-      "tier": 2,
-      "score": 20,
+      "tier": 4,
+      "score": 40,
       "kind": "material",
       "category": "common",
-      "radius": 52,
+      "radius": 60,
       "tags": [
         "food",
-        "animals"
+        "animals",
+        "myth"
       ]
     },
     {
@@ -874,6 +776,30 @@
       ]
     },
     {
+      "id": "leather",
+      "name": "가죽",
+      "tier": 10,
+      "score": 100,
+      "kind": "material",
+      "category": "common",
+      "radius": 76,
+      "tags": [
+        "magic"
+      ]
+    },
+    {
+      "id": "lens",
+      "name": "렌즈",
+      "tier": 6,
+      "score": 60,
+      "kind": "material",
+      "category": "common",
+      "radius": 68,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
       "id": "wing",
       "name": "날개",
       "tier": 12,
@@ -893,6 +819,18 @@
       "kind": "material",
       "category": "common",
       "radius": 64,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "propeller",
+      "name": "프로펠러",
+      "tier": 7,
+      "score": 70,
+      "kind": "material",
+      "category": "common",
+      "radius": 72,
       "tags": [
         "tech"
       ]
@@ -921,8 +859,55 @@
         "animals",
         "food",
         "magic",
-        "myth",
-        "tech"
+        "myth"
+      ]
+    },
+    {
+      "id": "rainbow",
+      "name": "무지개",
+      "tier": 5,
+      "score": 50,
+      "kind": "material",
+      "category": "common",
+      "radius": 64,
+      "tags": [
+        "myth"
+      ]
+    },
+    {
+      "id": "primate",
+      "name": "영장류",
+      "tier": 10,
+      "score": 100,
+      "kind": "material",
+      "category": "common",
+      "radius": 76,
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "ape",
+      "name": "초기 유인원",
+      "tier": 11,
+      "score": 110,
+      "kind": "material",
+      "category": "common",
+      "radius": 76,
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "human",
+      "name": "인간",
+      "tier": 12,
+      "score": 120,
+      "kind": "material",
+      "category": "common",
+      "radius": 76,
+      "tags": [
+        "animals"
       ]
     },
     {
@@ -937,8 +922,7 @@
         "animals",
         "myth",
         "food",
-        "magic",
-        "tech"
+        "magic"
       ]
     },
     {
@@ -950,21 +934,44 @@
       "category": "common",
       "radius": 76,
       "tags": [
-        "myth",
-        "food",
         "animals",
-        "magic",
-        "tech"
+        "myth"
       ]
     },
     {
-      "id": "computer",
-      "name": "컴퓨터",
-      "tier": 6,
-      "score": 60,
+      "id": "magic",
+      "name": "마법",
+      "tier": 7,
+      "score": 70,
       "kind": "material",
       "category": "common",
-      "radius": 68,
+      "radius": 72,
+      "tags": [
+        "myth",
+        "magic"
+      ]
+    },
+    {
+      "id": "wood",
+      "name": "목재",
+      "tier": 8,
+      "score": 80,
+      "kind": "material",
+      "category": "common",
+      "radius": 76,
+      "tags": [
+        "food",
+        "magic"
+      ]
+    },
+    {
+      "id": "engine",
+      "name": "엔진",
+      "tier": 7,
+      "score": 70,
+      "kind": "material",
+      "category": "common",
+      "radius": 72,
       "tags": [
         "tech"
       ]
@@ -978,6 +985,7 @@
       "category": "common",
       "radius": 72,
       "tags": [
+        "animals",
         "food"
       ]
     },
@@ -1066,6 +1074,30 @@
       ]
     },
     {
+      "id": "dog",
+      "name": "강아지",
+      "tier": 13,
+      "score": 130,
+      "kind": "collection",
+      "category": "animals",
+      "radius": 88,
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "dinosaur",
+      "name": "공룡",
+      "tier": 11,
+      "score": 110,
+      "kind": "collection",
+      "category": "animals",
+      "radius": 88,
+      "tags": [
+        "animals"
+      ]
+    },
+    {
       "id": "cat",
       "name": "고양이",
       "tier": 11,
@@ -1090,10 +1122,34 @@
       ]
     },
     {
+      "id": "fox",
+      "name": "여우",
+      "tier": 10,
+      "score": 100,
+      "kind": "collection",
+      "category": "animals",
+      "radius": 88,
+      "tags": [
+        "animals"
+      ]
+    },
+    {
       "id": "deer",
       "name": "사슴",
       "tier": 10,
       "score": 100,
+      "kind": "collection",
+      "category": "animals",
+      "radius": 88,
+      "tags": [
+        "animals"
+      ]
+    },
+    {
+      "id": "fish",
+      "name": "물고기",
+      "tier": 8,
+      "score": 80,
       "kind": "collection",
       "category": "animals",
       "radius": 88,
@@ -1114,10 +1170,58 @@
       ]
     },
     {
+      "id": "dragon",
+      "name": "드래곤",
+      "tier": 11,
+      "score": 110,
+      "kind": "collection",
+      "category": "myth",
+      "radius": 88,
+      "tags": [
+        "myth"
+      ]
+    },
+    {
+      "id": "unicorn",
+      "name": "유니콘",
+      "tier": 11,
+      "score": 110,
+      "kind": "collection",
+      "category": "myth",
+      "radius": 88,
+      "tags": [
+        "myth"
+      ]
+    },
+    {
       "id": "griffin",
       "name": "그리핀",
       "tier": 13,
       "score": 130,
+      "kind": "collection",
+      "category": "myth",
+      "radius": 88,
+      "tags": [
+        "myth"
+      ]
+    },
+    {
+      "id": "sea_dragon",
+      "name": "해룡",
+      "tier": 11,
+      "score": 110,
+      "kind": "collection",
+      "category": "myth",
+      "radius": 88,
+      "tags": [
+        "myth"
+      ]
+    },
+    {
+      "id": "nine_tail_fox",
+      "name": "구미호",
+      "tier": 10,
+      "score": 100,
       "kind": "collection",
       "category": "myth",
       "radius": 88,
@@ -1138,10 +1242,190 @@
       ]
     },
     {
-      "id": "console",
-      "name": "콘솔 게임기",
-      "tier": 7,
-      "score": 70,
+      "id": "slime",
+      "name": "슬라임",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "myth",
+      "radius": 88,
+      "tags": [
+        "myth"
+      ]
+    },
+    {
+      "id": "wind_spirit",
+      "name": "바람 정령",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "myth",
+      "radius": 88,
+      "tags": [
+        "myth"
+      ]
+    },
+    {
+      "id": "magic_sword",
+      "name": "마법검",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "magic",
+      "radius": 88,
+      "tags": [
+        "magic"
+      ]
+    },
+    {
+      "id": "wand",
+      "name": "마법봉",
+      "tier": 9,
+      "score": 90,
+      "kind": "collection",
+      "category": "magic",
+      "radius": 88,
+      "tags": [
+        "magic"
+      ]
+    },
+    {
+      "id": "philosopher_stone",
+      "name": "현자의 돌",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "magic",
+      "radius": 88,
+      "tags": [
+        "magic"
+      ]
+    },
+    {
+      "id": "crown",
+      "name": "왕관",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "magic",
+      "radius": 88,
+      "tags": [
+        "magic"
+      ]
+    },
+    {
+      "id": "potion",
+      "name": "마법 물약",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "magic",
+      "radius": 88,
+      "tags": [
+        "magic"
+      ]
+    },
+    {
+      "id": "spellbook",
+      "name": "마법서",
+      "tier": 11,
+      "score": 110,
+      "kind": "collection",
+      "category": "magic",
+      "radius": 88,
+      "tags": [
+        "magic"
+      ]
+    },
+    {
+      "id": "crystal_ball",
+      "name": "수정구",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "magic",
+      "radius": 88,
+      "tags": [
+        "magic"
+      ]
+    },
+    {
+      "id": "magic_shield",
+      "name": "마법 방패",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "magic",
+      "radius": 88,
+      "tags": [
+        "magic"
+      ]
+    },
+    {
+      "id": "portal",
+      "name": "차원문",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "magic",
+      "radius": 88,
+      "tags": [
+        "magic"
+      ]
+    },
+    {
+      "id": "car",
+      "name": "자동차",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "tech",
+      "radius": 88,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "train",
+      "name": "기차",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "tech",
+      "radius": 88,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "rocket",
+      "name": "로켓",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "tech",
+      "radius": 88,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "airplane",
+      "name": "비행기",
+      "tier": 12,
+      "score": 120,
+      "kind": "collection",
+      "category": "tech",
+      "radius": 88,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "tank",
+      "name": "탱크",
+      "tier": 8,
+      "score": 80,
       "kind": "collection",
       "category": "tech",
       "radius": 88,
@@ -1162,6 +1446,30 @@
       ]
     },
     {
+      "id": "drone",
+      "name": "드론",
+      "tier": 8,
+      "score": 80,
+      "kind": "collection",
+      "category": "tech",
+      "radius": 88,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
+      "id": "satellite",
+      "name": "인공위성",
+      "tier": 7,
+      "score": 70,
+      "kind": "collection",
+      "category": "tech",
+      "radius": 88,
+      "tags": [
+        "tech"
+      ]
+    },
+    {
       "id": "fruit",
       "name": "열매",
       "tier": 7,
@@ -1170,7 +1478,8 @@
       "category": "common",
       "radius": 72,
       "tags": [
-        "food"
+        "food",
+        "animals"
       ]
     },
     {
@@ -1188,8 +1497,8 @@
     {
       "id": "cocoa",
       "name": "카카오",
-      "tier": 9,
-      "score": 90,
+      "tier": 8,
+      "score": 80,
       "kind": "material",
       "category": "common",
       "radius": 76,
@@ -1200,143 +1509,24 @@
     {
       "id": "honey",
       "name": "벌꿀",
-      "tier": 9,
-      "score": 90,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "food"
-      ]
-    },
-    {
-      "id": "primate",
-      "name": "영장류",
-      "tier": 10,
-      "score": 100,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "animals",
-        "food",
-        "magic",
-        "tech"
-      ]
-    },
-    {
-      "id": "ape",
-      "name": "초기 유인원",
-      "tier": 11,
-      "score": 110,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "animals",
-        "food",
-        "magic",
-        "tech"
-      ]
-    },
-    {
-      "id": "human",
-      "name": "인간",
-      "tier": 12,
-      "score": 120,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "animals",
-        "food",
-        "magic",
-        "tech"
-      ]
-    },
-    {
-      "id": "tool",
-      "name": "도구",
-      "tier": 13,
-      "score": 130,
+      "tier": 8,
+      "score": 80,
       "kind": "material",
       "category": "common",
       "radius": 76,
       "tags": [
         "food",
-        "magic",
-        "tech"
+        "animals"
       ]
     },
     {
-      "id": "wood",
-      "name": "목재",
-      "tier": 14,
-      "score": 140,
+      "id": "cloth",
+      "name": "천",
+      "tier": 7,
+      "score": 70,
       "kind": "material",
       "category": "common",
-      "radius": 76,
-      "tags": [
-        "magic",
-        "tech"
-      ]
-    },
-    {
-      "id": "wheel",
-      "name": "바퀴",
-      "tier": 15,
-      "score": 150,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "cart",
-      "name": "수레",
-      "tier": 16,
-      "score": 160,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "machine",
-      "name": "기계",
-      "tier": 14,
-      "score": 140,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "rail",
-      "name": "철로",
-      "tier": 15,
-      "score": 150,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "gem",
-      "name": "보석",
-      "tier": 14,
-      "score": 140,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
+      "radius": 72,
       "tags": [
         "magic"
       ]
@@ -1356,8 +1546,8 @@
     {
       "id": "chocolate",
       "name": "초콜릿",
-      "tier": 10,
-      "score": 100,
+      "tier": 9,
+      "score": 90,
       "kind": "collection",
       "category": "food",
       "radius": 88,
@@ -1380,8 +1570,8 @@
     {
       "id": "juice",
       "name": "과일주스",
-      "tier": 14,
-      "score": 140,
+      "tier": 8,
+      "score": 80,
       "kind": "collection",
       "category": "food",
       "radius": 88,
@@ -1402,10 +1592,10 @@
       ]
     },
     {
-      "id": "dog",
-      "name": "강아지",
-      "tier": 13,
-      "score": 130,
+      "id": "bear",
+      "name": "곰",
+      "tier": 10,
+      "score": 100,
       "kind": "collection",
       "category": "animals",
       "radius": 88,
@@ -1414,207 +1604,15 @@
       ]
     },
     {
-      "id": "wand",
-      "name": "마법봉",
-      "tier": 15,
-      "score": 150,
-      "kind": "collection",
-      "category": "magic",
-      "radius": 88,
-      "tags": [
-        "magic"
-      ]
-    },
-    {
-      "id": "crown",
-      "name": "왕관",
-      "tier": 15,
-      "score": 150,
-      "kind": "collection",
-      "category": "magic",
-      "radius": 88,
-      "tags": [
-        "magic"
-      ]
-    },
-    {
-      "id": "robot",
-      "name": "로봇",
-      "tier": 15,
-      "score": 150,
-      "kind": "collection",
-      "category": "tech",
-      "radius": 88,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "leather",
-      "name": "가죽",
-      "tier": 14,
-      "score": 140,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "magic"
-      ]
-    },
-    {
-      "id": "cloth",
-      "name": "천",
-      "tier": 14,
-      "score": 140,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "magic"
-      ]
-    },
-    {
-      "id": "lens",
-      "name": "렌즈",
-      "tier": 14,
-      "score": 140,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "propeller",
-      "name": "프로펠러",
-      "tier": 16,
-      "score": 160,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "engine",
-      "name": "엔진",
-      "tier": 15,
-      "score": 150,
-      "kind": "material",
-      "category": "common",
-      "radius": 76,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
       "id": "carpet",
       "name": "마법 양탄자",
-      "tier": 15,
-      "score": 150,
+      "tier": 8,
+      "score": 80,
       "kind": "collection",
       "category": "magic",
       "radius": 88,
       "tags": [
         "magic"
-      ]
-    },
-    {
-      "id": "spellbook",
-      "name": "마법서",
-      "tier": 15,
-      "score": 150,
-      "kind": "collection",
-      "category": "magic",
-      "radius": 88,
-      "tags": [
-        "magic"
-      ]
-    },
-    {
-      "id": "car",
-      "name": "자동차",
-      "tier": 17,
-      "score": 170,
-      "kind": "collection",
-      "category": "tech",
-      "radius": 88,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "train",
-      "name": "기차",
-      "tier": 16,
-      "score": 160,
-      "kind": "collection",
-      "category": "tech",
-      "radius": 88,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "rocket",
-      "name": "로켓",
-      "tier": 16,
-      "score": 160,
-      "kind": "collection",
-      "category": "tech",
-      "radius": 88,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "airplane",
-      "name": "비행기",
-      "tier": 16,
-      "score": 160,
-      "kind": "collection",
-      "category": "tech",
-      "radius": 88,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "tank",
-      "name": "탱크",
-      "tier": 16,
-      "score": 160,
-      "kind": "collection",
-      "category": "tech",
-      "radius": 88,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "drone",
-      "name": "드론",
-      "tier": 17,
-      "score": 170,
-      "kind": "collection",
-      "category": "tech",
-      "radius": 88,
-      "tags": [
-        "tech"
-      ]
-    },
-    {
-      "id": "satellite",
-      "name": "인공위성",
-      "tier": 15,
-      "score": 150,
-      "kind": "collection",
-      "category": "tech",
-      "radius": 88,
-      "tags": [
-        "tech"
       ]
     }
   ],
@@ -1628,10 +1626,10 @@
       "result": "cake"
     },
     {
-      "id": "recipe_bread_v4",
+      "id": "recipe_bread_v5",
       "inputs": [
         "dough",
-        "fire"
+        "wood"
       ],
       "result": "bread"
     },
@@ -1676,10 +1674,10 @@
       "result": "pudding"
     },
     {
-      "id": "recipe_candy",
+      "id": "recipe_candy_v5",
       "inputs": [
         "sugar",
-        "fire"
+        "honey"
       ],
       "result": "candy"
     },
@@ -1708,18 +1706,18 @@
       "result": "dog"
     },
     {
-      "id": "recipe_bear_v4",
+      "id": "recipe_bear_v5",
       "inputs": [
         "animal",
-        "mountain"
+        "honey"
       ],
       "result": "bear"
     },
     {
-      "id": "recipe_dinosaur_v4",
+      "id": "recipe_dinosaur_v5",
       "inputs": [
         "dinosaur_lineage",
-        "earth"
+        "forest"
       ],
       "result": "dinosaur"
     },
@@ -1740,10 +1738,10 @@
       "result": "rabbit"
     },
     {
-      "id": "recipe_fox",
+      "id": "recipe_fox_v5",
       "inputs": [
         "animal",
-        "fire"
+        "forest"
       ],
       "result": "fox"
     },
@@ -1756,18 +1754,18 @@
       "result": "deer"
     },
     {
-      "id": "recipe_fish_v4",
+      "id": "recipe_fish_v5",
       "inputs": [
         "fish_ancestor",
-        "water"
+        "wheat"
       ],
       "result": "fish"
     },
     {
-      "id": "recipe_turtle",
+      "id": "recipe_turtle_v5",
       "inputs": [
         "lizard",
-        "water"
+        "armor"
       ],
       "result": "turtle"
     },
@@ -1780,10 +1778,10 @@
       "result": "penguin"
     },
     {
-      "id": "recipe_dragon",
+      "id": "recipe_dragon_v5",
       "inputs": [
         "lizard",
-        "fire"
+        "magic"
       ],
       "result": "dragon"
     },
@@ -1804,10 +1802,10 @@
       "result": "unicorn"
     },
     {
-      "id": "recipe_phoenix",
+      "id": "recipe_phoenix_v5",
       "inputs": [
         "bird",
-        "fire"
+        "electricity"
       ],
       "result": "phoenix"
     },
@@ -1820,10 +1818,10 @@
       "result": "griffin"
     },
     {
-      "id": "recipe_sea_dragon",
+      "id": "recipe_sea_dragon_v5",
       "inputs": [
         "lizard",
-        "magic"
+        "ice"
       ],
       "result": "sea_dragon"
     },
@@ -1852,9 +1850,9 @@
       "result": "slime"
     },
     {
-      "id": "recipe_wind_spirit",
+      "id": "recipe_wind_spirit_v5",
       "inputs": [
-        "wind",
+        "rainbow",
         "magic"
       ],
       "result": "wind_spirit"
@@ -1876,18 +1874,18 @@
       "result": "wand"
     },
     {
-      "id": "recipe_philosopher_stone",
+      "id": "recipe_philosopher_stone_v5",
       "inputs": [
-        "rainbow",
-        "crystal"
+        "gem",
+        "magic"
       ],
       "result": "philosopher_stone"
     },
     {
-      "id": "recipe_crown",
+      "id": "recipe_crown_v5",
       "inputs": [
         "gold",
-        "gem"
+        "magic"
       ],
       "result": "crown"
     },
@@ -1964,10 +1962,10 @@
       "result": "train"
     },
     {
-      "id": "recipe_rocket",
+      "id": "recipe_rocket_v5",
       "inputs": [
-        "fire",
-        "engine"
+        "engine",
+        "computer"
       ],
       "result": "rocket"
     },
@@ -2044,18 +2042,18 @@
       "result": "sugar"
     },
     {
-      "id": "recipe_cocoa_v4",
+      "id": "recipe_cocoa_v5",
       "inputs": [
-        "plant",
-        "forest"
+        "fruit",
+        "fire"
       ],
       "result": "cocoa"
     },
     {
-      "id": "recipe_ice",
+      "id": "recipe_ice_v5",
       "inputs": [
         "water",
-        "wind"
+        "mountain"
       ],
       "result": "ice"
     },
@@ -2076,26 +2074,26 @@
       "result": "cheese"
     },
     {
-      "id": "recipe_honey",
+      "id": "recipe_honey_v5",
       "inputs": [
         "fruit",
-        "forest"
+        "sun"
       ],
       "result": "honey"
     },
     {
-      "id": "recipe_leather",
+      "id": "recipe_leather_v5",
       "inputs": [
         "animal",
-        "tool"
+        "earth"
       ],
       "result": "leather"
     },
     {
-      "id": "recipe_cloth",
+      "id": "recipe_cloth_v5",
       "inputs": [
         "plant",
-        "tool"
+        "air"
       ],
       "result": "cloth"
     },
@@ -2132,10 +2130,10 @@
       "result": "propeller"
     },
     {
-      "id": "recipe_antenna",
+      "id": "recipe_antenna_v5",
       "inputs": [
         "metal",
-        "air"
+        "crystal"
       ],
       "result": "antenna"
     },
@@ -2188,7 +2186,7 @@
       "result": "stone"
     },
     {
-      "id": "recipe_sun",
+      "id": "recipe_sun_v5",
       "inputs": [
         "fire",
         "fire"
@@ -2220,10 +2218,10 @@
       "result": "mud"
     },
     {
-      "id": "recipe_rainbow",
+      "id": "recipe_rainbow_v5",
       "inputs": [
         "rain",
-        "sun"
+        "glass"
       ],
       "result": "rainbow"
     },
@@ -2252,10 +2250,10 @@
       "result": "algae"
     },
     {
-      "id": "recipe_multicellular",
+      "id": "recipe_multicellular_v5",
       "inputs": [
         "single_cell",
-        "single_cell"
+        "water"
       ],
       "result": "multicellular"
     },
@@ -2300,18 +2298,18 @@
       "result": "dinosaur_lineage"
     },
     {
-      "id": "recipe_primate",
+      "id": "recipe_primate_v5",
       "inputs": [
         "animal",
-        "forest"
+        "air"
       ],
       "result": "primate"
     },
     {
-      "id": "recipe_ape",
+      "id": "recipe_ape_v5",
       "inputs": [
         "primate",
-        "tree"
+        "earth"
       ],
       "result": "ape"
     },
@@ -2340,18 +2338,18 @@
       "result": "metal"
     },
     {
-      "id": "recipe_tree",
+      "id": "recipe_tree_v5",
       "inputs": [
         "plant",
-        "plant"
+        "earth"
       ],
       "result": "tree"
     },
     {
-      "id": "recipe_forest",
+      "id": "recipe_forest_v5",
       "inputs": [
         "tree",
-        "tree"
+        "earth"
       ],
       "result": "forest"
     },
@@ -2388,10 +2386,10 @@
       "result": "crystal"
     },
     {
-      "id": "recipe_magic",
+      "id": "recipe_magic_v5",
       "inputs": [
         "crystal",
-        "lightning"
+        "gem"
       ],
       "result": "magic"
     },
@@ -2412,42 +2410,42 @@
       "result": "bird"
     },
     {
-      "id": "recipe_lizard_v4",
+      "id": "recipe_lizard_v5",
       "inputs": [
         "reptile",
-        "stone"
+        "mud"
       ],
       "result": "lizard"
     },
     {
-      "id": "recipe_tool",
+      "id": "recipe_tool_v5",
       "inputs": [
-        "human",
-        "stone"
+        "stone",
+        "glass"
       ],
       "result": "tool"
     },
     {
-      "id": "recipe_wood",
+      "id": "recipe_wood_v5",
       "inputs": [
         "tree",
-        "tool"
+        "fire"
       ],
       "result": "wood"
     },
     {
-      "id": "recipe_wheel",
+      "id": "recipe_wheel_v5",
       "inputs": [
-        "wood",
-        "stone"
+        "stone",
+        "tool"
       ],
       "result": "wheel"
     },
     {
-      "id": "recipe_cart",
+      "id": "recipe_cart_v5",
       "inputs": [
-        "wood",
-        "wheel"
+        "wheel",
+        "air"
       ],
       "result": "cart"
     },
@@ -2492,10 +2490,10 @@
       "result": "circuit"
     },
     {
-      "id": "recipe_computer_v4",
+      "id": "recipe_computer_v5",
       "inputs": [
         "circuit",
-        "screen"
+        "metal"
       ],
       "result": "computer"
     },
@@ -2508,10 +2506,10 @@
       "result": "screen"
     },
     {
-      "id": "recipe_rail",
+      "id": "recipe_rail_v5",
       "inputs": [
-        "wood",
-        "metal"
+        "metal",
+        "wheel"
       ],
       "result": "rail"
     },

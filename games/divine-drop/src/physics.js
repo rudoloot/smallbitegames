@@ -1,13 +1,10 @@
-import {WORLD,keyFor} from './core.js?v=3d43dea3bde5';
-export const MERGE_INTERVAL=900;
-export const RESULT_LOCK=1800;
-export const CONTACT_DWELL=180;
+import {WORLD,keyFor} from './core.js?v=c9080b881791';
 export class Physics {
   constructor(data,{onMerge=()=>{},onGameOver=()=>{},Matter=globalThis.Matter}={}){
     this.M=Matter;this.data=data;this.onMerge=onMerge;this.onGameOver=onGameOver;
     this.engine=Matter.Engine.create({enableSleeping:false,positionIterations:8,velocityIterations:6});
     this.engine.gravity.y=1;this.engine.gravity.scale=.001;
-    this.blocks=[];this.time=0;this.dangerMs=0;this.over=false;this.lastDrop=-400;this.contacts=new Map();this.sequence=0;this.probes=new Map();this.nextMergeAt=0;this.parentContacts=new Map();
+    this.blocks=[];this.time=0;this.dangerMs=0;this.over=false;this.lastDrop=-400;this.contacts=new Map();this.sequence=0;this.probes=new Map();this.parentContacts=new Map();
     const {Bodies,Composite,Events}=Matter;
     this.walls=[Bodies.rectangle(WORLD.left-16,350,32,800,{isStatic:true,label:'wall'}),Bodies.rectangle(WORLD.right+16,350,32,800,{isStatic:true,label:'wall'}),Bodies.rectangle(640,WORLD.bottom+16,896,32,{isStatic:true,label:'floor'})];
     Composite.add(this.engine.world,this.walls);
@@ -35,9 +32,9 @@ export class Physics {
     const dy=b.max.y>WORLD.bottom?WORLD.bottom-b.max.y:0;
     if(dx||dy)this.M.Body.translate(body,{x:dx,y:dy});return body;
   }
-  add(id,x,y,{eligible=false,locked=0}={}){
+  add(id,x,y,{eligible=false}={}){
     const body=this.fitBody(this.createBody(id,x,y));
-    body.itemId=id;body.eligible=eligible;body.lockUntil=this.time+locked;
+    body.itemId=id;body.eligible=eligible;
     this.M.Composite.add(this.engine.world,body);this.blocks.push(body);return body;
   }
   probe(x,id){let body=this.probes.get(id);if(!body){body=this.createBody(id,x,WORLD.spawnY);this.probes.set(id,body);}this.M.Body.setPosition(body,{x,y:WORLD.spawnY});return this.fitBody(body);}
@@ -57,18 +54,15 @@ export class Physics {
     }
     this.parentContacts=parentPairs;
     const candidates=[...parentPairs.values()].sort((u,v)=>u.at-v.at||Math.min(u.a.id,u.b.id)-Math.min(v.a.id,v.b.id)||Math.max(u.a.id,u.b.id)-Math.max(v.a.id,v.b.id));
-    for(const {a,b,at} of candidates){
-      if(this.time<this.nextMergeAt)break;
-      if(this.time-at<CONTACT_DWELL)continue;
-      if(!existing.has(a.id)||!existing.has(b.id)||used.has(a.id)||used.has(b.id)||this.time<a.lockUntil||this.time<b.lockUntil)continue;
+    for(const {a,b} of candidates){
+      if(!existing.has(a.id)||!existing.has(b.id)||used.has(a.id)||used.has(b.id))continue;
       const recipe=this.data.byPair.get(keyFor(a.itemId,b.itemId));if(!recipe)continue;
       used.add(a.id);used.add(b.id);
       const mass=a.mass+b.mass;const x=(a.position.x*a.mass+b.position.x*b.mass)/mass;const y=(a.position.y*a.mass+b.position.y*b.mass)/mass;
       const velocity={x:(a.velocity.x*a.mass+b.velocity.x*b.mass)/mass*.5,y:(a.velocity.y*a.mass+b.velocity.y*b.mass)/mass*.5};
       this.M.Composite.remove(this.engine.world,[a,b]);
       this.blocks=this.blocks.filter(body=>body!==a&&body!==b);
-      const result=this.add(recipe.result,x,y,{eligible:true,locked:RESULT_LOCK});this.M.Body.setVelocity(result,velocity);
-      this.nextMergeAt=this.time+MERGE_INTERVAL;
+      const result=this.add(recipe.result,x,y,{eligible:true});this.M.Body.setVelocity(result,velocity);
       this.onMerge({eventId:++this.sequence,item:this.data.byId.get(recipe.result),recipe,body:result,time:this.time});
       break;
     }

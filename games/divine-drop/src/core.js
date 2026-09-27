@@ -1,4 +1,4 @@
-import {SHELF_SET,shelfCount,shelfItems} from './collections.js?v=3d43dea3bde5';
+import {SHELF_SET,shelfCount,shelfItems} from './collections.js?v=c9080b881791';
 export const WORLD=Object.freeze({left:224,right:1056,top:112,bottom:656,spawnY:156,dangerY:200,cameraX:192,cameraY:32,cameraW:896,cameraH:648});
 export const ELEMENTS=['fire','water','air','earth'];
 export const MILESTONES=[1,3,6,10,14,18];

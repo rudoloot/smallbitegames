@@ -1,10 +1,10 @@
-import {WORLD,Supply,indexData,fitWorld,clientToWorld,returnTarget,blankSave,recordMerge,unlocked,knownRecipe} from './core.js?v=3d43dea3bde5';
-import {readSave,writeSave} from './storage.js?v=3d43dea3bde5';
-import {Physics} from './physics.js?v=3d43dea3bde5';
-import {Renderer} from './renderer.js?v=3d43dea3bde5';
-import {paintIcon,prepareAssets,sprite} from './art.js?v=3d43dea3bde5';
-import {SHELF_IDS,SHELF_SET,shelfCount,shelfItems} from './collections.js?v=3d43dea3bde5';
-import {geometryFromAlpha} from './collision-shapes.js?v=3d43dea3bde5';
+import {WORLD,Supply,indexData,fitWorld,clientToWorld,returnTarget,blankSave,recordMerge,unlocked,knownRecipe} from './core.js?v=c9080b881791';
+import {readSave,writeSave} from './storage.js?v=c9080b881791';
+import {Physics} from './physics.js?v=c9080b881791';
+import {Renderer} from './renderer.js?v=c9080b881791';
+import {paintIcon,prepareAssets,sprite} from './art.js?v=c9080b881791';
+import {SHELF_IDS,SHELF_SET,shelfCount,shelfItems} from './collections.js?v=c9080b881791';
+import {geometryFromAlpha} from './collision-shapes.js?v=c9080b881791';
 
 const $=id=>document.getElementById(id);
 const icons={pause:'<path d="M8 5v14M16 5v14"/>',book:'<path d="M12 6Q7 3 3 5v14q4-2 9 1q5-3 9-1V5q-4-2-9 1v14"/>',settings:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>',back:'<path d="m14 5-7 7 7 7"/>'};
@@ -12,7 +12,7 @@ const icon=name=>`<svg viewBox="0 0 24 24" aria-hidden="true">${icons[name]}</sv
 $('pause-button').innerHTML=icon('pause');$('book-button').innerHTML=icon('book');$('settings-button').innerHTML=icon('settings');
 const debug=new URLSearchParams(location.search).get('debug')==='1';
 const partnerOrigins=['https://rudoloot.github.io'];
-let data,save,physics,renderer,supply,score=0,highestTier=0,screen='shelf',modal=false,portrait=false,aim=640,pointer=null,previousTime=0,accumulator=0,runDiscoveries=[],runCollections=[],toastTimer,mergeTimer,lastFocus,saveError=false,dropCount=0,audioContext;
+let data,save,physics,renderer,supply,score=0,highestTier=0,screen='shelf',modal=false,portrait=false,aim=640,pointer=null,previousTime=0,accumulator=0,runDiscoveries=[],runCollections=[],toastTimer,mergeTimer,mergeQueue=[],mergeShowing=false,lastFocus,saveError=false,dropCount=0,audioContext;
 const milestoneCopy={count_1:['첫 번째 하트','아빠가 만들어 준 첫 장난감!'],count_5:['아빠와 우리','아빠랑 만드는 거 좋아!'],count_10:['최고의 아빠','우리가 직접 그렸어요. 아빠 최고!'],count_20:['아빠에게 쓰는 편지','아빠가 만들어 준 거 다 기억해.'],count_35:['아빠의 종이 메달','우리 아빠에게 주는 특별한 상!'],count_50:['우리 아빠 최고!','아빠랑 함께여서 행복해.'],category_food:['우리 가족 소풍','아빠랑 소풍 가는 날!'],category_animals:['우리 집 동물원','발자국을 따라가 볼까?'],category_myth:['하늘까지 함께','아빠랑 하늘까지 가 볼래!'],category_magic:['최고의 마법사','아빠는 최고의 마법사!'],category_tech:['우리의 우주여행','아빠랑 우주여행!']};
 function notify(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3500);}
 function persist(){if(debug)return true;const ok=writeSave(save);if(!ok&&!saveError)notify('기록을 저장할 수 없어요. 이 판은 계속할 수 있어요.');saveError=!ok;return ok;}
@@ -20,11 +20,21 @@ Object.assign(milestoneCopy,{count_3:milestoneCopy.count_5,count_6:milestoneCopy
 function count(){return shelfCount(save);}
 function sound(tier=1){if(save.settings.muted)return;try{audioContext??=new (window.AudioContext||window.webkitAudioContext)();audioContext.resume();const osc=audioContext.createOscillator(),gain=audioContext.createGain();osc.type='sine';osc.frequency.setValueAtTime(280+tier*45,audioContext.currentTime);osc.frequency.exponentialRampToValueAtTime(440+tier*55,audioContext.currentTime+.1);gain.gain.setValueAtTime(.035,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.24);osc.connect(gain).connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+.25);}catch{}}
 function isRunning(){return physics&&!physics.over&&screen==='play'&&!modal&&!portrait&&!document.hidden;}
-function shortResult(text,duration=1800){$('merge-label').textContent=text;$('merge-label').classList.add('visible');clearTimeout(mergeTimer);mergeTimer=setTimeout(()=>$('merge-label').classList.remove('visible'),duration);}
+function showNextMerge(){
+  const next=mergeQueue.shift();mergeShowing=!!next;
+  if(!next){$('merge-label').classList.remove('visible');return;}
+  $('merge-label').textContent=next.text;$('merge-label').classList.add('visible');
+  mergeTimer=setTimeout(showNextMerge,next.duration);
+}
+function shortResult(text,duration=1800,discovery=false){
+  if(!discovery&&mergeShowing)return;
+  mergeQueue.push({text,duration});if(!mergeShowing)showNextMerge();
+}
+function clearMergeLabels(){clearTimeout(mergeTimer);mergeQueue=[];mergeShowing=false;$('merge-label').classList.remove('visible');}
 function onMerge(event){
   score+=event.item.score;highestTier=Math.max(highestTier,event.item.tier);save.highScore=Math.max(save.highScore,score);
   const result=recordMerge(save,event.item,event.recipe.id);if(result.firstDiscovery)runDiscoveries.push(event.item.id);if(result.firstCollection)runCollections.push(event.item.id);
-  renderer.burst(event);if(result.firstRecipe){const inputs=event.recipe.inputs.map(id=>data.byId.get(id).name);shortResult(`${inputs[0]} + ${inputs[1]} = ${event.item.name}`,2600);physics.nextMergeAt=Math.max(physics.nextMergeAt,event.time+2600);}else shortResult(`${event.item.name}  +${event.item.score}`,850);sound(event.item.tier);persist();updateHud();
+  renderer.burst(event);if(result.firstRecipe){const inputs=event.recipe.inputs.map(id=>data.byId.get(id).name);shortResult(`${inputs[0]} + ${inputs[1]} = ${event.item.name}`,2600,true);}else shortResult(`${event.item.name}  +${event.item.score}`,850);sound(event.item.tier);persist();updateHud();
 }
 function updateHud(){
   $('score').textContent=score.toLocaleString('ko-KR');$('best-score').textContent=`BEST ${save.highScore.toLocaleString('ko-KR')}`;
@@ -49,7 +59,7 @@ function showShelf(keepRun=false){
 }
 function start(){
   if(physics&&!physics.over){screen='play';$('shelf-view').hidden=true;$('play-view').hidden=false;hideDialog();resize();$('game').focus();return;}
-  physics?.destroy();score=0;highestTier=0;runDiscoveries=[];runCollections=[];dropCount=0;supply=new Supply();renderer.effects=[];
+  physics?.destroy();clearMergeLabels();score=0;highestTier=0;runDiscoveries=[];runCollections=[];dropCount=0;supply=new Supply();renderer.effects=[];
   physics=new Physics(data,{onMerge,onGameOver:()=>{persist();openResults();}});
   screen='play';$('shelf-view').hidden=true;$('play-view').hidden=false;$('drop-hint').style.opacity='1';$('debug-badge').hidden=!debug;hideDialog();updateHud();resize();$('game').focus();
 }
@@ -133,7 +143,7 @@ function frame(now){
   previousTime=now;if(screen==='play'&&physics)renderer.render(physics,supply,aim,!isRunning());requestAnimationFrame(frame);
 }
 async function init(){
-  try{const response=await fetch('data/game-data.json?v=3d43dea3bde5');if(!response.ok)throw Error('data');data=indexData(await response.json());await prepareAssets(data);data.geometry={};for(const item of data.items){const canvas=sprite(item);data.geometry[item.id]=geometryFromAlpha(canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height);}const loaded=debug?{save:blankSave(),error:false}:readSave(data);save=loaded.save;saveError=loaded.error;renderer=new Renderer($('game'),data);bind();showShelf();$('loading').hidden=true;if(saveError)notify('저장 기록을 읽지 못했어요. 이번에는 새 공방으로 시작해요.');
+  try{const response=await fetch('data/game-data.json?v=c9080b881791');if(!response.ok)throw Error('data');data=indexData(await response.json());await prepareAssets(data);data.geometry={};for(const item of data.items){const canvas=sprite(item);data.geometry[item.id]=geometryFromAlpha(canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height);}const loaded=debug?{save:blankSave(),error:false}:readSave(data);save=loaded.save;saveError=loaded.error;renderer=new Renderer($('game'),data);bind();showShelf();$('loading').hidden=true;if(saveError)notify('저장 기록을 읽지 못했어요. 이번에는 새 공방으로 시작해요.');
     if(debug)window.__game={
       snapshot:()=>({screen,modal,portrait,score,highestTier,collectionCount:count(),save:structuredClone(save),world:{...WORLD},current:supply?.current,next:supply?.next,time:physics?.time,dangerMs:physics?.dangerMs,over:physics?.over,blocks:physics?.blocks.map(b=>({id:b.id,itemId:b.itemId,x:b.position.x,y:b.position.y,r:b.visualRadius,eligible:b.eligible,parts:b.parts.length,bounds:structuredClone(b.bounds)}))||[]}),
       spawn:(id,x,y,options)=>physics.add(id,x,y,options),step:n=>{for(let i=0;i<n;i++)physics.step();},start,drop,
