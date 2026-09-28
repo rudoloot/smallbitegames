@@ -1,7 +1,8 @@
-import { TRACKS, MusicPlayer } from './music.js?v=261df4e08470';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=261df4e08470';
-import { World } from './scene.js?v=261df4e08470';
-import { exitGame } from './launch.js?v=261df4e08470';
+import { TRACKS, MusicPlayer } from './music.js?v=46a5add9e19b';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=46a5add9e19b';
+import { World } from './scene.js?v=46a5add9e19b';
+import { weaponForLevel } from './weapons.js?v=46a5add9e19b';
+import { exitGame } from './launch.js?v=46a5add9e19b';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -121,7 +122,8 @@ function updateHUD() {
   $('courseFill').style.height = `${course}%`; $('courseValue').textContent = `${Math.floor(course)}%`; $('courseMeter').setAttribute('aria-valuenow', Math.floor(course));
   $('healthFill').style.height = `${state.health}%`; $('healthValue').textContent = state.health; $('healthMeter').setAttribute('aria-valuenow', state.health); document.querySelector('.health').classList.toggle('low', state.health < 30);
   $('savedValue').textContent = state.saved; $('comboValue').textContent = state.combo > 1 ? `${state.combo} COMBO` : '음표를 구해요'; $('powerValue').textContent = state.power;
-  $('weaponName').textContent = state.saved >= 50 ? 'BLOOM BLASTER · LV.3' : state.saved >= 20 ? 'PRISM PISTOL · LV.2' : 'PULSE PISTOL · LV.1';
+  const weaponName = weaponForLevel(state.weaponLevel).name;
+  $('weaponName').textContent = `${weaponName} · LV.${state.weaponLevel} · ${state.saved % 50}/50`;
   $('timeValue').textContent = `${formatTime(state.time)} / ${formatTime(state.chart.duration)}`;
   const bonus = state.boss <= 0, attack = !bonus && state.attackWindow;
   $('phase').classList.toggle('attack', attack); $('phase').classList.toggle('bonus', bonus);
@@ -131,6 +133,7 @@ function updateHUD() {
 function handleEffects(effects) {
   for (const effect of effects) {
     if (effect.type === 'save') { world.burst(effect.lane, 0xb6f6d9); audio.sound('save'); }
+    if (effect.type === 'upgrade') world.showUpgrade(effect.level, effect.power);
     if (effect.type === 'shot') { world.shoot(effect.lane); world.showDamage(effect.damage); audio.sound('shot'); }
     if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${state.rules.mine}`, true); }
     if (effect.type === 'victory') { world.burst(2, 0xe0bcff); feedback('보스 격파 · RESCUE TIME!', false, 2300); }

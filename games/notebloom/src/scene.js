@@ -1,8 +1,9 @@
 import * as THREE from 'three';
+import { weaponForLevel } from './weapons.js?v=46a5add9e19b';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
-const SCROLL_SPEED = 1.5;
+const SCROLL_SPEED = 3;
 const material = (color, glow = 0) => new THREE.MeshStandardMaterial({ color, roughness: .65, metalness: .12, emissive: color, emissiveIntensity: glow });
 
 export class World {
@@ -19,9 +20,10 @@ export class World {
     container.appendChild(this.renderer.domElement);
     this.camera = new THREE.PerspectiveCamera(49, 1, .1, 130);
     this.camera.position.set(0, 6.6, 12.6); this.camera.lookAt(0, .8, -10);
-    this.scene.add(new THREE.HemisphereLight(0xf4efff, 0x657296, 2.2));
+    this.ambientLight = new THREE.HemisphereLight(0xf4efff, 0x657296, 2.2); this.scene.add(this.ambientLight);
     const sunlight = new THREE.DirectionalLight(0xffe6f4, 3.1); sunlight.position.set(-10, 18, 8); this.scene.add(sunlight);
     const fill = new THREE.DirectionalLight(0xa0ffeb, 1.4); fill.position.set(5, 6, -10); this.scene.add(fill);
+    this.sunlight = sunlight; this.fillLight = fill;
     this.materials = { road: material(0x555876), edge: material(0x99f7d2, .7), dark: material(COLORS.navy), white: material(COLORS.metal), hair: material(0xb5b4e4), mint: material(COLORS.mint, .45), lilac: material(COLORS.lilac, .2), pink: material(COLORS.pink, .2), black: material(0x35324e), mine: material(0x35334f), spike: material(0xf28ca8, .5) };
     this.boxGeo = new THREE.BoxGeometry(1, 1, 1);
     this.sphereGeo = new THREE.SphereGeometry(1, 12, 10);
@@ -30,7 +32,7 @@ export class World {
     this.damageNumbers = []; this.damageSerial = 0; this.hitFlash = 0;
     this.damageLayer = document.createElement('div'); this.damageLayer.className = 'damage-numbers';
     this.damageLayer.setAttribute('aria-hidden', 'true'); container.appendChild(this.damageLayer);
-    this.buildSky(); this.buildRoad(); this.buildGarden(); this.buildCharacter(); this.buildBoss();
+    this.buildSky(); this.buildRoad(); this.buildGarden(); this.prepareEnvironment(); this.buildCharacter(); this.buildBoss();
     this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(container);
     this.resize();
   }
@@ -49,6 +51,7 @@ export class World {
     gradient.addColorStop(0, '#869ccd'); gradient.addColorStop(.5, '#c9c1e1'); gradient.addColorStop(.78, '#efd2e2'); gradient.addColorStop(1, '#c0d9df');
     ctx.fillStyle = gradient; ctx.fillRect(0, 0, 8, 256);
     const texture = new THREE.CanvasTexture(skyCanvas); texture.colorSpace = THREE.SRGBColorSpace;
+    this.skyCanvas = skyCanvas; this.skyTexture = texture;
     this.scene.background = texture;
     this.ball(this.scene, material(0xffecdd, .25), [-12, 20, -65], [7, 7, 3]);
     const ring = this.mesh(this.scene, new THREE.TorusGeometry(10, .045, 6, 70), material(0xfff6f4, .7), [-12, 20, -65]); ring.rotation.z = -.35; ring.rotation.x = .55;
@@ -86,6 +89,7 @@ export class World {
   }
   buildGarden() {
     this.garden = [];
+    this.livingTrees = [];
     const trunkMat = material(0x777399), leafA = material(0xd6b6df), leafB = material(0xb8dccc), islandMat = material(0x889abb);
     for (let i = 0; i < 32; i++) {
       const group = new THREE.Group(); const side = i % 2 === 0 ? -1 : 1;
@@ -93,10 +97,11 @@ export class World {
       const scale = .7 + (i % 5) * .15; group.scale.setScalar(scale);
       const island = this.mesh(group, new THREE.ConeGeometry(2, 2.4, 5), islandMat, [0, -1.25, 0]); island.rotation.z = Math.PI;
       this.cylinder(group, material(0xa5c6c1), [0, -.1, 0], [1.8, .18, 1.6]);
-      this.cylinder(group, trunkMat, [0, .85, 0], [.12, 1.8, .12]);
+      const tree = new THREE.Group(); group.add(tree); this.livingTrees.push(tree);
+      this.cylinder(tree, trunkMat, [0, .85, 0], [.12, 1.8, .12]);
       const leaves = i % 3 ? leafA : leafB;
-      this.mesh(group, new THREE.IcosahedronGeometry(1, 0), leaves, [0, 2.2, 0], [1.35, 1.5, 1.1]);
-      this.mesh(group, new THREE.IcosahedronGeometry(1, 0), leaves, [.75, 1.85, .1], [.75, .8, .8]);
+      this.mesh(tree, new THREE.IcosahedronGeometry(1, 0), leaves, [0, 2.2, 0], [1.35, 1.5, 1.1]);
+      this.mesh(tree, new THREE.IcosahedronGeometry(1, 0), leaves, [.75, 1.85, .1], [.75, .8, .8]);
       this.mesh(group, new THREE.OctahedronGeometry(.4), this.materials.lilac, [-1, .4, .2], [.45, 1.4, .45]);
       this.scene.add(group); this.garden.push(group);
     }
@@ -162,6 +167,80 @@ export class World {
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(.5, 24), new THREE.MeshBasicMaterial({ color: 0x242a47, transparent: true, opacity: .3, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = -.025; root.add(shadow);
     this.aura = this.mesh(root, new THREE.TorusGeometry(.53, .012, 5, 35), m.mint, [0, .01, 0]); this.aura.rotation.x = Math.PI / 2;
   }
+  prepareEnvironment() {
+    // Clone only environment materials: notes, mines and the android keep their contrast.
+    this.environmentMaterials = [];
+    const clones = new Map();
+    this.scene.traverse(object => {
+      if (!object.isMesh || !object.material.isMeshStandardMaterial) return;
+      const original = object.material;
+      if (!clones.has(original)) {
+        const copy = original.clone(), luminous = original.emissiveIntensity >= .2;
+        clones.set(original, copy);
+        this.environmentMaterials.push({ mat: copy, bright: original.color.clone(), dark: new THREE.Color(luminous ? 0x715aa8 : 0x242838), emissive: original.emissive.clone(), darkEmissive: new THREE.Color(luminous ? 0x9475df : 0x242139), glow: original.emissiveIntensity, roughness: original.roughness, metalness: original.metalness, luminous });
+      }
+      object.material = clones.get(original);
+    });
+    this.attackFloors = this.attackFloors.map(mat => clones.get(mat));
+    this.obsidian = [];
+    const crystalGeo = new THREE.ConeGeometry(.45, 2.5, 5);
+    const crystalMat = new THREE.MeshStandardMaterial({ color: 0x11131f, metalness: .72, roughness: .18, emissive: 0x281c44, emissiveIntensity: .12 });
+    const thornGeo = new THREE.ConeGeometry(1, 1, 4);
+    const thornMat = new THREE.MeshStandardMaterial({ color: 0x242033, metalness: .58, roughness: .22, emissive: 0x413053, emissiveIntensity: .22 });
+    for (let i = 0; i < this.garden.length; i++) {
+      const group = new THREE.Group(); this.garden[i].add(group);
+      // Replace the rounded canopy with a tall spear and sharp, branching barbs.
+      this.mesh(group, thornGeo, thornMat, [0, 2, 0], [.38, 4.2, .32]);
+      for (let j = 0; j < 6; j++) {
+        const side = j % 2 ? 1 : -1, tier = Math.floor(j / 2);
+        const barb = this.mesh(group, thornGeo, thornMat,
+          [side * .42, 1.1 + tier * .85, (j % 3 - 1) * .2],
+          [.23, 1.8 - tier * .22, .2]);
+        barb.rotation.z = -side * (.58 - tier * .06);
+        barb.rotation.x = (j % 3 - 1) * .2;
+      }
+      for (let j = 0; j < 3; j++) {
+        const spike = this.mesh(group, crystalGeo, crystalMat, [(j - 1) * .75, .65 + j * .2, .65], [.8, .65 + j * .22, .8]);
+        spike.rotation.z = (j - 1) * -.23;
+      }
+      this.obsidian.push(group);
+    }
+    this.themeBlend = -1;
+    this.darkSky = ['#080b16', '#17142b', '#30223e', '#141c2c'].map(c => new THREE.Color(c));
+    this.brightSky = ['#869ccd', '#c9c1e1', '#efd2e2', '#c0d9df'].map(c => new THREE.Color(c));
+    this.darkFog = new THREE.Color(0x191629); this.brightFog = new THREE.Color(0xb7badf);
+    this.themeColor = new THREE.Color();
+    this.updateEnvironment(null);
+  }
+  updateEnvironment(state) {
+    const progress = state && state.boss <= 0 ? THREE.MathUtils.clamp((state.time - (state.defeatedAt ?? state.time)) / 2.4, 0, 1) : 0;
+    const blend = progress * progress * (3 - 2 * progress);
+    if (blend === this.themeBlend) return;
+    this.themeBlend = blend;
+    for (const item of this.environmentMaterials) {
+      item.mat.color.lerpColors(item.dark, item.bright, blend);
+      item.mat.emissive.lerpColors(item.darkEmissive, item.emissive, blend);
+      item.mat.emissiveIntensity = THREE.MathUtils.lerp(item.luminous ? .55 : .12, item.glow, blend);
+      item.mat.roughness = THREE.MathUtils.lerp(.2, item.roughness, blend);
+      item.mat.metalness = THREE.MathUtils.lerp(.65, item.metalness, blend);
+    }
+    this.scene.fog.color.lerpColors(this.darkFog, this.brightFog, blend);
+    this.ambientLight.intensity = THREE.MathUtils.lerp(1.15, 2.2, blend);
+    this.sunlight.intensity = THREE.MathUtils.lerp(1.65, 3.1, blend);
+    this.sunlight.color.set(blend === 1 ? 0xffe6f4 : 0xb9b5ee).lerp(new THREE.Color(0xffe6f4), blend);
+    this.fillLight.intensity = THREE.MathUtils.lerp(.85, 1.4, blend);
+    for (const crystal of this.obsidian) {
+      crystal.visible = blend < 1;
+      crystal.scale.setScalar(Math.max(.001, 1 - blend));
+    }
+    for (const tree of this.livingTrees) {
+      tree.visible = blend > 0;
+      tree.scale.setScalar(Math.max(.001, blend));
+    }
+    const ctx = this.skyCanvas.getContext('2d'), gradient = ctx.createLinearGradient(0, 0, 0, 256);
+    for (const [i, stop] of [0, .5, .78, 1].entries()) gradient.addColorStop(stop, this.themeColor.lerpColors(this.darkSky[i], this.brightSky[i], blend).getStyle());
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, 8, 256); this.skyTexture.needsUpdate = true;
+  }
   buildBoss() {
     const boss = new THREE.Group(); this.boss = boss; boss.position.set(0, 3.8, -23); this.scene.add(boss);
     this.mesh(boss, new THREE.IcosahedronGeometry(1.05, 1), this.materials.black, [0, 0, 0], [1, .78, .7]);
@@ -204,7 +283,8 @@ export class World {
   }
   shoot(lane) {
     this.character.updateWorldMatrix(true, true);
-    const muzzle = this.gun.localToWorld(new THREE.Vector3(0, .02, -.45));
+    const muzzleZ = (this.gunLevel || 1) === 1 ? -.45 : weaponForLevel(this.gunLevel).kind === 'smg' ? -.75 : -1.05;
+    const muzzle = this.gun.localToWorld(new THREE.Vector3(0, .02, muzzleZ));
     const mesh = this.mesh(this.scene, new THREE.SphereGeometry(.14, 8, 6), new THREE.MeshBasicMaterial({ color: 0xfff8ce, toneMapped: false, fog: false }), muzzle.toArray(), [1, 1, 5]);
     const glow = new THREE.Mesh(new THREE.SphereGeometry(.23, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffc547, transparent: true, opacity: .48, depthWrite: false, toneMapped: false, fog: false }));
     mesh.add(glow);
@@ -218,9 +298,36 @@ export class World {
     this.damageNumbers.push({ label, age: 0, anchor: this.boss.position.clone().add(new THREE.Vector3(0, 1.2, 0)), offset: (this.damageSerial++ % 3 - 1) * 22 });
     this.hitFlash = .14;
   }
+  showUpgrade(level, power) {
+    this.upgradeNotice?.label.remove();
+    const label = document.createElement('div'); label.className = 'upgrade-notice';
+    const weapon = weaponForLevel(level);
+    label.innerHTML = `<strong>UPGRADE</strong><svg viewBox="0 0 100 50" aria-hidden="true"><path d="${weapon.path}" fill="#e5f8ff" stroke="#243455" stroke-width="3"/><path d="M27 12h30v5H27z" fill="#b6f6d9"/></svg><small>${weapon.name}</small><small>LV.${level} · ATK ${power}</small>`;
+    this.damageLayer.appendChild(label); this.upgradeNotice = { label, age: 0 };
+  }
   disposeEffect(mesh) {
     mesh.traverse(child => { if (child.isMesh) { child.geometry.dispose(); child.material.dispose(); } });
     this.scene.remove(mesh);
+  }
+  setGunLevel(level) {
+    if (this.gunLevel === level) return;
+    this.gunLevel = level;
+    this.gunAttachment?.removeFromParent();
+    const attachment = new THREE.Group(); this.gun.add(attachment); this.gunAttachment = attachment;
+    // Attachments share scene-owned geometry/materials and allocate no GPU resources.
+    if (level < 2) return;
+    const kind = weaponForLevel(level).kind;
+    this.box(attachment, this.materials.dark, [0, 0, .16], [.2, .18, .3]);
+    this.box(attachment, this.materials.white, [0, -.19, -.12], [.14, .3, .18]);
+    const length = kind === 'smg' ? .25 : .55;
+    const count = kind === 'minigun' ? 6 : 1;
+    for (let i = 0; i < count; i++) {
+      const angle = i * Math.PI / 3, radius = count === 1 ? 0 : .09;
+      const barrel = this.cylinder(attachment, this.materials.dark, [Math.cos(angle) * radius, Math.sin(angle) * radius, -.5 - length / 2], [.045, length, .045]);
+      barrel.rotation.x = Math.PI / 2;
+    }
+    if (kind === 'machine') this.box(attachment, this.materials.lilac, [.14, -.15, -.1], [.22, .25, .25]);
+    this.box(attachment, this.materials.mint, [0, .15, -.26], [.1, .035, .22]);
   }
   clearGameObjects() {
     for (const note of this.notes.values()) this.disposeObject(note);
@@ -229,6 +336,7 @@ export class World {
     this.effects = [];
     for (const number of this.damageNumbers) number.label.remove();
     this.damageNumbers = []; this.hitFlash = 0;
+    this.upgradeNotice?.label.remove(); this.upgradeNotice = null;
   }
   disposeObject(object) {
     // Shared geometry/materials remain owned by the scene.
@@ -244,6 +352,7 @@ export class World {
     this.camera.updateProjectionMatrix();
   }
   render(elapsed, dt, state, playerX, mode) {
+    this.updateEnvironment(state);
     const active = !!state && ['playing', 'paused', 'countdown'].includes(mode);
     const time = active ? state.time : elapsed * .28;
     const moving = mode === 'playing' || mode === 'home';
@@ -258,7 +367,8 @@ export class World {
     this.arms[0].rotation.x = -.15 + Math.sin(run) * .16; this.arms[1].rotation.x = -.2;
     this.head.rotation.z = Math.sin(time * 2) * .03;
     this.aura.scale.setScalar(1 + Math.sin(time * 5) * .04);
-    this.gun.scale.setScalar(state?.saved >= 50 ? 1.35 : state?.saved >= 20 ? 1.16 : 1);
+    this.gun.scale.setScalar(1 + Math.min(5, (state?.weaponLevel || 1) - 1) * .16);
+    this.setGunLevel(state?.weaponLevel || 1);
     this.boss.visible = !state || state.boss > 0 || showHome;
     this.boss.position.x = Math.sin(time * .7) * 1.7; this.boss.position.y = 3.6 + Math.sin(time * 2) * .3;
     this.boss.rotation.z = Math.sin(time) * .1; this.bossCore.rotation.y = time; this.bossRing.rotation.z = time * .3;
@@ -288,6 +398,17 @@ export class World {
       else { const effectDt = mode === 'paused' ? 0 : dt; e.mesh.position.addScaledVector(e.velocity, effectDt); e.mesh.material.opacity = 1 - e.age / e.life; e.mesh.rotation.x += effectDt * 4; }
     }
     const effectDt = mode === 'paused' ? 0 : dt;
+    if (this.upgradeNotice) {
+      const notice = this.upgradeNotice; notice.age += effectDt;
+      if (notice.age >= 2) { notice.label.remove(); this.upgradeNotice = null; }
+      else {
+        this.character.updateWorldMatrix(true, false);
+        const anchor = this.character.localToWorld(new THREE.Vector3(0, 3.05, 0)).project(this.camera);
+        notice.label.style.left = `${(anchor.x * .5 + .5) * this.container.clientWidth}px`;
+        notice.label.style.top = `${(-anchor.y * .5 + .5) * this.container.clientHeight - Math.min(notice.age, .4) * 20}px`;
+        notice.label.style.opacity = Math.min(1, (2 - notice.age) / .4);
+      }
+    }
     this.hitFlash = Math.max(0, this.hitFlash - effectDt);
     this.bossCore.scale.setScalar(this.hitFlash > 0 ? 1.3 : 1);
     for (let i = this.damageNumbers.length - 1; i >= 0; i--) {

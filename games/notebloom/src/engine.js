@@ -1,8 +1,11 @@
 export const STARTING_POWER = 100;
-export const BOSS_HEALTH_MULTIPLIER = 2.5;
+export const NOTES_PER_UPGRADE = 50;
+export const UPGRADE_POWER = 50;
+export const weaponLevelFor = saved => 1 + Math.floor(saved / NOTES_PER_UPGRADE);
+export const powerForSaved = saved => STARTING_POWER + (weaponLevelFor(saved) - 1) * UPGRADE_POWER;
 export const RULES = {
-  easy: { miss: 1, mine: 16, heal: 5, mineEvery: 8, bossScale: .43 },
-  normal: { miss: 2, mine: 24, heal: 4, mineEvery: 6, bossScale: .55 },
+  easy: { miss: 1, mine: 16, heal: 5, mineEvery: 4 },
+  normal: { miss: 2, mine: 24, heal: 4, mineEvery: 3 },
 };
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 export function seededRandom(seed) {
@@ -61,21 +64,75 @@ export function makeChart(duration, analysis, difficulty = 'easy', seed = 42) {
       }
     }
   }
-  events.sort((a, b) => a.time - b.time || a.id - b.id);
-  let modelDamage = 0;
-  for (const section of sections) {
-    const count = events.filter(e => e.type === 'note' && e.time < section.start).length;
-    modelDamage += Math.max(0, Math.floor((section.end - section.start) / .5)) * (1 + count * .8);
+  // Ensure 90% has a real attack opportunity, with time to leave/return to center.
+  const perfectDefeatTime = Math.min(Math.ceil(duration * .9 / .5) * .5, Math.floor(duration / .5) * .5);
+  const finale = { start: Math.max(0, perfectDefeatTime - 2 * beat), end: Math.min(duration, perfectDefeatTime + .5), type: 'attack' };
+  const finalEvents = events.filter(e => e.time < finale.start - 2 * beat || e.time > finale.end + 2 * beat);
+  const finalSections = [...sections, finale].filter(s => s.end > s.start).sort((a, b) => a.start - b.start);
+  const mergedSections = [];
+  for (const section of finalSections) {
+    const last = mergedSections.at(-1);
+    if (last && section.start <= last.end) last.end = Math.max(last.end, section.end);
+    else mergedSections.push({ ...section });
   }
-  // Multiply the previous health baseline, independently of starting weapon damage.
-  const bossMax = Math.max(40, Math.round(modelDamage * rules.bossScale)) * BOSS_HEALTH_MULTIPLIER;
-  return { duration, events, sections, beat, bpm: analysis.bpm, noteCount, bossMax };
+  finalEvents.sort((a, b) => a.time - b.time || a.id - b.id);
+  const notes = finalEvents.filter(e => e.type === 'note');
+  // Add hazards only AFTER the existing notes/lanes/random sequence are finalized.
+  // Each attack window keeps one consistent outer lane open; alternate when central.
+  for (let i = 0; i < mergedSections.length; i++) {
+    const section = mergedSections[i];
+    const previous = notes.findLast(e => e.time < section.start);
+    section.safeLane = previous?.lane === 1 ? 0 : previous?.lane === 3 ? 4 : i % 2 ? 4 : 0;
+  }
+  const mineRandom = seededRandom(seed ^ 0x6d2b79f5);
+  let extraId = Math.max(-1, ...events.map(e => e.id)) + 1;
+  for (let step = 0; ; step++) {
+    const time = start + step * beat;
+    if (time > duration - 1) break;
+    if (notes.some(note => Math.abs(note.time - time) < .00001)) continue;
+    const protectedLanes = new Set([2]);
+    const protectBetween = (a, b) => { for (let lane = Math.min(a, b); lane <= Math.max(a, b); lane++) protectedLanes.add(lane); };
+    const previous = notes.findLast(note => note.time < time);
+    const next = notes.find(note => note.time > time);
+    // Keep a corridor to nearby rescue notes, including existing low-BPM patterns.
+    if (previous && time - previous.time <= beat * 1.05) protectBetween(2, previous.lane);
+    if (next && next.time - time <= beat * 1.05) protectBetween(2, next.lane);
+    for (const section of mergedSections) {
+      if (time >= section.start && time < section.end) protectedLanes.add(section.safeLane);
+      // Preserve an approach/return corridor for two beats around each attack window.
+      else if (time >= section.start - 2 * beat && time < section.start) {
+        const lastNote = notes.findLast(note => note.time < section.start);
+        protectBetween(lastNote?.lane ?? 2, section.safeLane);
+      } else if (time >= section.end && time <= section.end + 2 * beat) {
+        const nextNote = notes.find(note => note.time >= section.end);
+        protectBetween(section.safeLane, nextNote?.lane ?? 2);
+      }
+    }
+    const candidates = [0, 1, 2, 3, 4].filter(lane => !protectedLanes.has(lane));
+    // Seeded shuffle independent of note generation; rows never close all five lanes.
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(mineRandom() * (i + 1)); [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+    for (const lane of candidates.slice(0, difficulty === 'easy' ? 2 : 3)) {
+      finalEvents.push({ time, lane, type: 'mine', id: extraId++, gapMine: true });
+    }
+  }
+  finalEvents.sort((a, b) => a.time - b.time || a.id - b.id);
+  let bossMax = 0, collected = 0;
+  // Same half-second shot clock and note-before-shot ordering as GameState.
+  // Perfect = all notes, no mines, every shot during the marked attack windows.
+  for (let t = .5; t <= perfectDefeatTime; t += .5) {
+    while (collected < notes.length && notes[collected].time <= t) collected++;
+    if (mergedSections.some(s => t >= s.start && t < s.end)) bossMax += powerForSaved(collected);
+  }
+  return { duration, events: finalEvents, sections: mergedSections, beat, bpm: analysis.bpm, noteCount: notes.length, bossMax: Math.max(1, bossMax), perfectDefeatTime };
 }
 
 export class GameState {
   constructor(chart, difficulty = 'easy') {
     this.chart = chart; this.rules = RULES[difficulty]; this.time = 0; this.health = 100;
     this.boss = chart.bossMax; this.saved = 0; this.missed = 0; this.hits = 0; this.power = STARTING_POWER;
+    this.weaponLevel = 1;
     this.combo = 0; this.maxCombo = 0; this.index = 0; this.lastShot = 0;
     this.stunnedUntil = 0; this.invincibleUntil = 0; this.defeatedAt = null; this.status = 'playing';
   }
@@ -96,9 +153,13 @@ export class GameState {
         this.index++;
         if (event.type === 'note') {
           if (event.lane === lane && tick >= this.stunnedUntil) {
-            this.saved++; this.power++; this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
+            this.saved++; this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
             this.health = clamp(this.health + this.rules.heal, 0, 100);
             effects.push({ type: 'save', lane, time: tick });
+            if (this.saved % NOTES_PER_UPGRADE === 0) {
+              this.weaponLevel = weaponLevelFor(this.saved); this.power = powerForSaved(this.saved);
+              effects.push({ type: 'upgrade', level: this.weaponLevel, power: this.power, time: tick });
+            }
           } else {
             this.missed++; this.hurt(this.rules.miss); effects.push({ type: 'miss', lane: event.lane, time: tick });
           }

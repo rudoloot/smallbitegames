@@ -7,7 +7,7 @@
   <meta name="description" content="음악이 피어나는 길. 음표를 구하고 보스를 물리치는 3D 리듬 액션 게임 Notebloom." />
   <title>Notebloom — 음악이 피어나는 길</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23171929'/%3E%3Ctext x='12' y='47' font-size='48' fill='%239cf2d3'%3E♪%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./style.css?v=261df4e08470" />
+  <link rel="stylesheet" href="./style.css?v=46a5add9e19b" />
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
@@ -62,13 +62,13 @@
 
     <aside class="field-guide">
       <div class="guide-top"><span class="tiny-dot"></span> ALL SYSTEMS IN HARMONY</div>
-      <div class="guide-content"><div class="eyebrow">FIELD GUIDE / 001</div><h2>작은 구출이<br>커다란 힘으로.</h2><div class="guide-item"><span class="guide-icon mint">♪</span><div><strong>구하고, 회복해요</strong><p>중앙 3개 레인의 음표를 만나면<br>공격력과 체력이 올라가요.</p></div></div><div class="guide-item"><span class="guide-icon lilac">⌁</span><div><strong>가장자리에서 공격해요</strong><p>양끝 레인에 서 있으면<br>보스를 향해 자동으로 발사해요.</p></div></div><div class="guide-item"><span class="guide-icon rose">✹</span><div><strong>가시 지뢰를 피해요</strong><p>음표를 놓치면 체력이 조금,<br>지뢰에 닿으면 많이 줄어들어요.</p></div></div><div class="guide-divider"></div><div class="guide-tip"><span>✧</span><p>보스를 먼저 쓰러뜨렸나요?<br>남은 음악은 온전히 구출을 위한 시간.</p></div></div>
+      <div class="guide-content"><div class="eyebrow">FIELD GUIDE / 001</div><h2>작은 구출이<br>커다란 힘으로.</h2><div class="guide-item"><span class="guide-icon mint">♪</span><div><strong>구하고, 회복해요</strong><p>중앙 3개 레인의 음표를 만나면<br>체력 회복, 50개마다 무기 강화.</p></div></div><div class="guide-item"><span class="guide-icon lilac">⌁</span><div><strong>가장자리에서 공격해요</strong><p>양끝 레인에 서 있으면<br>보스를 향해 자동으로 발사해요.</p></div></div><div class="guide-item"><span class="guide-icon rose">✹</span><div><strong>가시 지뢰를 피해요</strong><p>음표를 놓치면 체력이 조금,<br>지뢰에 닿으면 많이 줄어들어요.</p></div></div><div class="guide-divider"></div><div class="guide-tip"><span>✧</span><p>보스를 먼저 쓰러뜨렸나요?<br>남은 음악은 온전히 구출을 위한 시간.</p></div></div>
       <div class="edition"><span>NOTEBLOOM</span><span>PLAYABLE EDITION 0.1</span></div>
     </aside>
   </main>
 
   <dialog id="trackDialog" class="modal"><div class="modal-heading"><div><div class="eyebrow">CHOOSE YOUR SOUNDTRACK</div><h2>어떤 음악으로 떠날까요?</h2></div><button class="close-button" data-close="trackDialog" aria-label="음악 선택 닫기">×</button></div><p class="modal-subtitle">12개의 음악, 저마다 다른 여정.</p><div id="trackList" class="track-list"></div><p class="modal-footnote">음원을 분석해 박자 기반 채보를 생성해요. 곡에 따라 추정 박자가 다를 수 있어요.</p></dialog>
-  <dialog id="helpDialog" class="modal help-modal"><div class="modal-heading"><div><div class="eyebrow">A QUICK HELLO</div><h2>아리아와 함께 떠나요</h2></div><button class="close-button" data-close="helpDialog" aria-label="플레이 방법 닫기">×</button></div><div class="lane-guide"><span>⌁<small>공격</small></span><span>♪<small>구출</small></span><span>♪<small>구출</small></span><span>♪<small>구출</small></span><span>⌁<small>공격</small></span></div><ol class="help-steps"><li><strong>좌우로 드래그</strong><p>손가락을 움직여 레인을 바꿔요. PC에서는 방향키나 A / D도 사용할 수 있어요.</p></li><li><strong>음표로 성장하고 회복</strong><p>음표가 발밑의 판정선에 도착할 때 같은 레인에 있으면 구출! 음표마다 공격력 +1, 체력 회복.</p></li><li><strong>공격 신호에 양끝으로</strong><p>가장자리에서는 자동 사격해요. 보라색 공격 안내가 나오면 이동하기 좋은 타이밍이에요.</p></li><li><strong>곡이 끝나기 전에 보스 격파</strong><p>내 체력이 0이 되거나, 곡이 끝나도 보스가 남으면 실패해요. 보스를 잡은 뒤에도 음표를 놓치지 마세요.</p></li></ol><p class="help-health">산책: 놓침 −1 · 지뢰 −16 · 구출 +5<br>모험: 놓침 −2 · 지뢰 −24 · 구출 +4</p><button data-close="helpDialog" class="primary-button">준비됐어요 <span>♪</span></button></dialog>
-  <script type="module" src="./src/app.js?v=261df4e08470"></script>
+  <dialog id="helpDialog" class="modal help-modal"><div class="modal-heading"><div><div class="eyebrow">A QUICK HELLO</div><h2>아리아와 함께 떠나요</h2></div><button class="close-button" data-close="helpDialog" aria-label="플레이 방법 닫기">×</button></div><div class="lane-guide"><span>⌁<small>공격</small></span><span>♪<small>구출</small></span><span>♪<small>구출</small></span><span>♪<small>구출</small></span><span>⌁<small>공격</small></span></div><ol class="help-steps"><li><strong>좌우로 드래그</strong><p>손가락을 움직여 레인을 바꿔요. PC에서는 방향키나 A / D도 사용할 수 있어요.</p></li><li><strong>음표로 성장하고 회복</strong><p>음표가 발밑의 판정선에 도착할 때 같은 레인에 있으면 구출! 음표마다 체력 회복! 50개마다 무기가 강화되고 공격력이 50 증가해요.</p></li><li><strong>공격 신호에 양끝으로</strong><p>가장자리에서는 자동 사격해요. 보라색 공격 안내가 나오면 이동하기 좋은 타이밍이에요.</p></li><li><strong>곡이 끝나기 전에 보스 격파</strong><p>내 체력이 0이 되거나, 곡이 끝나도 보스가 남으면 실패해요. 보스를 잡은 뒤에도 음표를 놓치지 마세요.</p></li></ol><p class="help-health">산책: 놓침 −1 · 지뢰 −16 · 구출 +5<br>모험: 놓침 −2 · 지뢰 −24 · 구출 +4</p><button data-close="helpDialog" class="primary-button">준비됐어요 <span>♪</span></button></dialog>
+  <script type="module" src="./src/app.js?v=46a5add9e19b"></script>
 </body>
 </html>
