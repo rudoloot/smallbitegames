@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
+const CHARACTER_SCALE = .7;
+const SCROLL_SPEED = 1.5;
 const material = (color, glow = 0) => new THREE.MeshStandardMaterial({ color, roughness: .65, metalness: .12, emissive: color, emissiveIntensity: glow });
 
 export class World {
@@ -25,6 +27,9 @@ export class World {
     this.sphereGeo = new THREE.SphereGeometry(1, 12, 10);
     this.cylinderGeo = new THREE.CylinderGeometry(1, 1, 1, 10);
     this.notes = new Map(); this.effects = []; this.lastTime = 0;
+    this.damageNumbers = []; this.damageSerial = 0; this.hitFlash = 0;
+    this.damageLayer = document.createElement('div'); this.damageLayer.className = 'damage-numbers';
+    this.damageLayer.setAttribute('aria-hidden', 'true'); container.appendChild(this.damageLayer);
     this.buildSky(); this.buildRoad(); this.buildGarden(); this.buildCharacter(); this.buildBoss();
     this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(container);
     this.resize();
@@ -198,14 +203,32 @@ export class World {
     }
   }
   shoot(lane) {
-    const mesh = this.mesh(this.scene, new THREE.SphereGeometry(.065, 6, 5), new THREE.MeshBasicMaterial({ color: 0xb8ffe1 }), [(lane - 2) * 1.22 + .39, 1.2, 2.8], [1, 1, 3]);
-    this.effects.push({ mesh, age: 0, life: .28, start: mesh.position.clone(), target: this.boss.position.clone(), shot: true });
+    this.character.updateWorldMatrix(true, true);
+    const muzzle = this.gun.localToWorld(new THREE.Vector3(0, .02, -.45));
+    const mesh = this.mesh(this.scene, new THREE.SphereGeometry(.14, 8, 6), new THREE.MeshBasicMaterial({ color: 0xfff8ce, toneMapped: false, fog: false }), muzzle.toArray(), [1, 1, 5]);
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(.23, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffc547, transparent: true, opacity: .48, depthWrite: false, toneMapped: false, fog: false }));
+    mesh.add(glow);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), this.boss.position.clone().sub(muzzle).normalize());
+    this.effects.push({ mesh, age: 0, life: .24, start: muzzle, target: this.boss.position.clone(), shot: true });
+  }
+  showDamage(damage) {
+    const label = document.createElement('span'); label.className = 'boss-damage';
+    label.textContent = `−${Number(damage.toFixed(1)).toLocaleString()}`;
+    this.damageLayer.appendChild(label);
+    this.damageNumbers.push({ label, age: 0, anchor: this.boss.position.clone().add(new THREE.Vector3(0, 1.2, 0)), offset: (this.damageSerial++ % 3 - 1) * 22 });
+    this.hitFlash = .14;
+  }
+  disposeEffect(mesh) {
+    mesh.traverse(child => { if (child.isMesh) { child.geometry.dispose(); child.material.dispose(); } });
+    this.scene.remove(mesh);
   }
   clearGameObjects() {
     for (const note of this.notes.values()) this.disposeObject(note);
     this.notes.clear();
-    for (const effect of this.effects) { this.scene.remove(effect.mesh); effect.mesh.geometry.dispose(); effect.mesh.material.dispose(); }
+    for (const effect of this.effects) this.disposeEffect(effect.mesh);
     this.effects = [];
+    for (const number of this.damageNumbers) number.label.remove();
+    this.damageNumbers = []; this.hitFlash = 0;
   }
   disposeObject(object) {
     // Shared geometry/materials remain owned by the scene.
@@ -224,11 +247,11 @@ export class World {
     const active = !!state && ['playing', 'paused', 'countdown'].includes(mode);
     const time = active ? state.time : elapsed * .28;
     const moving = mode === 'playing' || mode === 'home';
-    const run = moving ? time * 12 : 0;
+    const run = moving ? time * 12 * SCROLL_SPEED : 0;
     const showHome = mode === 'home' || mode === 'loading';
     this.character.position.x += ((showHome ? .7 : playerX * 1.22) - this.character.position.x) * Math.min(1, dt * 22);
     this.character.position.z = showHome ? -6 : 3.25;
-    this.character.scale.setScalar(showHome ? 1.7 : 1);
+    this.character.scale.setScalar((showHome ? 1.7 : 1) * CHARACTER_SCALE);
     this.character.rotation.y = showHome ? -.35 : -(playerX * 1.22 - this.character.position.x) * .13;
     this.character.position.y = .07 + Math.abs(Math.sin(run)) * .045;
     this.legs[0].rotation.x = Math.sin(run) * .38; this.legs[1].rotation.x = -Math.sin(run) * .38;
@@ -239,8 +262,8 @@ export class World {
     this.boss.visible = !state || state.boss > 0 || showHome;
     this.boss.position.x = Math.sin(time * .7) * 1.7; this.boss.position.y = 3.6 + Math.sin(time * 2) * .3;
     this.boss.rotation.z = Math.sin(time) * .1; this.bossCore.rotation.y = time; this.bossRing.rotation.z = time * .3;
-    for (let i = 0; i < this.beatLines.length; i++) this.beatLines[i].position.z = 9 - ((i * 3 + 80 - time * 7 % 78) % 78);
-    for (let i = 0; i < this.garden.length; i++) { this.garden[i].position.z = 13 - ((i * 3.1 + 105 - time * 3 % 99.2) % 99.2); }
+    for (let i = 0; i < this.beatLines.length; i++) this.beatLines[i].position.z = 9 - ((i * 3 + 80 - time * 7 * SCROLL_SPEED % 78) % 78);
+    for (let i = 0; i < this.garden.length; i++) { this.garden[i].position.z = 13 - ((i * 3.1 + 105 - time * 3 * SCROLL_SPEED % 99.2) % 99.2); }
     for (let i = 0; i < this.dust.length; i++) { this.dust[i].position.y += Math.sin(elapsed + i) * dt * .12; this.dust[i].rotation.y += dt; }
     const pulse = .2 + Math.max(0, Math.sin(time / (state?.chart.beat || .5) * Math.PI * 2)) * .2;
     for (const mat of this.attackFloors) mat.emissiveIntensity = state?.attackWindow && state.boss > 0 ? pulse + .25 : .08;
@@ -248,21 +271,33 @@ export class World {
     if (active) {
       for (let i = state.index; i < state.chart.events.length; i++) {
         const event = state.chart.events[i], until = event.time - time;
-        if (until > 3) break;
+        if (until > 3 / SCROLL_SPEED) break;
         if (until < -.1 || (event.type === 'mine' && state.boss <= 0)) continue;
         visible.add(event.id);
         let mesh = this.notes.get(event.id);
         if (!mesh) { mesh = this.createNote(event.type); this.notes.set(event.id, mesh); }
-        mesh.position.set((event.lane - 2) * 1.22, .12, 3.25 - until * 14);
+        mesh.position.set((event.lane - 2) * 1.22, .12, 3.25 - until * 14 * SCROLL_SPEED);
         mesh.rotation.y = event.type === 'mine' ? time * 1.6 : Math.sin(time * 3 + event.id) * .2;
       }
     }
     for (const [id, mesh] of this.notes) if (!visible.has(id)) { this.disposeObject(mesh); this.notes.delete(id); }
     for (let i = this.effects.length - 1; i >= 0; i--) {
       const e = this.effects[i]; if (mode !== 'paused') e.age += dt;
-      if (e.age >= e.life) { this.scene.remove(e.mesh); e.mesh.geometry.dispose(); e.mesh.material.dispose(); this.effects.splice(i, 1); continue; }
+      if (e.age >= e.life) { this.disposeEffect(e.mesh); this.effects.splice(i, 1); continue; }
       if (e.shot) e.mesh.position.lerpVectors(e.start, e.target, e.age / e.life);
       else { const effectDt = mode === 'paused' ? 0 : dt; e.mesh.position.addScaledVector(e.velocity, effectDt); e.mesh.material.opacity = 1 - e.age / e.life; e.mesh.rotation.x += effectDt * 4; }
+    }
+    const effectDt = mode === 'paused' ? 0 : dt;
+    this.hitFlash = Math.max(0, this.hitFlash - effectDt);
+    this.bossCore.scale.setScalar(this.hitFlash > 0 ? 1.3 : 1);
+    for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
+      const number = this.damageNumbers[i]; number.age += effectDt;
+      if (number.age >= .95) { number.label.remove(); this.damageNumbers.splice(i, 1); continue; }
+      const projected = number.anchor.clone().project(this.camera);
+      const x = (projected.x * .5 + .5) * this.container.clientWidth + number.offset;
+      const y = (-projected.y * .5 + .5) * this.container.clientHeight - number.age * 38;
+      number.label.style.left = `${x}px`; number.label.style.top = `${y}px`;
+      number.label.style.opacity = Math.min(1, (.95 - number.age) / .25);
     }
     this.renderer.render(this.scene, this.camera);
   }

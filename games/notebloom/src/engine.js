@@ -1,3 +1,5 @@
+export const STARTING_POWER = 100;
+export const BOSS_HEALTH_MULTIPLIER = 2.5;
 export const RULES = {
   easy: { miss: 1, mine: 16, heal: 5, mineEvery: 8, bossScale: .43 },
   normal: { miss: 2, mine: 24, heal: 4, mineEvery: 6, bossScale: .55 },
@@ -65,13 +67,15 @@ export function makeChart(duration, analysis, difficulty = 'easy', seed = 42) {
     const count = events.filter(e => e.type === 'note' && e.time < section.start).length;
     modelDamage += Math.max(0, Math.floor((section.end - section.start) / .5)) * (1 + count * .8);
   }
-  return { duration, events, sections, beat, bpm: analysis.bpm, noteCount, bossMax: Math.max(40, Math.round(modelDamage * rules.bossScale)) };
+  // Multiply the previous health baseline, independently of starting weapon damage.
+  const bossMax = Math.max(40, Math.round(modelDamage * rules.bossScale)) * BOSS_HEALTH_MULTIPLIER;
+  return { duration, events, sections, beat, bpm: analysis.bpm, noteCount, bossMax };
 }
 
 export class GameState {
   constructor(chart, difficulty = 'easy') {
     this.chart = chart; this.rules = RULES[difficulty]; this.time = 0; this.health = 100;
-    this.boss = chart.bossMax; this.saved = 0; this.missed = 0; this.hits = 0; this.power = 1;
+    this.boss = chart.bossMax; this.saved = 0; this.missed = 0; this.hits = 0; this.power = STARTING_POWER;
     this.combo = 0; this.maxCombo = 0; this.index = 0; this.lastShot = 0;
     this.stunnedUntil = 0; this.invincibleUntil = 0; this.defeatedAt = null; this.status = 'playing';
   }
@@ -105,7 +109,8 @@ export class GameState {
       } else {
         this.lastShot = nextShot;
         if ((lane === 0 || lane === 4) && this.boss > 0 && tick >= this.stunnedUntil) {
-          this.boss = Math.max(0, this.boss - this.power); effects.push({ type: 'shot', lane, time: tick });
+          const damage = Math.min(this.boss, this.power);
+          this.boss -= damage; effects.push({ type: 'shot', lane, time: tick, damage });
           if (this.boss === 0) { this.defeatedAt = tick; effects.push({ type: 'victory', time: tick }); }
         }
         nextShot += .5;

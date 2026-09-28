@@ -1,7 +1,7 @@
-import { TRACKS, MusicPlayer } from './music.js';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js';
-import { World } from './scene.js';
-import { exitGame } from './launch.js';
+import { TRACKS, MusicPlayer } from './music.js?v=261df4e08470';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=261df4e08470';
+import { World } from './scene.js?v=261df4e08470';
+import { exitGame } from './launch.js?v=261df4e08470';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -131,7 +131,7 @@ function updateHUD() {
 function handleEffects(effects) {
   for (const effect of effects) {
     if (effect.type === 'save') { world.burst(effect.lane, 0xb6f6d9); audio.sound('save'); }
-    if (effect.type === 'shot') { world.shoot(effect.lane); audio.sound('shot'); }
+    if (effect.type === 'shot') { world.shoot(effect.lane); world.showDamage(effect.damage); audio.sound('shot'); }
     if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${state.rules.mine}`, true); }
     if (effect.type === 'victory') { world.burst(2, 0xe0bcff); feedback('보스 격파 · RESCUE TIME!', false, 2300); }
     if (effect.type === 'save' && state.saved % 10 === 0) feedback(`+${state.rules.heal} HP · ${state.saved} RESCUED`);
