@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { weaponForLevel } from './weapons.js?v=46a5add9e19b';
+import { weaponForLevel } from './weapons.js?v=6bf967bcfb63';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -65,23 +65,26 @@ export class World {
     for (let i = 0; i < 45; i++) { const mote = this.mesh(this.scene, geo, this.materials.mint, [Math.sin(i * 5.8) * 12, 1 + i % 8, -i * 1.5]); this.dust.push(mote); }
   }
   buildRoad() {
-    this.box(this.scene, this.materials.road, [0, -.23, -32], [6.5, .4, 100]);
+    this.box(this.scene, this.materials.road, [0, -.23, -32], [6.1, .4, 100]);
     this.attackFloors = [];
     for (let i = 0; i < 5; i++) {
       const x = (i - 2) * 1.22;
-      if (i === 0 || i === 4) {
-        const mat = material(0x9983c9, .12);
-        this.box(this.scene, mat, [x, -.014, -32], [1.16, .04, 100]); this.attackFloors.push(mat);
-      }
-      this.box(this.scene, material(i === 0 || i === 4 ? 0xd5b4ff : 0xb9e8e0, .25), [x, .006, -32], [.023, .02, 100]);
+      const attack = i === 0 || i === 4;
+      const mat = material(attack ? 0x9983c9 : i === 2 ? 0x718a96 : 0x667687, .12);
+      // Five broad road surfaces; objects travel through their centers, not on lines.
+      this.box(this.scene, mat, [x, -.014, -32], [1.18, .04, 100]);
+      if (attack) this.attackFloors.push(mat);
+    }
+    for (let i = 1; i < 5; i++) {
+      this.box(this.scene, material(0xb9e8e0, .25), [(i - 2.5) * 1.22, .006, -32], [.035, .02, 100]);
     }
     for (const side of [-1, 1]) {
-      this.box(this.scene, this.materials.edge, [side * 3.26, .035, -32], [.065, .09, 100]);
-      this.box(this.scene, this.materials.white, [side * 3.36, -.12, -32], [.12, .28, 100]);
+      this.box(this.scene, this.materials.edge, [side * 3.05, .035, -32], [.065, .09, 100]);
+      this.box(this.scene, this.materials.white, [side * 3.15, -.12, -32], [.12, .28, 100]);
     }
     this.beatLines = [];
-    for (let i = 0; i < 26; i++) this.beatLines.push(this.box(this.scene, material(0x8a8caa), [0, .007, -i * 3], [6.45, .015, .027]));
-    this.box(this.scene, material(0xb9ffe0, .9), [0, .04, 3.25], [6.4, .026, .06]);
+    for (let i = 0; i < 26; i++) this.beatLines.push(this.box(this.scene, material(0x8a8caa), [0, .007, -i * 3], [6.1, .015, .027]));
+    this.box(this.scene, material(0xb9ffe0, .9), [0, .04, 3.25], [6.1, .026, .06]);
     const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 64;
     const ctx = canvas.getContext('2d'); ctx.fillStyle = '#e8ddff'; ctx.font = 'bold 35px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⌁', 64, 42);
     const tex = new THREE.CanvasTexture(canvas), mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });

@@ -1,8 +1,8 @@
-import { TRACKS, MusicPlayer } from './music.js?v=46a5add9e19b';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=46a5add9e19b';
-import { World } from './scene.js?v=46a5add9e19b';
-import { weaponForLevel } from './weapons.js?v=46a5add9e19b';
-import { exitGame } from './launch.js?v=46a5add9e19b';
+import { TRACKS, MusicPlayer } from './music.js?v=6bf967bcfb63';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=6bf967bcfb63';
+import { World } from './scene.js?v=6bf967bcfb63';
+import { weaponForLevel } from './weapons.js?v=6bf967bcfb63';
+import { exitGame } from './launch.js?v=6bf967bcfb63';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');

@@ -14,12 +14,35 @@ export const TRACKS = [
   { id: 'dramatic', title: 'Dramatic Cinematic', artist: '_musicdream_', genre: 'ORCHESTRAL', duration: '3:16', color: '#b5d2e7', file: 'musicdream-dramatic-cinematic-documentary-609202.mp3' },
 ];
 
+// A short kick with a crisp, filtered noise attack: audible over the soundtrack
+// without a pitched melody that could clash with the selected song.
+export function rescueBeatSamples(sampleRate) {
+  const samples = new Float32Array(Math.ceil(sampleRate * .15));
+  let phase = 0, noise = 73, previousNoise = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const t = i / sampleRate;
+    phase += 2 * Math.PI * (65 + 155 * Math.exp(-t * 55)) / sampleRate;
+    noise = (1664525 * noise + 1013904223) >>> 0;
+    const currentNoise = noise / 4294967296 * 2 - 1;
+    const click = (currentNoise - previousNoise) * .23 * Math.exp(-t * 130);
+    previousNoise = currentNoise;
+    const attack = Math.min(1, t / .0015), release = Math.min(1, (samples.length - 1 - i) / (sampleRate * .012));
+    samples[i] = (.72 * Math.sin(phase) * Math.exp(-t * 26) + click) * attack * release;
+  }
+  return samples;
+}
+
 export class MusicPlayer {
-  constructor() { this.context = null; this.source = null; this.buffer = null; this.offset = 0; this.started = 0; this.playing = false; this.volume = .65; this.cache = new Map(); }
+  constructor() { this.context = null; this.source = null; this.buffer = null; this.offset = 0; this.started = 0; this.playing = false; this.volume = .65; this.cache = new Map(); this.rescueVoices = new Set(); }
   async unlock() {
     if (!this.context) {
       this.context = new (window.AudioContext || window.webkitAudioContext)();
       this.gain = this.context.createGain(); this.gain.connect(this.context.destination); this.gain.gain.value = this.volume;
+      this.rescueGain = this.context.createGain(); this.rescueGain.gain.value = this.volume * .8;
+      this.rescueGain.connect(this.context.destination);
+      const samples = rescueBeatSamples(this.context.sampleRate);
+      this.rescueBuffer = this.context.createBuffer(1, samples.length, this.context.sampleRate);
+      this.rescueBuffer.copyToChannel(samples, 0);
     }
     await this.context.resume();
   }
@@ -42,11 +65,27 @@ export class MusicPlayer {
     this.started = this.context.currentTime; this.source.start(0, this.offset); this.playing = true;
   }
   get time() { return Math.min(this.buffer?.duration || 0, this.offset + (this.playing ? this.context.currentTime - this.started : 0)); }
-  pause() { if (!this.playing) return; this.offset = this.time; this.playing = false; this.source?.stop(); this.source?.disconnect(); this.source = null; }
+  pause() {
+    for (const voice of this.rescueVoices) { voice.stop(); voice.disconnect(); }
+    this.rescueVoices.clear();
+    if (!this.playing) return;
+    this.offset = this.time; this.playing = false; this.source?.stop(); this.source?.disconnect(); this.source = null;
+  }
   stop() { this.pause(); this.offset = 0; }
-  setVolume(value) { this.volume = value; if (this.gain) this.gain.gain.setTargetAtTime(value, this.context.currentTime, .04); }
+  setVolume(value) {
+    this.volume = value;
+    if (this.gain) this.gain.gain.setTargetAtTime(value, this.context.currentTime, .04);
+    if (this.rescueGain) this.rescueGain.gain.setTargetAtTime(value * .8, this.context.currentTime, .04);
+  }
   sound(kind) {
     if (!this.context || !this.playing) return;
+    if (kind === 'save') {
+      const voice = this.context.createBufferSource(); voice.buffer = this.rescueBuffer;
+      voice.connect(this.rescueGain); this.rescueVoices.add(voice);
+      voice.onended = () => { voice.disconnect(); this.rescueVoices.delete(voice); };
+      voice.start();
+      return;
+    }
     const osc = this.context.createOscillator(), gain = this.context.createGain(), now = this.context.currentTime;
     osc.type = kind === 'mine' ? 'triangle' : 'sine';
     osc.frequency.setValueAtTime(kind === 'mine' ? 110 : kind === 'shot' ? 480 : 1046, now);
