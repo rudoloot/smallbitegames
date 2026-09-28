@@ -1,10 +1,10 @@
-import {WORLD,Supply,indexData,fitWorld,clientToWorld,returnTarget,blankSave,recordMerge,unlocked,knownRecipe} from './core.js?v=c9080b881791';
-import {readSave,writeSave} from './storage.js?v=c9080b881791';
-import {Physics} from './physics.js?v=c9080b881791';
-import {Renderer} from './renderer.js?v=c9080b881791';
-import {paintIcon,prepareAssets,sprite} from './art.js?v=c9080b881791';
-import {SHELF_IDS,SHELF_SET,shelfCount,shelfItems} from './collections.js?v=c9080b881791';
-import {geometryFromAlpha} from './collision-shapes.js?v=c9080b881791';
+import {WORLD,Supply,indexData,fitWorld,clientToWorld,returnTarget,blankSave,recordMerge,unlocked,knownRecipe} from './core.js?v=86366cb10acf';
+import {readSave,writeSave} from './storage.js?v=86366cb10acf';
+import {Physics} from './physics.js?v=86366cb10acf';
+import {Renderer} from './renderer.js?v=86366cb10acf';
+import {paintIcon,prepareAssets,sprite} from './art.js?v=86366cb10acf';
+import {SHELF_IDS,SHELF_SET,shelfCount,shelfItems} from './collections.js?v=86366cb10acf';
+import {geometryFromAlpha} from './collision-shapes.js?v=86366cb10acf';
 
 const $=id=>document.getElementById(id);
 const icons={pause:'<path d="M8 5v14M16 5v14"/>',book:'<path d="M12 6Q7 3 3 5v14q4-2 9 1q5-3 9-1V5q-4-2-9 1v14"/>',settings:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/>',close:'<path d="m6 6 12 12M18 6 6 18"/>',back:'<path d="m14 5-7 7 7 7"/>'};
@@ -143,7 +143,7 @@ function frame(now){
   previousTime=now;if(screen==='play'&&physics)renderer.render(physics,supply,aim,!isRunning());requestAnimationFrame(frame);
 }
 async function init(){
-  try{const response=await fetch('data/game-data.json?v=c9080b881791');if(!response.ok)throw Error('data');data=indexData(await response.json());await prepareAssets(data);data.geometry={};for(const item of data.items){const canvas=sprite(item);data.geometry[item.id]=geometryFromAlpha(canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height);}const loaded=debug?{save:blankSave(),error:false}:readSave(data);save=loaded.save;saveError=loaded.error;renderer=new Renderer($('game'),data);bind();showShelf();$('loading').hidden=true;if(saveError)notify('저장 기록을 읽지 못했어요. 이번에는 새 공방으로 시작해요.');
+  try{const response=await fetch('data/game-data.json?v=86366cb10acf');if(!response.ok)throw Error('data');data=indexData(await response.json());await prepareAssets(data);data.geometry={};for(const item of data.items){const canvas=sprite(item);data.geometry[item.id]=geometryFromAlpha(canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data,canvas.width,canvas.height);}const loaded=debug?{save:blankSave(),error:false}:readSave(data);save=loaded.save;saveError=loaded.error;renderer=new Renderer($('game'),data);bind();showShelf();$('loading').hidden=true;if(saveError)notify('저장 기록을 읽지 못했어요. 이번에는 새 공방으로 시작해요.');
     if(debug)window.__game={
       snapshot:()=>({screen,modal,portrait,score,highestTier,collectionCount:count(),save:structuredClone(save),world:{...WORLD},current:supply?.current,next:supply?.next,time:physics?.time,dangerMs:physics?.dangerMs,over:physics?.over,blocks:physics?.blocks.map(b=>({id:b.id,itemId:b.itemId,x:b.position.x,y:b.position.y,r:b.visualRadius,eligible:b.eligible,parts:b.parts.length,bounds:structuredClone(b.bounds)}))||[]}),
       spawn:(id,x,y,options)=>physics.add(id,x,y,options),step:n=>{for(let i=0;i<n;i++)physics.step();},start,drop,

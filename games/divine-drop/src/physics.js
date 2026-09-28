@@ -1,4 +1,4 @@
-import {WORLD,keyFor} from './core.js?v=c9080b881791';
+import {WORLD,keyFor} from './core.js?v=86366cb10acf';
 export class Physics {
   constructor(data,{onMerge=()=>{},onGameOver=()=>{},Matter=globalThis.Matter}={}){
     this.M=Matter;this.data=data;this.onMerge=onMerge;this.onGameOver=onGameOver;
@@ -23,6 +23,16 @@ export class Physics {
     const scale=item.radius*1.11,options={restitution:.08,friction:.35,frictionStatic:.65,frictionAir:.012,density:.001,slop:.08};
     const parts=geometry.parts.map(p=>this.M.Bodies.rectangle(p.x*scale,p.y*scale,p.w*scale,p.h*scale,options));
     const body=parts.length===1?parts[0]:this.M.Body.create({...options,parts});
+    if(parts.length>1){
+      // Matter sums each part's local inertia without its distance from the
+      // compound centre. Include that parallel-axis term for thin/split sprites,
+      // using the same inertia scale (4) as Matter's rectangle bodies.
+      const inertia=body.parts.slice(1).reduce((sum,part)=>{
+        const dx=part.position.x-body.position.x,dy=part.position.y-body.position.y;
+        return sum+part.inertia+4*part.mass*(dx*dx+dy*dy);
+      },0);
+      this.M.Body.setInertia(body,inertia);
+    }
     body.renderOffset={x:-body.position.x,y:-body.position.y};body.visualRadius=item.radius;
     this.M.Body.setPosition(body,{x,y});body.itemId=id;
     return body;

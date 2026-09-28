@@ -1,7 +1,7 @@
-import {extractAtlas,compactDimensions} from './atlas.js?v=c9080b881791';
+import {extractAtlas,compactDimensions} from './atlas.js?v=86366cb10acf';
 const objects=new Map(),toys=new Map(),ghosts=new Map();
 export async function prepareAssets(data){
-  const response=await fetch('assets/generated/manifest.json?v=c9080b881791');if(!response.ok)throw Error('Missing sprite manifest');
+  const response=await fetch('assets/generated/manifest.json?v=86366cb10acf');if(!response.ok)throw Error('Missing sprite manifest');
   const manifest=await response.json(),sheets=[...manifest.sheets,...manifest.toySheets];
   const images=await Promise.all(sheets.map(async sheet=>{const image=new Image();image.src=sheet.path;await image.decode();return image;}));
   for(let n=0;n<sheets.length;n++){

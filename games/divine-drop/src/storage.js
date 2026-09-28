@@ -1,4 +1,4 @@
-import {blankSave,normalizeSave} from './core.js?v=c9080b881791';
+import {blankSave,normalizeSave} from './core.js?v=86366cb10acf';
 export const SAVE_KEY='elementToyShelf.save.v2';
 export function readSave(data,storage){
   try{
