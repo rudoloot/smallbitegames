@@ -7,7 +7,7 @@
   <meta name="description" content="음악이 피어나는 길. 음표를 구하고 보스를 물리치는 3D 리듬 액션 게임 Notebloom." />
   <title>Notebloom — 음악이 피어나는 길</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23171929'/%3E%3Ctext x='12' y='47' font-size='48' fill='%239cf2d3'%3E♪%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./style.css?v=6bf967bcfb63" />
+  <link rel="stylesheet" href="./style.css?v=f2875b1ee594" />
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
@@ -29,6 +29,7 @@
       <div id="scene" aria-label="3D 음악 세계"></div>
       <div class="vignette"></div>
       <div class="stage-brand"><span>✳</span> notebloom <small>THE BLOOMING ROAD</small></div>
+      <button id="fullscreenButton" class="fullscreen-button" type="button" aria-label="전체화면" aria-pressed="false">⛶ 전체화면</button>
       <div id="hud" class="hud hidden">
         <div class="boss-label"><span id="bossName">DISSONANCE <small>불협화음</small></span><span id="bossValue">100%</span></div>
         <div id="bossMeter" class="boss-meter" role="progressbar" aria-label="보스 체력" aria-valuemin="0" aria-valuemax="100"><div id="bossFill"></div></div>
@@ -67,8 +68,8 @@
     </aside>
   </main>
 
-  <dialog id="trackDialog" class="modal"><div class="modal-heading"><div><div class="eyebrow">CHOOSE YOUR SOUNDTRACK</div><h2>어떤 음악으로 떠날까요?</h2></div><button class="close-button" data-close="trackDialog" aria-label="음악 선택 닫기">×</button></div><p class="modal-subtitle">12개의 음악, 저마다 다른 여정.</p><div id="trackList" class="track-list"></div><p class="modal-footnote">음원을 분석해 박자 기반 채보를 생성해요. 곡에 따라 추정 박자가 다를 수 있어요.</p></dialog>
+  <dialog id="trackDialog" class="modal"><div class="modal-heading"><div><div class="eyebrow">CHOOSE YOUR SOUNDTRACK</div><h2>어떤 음악으로 떠날까요?</h2></div><button class="close-button" data-close="trackDialog" aria-label="음악 선택 닫기">×</button></div><p class="modal-subtitle">내 노래 또는 준비된 12곡으로 떠나요.</p><button id="localMusicButton" class="secondary-button">＋ 내 기기에서 노래 선택</button><input id="localMusicFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac" hidden><p class="local-music-hint">파일 앱에 저장된 음원을 선택해요. 최대 50MB · 10초~10분<br>기기 안에서만 분석·재생하며 업로드하지 않아요.</p><p id="localMusicError" class="local-music-error" role="alert"></p><div id="trackList" class="track-list"></div><p class="modal-footnote">실제 타격음과 강세를 분석해 음표를 배치해요. 스트리밍 앱 전용 다운로드 곡은 사용할 수 없어요. 내 노래는 새로고침하면 다시 선택해야 해요.</p></dialog>
   <dialog id="helpDialog" class="modal help-modal"><div class="modal-heading"><div><div class="eyebrow">A QUICK HELLO</div><h2>아리아와 함께 떠나요</h2></div><button class="close-button" data-close="helpDialog" aria-label="플레이 방법 닫기">×</button></div><div class="lane-guide"><span>⌁<small>공격</small></span><span>♪<small>구출</small></span><span>♪<small>구출</small></span><span>♪<small>구출</small></span><span>⌁<small>공격</small></span></div><ol class="help-steps"><li><strong>좌우로 드래그</strong><p>손가락을 움직여 레인을 바꿔요. PC에서는 방향키나 A / D도 사용할 수 있어요.</p></li><li><strong>음표로 성장하고 회복</strong><p>음표가 발밑의 판정선에 도착할 때 같은 레인에 있으면 구출! 음표마다 체력 회복! 50개마다 무기가 강화되고 공격력이 50 증가해요.</p></li><li><strong>공격 신호에 양끝으로</strong><p>가장자리에서는 자동 사격해요. 보라색 공격 안내가 나오면 이동하기 좋은 타이밍이에요.</p></li><li><strong>곡이 끝나기 전에 보스 격파</strong><p>내 체력이 0이 되거나, 곡이 끝나도 보스가 남으면 실패해요. 보스를 잡은 뒤에도 음표를 놓치지 마세요.</p></li></ol><p class="help-health">산책: 놓침 −1 · 지뢰 −16 · 구출 +5<br>모험: 놓침 −2 · 지뢰 −24 · 구출 +4</p><button data-close="helpDialog" class="primary-button">준비됐어요 <span>♪</span></button></dialog>
-  <script type="module" src="./src/app.js?v=6bf967bcfb63"></script>
+  <script type="module" src="./src/app.js?v=f2875b1ee594"></script>
 </body>
 </html>

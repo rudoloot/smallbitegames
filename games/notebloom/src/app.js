@@ -1,11 +1,13 @@
-import { TRACKS, MusicPlayer } from './music.js?v=6bf967bcfb63';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=6bf967bcfb63';
-import { World } from './scene.js?v=6bf967bcfb63';
-import { weaponForLevel } from './weapons.js?v=6bf967bcfb63';
-import { exitGame } from './launch.js?v=6bf967bcfb63';
+import { TRACKS, MusicPlayer, localTrackFromFile } from './music.js?v=f2875b1ee594';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=f2875b1ee594';
+import { World } from './scene.js?v=f2875b1ee594';
+import { weaponForLevel } from './weapons.js?v=f2875b1ee594';
+import { exitGame } from './launch.js?v=f2875b1ee594';
+import { setupFullscreen } from './fullscreen.js?v=f2875b1ee594';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
+setupFullscreen($('fullscreenButton'));
 let world;
 try { world = new World($('scene')); }
 catch (error) { $('homeError').textContent = '3D 화면을 시작하지 못했어요. WebGL을 지원하는 브라우저에서 하드웨어 가속을 켜고 다시 열어 주세요.'; $('startButton').disabled = true; console.error(error); }
@@ -32,6 +34,30 @@ for (const track of TRACKS) {
 }
 selectTrack(selected);
 $('trackButton').addEventListener('click', () => $('trackDialog').showModal());
+let localTrack = null, localSerial = 0;
+$('localMusicButton').addEventListener('click', () => $('localMusicFile').click());
+$('localMusicFile').addEventListener('change', () => {
+  const file = $('localMusicFile').files?.[0];
+  $('localMusicFile').value = '';
+  if (!file) return;
+  $('localMusicError').textContent = '';
+  try {
+    const track = localTrackFromFile(file, ++localSerial);
+    if (localTrack) { audio.cache.delete(localTrack.id); analyses.delete(localTrack.id); }
+    localTrack = track;
+    $('localTrackOption')?.remove();
+    const button = document.createElement('button');
+    button.id = 'localTrackOption'; button.className = 'track-option'; button.dataset.id = track.id;
+    const art = document.createElement('span'); art.className = 'album-art'; art.textContent = '♫';
+    const label = document.createElement('span'), title = document.createElement('strong'), subtitle = document.createElement('small');
+    title.textContent = track.title; subtitle.textContent = '내 기기 · MY MUSIC'; label.append(title, subtitle);
+    const check = document.createElement('span'); check.className = 'check';
+    button.append(art, label, check);
+    button.addEventListener('click', () => { selectTrack(track); $('trackDialog').close(); });
+    $('trackList').prepend(button);
+    selectTrack(track); $('homeError').textContent = ''; $('trackDialog').close();
+  } catch (error) { $('localMusicError').textContent = error.message; }
+});
 $('helpButton').addEventListener('click', () => $('helpDialog').showModal());
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
 document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', e => { if (e.target === dialog) { const r = dialog.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close(); } }));
@@ -47,6 +73,7 @@ async function start() {
   try {
     await audio.unlock();
     const buffer = await audio.load(selected);
+    if (selected.localFile) { selected.duration = formatTime(buffer.duration); selectTrack(selected); }
     $('loadingText').textContent = '박자를 찾고 음표의 길을 만드는 중';
     // Allow the loading text to paint before the bounded analysis work.
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));

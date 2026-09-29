@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { weaponForLevel } from './weapons.js?v=6bf967bcfb63';
+import { weaponForLevel } from './weapons.js?v=f2875b1ee594';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;

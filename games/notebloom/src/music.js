@@ -32,6 +32,12 @@ export function rescueBeatSamples(sampleRate) {
   return samples;
 }
 
+export function localTrackFromFile(file, id) {
+  if (!file || file.size === 0) throw new Error('비어 있는 파일이에요. 다른 음원을 선택해 주세요.');
+  if (file.size > 50 * 1024 * 1024) throw new Error('50MB 이하의 음원을 선택해 주세요.');
+  return { id: `local-${id}`, title: file.name.replace(/\.[^.]+$/, '') || file.name, artist: '내 기기', genre: 'MY MUSIC', duration: '선택한 음원', color: '#89dacb', localFile: file };
+}
+
 export class MusicPlayer {
   constructor() { this.context = null; this.source = null; this.buffer = null; this.offset = 0; this.started = 0; this.playing = false; this.volume = .65; this.cache = new Map(); this.rescueVoices = new Set(); }
   async unlock() {
@@ -50,9 +56,19 @@ export class MusicPlayer {
     this.stop();
     if (this.cache.has(track.id)) this.buffer = this.cache.get(track.id);
     else {
-      const response = await fetch(`./music/${track.file}`);
-      if (!response.ok) throw new Error('음악 파일을 불러오지 못했습니다. 서버와 music 폴더를 확인해 주세요.');
-      this.buffer = await this.context.decodeAudioData(await response.arrayBuffer());
+      let data;
+      if (track.localFile) data = await track.localFile.arrayBuffer();
+      else {
+        const response = await fetch(`./music/${track.file}`);
+        if (!response.ok) throw new Error('음악 파일을 불러오지 못했습니다. 서버와 music 폴더를 확인해 주세요.');
+        data = await response.arrayBuffer();
+      }
+      try { this.buffer = await this.context.decodeAudioData(data); }
+      catch { throw new Error('이 음원을 재생할 수 없어요. 손상되지 않은 MP3 또는 이 브라우저가 지원하는 다른 음원을 선택해 주세요.'); }
+      if (track.localFile && (this.buffer.duration < 10 || this.buffer.duration > 600)) {
+        this.buffer = null;
+        throw new Error('10초 이상, 10분 이하의 노래를 선택해 주세요.');
+      }
       if (this.cache.size >= 2) this.cache.delete(this.cache.keys().next().value);
       this.cache.set(track.id, this.buffer);
     }
