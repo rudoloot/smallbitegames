@@ -1,0 +1,1603 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#85dcd9">
+<title>CELLTIDE · 세포의 바다</title>
+<style>
+:root{color-scheme:dark;--ink:#e8fcf3;--muted:#91afa9;--mint:#b8f1c9;--line:rgba(191,240,222,.15);--panel:rgba(10,32,39,.94);font-family:Inter,"Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050f17;color:var(--ink);overscroll-behavior:none}body{display:flex;justify-content:center;background:radial-gradient(ellipse at 50% 45%,#13313a,#050e16 72%)}button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulation}button:focus-visible{outline:2px solid var(--mint);outline-offset:4px}button:disabled{opacity:.32;cursor:default}[hidden]{display:none!important}#app{position:relative;width:100%;max-width:500px;height:100%;height:100dvh;overflow:hidden;background:#0a2a32;isolation:isolate;box-shadow:0 0 120px #0008}#sea{position:absolute;inset:0;width:100%;height:100%;touch-action:none;user-select:none}#hud{position:absolute;inset:0;pointer-events:none}.top{position:absolute;top:calc(22px + env(safe-area-inset-top));left:22px;right:20px;display:flex;align-items:flex-start;justify-content:space-between}.identity{display:flex;align-items:center;gap:12px;text-shadow:0 2px 12px #00222b}.mark{width:29px;height:29px;display:grid;grid-template-columns:repeat(2,10px);gap:3px;transform:rotate(-10deg)}.mark i{border:1px solid #bbefd6;background:#99dfb822;border-radius:2px}.mark i:last-child{background:#a8e6bf}.brand{font-weight:650;letter-spacing:3px;font-size:11px;line-height:1.4}.generation{font-size:11px;letter-spacing:.4px;color:#94b3ad;margin-top:4px}.round{pointer-events:auto;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#081e2999;border:1px solid var(--line);backdrop-filter:blur(12px)}.round svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}.right{display:flex;flex-direction:column;align-items:flex-end;gap:14px}#evolve{pointer-events:auto;padding:12px 19px;background:var(--mint);color:#183a31;border-radius:25px;font-weight:750;font-size:14px;box-shadow:0 0 24px #a9efbf38;animation:breathe 2.6s infinite;display:flex;gap:9px;align-items:center}#evolve svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7}.bottom{position:absolute;bottom:calc(22px + env(safe-area-inset-bottom));left:24px;right:24px;pointer-events:none}#hint{text-align:center;font-size:12px;letter-spacing:.5px;color:#c0d4c7c9;margin-bottom:26px;transition:opacity 1s}.telemetry{display:flex;align-items:center;justify-content:space-between;margin:0 3px 11px;color:#c0d6cf;font-variant-numeric:tabular-nums;font-size:11px;letter-spacing:.4px}.telemetry .dim{color:#6d9694}.velocity{display:flex;align-items:center;gap:7px}.velocity svg,.kin svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.5}.kin{display:flex;gap:7px;align-items:center}.dashboard{padding:15px 17px;background:linear-gradient(120deg,#0b252dee,#0b222cc9);border:1px solid var(--line);border-radius:18px;backdrop-filter:blur(14px);box-shadow:0 10px 30px #0010194d}.barline{display:grid;grid-template-columns:14px 1fr 61px;align-items:center;gap:12px}.barline+.barline{margin-top:12px}.barline svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round}.barline.hp{color:#a8d1c6}.barline.energy{color:#d7eaa1}.track{height:4px;background:#9fd2c015;border-radius:4px;overflow:hidden}.fill{height:100%;width:0;border-radius:4px;background:currentColor;transition:width .12s}.barvalue{font-size:11px;text-align:right;color:#bbd0c8;font-variant-numeric:tabular-nums;white-space:nowrap}#toxin{position:absolute;left:50%;bottom:calc(165px + env(safe-area-inset-bottom));transform:translateX(-50%);color:#e6b9fa;background:#422953d9;border:1px solid #d9a1f533;border-radius:30px;font-size:11px;padding:7px 12px}#toast{position:absolute;top:25%;left:50%;transform:translate(-50%,-12px);max-width:90%;white-space:nowrap;font-size:12px;padding:11px 16px;border:1px solid #b4e8d233;border-radius:30px;background:#0b2530ed;color:#d9f6e7;pointer-events:none;opacity:0;transition:opacity .3s,transform .3s;z-index:8}#toast.on{opacity:1;transform:translate(-50%,0)}.overlay{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:22px;background:#05182099;backdrop-filter:blur(9px)}.panel{width:100%;max-height:calc(100dvh - 44px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto;background:linear-gradient(145deg,#14353cfa,#0b232dfa);border:1px solid #b6e9d321;border-radius:28px;padding:26px;box-shadow:0 30px 90px #0005;scrollbar-width:thin}.eyebrow{font-size:10px;letter-spacing:3px;color:#89aca5;font-weight:650}.panel h1{font-size:34px;font-weight:450;letter-spacing:4px;margin:12px 0;color:#e2f8ec}.panel h2{font-size:23px;font-weight:500;letter-spacing:-.5px;margin:9px 0 0}.sub{font-size:12px;color:#a1bdb4;line-height:1.8;margin:10px 0 22px}.button{width:100%;min-height:47px;border-radius:14px;background:var(--mint);color:#18352e;font-size:14px;font-weight:700;padding:12px 16px}.button.secondary{background:#b9e9d408;color:#bcd7cb;border:1px solid #b1dfc71a;font-weight:500}.button+.button{margin-top:10px}.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.close{background:#bfdccb0a;width:34px;height:34px;border-radius:50%;font-size:21px;font-weight:300;color:#b5d1c5}.options{display:grid;grid-template-columns:1fr 1fr;gap:12px}.option{text-align:left;min-height:188px;padding:19px 15px;border-radius:19px;background:#9bd4bc08;border:1px solid #acd7c21c;display:flex;flex-direction:column;align-items:flex-start;transition:background .2s,transform .2s}.option:hover{background:#a8edc116;transform:translateY(-2px)}.option strong{font-size:15px;line-height:1.45;margin:19px 0 8px;font-weight:600;word-break:keep-all}.option small{color:#94b6a9;font-size:11px;line-height:1.75;word-break:keep-all}.cell-icon{width:37px;height:37px;border:1.5px solid var(--cell);background:color-mix(in srgb,var(--cell),transparent 82%);color:var(--cell);display:grid;place-items:center;border-radius:6px;box-shadow:0 0 19px color-mix(in srgb,var(--cell),transparent 93%)}.cell-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.footnote{margin:18px 0 0;text-align:center;font-size:10px;line-height:1.8;color:#74978d}.editor .panel-head{margin-bottom:8px}.editor .sub{margin:8px 0 10px;font-size:11px}#builder{width:100%;height:286px;display:block;touch-action:none;background:#051b2466;border:1px solid #b8e5cf10;border-radius:18px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);margin:17px 0 20px;text-align:center}.metric{border-right:1px solid var(--line)}.metric:last-child{border:0}.metric small{font-size:10px;color:#7eaaa0}.metric div{margin-top:5px;font-size:13px;color:#d4eedf;white-space:nowrap}#splash .panel{text-align:center;background:linear-gradient(155deg,#163e4366,#0d293087);border-color:#b2e6d318;padding:34px 28px}#splash .sub{margin-top:8px}#splash .eyebrow{font-size:9px;color:#a5c6b8;letter-spacing:4px}#splash .hero{height:132px;display:grid;place-items:center;position:relative;margin:8px 0 20px}.hero .halo{position:absolute;width:116px;height:116px;border:1px solid #b9efcc15;border-radius:50%;box-shadow:0 0 65px #a2edc410;animation:breathe 4s infinite}.hero .halo:after{content:'';position:absolute;inset:17px;border:1px solid #b9efcc0e;border-radius:50%}.hero-cell{width:42px;height:42px;border:1.5px solid #d1f2c4;background:#a5d8b94f;border-radius:6px;box-shadow:inset 0 0 14px #e2fbbb28,0 0 35px #b7ebc237;display:grid;place-items:center;transform:rotate(-8deg);animation:float 4.5s ease-in-out infinite}.hero-cell:before{content:'';width:13px;height:13px;border:1px solid #edffc9;box-shadow:0 0 12px #e8ffc13b;border-radius:50%;background:#dff7b966}#splash .button{margin-top:9px}.start-note{font-size:10px;color:#7fa69a;letter-spacing:.4px;margin:17px 0 0}.menu-row{display:flex;gap:10px;margin:13px 0}.menu-row .button{margin:0;min-height:43px;font-size:12px}.rules-toggle{width:100%;background:none;color:#8bad9f;font-size:12px;margin-top:15px;padding:8px}.rules{font-size:11px;color:#a7c2b4;line-height:1.9;border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.rules p{margin:8px 0}.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:25px 0}.stat-tile{background:#a9d9bb06;border:1px solid #a9d9bb14;padding:17px;border-radius:16px}.stat-tile b{display:block;font-size:24px;font-weight:450}.stat-tile small{font-size:10px;color:#87ae9e;display:block;margin-top:7px}.pill{padding:5px 9px;border-radius:20px;background:#b5e7c90d;color:#97bca9;font-size:10px;white-space:nowrap}#error{position:absolute;z-index:30;bottom:18px;left:18px;right:18px;padding:15px;border-radius:14px;color:#ffd9cc;background:#5d2d2df5;font-size:12px;line-height:1.8}#flash{position:absolute;inset:0;pointer-events:none;z-index:9;box-shadow:inset 0 0 120px #ef647800;transition:box-shadow .2s}#flash.hit{box-shadow:inset 0 0 100px #ef647855}@keyframes breathe{0%,100%{filter:brightness(1);box-shadow:0 0 25px #afe2bd22}50%{filter:brightness(1.08);box-shadow:0 0 37px #afe2bd44}}@keyframes float{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-7px) rotate(2deg)}}@media(max-height:720px){.panel{padding:21px}.option{min-height:160px}.option strong{margin-top:13px}#builder{height:225px}#splash .hero{height:80px}.bottom{bottom:calc(15px + env(safe-area-inset-bottom))}.top{top:calc(16px + env(safe-area-inset-top))}}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Airy full-viewport ocean and compact, readable floating controls. */
+:root{color-scheme:light;--ink:#24565e;--muted:#608b90;--mint:#ffe4a0;--line:#649da32b;--panel:#f0fffaed}
+html,body{background:#85dcd9}body{background:#85dcd9}#app{max-width:none;background:#85dcd9;box-shadow:none}#app:fullscreen{width:100vw;height:100dvh}
+.panel{max-width:460px;background:linear-gradient(145deg,#f7fff9f5,#e5faf6f5);border-color:#fff9;box-shadow:0 24px 70px #327e8b24}
+.overlay{background:#8ddcd735;backdrop-filter:blur(7px)}#splash .panel{background:linear-gradient(145deg,#f7fff9ee,#e5faf6ed);border-color:#fff9}
+.panel h1,.panel h2,.metric div,.stat-tile b{color:#24565e}.sub,.option small,.rules,.footnote,.eyebrow,#splash .eyebrow,.start-note,.metric small,.stat-tile small,.rules-toggle,.generation,.telemetry,.telemetry .dim{color:#547f84}
+.identity{text-shadow:none}.round,.close{background:#f0fffae8;color:#346a72;border-color:#fff9}.fullscreen{width:auto;padding:0 14px;border-radius:24px;font-size:11px}.right{flex-direction:row;align-items:center;gap:8px}
+.bottom{max-width:480px;left:50%;right:auto;width:calc(100% - 48px);transform:translateX(-50%)}.dashboard{background:#effff4e8;border-color:#fff9;box-shadow:0 10px 30px #438c9420}.barline.hp{color:#50a78d}.barline.energy{color:#d1a44d}.barvalue{color:#476d71}.track{background:#6caba322}
+.button{color:#5d562d;box-shadow:0 4px 12px #96b3a51a}.button.secondary,.option,.stat-tile{background:#fff9;color:#3c7078;border-color:#7cadad38}.option:hover{background:#e1f5da}.pill{background:#d5eee5;color:#4c777b}#hint{color:#376d76}#builder{background:#dbf2ed;border-color:#75b4b342}
+#toast{background:#f3fff5f5;color:#35676e;border-color:#fff}.hero-cell{background:#9bd489;border-color:#4f9d79;border-radius:12px}.hero-cell:before{background:#ffe4a0;border-color:#72a566}.hero .halo{border-color:#6ead9d40}.mark i{border-color:#529c8d;background:#c6edc1}.mark i:last-child{background:#ffe4a0}
+@media(max-width:420px){.top{left:16px;right:16px}.right{gap:6px}.fullscreen{padding:0 10px}.brand{letter-spacing:2px}#evolve{padding:12px;font-size:12px}.identity{gap:8px}}
+</style>
+</head>
+<body>
+<main id="app">
+<canvas id="sea" aria-label="세포의 바다. 드래그 또는 방향키로 이동합니다."></canvas>
+<section id="hud" hidden>
+ <div class="top"><div class="identity"><div class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div><div><div class="brand">CELLTIDE</div><div id="generation" class="generation">1세대 · 1 CELL</div></div></div><div class="right"><button id="fullscreen" class="round fullscreen" aria-label="전체 화면 전환">전체 화면</button><button id="pause" class="round" aria-label="일시 정지"><svg viewBox="0 0 20 20"><path d="M7 4v12M13 4v12"/></svg></button><button id="evolve" hidden><svg viewBox="0 0 20 20"><path d="M10 2v5m0 6v5M2 10h5m6 0h5M6 6l2 2m4 4 2 2M6 14l2-2m4-4 2-2"/></svg>진화</button></div></div>
+ <div id="toxin" hidden></div><div class="bottom"><div id="hint">드래그하여 헤엄치기</div><div class="telemetry"><span class="velocity"><svg viewBox="0 0 20 20"><path d="M3 15a8 8 0 0 1 14 0M10 12l4-6"/></svg><span id="speed">0.00 <span class="dim">/ 1.50 셀/s</span></span></span><span class="kin"><svg viewBox="0 0 20 20"><rect x="2" y="3" width="6" height="6" rx="1"/><rect x="12" y="11" width="6" height="6" rx="1"/><path d="M5 11v3h5M10 6h5v3"/></svg><span id="kin">혈연 0</span></span></div><div class="dashboard"><div class="barline hp"><svg viewBox="0 0 18 18"><path d="M9 15S2 11 2 6.5a3.4 3.4 0 0 1 7-1 3.4 3.4 0 0 1 7 1C16 11 9 15 9 15Z"/></svg><div class="track"><div class="fill" id="hpFill"></div></div><div class="barvalue" id="hpText">5 / 5</div></div><div class="barline energy"><svg viewBox="0 0 18 18"><path d="m10 1-6 9h5l-1 7 6-10H9Z"/></svg><div class="track"><div class="fill" id="energyFill"></div></div><div class="barvalue" id="energyText">4 / 10</div></div></div></div>
+</section>
+<div id="toast" role="status"></div><div id="flash"></div>
+<section class="overlay" id="splash"><div class="panel"><div class="eyebrow">AN ENDLESS LITTLE OCEAN</div><div class="hero"><span class="halo"></span><span class="hero-cell"></span></div><h1>CELLTIDE</h1><p class="sub">하나의 세포, 끝없는 진화.</p><button id="start" class="button">시작하기</button><button id="continue" class="button secondary" hidden>이어하기</button><div class="start-note">드래그로 이동 · 같은 방향으로 가속</div></div></section>
+<section class="overlay" id="choices" hidden><div class="panel"><div class="panel-head"><div><div class="eyebrow">EVOLUTION</div><h2>다음 세대로</h2></div><button id="closeChoices" class="close" aria-label="진화 취소">×</button></div><div class="options" id="options"></div><p class="footnote">하나를 선택하세요. 진화하는 동안 바다는 잠시 멈춥니다.</p></div></section>
+<section class="overlay" id="editor" hidden><div class="panel editor"><div class="panel-head"><div><div class="eyebrow">CELL DESIGN</div><h2 id="editorTitle">세포 추가</h2></div><button id="backEditor" class="close" aria-label="이전">‹</button></div><p id="editorHint" class="sub">빈칸을 누르세요 · 선택한 한 칸만 변경</p><canvas id="builder" aria-label="세포 배치 편집기"></canvas><div class="metrics"><div class="metric"><small>세포</small><div id="mCells">1 → 2</div></div><div class="metric"><small>체력</small><div id="mHealth">5 → 10</div></div><div class="metric"><small>최대 속도</small><div id="mSpeed">1.5 → 1.5</div></div></div><button id="applyEvolution" class="button" disabled>진화하기</button></div></section>
+<section class="overlay" id="menu" hidden><div class="panel"><div class="panel-head"><div><div class="eyebrow">A MOMENT OF STILLNESS</div><h2>잠시, 고요하게</h2></div><span class="pill" id="sessionTime">00:00</span></div><button id="resume" class="button">계속하기</button><div class="menu-row"><button id="save" class="button secondary">파일로 저장</button><button id="load" class="button secondary">불러오기</button></div><div class="menu-row"><button id="sound" class="button secondary">소리 켜기</button><button id="restart" class="button secondary">새로 시작</button></div><button id="exitMenu" class="button secondary">게임 종료하기</button><button id="rulesToggle" class="rules-toggle">세포와 생존 규칙 ＋</button><div id="rules" class="rules" hidden><p><b>조작</b> 드래그를 유지하면 가속합니다. 손을 떼면 감속합니다. 기본 최대 속도는 1.5셀/s입니다. PC에서는 방향키·WASD도 가능합니다.</p><p><b>진화</b> 에너지 10 × 세포 수를 채우면 활성화됩니다. 분열은 50% 확률로 선택지에 포함됩니다. 다른 진화는 기존 개체를 남기고 새 개체로 이어집니다.</p><p><b>세포</b> 일반: 양분 흡수·체력 +5 / 딱딱: 방향별 피해 −5·접촉 독 차단 / 시야: 반경 5셀, 연속 방향 확장 / 독: 5초간 초당 1, 연속 접촉부 누적 / 해독: 개당 지속시간 −1초 / 힘: 세로 연속 최대속도 +1.5, 가로 연속 회전 향상.</p><p><b>형상</b> 면으로 연결된 모양을 자유롭게 만드세요. 선택한 위치의 세포 하나만 추가·삭제합니다. 퇴화로 몸이 분리되거나 모든 세포가 없어질 수는 없습니다.</p><p><b>계승</b> 세포 종류와 배치가 같고 같은 혈통인 생존 개체만 계승합니다. 형상이 같은 개체 사이에는 충돌 공격과 접촉 독이 적용되지 않습니다.</p><p><b>충돌</b> 상대속도의 충돌 방향 성분 × 내 세포 수를 접촉 면적에 나눠 배분합니다. 한 곳에 10을 맞히거나 두 곳에 5씩 맞혀도 기본 피해 총량은 같습니다.</p><p><b>생존</b> 대사량은 세포 수의 0.75제곱에 비례합니다. 양분은 일반세포로 접촉해 흡수합니다. 특수세포에 닿거나 저장 공간이 없으면 튕겨 나갑니다. 에너지가 없으면 체력이 감소합니다. 독이 있는 사체는 보라색 양분이 됩니다.</p><p><b>생태계</b> 새 야생 개체는 단세포 또는 플레이어가 거쳤던 형상으로 화면 밖에서 생성됩니다. 자율 진화·분열은 계속됩니다.</p><p>15초마다 자동 저장을 시도합니다. 파일로 저장하면 다른 브라우저에서도 불러올 수 있습니다.</p></div></div></section>
+<section class="overlay" id="gameover" hidden><div class="panel"><div class="eyebrow">THE END OF A LINEAGE</div><h2>바다로 돌아가다</h2><p class="sub">이어받을 동일한 혈연 개체가 없습니다.</p><div class="stat-grid" id="endStats"></div><button id="again" class="button">다시 시작</button><button id="exitOver" class="button secondary">게임 종료하기</button></div></section>
+<input id="loadFile" type="file" accept="application/json,.json" hidden><div id="error" hidden></div>
+</main>
+<script>
+'use strict';
+(() => {
+    // CELLTIDE 1.1 — zero-dependency, single-file Canvas game.
+    // Coordinates and velocities are measured in cells and cells/second.
+    /** @typedef {{x:number, y:number, type:'normal'|'armor'|'eye'|'antidote'|'poison'|'force'}} Cell */
+    /** @typedef {{dx:number, dy:number, throttle:number}} MovementCommand */
+    const $ = id => document.getElementById(id);
+    const TAU = Math.PI * 2, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const hypot = Math.hypot, dist = (a, b) => hypot(a.x - b.x, a.y - b.y);
+    const angleDelta = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
+    const key = (x, y) => `${x},${y}`;
+    const CFG = Object.freeze({ baseSpeed: 1.5, forceSpeed: 1.5, baseTurn: 1.1, turnBonus: .5, acceleration: .72, braking: 1.65, foodRadius: .38, foodRestitution: .75, foodDrag: 1.8, spawnMargin: 6, historySpawnChance: .3, birthSeconds: .75, metabolism: .035, moveMetabolism: .45, starvation: .32, armor: 5, poisonDps: 1, poisonSeconds: 5, energyPerCell: 10, healthPerNormal: 5, baseSight: 3.7, eyeSight: 5, chunk: 18, foodPerChunk: 28, activeLimit: 96, aiCellLimit: 25, birthGrace: 4, hitCooldown: .7, autoSaveSeconds: 15 });
+    const TYPES = {
+        normal: { name: '일반세포', color: '#57a961', desc: '양분 흡수 · 체력 +5', icon: '<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>' },
+        armor: { name: '딱딱세포', color: '#698eaf', desc: '피해 −5 · 접촉 독 차단', icon: '<path d="m12 3 7 3v6c0 4-7 9-7 9s-7-5-7-9V6Z"/>' },
+        eye: { name: '시야세포', color: '#259f9d', desc: '시야 5셀 · 연속 방향 확장', icon: '<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>' },
+        antidote: { name: '해독세포', color: '#658ed7', desc: '개당 중독 시간 −1초', icon: '<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z"/>' },
+        poison: { name: '독세포', color: '#ae71ce', desc: '5초간 초당 독 1 · 연속 누적', icon: '<path d="M12 2S5 11 5 15a7 7 0 0 0 14 0c0-4-7-13-7-13Z"/><path d="m9 13 6 4m0-4-6 4"/>' },
+        force: { name: '힘세포', color: '#dc9261', desc: '세로는 속도 · 가로는 회전', icon: '<path d="m6 15 6-6 6 6M6 9l6-6 6 6M12 9v12"/>' },
+        split: { name: '분열', color: '#c8eacb', desc: '동일한 두 자손 · 생존의 보험', icon: '<rect x="2" y="8" width="7" height="9" rx="1"/><rect x="15" y="8" width="7" height="9" rx="1"/><path d="M9 4h6m-3-2v4"/>' },
+        remove: { name: '퇴화', color: '#d9b9aa', desc: '세포를 덜어내 대사량 감소', icon: '<path d="M5 5h14v14H5ZM8 12h8"/>' }
+    };
+    function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+    function hash2(x, y, seed = 0) { let h = Math.imul(x | 0, 374761393) ^ Math.imul(y | 0, 668265263) ^ seed; h = Math.imul(h ^ (h >>> 13), 1274126177); return (h ^ (h >>> 16)) >>> 0; }
+    function cloneCells(cells) { return cells.map(c => ({ x: c.x, y: c.y, type: c.type })); }
+    function canonical(cells) { const minY = Math.min(...cells.map(c => c.y)); return cells.map(c => `${c.x},${c.y - minY},${c.type}`).sort().join(';'); }
+    function normalize(cells) { const minY = Math.min(...cells.map(c => c.y)); return cells.map(c => ({ x: c.x, y: c.y - minY, type: c.type })).sort((a, b) => a.y - b.y || a.x - b.x); }
+    function connected(cells) { if (!cells.length)
+        return false; const set = new Set(cells.map(c => key(c.x, c.y))); if (set.size !== cells.length)
+        return false; const seen = new Set(), queue = [cells[0]]; while (queue.length) {
+        const c = queue.pop(), k = key(c.x, c.y);
+        if (seen.has(k))
+            continue;
+        seen.add(k);
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const n = key(c.x + dx, c.y + dy);
+            if (set.has(n) && !seen.has(n))
+                queue.push({ x: c.x + dx, y: c.y + dy });
+        }
+    } return seen.size === cells.length; }
+    function symmetric(cells) { const m = new Map(cells.map(c => [key(c.x, c.y), c.type])); return cells.every(c => m.get(key(-c.x, c.y)) === c.type); }
+    function runAt(map, c, axis, type) { let n = 1; for (const sign of [-1, 1]) {
+        for (let i = 1; i <= map.size; i++) {
+            const x = c.x + (axis === 'x' ? sign * i : 0), y = c.y + (axis === 'y' ? sign * i : 0);
+            if (map.get(key(x, y))?.type !== type)
+                break;
+            n++;
+        }
+    } return n; }
+    // Local +x is right; local -y is forward. Geometry and cell type define identity.
+    function statsFor(cells) {
+        const m = new Map(cells.map(c => [key(c.x, c.y), c]));
+        let normal = 0, forceY = 0, forceX = 0, antidote = 0, poison = 0;
+        for (const c of cells) {
+            if (c.type === 'normal')
+                normal++;
+            if (c.type === 'antidote')
+                antidote++;
+            if (c.type === 'poison')
+                poison++;
+            if (c.type === 'force') {
+                forceY = Math.max(forceY, runAt(m, c, 'y', 'force'));
+                forceX = Math.max(forceX, runAt(m, c, 'x', 'force'));
+            }
+        }
+        const cx = cells.reduce((s, c) => s + c.x, 0) / cells.length;
+        const cy = cells.reduce((s, c) => s + c.y, 0) / cells.length;
+        const radius = Math.max(...cells.map(c => hypot(c.x - cx, c.y - cy))) + Math.SQRT1_2;
+        return { n: cells.length, normal, antidote, poison, forceY, forceX, maxHp: Math.max(1, normal * CFG.healthPerNormal), cap: cells.length * CFG.energyPerCell, maxSpeed: CFG.baseSpeed + CFG.forceSpeed * forceY, turn: CFG.baseTurn + Math.max(0, forceX - 1) * CFG.turnBonus, cx, cy, radius, map: m, genome: canonical(cells) };
+    }
+    function legalSlots(cells, remove = false) {
+        const map = new Map(cells.map(c => [key(c.x, c.y), c]));
+        const candidates = new Map();
+        for (const c of cells) {
+            if (remove)
+                candidates.set(key(c.x, c.y), { x: c.x, y: c.y });
+            else
+                for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                    const x = c.x + dx, y = c.y + dy;
+                    if (!map.has(key(x, y)))
+                        candidates.set(key(x, y), { x, y });
+                }
+        }
+        return [...candidates.values()].filter(p => { const result = mutatedCells(cells, remove ? 'remove' : 'normal', p); return result.length && connected(result); });
+    }
+    function mutatedCells(cells, type, p) { if (type === 'remove')
+        return cells.filter(c => !(c.y === p.y && c.x === p.x)).map(c => ({ ...c })); const copy = cloneCells(cells), set = new Set(cells.map(c => key(c.x, c.y))); for (const x of [p.x]) {
+        if (!set.has(key(x, p.y)))
+            copy.push({ x, y: p.y, type });
+    } return copy; }
+    // 50% means inclusion probability, not a 50% chance of successful division.
+    function drawOptions(cells, random = Math.random) { let pool = ['normal', 'armor', 'eye', 'antidote', 'poison', 'force']; if (legalSlots(cells, true).length)
+        pool.push('remove'); const take = () => pool.splice(Math.floor(random() * pool.length), 1)[0]; const result = random() < .5 ? ['split', take()] : [take(), take()]; if (random() < .5)
+        result.reverse(); return result; }
+    class SpatialHash {
+        constructor(size) { this.size = size; this.map = new Map(); }
+        insert(item, minX, minY, maxX = minX, maxY = minY) { const s = this.size; for (let x = Math.floor(minX / s); x <= Math.floor(maxX / s); x++)
+            for (let y = Math.floor(minY / s); y <= Math.floor(maxY / s); y++) {
+                const k = key(x, y);
+                if (!this.map.has(k))
+                    this.map.set(k, []);
+                this.map.get(k).push(item);
+            } }
+        // Nutrients move between hash buckets immediately after a bounce.
+        movePoint(item, oldX, oldY) {
+            const before = key(Math.floor(oldX / this.size), Math.floor(oldY / this.size));
+            const after = key(Math.floor(item.x / this.size), Math.floor(item.y / this.size));
+            if (before === after) return;
+            const bucket = this.map.get(before);
+            if (bucket) {
+                const at = bucket.indexOf(item);
+                if (at >= 0) bucket.splice(at, 1);
+                if (!bucket.length) this.map.delete(before);
+            }
+            this.insert(item, item.x, item.y);
+        }
+        query(x, y, r) { const out = new Set(), s = this.size; for (let i = Math.floor((x - r) / s); i <= Math.floor((x + r) / s); i++)
+            for (let j = Math.floor((y - r) / s); j <= Math.floor((y + r) / s); j++)
+                for (const v of this.map.get(key(i, j)) || [])
+                    out.add(v); return out; }
+    }
+    let W, player, active = [], foodVisible = [], foodHash = new SpatialHash(3), mode = 'splash', lastFrame = 0, accumulator = 0, screenW = 0, screenH = 0, dpr = 1, unit = 34, realTime = 0, maintenanceTimer = 0, hudTimer = 0, autoSaveTimer = 0;
+    let camera = { x: 0, y: 0 }, input = { id: null, x: 0, y: 0, dx: 0, dy: 0, active: false }, keys = new Set(), fx = [], toastUntil = 0, selection = null, editorType = null, editorSlots = [], editorView = null, readyNotified = false;
+    let soundOn = false, audio = null, uiLast = {}, birthPulse = 0;
+    const sea = $('sea'), ctx = sea.getContext('2d', { alpha: false }), fog = document.createElement('canvas'), fctx = fog.getContext('2d');
+    function makeEntity(cells, x, y, lineage = null, generation = 1, opts = {}) { cells = normalize(cells); const st = statsFor(cells), id = W.nextId++; const e = { id, lineage: lineage || `L${id}-${W.seed}`, generation, cells: normalize(cells), x, y, angle: opts.angle ?? Math.random() * TAU, speed: 0, vx: 0, vy: 0, knockX: 0, knockY: 0, hp: st.maxHp, energy: opts.energy ?? st.cap * .35, ready: false, options: null, poisons: [], age: 0, grace: opts.grace ?? CFG.birthGrace, alive: true, aiThink: 0, aiDX: 0, aiDY: -1, throttle: 0, lastHit: -100, lastMeal: -100, born: W.time, ...st }; return e; }
+    function rebuild(e) { e.cells = normalize(e.cells); Object.assign(e, statsFor(e.cells)); }
+    function worldCells(e) { const co = Math.cos(e.angle), si = Math.sin(e.angle); e.world = e.cells.map((c, i) => { const x = c.x - e.cx, y = c.y - e.cy; return { x: e.x + x * co - y * si, y: e.y + x * si + y * co, c, index: i }; }); e.co = co; e.si = si; return e.world; }
+    function newWorld() {
+        W = { version: 2, initializing: true, history: new Map(), seed: (Date.now() ^ Math.random() * 0xffffffff) >>> 0, time: 0, nextId: 1, entities: [], chunks: new Map(), loose: [], contacts: new Map(), stats: { evolutions: 0, splits: 0, kills: 0, distance: 0, maxCells: 1, inheritances: 0 } };
+        player = makeEntity([{ x: 0, y: 0, type: 'normal' }], 0, 0, null, 1, { angle: 0, energy: 4, grace: 12 });
+        W.entities.push(player);
+        rememberShape(player);
+        camera = { x: 0, y: 0 };
+        fx = [];
+        input.active = false;
+        keys.clear();
+        maintenanceTimer = 0;
+        autoSaveTimer = 0;
+        readyNotified = false;
+        uiLast = {};
+        birthPulse = 1;
+        for (let i = 0; i < 11; i++) {
+            const a = i * 2.39996, r = i === 0 ? 1.7 : 2.3 + Math.sqrt(i) * 1.1;
+            W.loose.push({ id: `starter${i}`, x: Math.sin(a) * r, y: -Math.cos(a) * r, phase: i, amount: 10, poison: 0, alive: true, born: 0 });
+        }
+        ensureWorld();
+        W.initializing = false;
+        prepareActive();
+    }
+    // Only morphologies actually controlled in this run can seed evolved wildlife.
+    // A matching morphology never implies a blood relationship.
+    function rememberShape(e) {
+        const genome = canonical(e.cells);
+        if (!W.history.has(genome))
+            W.history.set(genome, { cells: cloneCells(e.cells), generation: e.generation });
+    }
+    function chooseWildShape(random = Math.random) {
+        const history = [...W.history.values()].filter(h => h.cells.length > 1);
+        if (history.length && random() < CFG.historySpawnChance) {
+            const chosen = history[Math.floor(random() * history.length)];
+            return { cells: cloneCells(chosen.cells), generation: chosen.generation };
+        }
+        return { cells: [{ x: 0, y: 0, type: 'normal' }], generation: 1 };
+    }
+    // Include both the actual camera and its destination, including a pending zoom-out.
+    function targetUnit() {
+        const side = Math.min(screenW, screenH);
+        return Math.min(clamp(side / 11.8, 25, 40) / (1 + .13 * (Math.sqrt(player.n) - 1)), side / Math.max(11.8, player.radius * 2 + 5));
+    }
+    function observationBounds(padding = 0) {
+        const scale = Math.max(.01, Math.min(unit, targetUnit()));
+        return {
+            left: Math.min(camera.x, player.x) - screenW / scale / 2 - padding,
+            right: Math.max(camera.x, player.x) + screenW / scale / 2 + padding,
+            top: Math.min(camera.y, player.y) - screenH / scale * .49 - padding,
+            bottom: Math.max(camera.y, player.y) + screenH / scale * .51 + padding
+        };
+    }
+    function inObservation(e, padding = 0) {
+        const b = observationBounds(padding), r = e.radius || 0;
+        return e.x + r >= b.left && e.x - r <= b.right && e.y + r >= b.top && e.y - r <= b.bottom;
+    }
+    function spawnPending(chunk) {
+        if (!chunk.pending?.length) return;
+        const pending = [];
+        for (const spawn of chunk.pending) {
+            const random = rng(spawn.seed), shape = chooseWildShape(random), st = statsFor(shape.cells);
+            const point = { x: spawn.x, y: spawn.y, radius: st.radius };
+            // Never create even part of a body inside the current/predicted viewport.
+            if (!W.initializing && inObservation(point, CFG.spawnMargin + player.maxSpeed)) {
+                pending.push(spawn);
+                continue;
+            }
+            if (W.entities.some(e => e.alive && dist(e, point) < e.radius + st.radius + .3)) {
+                pending.push(spawn);
+                continue;
+            }
+            W.entities.push(makeEntity(shape.cells, spawn.x, spawn.y, null, shape.generation,
+                { angle: random() * TAU, energy: st.cap * (.25 + random() * .45), grace: 2 }));
+        }
+        chunk.pending = pending;
+    }
+    function generateChunk(cx, cy) {
+        const k = key(cx, cy);
+        if (W.chunks.has(k)) return W.chunks.get(k);
+        const r = rng(hash2(cx, cy, W.seed)), foods = [];
+        for (let i = 0; i < CFG.foodPerChunk; i++)
+            foods.push({ id: `${k}:${i}`, x: (cx + r()) * CFG.chunk, y: (cy + r()) * CFG.chunk,
+                vx: 0, vy: 0, chunkKey: k, phase: r() * TAU, amount: 10, poison: 0, alive: true, respawn: 0 });
+        const chunk = { cx, cy, foods, pending: [] };
+        W.chunks.set(k, chunk);
+        const n = 2 + Math.floor(r() * 2);
+        for (let i = 0; i < n; i++) {
+            const x = (cx + r()) * CFG.chunk, y = (cy + r()) * CFG.chunk;
+            if (hypot(x, y) < 7.5) continue;
+            chunk.pending.push({ x, y, seed: Math.floor(r() * 0xffffffff) });
+        }
+        spawnPending(chunk);
+        return chunk;
+    }
+    // Preload beyond the viewport. Deferred seeds retain their world position.
+    function ensureWorld() {
+        if (!player) return;
+        const b = observationBounds(CFG.spawnMargin + player.maxSpeed + 10);
+        const cx = Math.floor(player.x / CFG.chunk), cy = Math.floor(player.y / CFG.chunk);
+        const minX = Math.min(cx - 2, Math.floor(b.left / CFG.chunk));
+        const maxX = Math.max(cx + 2, Math.floor(b.right / CFG.chunk));
+        const minY = Math.min(cy - 2, Math.floor(b.top / CFG.chunk));
+        const maxY = Math.max(cy + 2, Math.floor(b.bottom / CFG.chunk));
+        for (let x = minX; x <= maxX; x++)
+            for (let y = minY; y <= maxY; y++) {
+                const chunk = generateChunk(x, y);
+                spawnPending(chunk);
+            }
+    }
+    function prepareActive() {
+        if (!player) return;
+        const b = observationBounds(CFG.spawnMargin + player.maxSpeed);
+        const radius = Math.max(28, hypot(Math.max(player.x - b.left, b.right - player.x),
+            Math.max(player.y - b.top, b.bottom - player.y)) + 8);
+        const previous = new Set(active);
+        const living = W.entities.filter(e => e.alive);
+        // The 96-body budget is soft: nothing visible may disappear to meet it.
+        const protectedBodies = living.filter(e => e === player || inObservation(e, CFG.spawnMargin));
+        const protectedSet = new Set(protectedBodies);
+        const nearby = living.filter(e => !protectedSet.has(e) && dist(e, player) < radius + e.radius + (previous.has(e) ? 8 : 0))
+            .sort((a, b) => Number(previous.has(b)) - Number(previous.has(a)) || dist(a, player) - dist(b, player));
+        active = protectedBodies.concat(nearby.slice(0, Math.max(0, CFG.activeLimit - protectedBodies.length)));
+        // Rendering is independent of ordering within the simulation budget.
+        active.sort((a, b) => a === player ? -1 : b === player ? 1 : a.id - b.id);
+        for (const e of active) worldCells(e);
+        foodVisible = [];
+        const range = Math.max(radius + 6, ...active.map(e => dist(e, player) + e.radius + 2));
+        const cx = Math.floor(player.x / CFG.chunk), cy = Math.floor(player.y / CFG.chunk), cr = Math.ceil(range / CFG.chunk);
+        for (let x = cx - cr; x <= cx + cr; x++)
+            for (let y = cy - cr; y <= cy + cr; y++) {
+                const ch = W.chunks.get(key(x, y));
+                if (!ch) continue;
+                for (const f of ch.foods) {
+                    if (!f.alive && W.time >= f.respawn && !inObservation(f, 1)) {
+                        f.alive = true;
+                        f.vx = f.vy = 0;
+                    }
+                    if (f.alive && dist(f, player) < range) foodVisible.push(f);
+                }
+            }
+        for (const f of W.loose)
+            if (f.alive && dist(f, player) < range) foodVisible.push(f);
+        rebuildFoodHash();
+    }
+    function rebuildFoodHash() {
+        foodHash = new SpatialHash(3);
+        for (const f of foodVisible)
+            if (f.alive) foodHash.insert(f, f.x, f.y);
+    }
+    // A bounced nutrient belongs to its current chunk, not its original spawn chunk.
+    function relocateFood(f) {
+        if (f.chunkKey === undefined) return;
+        const nextKey = key(Math.floor(f.x / CFG.chunk), Math.floor(f.y / CFG.chunk));
+        if (nextKey === f.chunkKey) return;
+        const old = W.chunks.get(f.chunkKey), index = old?.foods.indexOf(f) ?? -1;
+        if (index >= 0) old.foods.splice(index, 1);
+        const next = W.chunks.get(nextKey);
+        if (next) {
+            next.foods.push(f);
+            f.chunkKey = nextKey;
+        } else {
+            delete f.chunkKey;
+            delete f.respawn;
+            W.loose.push(f);
+        }
+    }
+    function updateFood(dt) {
+        const damping = Math.exp(-CFG.foodDrag * dt);
+        for (const f of foodVisible) {
+            if (!f.alive) continue;
+            f.vx = (f.vx || 0) * damping;
+            f.vy = (f.vy || 0) * damping;
+            f.x += f.vx * dt;
+            f.y += f.vy * dt;
+            relocateFood(f);
+        }
+        rebuildFoodHash();
+    }
+    function setMode(next) { mode = next; input.active = false; input.id = null; keys.clear(); for (const id of ['splash', 'choices', 'editor', 'menu', 'gameover'])
+        $(id).hidden = id !== next; $('hud').hidden = next === 'splash' || next === 'gameover'; accumulator = 0; }
+    function toast(text) { $('toast').textContent = text; $('toast').classList.add('on'); toastUntil = realTime + 3.2; }
+    function initAudio() { if (!audio) {
+        try {
+            audio = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        catch {
+            soundOn = false;
+        }
+    } if (audio?.state === 'suspended')
+        audio.resume().catch(() => { }); }
+    function chime(kind) { if (!soundOn)
+        return; initAudio(); if (!audio)
+        return; const notes = kind === 'evolve' ? [330, 440, 660] : kind === 'hit' ? [105] : [620 + Math.random() * 100]; for (let i = 0; i < notes.length; i++) {
+        const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + i * .1;
+        o.type = kind === 'hit' ? 'triangle' : 'sine';
+        o.frequency.setValueAtTime(notes[i], t);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(.055, t + .015);
+        g.gain.exponentialRampToValueAtTime(.0001, t + .38);
+        o.connect(g);
+        g.connect(audio.destination);
+        o.start(t);
+        o.stop(t + .4);
+    } }
+    function particle(x, y, color, count = 7, scale = 1) { for (let i = 0; i < count; i++) {
+        const a = Math.random() * TAU, s = (.2 + Math.random() * 1.1) * scale;
+        fx.push({ kind: 'dot', x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: .6 + Math.random() * .5, max: 1.1, color, size: .035 + Math.random() * .04 });
+    } if (fx.length > 500)
+        fx.splice(0, fx.length - 500); }
+    function floatText(x, y, text, color = '#dcf3c0') { fx.push({ kind: 'text', x, y, vy: -.5, life: 1.4, max: 1.4, text, color }); }
+    function ring(x, y, color) { fx.push({ kind: 'ring', x, y, life: 1.3, max: 1.3, color }); }
+    function inputVector() { let dx = (keys.has('arrowright') || keys.has('d') ? 1 : 0) - (keys.has('arrowleft') || keys.has('a') ? 1 : 0), dy = (keys.has('arrowdown') || keys.has('s') ? 1 : 0) - (keys.has('arrowup') || keys.has('w') ? 1 : 0); if (dx || dy)
+        return { dx, dy, throttle: 1 }; if (input.active) {
+        const l = hypot(input.dx, input.dy);
+        if (l > 7)
+            return { dx: input.dx, dy: input.dy, throttle: clamp((l - 7) / 40, 0, 1) };
+    } return { dx: 0, dy: 0, throttle: 0 }; }
+    function aiSteer(e, dt) {
+        e.aiThink -= dt;
+        if (e.aiThink > 0)
+            return { dx: e.aiDX, dy: e.aiDY, throttle: e.throttle };
+        e.aiThink = .4 + Math.random() * .7;
+        let target = null, score = Infinity;
+        for (const f of foodHash.query(e.x, e.y, 16 + e.radius)) {
+            if (!f.alive)
+                continue;
+            const d = dist(f, e);
+            const v = d + (f.poison && e.antidote < 5 ? 9 : 0);
+            if (v < score) {
+                score = v;
+                target = f;
+            }
+        }
+        let dx = target ? target.x - e.x : e.aiDX, dy = target ? target.y - e.y : e.aiDY;
+        if (!dx && !dy) {
+            const a = Math.random() * TAU;
+            dx = Math.sin(a);
+            dy = Math.cos(a);
+        }
+        let nearestDanger = null;
+        for (const other of active) {
+            if (other === e || !other.alive)
+                continue;
+            const d = dist(e, other);
+            if (d > e.radius + other.radius + 6)
+                continue;
+            const same = other.genome === e.genome;
+            const danger = !same && (other.n > e.n * 1.65 || other.poison > e.antidote + 1);
+            if (danger && (!nearestDanger || d < nearestDanger.d))
+                nearestDanger = { other, d };
+            if (!same && other.lineage !== e.lineage && (e.poison || e.forceY) && e.n >= other.n && e.hp / e.maxHp > .55 && d < e.radius + other.radius + 4 && e.age > 15) {
+                dx = other.x - e.x;
+                dy = other.y - e.y;
+                target = other;
+            }
+            if (same && d < e.radius + other.radius + .8 && d > .01) {
+                dx += (e.x - other.x) / d * 2;
+                dy += (e.y - other.y) / d * 2;
+            }
+        }
+        if (nearestDanger && e.hp / e.maxHp < .85) {
+            dx = e.x - nearestDanger.other.x;
+            dy = e.y - nearestDanger.other.y;
+        }
+        if (!target) {
+            const a = Math.atan2(dy, dx) + (Math.random() - .5) * 1.1;
+            dx = Math.cos(a);
+            dy = Math.sin(a);
+        }
+        e.aiDX = dx;
+        e.aiDY = dy;
+        e.throttle = target ? 1 : .7;
+        return { dx, dy, throttle: e.throttle };
+    }
+    function moveEntity(e, dt, command) {
+        const oldX = e.x, oldY = e.y;
+        const running = command.throttle > .01;
+        let turn = 0;
+        if (running) {
+            const desired = Math.atan2(command.dx, -command.dy), delta = angleDelta(e.angle, desired);
+            turn = clamp(delta, -e.turn * dt, e.turn * dt);
+            e.angle += turn;
+            e.speed *= Math.exp(-Math.abs(turn) * .65);
+            const alignment = Math.max(.12, Math.cos(Math.min(Math.abs(delta), Math.PI / 2)));
+            e.speed = Math.min(e.maxSpeed * command.throttle, e.speed + CFG.acceleration * (1 + .35 * e.forceY) * dt * alignment);
+        }
+        else
+            e.speed = Math.max(0, e.speed - (CFG.braking + e.maxSpeed * .25) * dt);
+        e.angularVelocity = dt > 0 ? turn / dt : 0;
+        e.knockX *= Math.exp(-5 * dt);
+        e.knockY *= Math.exp(-5 * dt);
+        e.vx = Math.sin(e.angle) * e.speed + e.knockX;
+        e.vy = -Math.cos(e.angle) * e.speed + e.knockY;
+        e.x += e.vx * dt;
+        e.y += e.vy * dt;
+        if (e === player)
+            W.stats.distance += hypot(e.x - oldX, e.y - oldY);
+        worldCells(e);
+    }
+    function metabolism(e, dt) {
+        e.age += dt;
+        e.grace = Math.max(0, e.grace - dt);
+        const burn = CFG.metabolism * Math.pow(e.n, .75) * (1 + CFG.moveMetabolism * Math.pow(e.speed / e.maxSpeed, 2));
+        e.energy = Math.max(0, e.energy - burn * dt);
+        if (e.energy <= 0)
+            e.hp -= CFG.starvation * Math.pow(e.n, .45) * dt;
+        for (let i = e.poisons.length - 1; i >= 0; i--) {
+            const p = e.poisons[i], duration = Math.min(dt, p.remaining);
+            e.hp -= p.stacks * CFG.poisonDps * duration;
+            p.remaining -= dt;
+            if (p.remaining <= 0)
+                e.poisons.splice(i, 1);
+        }
+        if (e.hp <= 0)
+            kill(e);
+    }
+    function addPoison(e, stacks, source, sourceGenome = null) { if (!stacks || e.antidote >= CFG.poisonSeconds || e.grace > 0)
+        return; const duration = Math.max(0, CFG.poisonSeconds - e.antidote); const existing = e.poisons.find(p => p.source === source); if (existing) {
+        existing.remaining = Math.max(existing.remaining, duration);
+        existing.stacks = Math.max(existing.stacks, stacks);
+    }
+    else
+        e.poisons.push({ remaining: duration, stacks, source, genome: sourceGenome }); if (e === player) {
+        particle(e.x, e.y, '#d7a5ef', 4);
+    } }
+    function eat(e, f) { if (!f.alive || !e.normal || e.energy >= e.cap - .00001)
+        return false; f.alive = false; if (f.respawn !== undefined)
+        f.respawn = W.time + 95 + (hash2(Math.floor(f.x), Math.floor(f.y), W.seed) % 60); const gain = Math.min(f.amount, e.cap - e.energy); e.energy += gain; e.hp = Math.min(e.maxHp, e.hp + e.normal * .45); e.lastMeal = W.time; if (f.poison)
+        addPoison(e, f.poison, `food:${f.id}`); if (e.energy >= e.cap - .00001)
+        e.ready = true; if (e === player) {
+        particle(f.x, f.y, f.poison ? '#d5a7e9' : '#d5e8a3', 8);
+        floatText(f.x, f.y - .3, `+${Number(gain.toFixed(1))}`, f.poison ? '#d5a7e9' : '#deedaf');
+        chime('eat');
+    } return true; }
+    // Circle against the actual rotated cell square. Glow is not a hitbox.
+    function nutrientContact(e, wc, f) {
+        const dx = f.x - wc.x, dy = f.y - wc.y;
+        const lx = dx * e.co + dy * e.si, ly = -dx * e.si + dy * e.co;
+        const cx = clamp(lx, -.5, .5), cy = clamp(ly, -.5, .5);
+        const qx = lx - cx, qy = ly - cy, d2 = qx * qx + qy * qy;
+        if (d2 > CFG.foodRadius * CFG.foodRadius) return null;
+        let nx, ny, depth;
+        if (d2 > 1e-12) {
+            const d = Math.sqrt(d2);
+            nx = qx / d; ny = qy / d; depth = CFG.foodRadius - d;
+        } else {
+            // Handles initially overlapping food and rotation into a nutrient.
+            if (.5 - Math.abs(lx) < .5 - Math.abs(ly)) {
+                nx = Math.sign(lx) || 1; ny = 0; depth = .5 - Math.abs(lx) + CFG.foodRadius;
+            } else {
+                nx = 0; ny = Math.sign(ly) || -1; depth = .5 - Math.abs(ly) + CFG.foodRadius;
+            }
+        }
+        return { wc, nx: nx * e.co - ny * e.si, ny: nx * e.si + ny * e.co, depth };
+    }
+    function emerging(e) { return e.birthOrigin && e.age < CFG.birthSeconds; }
+    function absorb(e) {
+        if (!e.alive || emerging(e)) return;
+        const nearest = foodHash.query(e.x, e.y, e.radius + CFG.foodRadius + .1);
+        for (const f of nearest) {
+            if (!f.alive) continue;
+            // Several passes resolve corners/concave arrangements without penetration.
+            for (let pass = 0; pass < 4 && f.alive; pass++) {
+                let hit = null;
+                for (const wc of e.world) {
+                    const contact = nutrientContact(e, wc, f);
+                    if (contact && (!hit || contact.depth > hit.depth + 1e-8 ||
+                        Math.abs(contact.depth - hit.depth) < 1e-8 && wc.c.type !== 'normal')) hit = contact;
+                }
+                if (!hit) break;
+                if (hit.wc.c.type === 'normal' && eat(e, f)) break;
+                const oldX = f.x, oldY = f.y;
+                f.x += hit.nx * (hit.depth + .002);
+                f.y += hit.ny * (hit.depth + .002);
+                // Reflect relative to the moving/rotating surface, not the world.
+                const omega = e.angularVelocity || 0;
+                const surfaceX = e.vx - omega * (f.y - hit.ny * CFG.foodRadius - e.y);
+                const surfaceY = e.vy + omega * (f.x - hit.nx * CFG.foodRadius - e.x);
+                const closing = ((f.vx || 0) - surfaceX) * hit.nx + ((f.vy || 0) - surfaceY) * hit.ny;
+                const impulse = closing < 0 ? -(1 + CFG.foodRestitution) * closing : .12;
+                f.vx = (f.vx || 0) + hit.nx * impulse;
+                f.vy = (f.vy || 0) + hit.ny * impulse;
+                foodHash.movePoint(f, oldX, oldY);
+                relocateFood(f);
+            }
+        }
+    }
+    // Compound oriented-square collision detection; one damage budget per body pair.
+    function squareContact(a, wa, b, wb) { const dx = wb.x - wa.x, dy = wb.y - wa.y; if (Math.abs(dx) > 1.42 || Math.abs(dy) > 1.42)
+        return null; const axes = [[a.co, a.si], [-a.si, a.co], [b.co, b.si], [-b.si, b.co]]; let depth = Infinity, nx = 0, ny = 0; for (const [ax, ay] of axes) {
+        const ra = .5 * (Math.abs(ax * a.co + ay * a.si) + Math.abs(-ax * a.si + ay * a.co)), rb = .5 * (Math.abs(ax * b.co + ay * b.si) + Math.abs(-ax * b.si + ay * b.co)), p = dx * ax + dy * ay, overlap = ra + rb - Math.abs(p);
+        if (overlap <= .000001)
+            return null;
+        if (overlap < depth) {
+            depth = overlap;
+            const s = p >= 0 ? 1 : -1;
+            nx = ax * s;
+            ny = ay * s;
+        }
+    } return { a: wa, b: wb, depth, nx, ny }; }
+    // Total momentum-like budget. Contact-area division happens exactly once in distributeDamage.
+    function impactBudget(a, b, nx, ny) { const closing = Math.max(0, (a.vx - b.vx) * nx + (a.vy - b.vy) * ny), approach = a.vx * nx + a.vy * ny; if (approach <= .025 || closing <= .025)
+        return 0; return a.n * closing; }
+    function armorLayers(e, cell, nx, ny) { const co = Math.cos(e.angle), si = Math.sin(e.angle), lx = nx * co + ny * si, ly = -nx * si + ny * co; const dx = Math.abs(lx) > Math.abs(ly) ? Math.sign(lx) : 0, dy = dx ? 0 : Math.sign(ly) || 1; let layers = 0; for (let i = 0; i < e.n; i++) {
+        const c = e.map.get(key(cell.x + dx * i, cell.y + dy * i));
+        if (!c)
+            break;
+        if (c.type === 'armor')
+            layers++;
+    } return layers; }
+    // In 2D, one unique contacted square is one unit of contact area.
+    // One hit: B / 1. Two hits: B / 2 + B / 2 = B, before directional armor.
+    function distributeDamage(target, total, contacts, nx, ny, targetSide) { if (total <= 0 || !contacts.length)
+        return 0; const unique = new Map(); for (const c of contacts) {
+        const v = c[targetSide].c;
+        unique.set(key(v.x, v.y), v);
+    } let result = 0; for (const c of unique.values())
+        result += Math.max(0, total / unique.size - CFG.armor * armorLayers(target, c, nx, ny)); return result; }
+    function poisonComponent(e, starts) { const seen = new Set(), stack = []; for (const c of starts)
+        if (c.type === 'poison')
+            stack.push(c); while (stack.length) {
+        const c = stack.pop(), k = key(c.x, c.y);
+        if (seen.has(k))
+            continue;
+        seen.add(k);
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const n = e.map.get(key(c.x + dx, c.y + dy));
+            if (n?.type === 'poison' && !seen.has(key(n.x, n.y)))
+                stack.push(n);
+        }
+    } return seen.size; }
+    function contactPoison(a, b, contacts) { if (a.genome === b.genome)
+        return; const ab = [], ba = []; for (const c of contacts) {
+        if (c.b.c.type !== 'armor')
+            ab.push(c.a.c);
+        if (c.a.c.type !== 'armor')
+            ba.push(c.b.c);
+    } const pa = poisonComponent(a, ab), pb = poisonComponent(b, ba); if (pa)
+        addPoison(b, pa, `body:${a.id}`, a.genome); if (pb)
+        addPoison(a, pb, `body:${b.id}`, b.genome); }
+    function damage(e, amount, attacker) { if (amount <= .00001 || e.grace > 0 || !e.alive)
+        return; e.hp -= amount; e.lastHit = W.time; particle(e.x, e.y, '#e8b2a6', Math.min(12, Math.ceil(amount) * 2)); if (e === player) {
+        $('flash').classList.add('hit');
+        setTimeout(() => $('flash').classList.remove('hit'), 180);
+        chime('hit');
+    } if (e === player || attacker === player)
+        floatText(e.x, e.y - .6, `−${Number(amount.toFixed(1))}`, '#f3b9ad'); if (e.hp <= 0)
+        kill(e, attacker); }
+    function collide() {
+        const hash = new SpatialHash(6);
+        for (const e of active)
+            if (e.alive && !emerging(e))
+                hash.insert(e, e.x - e.radius, e.y - e.radius, e.x + e.radius, e.y + e.radius);
+        const checked = new Set();
+        for (const a of active) {
+            if (!a.alive || emerging(a))
+                continue;
+            for (const b of hash.query(a.x, a.y, a.radius + 1)) {
+                if (a === b || !b.alive)
+                    continue;
+                const pair = a.id < b.id ? `${a.id}:${b.id}` : `${b.id}:${a.id}`;
+                if (checked.has(pair))
+                    continue;
+                checked.add(pair);
+                if (dist(a, b) > a.radius + b.radius)
+                    continue;
+                const contacts = [];
+                let main = null;
+                for (const wa of a.world)
+                    for (const wb of b.world) {
+                        const c = squareContact(a, wa, b, wb);
+                        if (c) {
+                            contacts.push(c);
+                            if (!main || c.depth > main.depth)
+                                main = c;
+                        }
+                    }
+                if (!main)
+                    continue;
+                const { nx, ny } = main;
+                if (a.genome !== b.genome) {
+                    contactPoison(a, b, contacts);
+                    if ((W.contacts.get(pair) || -Infinity) < W.time && a.grace <= 0 && b.grace <= 0) {
+                        const da = impactBudget(a, b, nx, ny), db = impactBudget(b, a, -nx, -ny);
+                        if (da > 0 || db > 0) {
+                            W.contacts.set(pair, W.time + CFG.hitCooldown);
+                            const hitB = distributeDamage(b, da, contacts, nx, ny, 'b'), hitA = distributeDamage(a, db, contacts, -nx, -ny, 'a');
+                            damage(b, hitB, a);
+                            damage(a, hitA, b);
+                        }
+                    }
+                }
+                if (!a.alive || !b.alive)
+                    continue;
+                const push = Math.min(main.depth + .001, 1.1), sum = a.n + b.n;
+                a.x -= nx * push * b.n / sum;
+                a.y -= ny * push * b.n / sum;
+                b.x += nx * push * a.n / sum;
+                b.y += ny * push * a.n / sum;
+                const closing = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+                if (closing > 0) {
+                    const kick = Math.min(closing * .25, .9);
+                    a.knockX -= nx * kick * b.n / sum;
+                    a.knockY -= ny * kick * b.n / sum;
+                    b.knockX += nx * kick * a.n / sum;
+                    b.knockY += ny * kick * a.n / sum;
+                    a.speed *= .98;
+                    b.speed *= .98;
+                }
+                worldCells(a);
+                worldCells(b);
+            }
+        }
+    }
+    function inheritanceCandidates(dead) { return W.entities.filter(e => e.alive && e.id !== dead.id && e.lineage === dead.lineage && e.genome === dead.genome).sort((a, b) => healthScore(b) - healthScore(a) || a.id - b.id); }
+    function healthScore(e) { const toxin = e.poisons.reduce((s, p) => s + p.stacks * p.remaining, 0); return .65 * clamp((e.hp - toxin * .5) / e.maxHp, 0, 1) + .3 * clamp(e.energy / e.cap, 0, 1) + .05 * (e.poisons.length ? 0 : 1); }
+    function kill(e, attacker = null) { if (!e.alive)
+        return; e.alive = false; worldCells(e); const poison = Math.max(e.poison, e.poisons.reduce((s, p) => s + p.stacks, 0)); for (const wc of e.world) {
+        W.loose.push({ id: `corpse${e.id}:${wc.index}`, x: wc.x + (Math.random() - .5) * .2, y: wc.y + (Math.random() - .5) * .2, phase: Math.random() * TAU, amount: 10, poison, alive: true, born: W.time });
+    } particle(e.x, e.y, poison ? '#d6a7ea' : '#d6e8af', Math.min(35, e.n * 5), 1.5); if (attacker === player)
+        W.stats.kills++; if (e !== player)
+        return; const candidates = inheritanceCandidates(e); if (candidates.length) {
+        player = candidates[0];
+        player.grace = Math.max(player.grace, 2);
+        player.speed = 0;
+        player.knockX = 0;
+        player.knockY = 0;
+        camera = { x: player.x, y: player.y };
+        birthPulse = 1;
+        W.stats.inheritances++;
+        input.active = false;
+        keys.clear();
+        readyNotified = false;
+        ensureWorld();
+        toast('동일한 혈연 개체로 이어졌습니다');
+        chime('evolve');
+    }
+    else {
+        setMode('gameover');
+        const values = [[formatTime(W.time), '생존 시간'], [W.stats.maxCells, '최대 세포'], [W.stats.evolutions, '진화'], [W.stats.inheritances, '계승']];
+        $('endStats').innerHTML = values.map(([v, label]) => `<div class="stat-tile"><b>${v}</b><small>${label}</small></div>`).join('');
+        try {
+            localStorage.removeItem('celltide-save-v1');
+        }
+        catch { }
+    } }
+    // Offspring has a new entity id, the same lineage id, and a fresh morphology cache.
+    function offspring(parent, cells, x, y, energy) { const child = makeEntity(cells, x, y, parent.lineage, parent.generation + 1, { angle: parent.angle, energy, grace: CFG.birthGrace }); child.hp = clamp(parent.hp + Math.max(0, child.maxHp - parent.maxHp), .01, child.maxHp); child.energy = Math.min(child.cap, energy); child.poisons = parent.poisons.map(p => ({ ...p, remaining: Math.max(0, p.remaining - (child.antidote - parent.antidote)) })).filter(p => p.remaining > 0); child.birthOrigin = { x: parent.x, y: parent.y }; worldCells(child); return child; }
+    function evolveEntity(parent, type, slot = null) {
+        if (!parent.alive || !parent.ready)
+            return null;
+        const controlled = parent === player;
+        let changed;
+        if (type !== 'split') {
+            changed = mutatedCells(parent.cells, type, slot);
+            if (!changed.length || !connected(changed))
+                return null;
+            changed = normalize(changed);
+        }
+        const energy = parent.energy / 2, sideX = Math.cos(parent.angle), sideY = Math.sin(parent.angle);
+        let child;
+        if (type === 'split') {
+            const offset = parent.radius + .65;
+            const a = offspring(parent, parent.cells, parent.x - sideX * offset, parent.y - sideY * offset, energy), b = offspring(parent, parent.cells, parent.x + sideX * offset, parent.y + sideY * offset, energy);
+            a.aiDX = -sideX;
+            a.aiDY = -sideY;
+            b.aiDX = sideX;
+            b.aiDY = sideY;
+            a.aiThink = b.aiThink = 1.2;
+            a.throttle = b.throttle = 1;
+            parent.alive = false;
+            parent.retired = true;
+            W.entities.push(a, b);
+            child = a;
+            if (controlled)
+                W.stats.splits++;
+        }
+        else {
+            const childStats = statsFor(changed), offset = parent.radius + childStats.radius + .85;
+            child = offspring(parent, changed, parent.x + sideX * offset, parent.y + sideY * offset, energy);
+            parent.energy = energy;
+            parent.ready = false;
+            parent.options = null;
+            parent.grace = Math.max(2, parent.grace);
+            parent.aiDX = -sideX;
+            parent.aiDY = -sideY;
+            parent.aiThink = 1.6;
+            parent.throttle = 1;
+            W.entities.push(child);
+        }
+        if (controlled) {
+            player = child;
+            rememberShape(child);
+            W.stats.evolutions++;
+            W.stats.maxCells = Math.max(W.stats.maxCells, child.n);
+            birthPulse = 1;
+            readyNotified = false;
+            setMode('play');
+            ring(child.x, child.y, '#cef2d3');
+            particle(child.x, child.y, '#daf4c6', 22, 1.8);
+            chime('evolve');
+            toast(type === 'split' ? '분열 · 같은 혈연이 생겼습니다' : `${TYPES[type].name} · ${child.generation}세대`);
+            autoSaveTimer = CFG.autoSaveSeconds;
+        }
+        prepareActive();
+        return child;
+    }
+    function evolveAI(e) { if (!e.ready || e.age < 5 || active.length >= CFG.activeLimit - 2 || Math.random() > .5)
+        return; let opts = drawOptions(e.cells); if (e.n >= CFG.aiCellLimit)
+        opts = ['split', 'remove']; let choice = opts[Math.floor(Math.random() * opts.length)]; if (choice === 'split') {
+        evolveEntity(e, 'split');
+        return;
+    } const slots = legalSlots(e.cells, choice === 'remove'); if (!slots.length)
+        return; if (!e.normal && choice !== 'normal')
+        choice = 'normal'; const slot = slots[Math.floor(Math.random() * slots.length)]; evolveEntity(e, choice, slot); }
+    function step(dt) {
+        if (mode !== 'play')
+            return;
+        W.time += dt;
+        maintenanceTimer -= dt;
+        if (maintenanceTimer <= 0) {
+            ensureWorld();
+            prepareActive();
+            maintenanceTimer = .45;
+            for (const [k, v] of W.contacts)
+                if (v < W.time - 5)
+                    W.contacts.delete(k);
+            W.entities = W.entities.filter(e => e.alive);
+            W.loose = W.loose.filter(f => f.alive);
+        }
+        const snapshot = [...active];
+        // Adaptive microsteps prevent faster bodies or bounced food tunnelling through cells.
+        const topSpeed = Math.max(1, ...snapshot.map(e => Math.max(e.speed, e.maxSpeed) + hypot(e.knockX, e.knockY)),
+            ...foodVisible.filter(f => f.alive).map(f => hypot(f.vx || 0, f.vy || 0)));
+        const substeps = Math.min(32, Math.max(1, Math.ceil(topSpeed * dt / .2))), h = dt / substeps;
+        for (let sub = 0; sub < substeps && mode === 'play'; sub++) {
+            updateFood(h);
+            for (const e of snapshot) {
+                if (!e.alive) continue;
+                if (!emerging(e)) {
+                    const command = e === player ? inputVector() : aiSteer(e, h);
+                    moveEntity(e, h, command);
+                }
+            }
+            collide();
+            for (const e of snapshot) {
+                if (!e.alive) continue;
+                absorb(e);
+                metabolism(e, h);
+                if (mode !== 'play') break;
+            }
+        }
+        if (Math.floor(W.time * 2) !== Math.floor((W.time - dt) * 2)) {
+            for (const e of snapshot)
+                if (e !== player && e.alive)
+                    evolveAI(e);
+        }
+        for (const p of fx) {
+            p.life -= dt;
+            if (p.kind === 'dot') {
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+                p.vx *= Math.exp(-2 * dt);
+                p.vy *= Math.exp(-2 * dt);
+            }
+            else if (p.kind === 'text')
+                p.y += p.vy * dt;
+        }
+        fx = fx.filter(p => p.life > 0);
+        autoSaveTimer += dt;
+        if (autoSaveTimer >= CFG.autoSaveSeconds) {
+            autoSaveTimer = 0;
+            saveLocal();
+        }
+    }
+    function formatTime(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`; }
+    function snapshot() { return { format: 'CELLTIDE', version: 2, history: [...W.history.values()].map(h => ({ cells: cloneCells(h.cells), generation: h.generation })), seed: W.seed, time: W.time, nextId: W.nextId, playerId: player.id, stats: { ...W.stats }, soundOn, entities: W.entities.filter(e => e.alive).map(e => ({ id: e.id, lineage: e.lineage, generation: e.generation, cells: cloneCells(e.cells), x: e.x, y: e.y, angle: e.angle, speed: e.speed, hp: e.hp, energy: e.energy, ready: e.ready, options: e.options, poisons: e.poisons.map(p => ({ ...p })), age: e.age, grace: e.grace, birthOrigin: e.birthOrigin ? { ...e.birthOrigin } : null })), chunks: [...W.chunks.values()].map(c => ({ cx: c.cx, cy: c.cy, pending: (c.pending || []).map(p => ({ ...p })), foods: c.foods.map(f => ({ ...f })) })), loose: W.loose.filter(f => f.alive).map(f => ({ ...f })) }; }
+    function saveLocal() { if (!player?.alive || mode === 'splash' || mode === 'gameover')
+        return false; try {
+        localStorage.setItem('celltide-save-v1', JSON.stringify(snapshot()));
+        return true;
+    }
+    catch {
+        return false;
+    } }
+    function finite(n) { return typeof n === 'number' && Number.isFinite(n); }
+    function validateSave(data) {
+        if (data?.format !== 'CELLTIDE' || ![1, 2].includes(data.version) || !Array.isArray(data.entities) || !Array.isArray(data.chunks) || !Array.isArray(data.loose))
+            throw Error('CELLTIDE 저장 파일이 아닙니다.');
+        if (data.entities.length > 30000 || data.chunks.length > 15000 || data.loose.length > 150000)
+            throw Error('불러올 수 있는 저장 크기를 넘었습니다.');
+        if (!Number.isInteger(data.seed) || !finite(data.time) || !Number.isInteger(data.nextId) || data.nextId < 1 || data.time < 0)
+            throw Error('월드 정보가 올바르지 않습니다.');
+        for (const k of ['evolutions', 'splits', 'kills', 'distance', 'maxCells', 'inheritances'])
+            if (data.stats?.[k] !== undefined && (!finite(data.stats[k]) || data.stats[k] < 0))
+                throw Error('통계 정보가 올바르지 않습니다.');
+        if (data.history !== undefined) {
+            if (!Array.isArray(data.history) || data.history.length > 5000) throw Error('진화 기록이 올바르지 않습니다.');
+            for (const h of data.history) {
+                if (!Number.isInteger(h.generation) || h.generation < 1 || !Array.isArray(h.cells) ||
+                    !h.cells.length || h.cells.length > 2000 || h.cells.some(c =>
+                    !Number.isInteger(c.x) || !Number.isInteger(c.y) || Math.abs(c.x) > 10000 || Math.abs(c.y) > 10000 ||
+                    !['normal', 'armor', 'eye', 'antidote', 'poison', 'force'].includes(c.type)) ||
+                    !connected(h.cells)) throw Error('진화 기록의 형상이 올바르지 않습니다.');
+            }
+        }
+        const ids = new Set();
+        for (const e of data.entities) {
+            if (!Number.isInteger(e.id) || ids.has(e.id) || typeof e.lineage !== 'string' || e.lineage.length > 100 || !Number.isInteger(e.generation) || e.generation < 1)
+                throw Error('개체 정보가 손상되었습니다.');
+            ids.add(e.id);
+            if (e.birthOrigin != null && (!finite(e.birthOrigin.x) || !finite(e.birthOrigin.y)))
+                throw Error('분열 위치가 올바르지 않습니다.');
+            if (!Array.isArray(e.cells) || !e.cells.length || e.cells.length > 2000 || !Array.isArray(e.poisons) || e.poisons.length > 1000)
+                throw Error('세포 정보가 올바르지 않습니다.');
+            for (const c of e.cells)
+                if (!Number.isInteger(c.x) || !Number.isInteger(c.y) || Math.abs(c.x) > 10000 || Math.abs(c.y) > 10000 || !['normal', 'armor', 'eye', 'antidote', 'poison', 'force'].includes(c.type))
+                    throw Error('잘못된 세포입니다.');
+            if (!connected(e.cells))
+                throw Error('연결 규칙에 맞지 않는 세포입니다.');
+            for (const v of ['x', 'y', 'angle', 'speed', 'hp', 'energy', 'age', 'grace'])
+                if (!finite(e[v]))
+                    throw Error('개체 상태가 올바르지 않습니다.');
+            for (const p of e.poisons)
+                if (!finite(p.remaining) || !finite(p.stacks) || p.stacks < 0 || typeof p.source !== 'string')
+                    throw Error('독 정보가 손상되었습니다.');
+            if (e.options !== null && e.options !== undefined && (!Array.isArray(e.options) || e.options.length !== 2 || e.options.some(x => !TYPES[x])))
+                throw Error('진화 선택지가 올바르지 않습니다.');
+        }
+        if (!ids.has(data.playerId))
+            throw Error('조종할 개체가 없습니다.');
+        const foods = [...data.loose];
+        for (const c of data.chunks) {
+            if (!Number.isInteger(c.cx) || !Number.isInteger(c.cy) || !Array.isArray(c.foods) || c.foods.length > 1000)
+                throw Error('해역 정보가 올바르지 않습니다.');
+            if (c.pending !== undefined && (!Array.isArray(c.pending) || c.pending.length > 10 ||
+                c.pending.some(p => !finite(p.x) || !finite(p.y) || !Number.isInteger(p.seed))))
+                throw Error('대기 중인 개체 위치가 올바르지 않습니다.');
+            foods.push(...c.foods);
+        }
+        for (const f of foods)
+            if (!finite(f.x) || !finite(f.y) || !finite(f.amount) || !finite(f.poison) || f.amount < 0 || f.poison < 0 || typeof f.id !== 'string' || !finite(f.phase) || (f.respawn !== undefined && !finite(f.respawn)) || (f.vx !== undefined && !finite(f.vx)) || (f.vy !== undefined && !finite(f.vy)))
+                throw Error('양분 정보가 올바르지 않습니다.');
+        return true;
+    }
+    function restore(data) { validateSave(data); const oldW = W, oldPlayer = player, oldCamera = camera; try {
+        W = { version: 2, initializing: false, history: new Map(), seed: data.seed >>> 0, time: data.time, nextId: 1, entities: [], chunks: new Map(), loose: data.loose.map(f => ({ ...f })), contacts: new Map(), stats: { evolutions: 0, splits: 0, kills: 0, distance: 0, maxCells: 1, inheritances: 0, ...data.stats } };
+        for (const raw of data.entities) {
+            const e = makeEntity(raw.cells, raw.x, raw.y, raw.lineage, raw.generation, { angle: raw.angle, energy: raw.energy });
+            Object.assign(e, { id: raw.id, hp: clamp(raw.hp, .001, e.maxHp), energy: clamp(raw.energy, 0, e.cap), speed: clamp(raw.speed * (data.version === 1 ? 3 : 1), 0, e.maxSpeed), ready: !!raw.ready, options: raw.options || null, poisons: raw.poisons.map(p => ({ ...p })), age: raw.age, grace: Math.max(0, raw.grace), birthOrigin: raw.birthOrigin ? { ...raw.birthOrigin } : null });
+            e.vx = Math.sin(e.angle) * e.speed;
+            e.vy = -Math.cos(e.angle) * e.speed;
+            W.entities.push(e);
+        }
+        W.nextId = Math.max(data.nextId, ...W.entities.map(e => e.id + 1));
+        for (const c of data.chunks)
+            W.chunks.set(key(c.cx, c.cy), { cx: c.cx, cy: c.cy, pending: (c.pending || []).map(p => ({ ...p })), foods: c.foods.map(f => ({ ...f, vx: f.vx || 0, vy: f.vy || 0, chunkKey: key(c.cx, c.cy) })) });
+        player = W.entities.find(e => e.id === data.playerId);
+        for (const h of data.history || []) W.history.set(canonical(h.cells), { cells: normalize(h.cells), generation: h.generation });
+        // Old saves did not track player-design history. Preserve existing organisms,
+        // but do not invent which AI shapes the player personally designed.
+        rememberShape({ cells: [{ x: 0, y: 0, type: 'normal' }], generation: 1 });
+        rememberShape(player);
+        camera = { x: player.x, y: player.y };
+        fx = [];
+        readyNotified = false;
+        birthPulse = 1;
+        maintenanceTimer = 0;
+        autoSaveTimer = 0;
+        soundOn = !!data.soundOn;
+        ensureWorld();
+        prepareActive();
+        setMode('play');
+        updateHUD();
+        toast('저장한 바다를 불러왔습니다');
+    }
+    catch (error) {
+        W = oldW;
+        player = oldPlayer;
+        camera = oldCamera;
+        throw error;
+    } }
+    // Rendering: procedural underwater scenery, per-cell light, no network assets.
+    function roundBox(c, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+    function sx(x) { return (x - camera.x) * unit + screenW / 2; }
+    function sy(y) { return (y - camera.y) * unit + screenH * .49; }
+    function resize() { const r = $('app').getBoundingClientRect(); screenW = r.width; screenH = r.height; dpr = Math.min(window.devicePixelRatio || 1, 2); sea.width = Math.round(screenW * dpr); sea.height = Math.round(screenH * dpr); fog.width = Math.ceil(screenW * .65); fog.height = Math.ceil(screenH * .65); unit = clamp(screenW / 11.8, 25, 40); if (mode === 'editor') drawBuilder(); if (W && player) { ensureWorld(); prepareActive(); } }
+    let lightSources = [];
+    function collectLights() { if (!player)
+        return []; const sources = []; for (const wc of player.world || worldCells(player)) {
+        sources.push({ x: wc.x, y: wc.y, rx: CFG.baseSight, ry: CFG.baseSight, angle: 0 });
+        if (wc.c.type === 'eye') {
+            sources.push({ x: wc.x, y: wc.y, rx: CFG.eyeSight * runAt(player.map, wc.c, 'x', 'eye'), ry: CFG.eyeSight * runAt(player.map, wc.c, 'y', 'eye'), angle: player.angle });
+        }
+    } return sources; }
+    function visibilityAt(x, y) { let value = 0; for (const l of lightSources) {
+        const dx = x - l.x, dy = y - l.y, co = Math.cos(l.angle), si = Math.sin(l.angle), r = hypot((dx * co + dy * si) / l.rx, (-dx * si + dy * co) / l.ry);
+        if (r < 1)
+            value = Math.max(value, clamp((1 - r) * 2.4, 0, 1));
+    } return value; }
+    function water() {
+        const bg = ctx.createLinearGradient(0, 0, screenW * .5, screenH);
+        bg.addColorStop(0, '#b6eee6');
+        bg.addColorStop(.4, '#85dcd9');
+        bg.addColorStop(1, '#65c6d9');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, screenW, screenH);
+        // Soft shafts and shifting caustics are visual only, not impassable terrain.
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 3; i++) {
+            const x = (i * .51 - .35) * screenW + Math.sin(realTime * .075 + i) * 40;
+            const g = ctx.createLinearGradient(x, 0, x + screenW * .65, screenH);
+            g.addColorStop(0, '#ffffff14');
+            g.addColorStop(.45, '#ffffff28');
+            g.addColorStop(1, '#153a4c00');
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.moveTo(x - 30, 0);
+            ctx.lineTo(x + 50, 0);
+            ctx.lineTo(x + screenW * .7 + 120, screenH);
+            ctx.lineTo(x + screenW * .7, screenH);
+            ctx.fill();
+        }
+        ctx.restore();
+        const step = unit * 2.8, ox = ((camera.x * unit * .25) % step + step) % step, oy = ((camera.y * unit * .25) % step + step) % step;
+        ctx.strokeStyle = '#ffffff24';
+        ctx.lineWidth = 1;
+        for (let y = -step; y < screenH + step; y += step) {
+            ctx.beginPath();
+            for (let x = -step; x < screenW + step; x += 10) {
+                const yy = y - oy + Math.sin(x * .014 + realTime * .12 + y) * 12 + Math.cos(x * .005 - realTime * .07) * 14;
+                x === -step ? ctx.moveTo(x - ox, yy) : ctx.lineTo(x - ox, yy);
+            }
+            ctx.stroke();
+        }
+        const minX = Math.floor((camera.x - screenW / unit / 2) / 4) - 1, maxX = Math.ceil((camera.x + screenW / unit / 2) / 4) + 1, minY = Math.floor((camera.y - screenH / unit * .5) / 4) - 1, maxY = Math.ceil((camera.y + screenH / unit * .55) / 4) + 1;
+        for (let gx = minX; gx <= maxX; gx++)
+            for (let gy = minY; gy <= maxY; gy++) {
+                const h = hash2(gx, gy, W.seed), r = rng(h);
+                const x = sx((gx + r()) * 4), y = sy((gy + r()) * 4);
+                if (h % 7 === 0) {
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.strokeStyle = '#6b9f8d13';
+                    ctx.lineWidth = 1.2;
+                    for (let b = 0; b < 4; b++) {
+                        const a = (r() - .5) * 1.5, length = unit * (.35 + r() * .65);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.quadraticCurveTo(Math.sin(a) * length * .6 + Math.sin(realTime * .8 + b) * 2, -length * .6, Math.sin(a) * length, -length);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+                else if (h % 4 === 0) {
+                    ctx.fillStyle = '#79ab9210';
+                    ctx.beginPath();
+                    ctx.ellipse(x, y, unit * (.15 + r() * .25), unit * (.08 + r() * .08), r() * Math.PI, 0, TAU);
+                    ctx.fill();
+                }
+            }
+        for (let i = 0; i < 70; i++) {
+            const r = rng(hash2(i, 121, W.seed)), depth = .2 + r() * .65;
+            let x = ((r() * screenW - camera.x * unit * depth + Math.sin(realTime * .13 + i) * 12) % (screenW + 20) + (screenW + 20)) % (screenW + 20) - 10;
+            let y = ((r() * screenH - camera.y * unit * depth - realTime * (1.4 + depth * 3)) % (screenH + 20) + (screenH + 20)) % (screenH + 20) - 10;
+            ctx.fillStyle = `rgba(166,211,192,${.08 + depth * .1})`;
+            ctx.beginPath();
+            ctx.arc(x, y, .6 + depth * .8, 0, TAU);
+            ctx.fill();
+        }
+    }
+    function drawFood(f) { const visible = visibilityAt(f.x, f.y); if (visible < .015)
+        return; const x = sx(f.x), y = sy(f.y), r = unit * CFG.foodRadius; if (x < -r || x > screenW + r || y < -r || y > screenH + r)
+        return; ctx.save(); ctx.globalAlpha = visible; const g = ctx.createRadialGradient(x - r * .2, y - r * .25, r * .12, x, y, r * 1.6); if (f.poison) {
+        g.addColorStop(0, '#e2bde6');
+        g.addColorStop(.3, '#b88bca');
+        g.addColorStop(.65, '#9e72b42a');
+        g.addColorStop(1, '#bb84c500');
+    }
+    else {
+        g.addColorStop(0, '#dceab6');
+        g.addColorStop(.33, '#bdcb8d');
+        g.addColorStop(.64, '#9abb8430');
+        g.addColorStop(1, '#adc78c00');
+    } ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 1.6, 0, TAU); ctx.fill(); ctx.strokeStyle = f.poison ? '#ebd0f072' : '#dce8b560'; ctx.lineWidth = .7; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke(); ctx.fillStyle = f.poison ? '#f4d3ed77' : '#f1f5d0a3'; ctx.beginPath(); ctx.arc(x - r * .17, y - r * .22, r * .15, 0, TAU); ctx.fill(); if (f.poison) {
+        ctx.strokeStyle = '#6e3e85aa';
+        ctx.beginPath();
+        ctx.moveTo(x - r * .16, y - r * .12);
+        ctx.lineTo(x + r * .16, y + r * .2);
+        ctx.moveTo(x + r * .16, y - r * .12);
+        ctx.lineTo(x - r * .16, y + r * .2);
+        ctx.stroke();
+    } ctx.restore(); }
+    function paintCell(c, x, y, size, type, bright = false) {
+        const color = TYPES[type].color, s = size;
+        c.save();
+        c.translate(x, y);
+        roundBox(c, -s * .49, -s * .49, s * .98, s * .98, s * .19);
+        c.fillStyle = color + (bright ? 'a0' : '80');
+        c.fill();
+        c.strokeStyle = color + (bright ? 'ee' : 'b8');
+        c.lineWidth = bright ? 1.3 : 1;
+        c.stroke();
+        roundBox(c, -s * .36, -s * .36, s * .72, s * .72, s * .06);
+        c.strokeStyle = color + '25';
+        c.lineWidth = .6;
+        c.stroke();
+        c.strokeStyle = color;
+        c.fillStyle = color + '6b';
+        c.lineWidth = Math.max(.9, s * .032);
+        c.lineCap = 'round';
+        const r = s * .2;
+        if (type === 'normal') {
+            c.beginPath();
+            c.arc(0, 0, r, 0, TAU);
+            c.fill();
+            c.stroke();
+            c.fillStyle = '#eff4c5';
+            c.beginPath();
+            c.arc(-r * .2, -r * .22, r * .24, 0, TAU);
+            c.fill();
+        }
+        else if (type === 'armor') {
+            c.beginPath();
+            c.moveTo(-r, -r);
+            c.lineTo(0, -r * 1.35);
+            c.lineTo(r, -r);
+            c.lineTo(r, r * .5);
+            c.lineTo(0, r * 1.4);
+            c.lineTo(-r, r * .5);
+            c.closePath();
+            c.fill();
+            c.stroke();
+            c.beginPath();
+            c.moveTo(0, -r * .7);
+            c.lineTo(0, r * .65);
+            c.stroke();
+        }
+        else if (type === 'eye') {
+            c.beginPath();
+            c.ellipse(0, 0, r * 1.4, r * .82, 0, 0, TAU);
+            c.stroke();
+            c.beginPath();
+            c.arc(0, 0, r * .48, 0, TAU);
+            c.fill();
+            c.stroke();
+        }
+        else if (type === 'antidote') {
+            c.beginPath();
+            c.moveTo(-r, 0);
+            c.lineTo(r, 0);
+            c.moveTo(0, -r);
+            c.lineTo(0, r);
+            c.lineWidth = Math.max(1.8, s * .075);
+            c.stroke();
+        }
+        else if (type === 'poison') {
+            c.beginPath();
+            c.moveTo(0, -r * 1.4);
+            c.bezierCurveTo(-r * 1.5, r * .1, -r, r * 1.3, 0, r * 1.3);
+            c.bezierCurveTo(r, r * 1.3, r * 1.5, r * .1, 0, -r * 1.4);
+            c.fill();
+            c.stroke();
+        }
+        else if (type === 'force') {
+            c.beginPath();
+            c.moveTo(-r, r * .5);
+            c.lineTo(0, -r * .6);
+            c.lineTo(r, r * .5);
+            c.moveTo(-r, -r * .25);
+            c.lineTo(0, -r * 1.35);
+            c.lineTo(r, -r * .25);
+            c.stroke();
+        }
+        c.restore();
+    }
+    function bodyOutline(c, e, color, width) { c.strokeStyle = color; c.lineWidth = width; c.beginPath(); for (const cell of e.cells) {
+        const x = (cell.x - e.cx) * unit, y = (cell.y - e.cy) * unit, s = unit / 2;
+        if (!e.map.has(key(cell.x - 1, cell.y))) {
+            c.moveTo(x - s, y - s);
+            c.lineTo(x - s, y + s);
+        }
+        if (!e.map.has(key(cell.x + 1, cell.y))) {
+            c.moveTo(x + s, y - s);
+            c.lineTo(x + s, y + s);
+        }
+        if (!e.map.has(key(cell.x, cell.y - 1))) {
+            c.moveTo(x - s, y - s);
+            c.lineTo(x + s, y - s);
+        }
+        if (!e.map.has(key(cell.x, cell.y + 1))) {
+            c.moveTo(x - s, y + s);
+            c.lineTo(x + s, y + s);
+        }
+    } c.stroke(); }
+    function drawEntity(e) {
+        if (!e.alive)
+            return;
+        const birthT = e.birthOrigin ? clamp(e.age / CFG.birthSeconds, 0, 1) : 1;
+        const birthEase = birthT * birthT * (3 - 2 * birthT);
+        const drawX = e.birthOrigin ? lerp(e.birthOrigin.x, e.x, birthEase) : e.x;
+        const drawY = e.birthOrigin ? lerp(e.birthOrigin.y, e.y, birthEase) : e.y;
+        const x = sx(drawX), y = sy(drawY), r = e.radius * unit;
+        if (x + r < -25 || x - r > screenW + 25 || y + r < -25 || y - r > screenH + 25)
+            return;
+        const own = e === player, same = e.genome === player.genome, kin = same && e.lineage === player.lineage;
+        const vis = own ? 1 : Math.max(visibilityAt(drawX, drawY), ...e.world.map(c => visibilityAt(c.x + drawX - e.x, c.y + drawY - e.y)));
+        if (vis < .02)
+            return;
+        ctx.save();
+        ctx.globalAlpha = vis;
+        ctx.translate(x, y);
+        ctx.rotate(e.angle);
+        if (birthT < 1) ctx.scale(.65 + birthEase * .35, .65 + birthEase * .35);
+        if (own) {
+            const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(unit * 1.8, r + unit));
+            glow.addColorStop(0, '#c1efb813');
+            glow.addColorStop(1, '#c1efb800');
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(0, 0, Math.max(unit * 1.8, r + unit), 0, TAU);
+            ctx.fill();
+        }
+        for (const cell of e.cells)
+            paintCell(ctx, (cell.x - e.cx) * unit, (cell.y - e.cy) * unit, unit, cell.type, own);
+        bodyOutline(ctx, e, own ? '#dff7d79f' : kin ? '#c5efc188' : same ? '#adcabc66' : '#efb29f77', own ? 1.3 : .85);
+        const minY = Math.min(...e.cells.map(c => c.y)) - e.cy - .75;
+        if (own) {
+            ctx.strokeStyle = '#def3caaa';
+            ctx.lineWidth = 1.3;
+            ctx.beginPath();
+            ctx.moveTo(-3, minY * unit + 2);
+            ctx.lineTo(0, minY * unit - 1);
+            ctx.lineTo(3, minY * unit + 2);
+            ctx.stroke();
+        }
+        else if (kin) {
+            ctx.fillStyle = '#bcebc5b0';
+            ctx.beginPath();
+            ctx.arc(0, minY * unit, 2.2, 0, TAU);
+            ctx.fill();
+        }
+        if (e.grace > 0 && own) {
+            ctx.strokeStyle = `rgba(216,241,199,${.14 + .1 * Math.sin(realTime * 4)})`;
+            ctx.lineWidth = .8;
+            ctx.setLineDash([3, 7]);
+            ctx.beginPath();
+            ctx.arc(0, 0, r + 9, 0, TAU);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        if (e.poisons.length) {
+            ctx.strokeStyle = '#dca1e99c';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(0, 0, r + 4, realTime, realTime + Math.PI * 1.6);
+            ctx.stroke();
+        }
+        ctx.restore();
+        if (!own && e.hp < e.maxHp && W.time - e.lastHit < 6) {
+            ctx.save();
+            ctx.globalAlpha = vis;
+            ctx.fillStyle = '#080f18aa';
+            roundBox(ctx, x - 16, y - r - 11, 32, 3, 2);
+            ctx.fill();
+            ctx.fillStyle = same ? '#b2dcb0' : '#d59a89';
+            roundBox(ctx, x - 16, y - r - 11, 32 * clamp(e.hp / e.maxHp, 0, 1), 3, 2);
+            ctx.fill();
+            ctx.restore();
+        }
+        if (own && e.speed > .18) {
+            ctx.save();
+            ctx.globalAlpha = clamp(e.speed / e.maxSpeed, 0, 1) * .16;
+            ctx.strokeStyle = '#c1e6ce';
+            ctx.lineWidth = .7;
+            const backY = Math.max(...e.cells.map(c => c.y)) - e.cy + .7;
+            ctx.translate(x, y);
+            ctx.rotate(e.angle);
+            for (let i = 0; i < 3; i++) {
+                const q = ((realTime * .6 + i / 3) % 1) * unit * 2;
+                ctx.beginPath();
+                ctx.ellipse(0, backY * unit + q, unit * .28 + q * .15, unit * .1, 0, 0, Math.PI);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+    }
+    function drawFog() { const scale = .65; fctx.setTransform(scale, 0, 0, scale, 0, 0); fctx.globalCompositeOperation = 'source-over'; fctx.clearRect(0, 0, screenW + 2, screenH + 2); fctx.fillStyle = 'rgba(49,139,167,.18)'; fctx.fillRect(0, 0, screenW + 2, screenH + 2); fctx.globalCompositeOperation = 'destination-out'; for (const l of lightSources) {
+        fctx.save();
+        fctx.translate(sx(l.x), sy(l.y));
+        fctx.rotate(l.angle);
+        fctx.scale(l.rx * unit, l.ry * unit);
+        const g = fctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+        g.addColorStop(0, 'rgba(0,0,0,.98)');
+        g.addColorStop(.43, 'rgba(0,0,0,.9)');
+        g.addColorStop(.74, 'rgba(0,0,0,.45)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        fctx.fillStyle = g;
+        fctx.beginPath();
+        fctx.arc(0, 0, 1, 0, TAU);
+        fctx.fill();
+        fctx.restore();
+    } fctx.globalCompositeOperation = 'source-over'; ctx.drawImage(fog, 0, 0, screenW, screenH); }
+    function drawFx() { for (const f of fx) {
+        const visible = visibilityAt(f.x, f.y);
+        if (visible < .01)
+            continue;
+        const x = sx(f.x), y = sy(f.y), t = clamp(f.life / f.max, 0, 1);
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, t * 2) * visible;
+        if (f.kind === 'dot') {
+            ctx.fillStyle = f.color;
+            ctx.beginPath();
+            ctx.arc(x, y, f.size * unit, 0, TAU);
+            ctx.fill();
+        }
+        else if (f.kind === 'text') {
+            ctx.font = '500 13px -apple-system,BlinkMacSystemFont,sans-serif';
+            ctx.fillStyle = f.color;
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#03232e';
+            ctx.shadowBlur = 7;
+            ctx.fillText(f.text, x, y);
+        }
+        else if (f.kind === 'ring') {
+            ctx.strokeStyle = f.color;
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = t * .4;
+            ctx.beginPath();
+            ctx.arc(x, y, (1 - t) * unit * 3 + .5 * unit, 0, TAU);
+            ctx.stroke();
+        }
+        ctx.restore();
+    } }
+    function drawJoystick() { if (!input.active || mode !== 'play')
+        return; const dx = input.dx, dy = input.dy, l = hypot(dx, dy), k = l > 45 ? 45 / l : 1; ctx.save(); ctx.strokeStyle = '#c6e2d42e'; ctx.fillStyle = '#badbc908'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(input.x, input.y, 45, 0, TAU); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(input.x, input.y); ctx.lineTo(input.x + dx * k, input.y + dy * k); ctx.stroke(); ctx.fillStyle = '#d5ebd83b'; ctx.beginPath(); ctx.arc(input.x + dx * k, input.y + dy * k, 13, 0, TAU); ctx.fill(); ctx.stroke(); ctx.restore(); }
+    function render(dt) { if (!W || !player)
+        return; const desiredUnit = targetUnit(); unit = lerp(unit, desiredUnit, 1 - Math.exp(-dt * 3)); camera.x = lerp(camera.x, player.x, 1 - Math.exp(-dt * 4.5)); camera.y = lerp(camera.y, player.y, 1 - Math.exp(-dt * 4.5)); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); lightSources = collectLights(); water(); for (const f of foodVisible)
+        if (f.alive)
+            drawFood(f); for (const e of active)
+        if (e !== player)
+            drawEntity(e); drawEntity(player); drawFog(); drawFx(); drawJoystick(); if (birthPulse > 0) {
+        birthPulse = Math.max(0, birthPulse - dt * .8);
+        ctx.fillStyle = `rgba(191,238,209,${birthPulse * .1})`;
+        ctx.fillRect(0, 0, screenW, screenH);
+    } if (realTime > toastUntil)
+        $('toast').classList.remove('on'); }
+    function updateHUD() { if (!player)
+        return; const p = player; const put = (id, value, html = false) => { if (uiLast[id] !== value) {
+        $(id)[html ? 'innerHTML' : 'textContent'] = value;
+        uiLast[id] = value;
+    } }; put('generation', `${p.generation}세대 · ${p.n} CELL${p.n > 1 ? 'S' : ''}`); put('hpText', `${Number(Math.max(0, p.hp).toFixed(1))} / ${p.maxHp}`); put('energyText', `${Number(p.energy.toFixed(1))} / ${p.cap}`); $('hpFill').style.width = `${clamp(p.hp / p.maxHp * 100, 0, 100)}%`; $('energyFill').style.width = `${clamp(p.energy / p.cap * 100, 0, 100)}%`; put('speed', `${p.speed.toFixed(2)} <span class="dim">/ ${p.maxSpeed.toFixed(2)} 셀/s</span>`, true); const kin = inheritanceCandidates(p).length; put('kin', `혈연 ${kin}`); $('evolve').hidden = !p.ready; $('toxin').hidden = !p.poisons.length; if (p.poisons.length) {
+        const stacks = p.poisons.reduce((s, x) => s + x.stacks, 0), duration = Math.max(...p.poisons.map(x => x.remaining));
+        put('toxin', `중독 ${Math.ceil(duration)}초 · −${stacks}/s`);
+    } if (p.ready && !readyNotified) {
+        readyNotified = true;
+        ring(p.x, p.y, '#d5e9b8');
+    } if (!p.ready)
+        readyNotified = false; $('hint').style.opacity = W.stats.distance > .2 ? '0' : '1'; }
+    function openChoices() { if (!player.ready || !player.alive)
+        return; player.options = player.options || drawOptions(player.cells); setMode('choices'); $('options').innerHTML = ''; for (const type of player.options) {
+        const info = TYPES[type], button = document.createElement('button');
+        button.className = 'option';
+        button.dataset.type = type;
+        button.innerHTML = `<span class="cell-icon" style="--cell:${info.color}"><svg viewBox="0 0 24 24">${info.icon}</svg></span><strong>${info.name}${type === 'split' ? '' : ' ' + (type === 'remove' ? '' : '추가')}</strong><small>${info.desc}</small>`;
+        button.addEventListener('click', () => { if (type === 'split')
+            evolveEntity(player, 'split');
+        else
+            openEditor(type); });
+        $('options').appendChild(button);
+    } }
+    function openEditor(type) { editorType = type; selection = null; editorSlots = legalSlots(player.cells, type === 'remove'); if (!editorSlots.length) {
+        toast('연결을 유지할 수 있는 위치가 없습니다');
+        return;
+    } $('editorTitle').textContent = type === 'remove' ? '세포 덜어내기' : `${TYPES[type].name} 추가`; $('editorHint').textContent = type === 'remove' ? '삭제할 세포를 누르세요 · 선택한 한 칸만 변경' : '빈칸을 누르세요 · 선택한 한 칸만 변경'; $('applyEvolution').disabled = true; setMode('editor'); drawBuilder(); updateEditorStats(); }
+    function updateEditorStats() { const p = player, after = selection ? statsFor(mutatedCells(p.cells, editorType, selection)) : p; $('mCells').textContent = `${p.n} → ${after.n}`; $('mHealth').textContent = `${p.maxHp} → ${after.maxHp}`; $('mSpeed').textContent = `${p.maxSpeed.toFixed(1)} → ${after.maxSpeed.toFixed(1)}`; $('applyEvolution').disabled = !selection; if (selection) {
+        const n = after.n - p.n;
+        $('applyEvolution').textContent = `진화하기 · ${n > 0 ? '+' : ''}${n}셀`;
+        $('editorHint').textContent = !after.normal ? '일반세포 없음 · 양분을 흡수할 수 없습니다' : editorType === 'remove' ? '선택한 세포 하나만 삭제됩니다' : '선택한 위치에 세포 하나가 추가됩니다';
+    }
+    else
+        $('applyEvolution').textContent = '진화하기'; }
+    function drawBuilder() {
+        const canvas = $('builder'), rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height)
+            return;
+        const w = rect.width, h = rect.height;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        const c = canvas.getContext('2d');
+        c.setTransform(dpr, 0, 0, dpr, 0, 0);
+        c.clearRect(0, 0, w, h);
+        const all = [...player.cells, ...editorSlots], maxX = Math.max(2, ...all.map(v => Math.abs(v.x))) + 1, minY = Math.min(...all.map(v => v.y)) - 1, maxY = Math.max(...all.map(v => v.y)) + 1, midY = (minY + maxY) / 2, s = Math.min(39, (w - 24) / (maxX * 2 + 1), (h - 38) / (maxY - minY + 1));
+        editorView = { w, h, s, midY };
+        const px = x => w / 2 + x * s, py = y => h / 2 + 8 + (y - midY) * s;
+        c.strokeStyle = '#438f9130';
+        c.lineWidth = .7;
+        for (let x = -maxX; x <= maxX; x++) {
+            c.beginPath();
+            c.moveTo(px(x) - s / 2, py(minY) - s / 2);
+            c.lineTo(px(x) - s / 2, py(maxY) + s / 2);
+            c.stroke();
+        }
+        for (let y = minY; y <= maxY + 1; y++) {
+            c.beginPath();
+            c.moveTo(px(-maxX) - s / 2, py(y) - s / 2);
+            c.lineTo(px(maxX) + s / 2, py(y) - s / 2);
+            c.stroke();
+        }
+        c.setLineDash([3, 5]);
+        c.strokeStyle = '#aad6c623';
+        c.beginPath();
+        c.moveTo(w / 2, 23);
+        c.lineTo(w / 2, h - 10);
+        c.stroke();
+        c.setLineDash([]);
+        c.fillStyle = '#487e83';
+        c.font = '9px -apple-system,BlinkMacSystemFont,sans-serif';
+        c.textAlign = 'center';
+        c.fillText('↑ 진행 방향', w / 2, 17);
+        for (const p of editorSlots) {
+            if (editorType === 'remove')
+                continue;
+            roundBox(c, px(p.x) - s * .44, py(p.y) - s * .44, s * .88, s * .88, s * .07);
+            c.fillStyle = '#a0d9bd06';
+            c.fill();
+            c.strokeStyle = '#438f9180';
+            c.setLineDash([2, 3]);
+            c.stroke();
+            c.setLineDash([]);
+            c.strokeStyle = '#438f91aa';
+            c.lineWidth = 1;
+            c.beginPath();
+            c.moveTo(px(p.x) - 4, py(p.y));
+            c.lineTo(px(p.x) + 4, py(p.y));
+            c.moveTo(px(p.x), py(p.y) - 4);
+            c.lineTo(px(p.x), py(p.y) + 4);
+            c.stroke();
+        }
+        for (const cell of player.cells) {
+            paintCell(c, px(cell.x), py(cell.y), s * .94, cell.type, false);
+            if (editorType === 'remove' && editorSlots.some(p => p.x === cell.x && p.y === cell.y)) {
+                c.strokeStyle = '#efb3a58c';
+                roundBox(c, px(cell.x) - s * .47, py(cell.y) - s * .47, s * .94, s * .94, s * .07);
+                c.stroke();
+            }
+        }
+        if (selection) {
+            for (const x of [selection.x]) {
+                if (editorType === 'remove') {
+                    c.fillStyle = '#bc65504d';
+                    roundBox(c, px(x) - s * .48, py(selection.y) - s * .48, s * .96, s * .96, s * .07);
+                    c.fill();
+                    c.strokeStyle = '#fac1ad';
+                    c.lineWidth = 1.8;
+                    c.beginPath();
+                    c.moveTo(px(x) - s * .23, py(selection.y) - s * .23);
+                    c.lineTo(px(x) + s * .23, py(selection.y) + s * .23);
+                    c.moveTo(px(x) + s * .23, py(selection.y) - s * .23);
+                    c.lineTo(px(x) - s * .23, py(selection.y) + s * .23);
+                    c.stroke();
+                }
+                else {
+                    paintCell(c, px(x), py(selection.y), s * .97, editorType, true);
+                    c.strokeStyle = '#e8f7dd';
+                    c.lineWidth = 1.3;
+                    roundBox(c, px(x) - s * .51, py(selection.y) - s * .51, s * 1.02, s * 1.02, s * .19);
+                    c.stroke();
+                }
+            }
+        }
+    }
+    $('builder').addEventListener('pointerdown', event => { if (mode !== 'editor' || !editorView)
+        return; event.preventDefault(); const r = $('builder').getBoundingClientRect(), v = editorView, x = (event.clientX - r.left - v.w / 2) / v.s, y = (event.clientY - r.top - v.h / 2 - 8) / v.s + v.midY; let nearest = null, best = .8; for (const p of editorSlots) {
+        const d = hypot(p.x - x, p.y - y);
+        if (d < best) {
+            nearest = p;
+            best = d;
+        }
+    } if (nearest) {
+        selection = { ...nearest };
+        drawBuilder();
+        updateEditorStats();
+    } });
+    $('applyEvolution').addEventListener('click', () => { if (selection)
+        evolveEntity(player, editorType, selection); });
+    $('backEditor').addEventListener('click', openChoices);
+    $('evolve').addEventListener('click', openChoices);
+    $('closeChoices').addEventListener('click', () => setMode('play'));
+    $('pause').addEventListener('click', () => { if (mode !== 'play')
+        return; saveLocal(); $('sessionTime').textContent = formatTime(W.time); $('sound').textContent = soundOn ? '소리 끄기' : '소리 켜기'; setMode('menu'); });
+    // Only explicit exit actions may navigate to an allowlisted HTTPS return URL.
+    function getReturnUrl(search = window.location.search) {
+        const raw = new URLSearchParams(search).get('returnTo');
+        if (!raw) return null;
+        try {
+            const target = new URL(raw);
+            const allowedOrigins = new Set([window.location.origin, 'https://rudoloot.github.io']);
+            return target.protocol === 'https:' && allowedOrigins.has(target.origin) && !target.username && !target.password ? target.href : null;
+        } catch { return null; }
+    }
+    function exitGame() {
+        saveLocal();
+        const target = getReturnUrl();
+        if (target) window.location.replace(target);
+        else { setMode('splash'); try { $('continue').hidden = !localStorage.getItem('celltide-save-v1'); } catch {} }
+    }
+    async function toggleFullscreen() {
+        try {
+            if (document.fullscreenElement) await document.exitFullscreen();
+            else if ($('app').requestFullscreen) await $('app').requestFullscreen();
+            else toast('이 브라우저에서는 화면을 가득 채워 실행합니다');
+        } catch { toast('전체 화면을 사용할 수 없습니다'); }
+    }
+    $('fullscreen').addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', () => { $('fullscreen').textContent = document.fullscreenElement ? '전체 화면 해제' : '전체 화면'; resize(); });
+    $('exitMenu').addEventListener('click', exitGame);
+    $('exitOver').addEventListener('click', exitGame);
+    $('resume').addEventListener('click', () => setMode('play'));
+    $('start').addEventListener('click', () => { newWorld(); setMode('play'); initAudio(); updateHUD(); });
+    $('again').addEventListener('click', () => { newWorld(); setMode('play'); updateHUD(); });
+    $('continue').addEventListener('click', () => { try {
+        const text = localStorage.getItem('celltide-save-v1');
+        if (!text)
+            throw Error('저장된 바다가 없습니다.');
+        restore(JSON.parse(text));
+    }
+    catch (err) {
+        toast(err.message);
+    } });
+    let restartArmed = 0;
+    $('restart').addEventListener('click', () => { if (realTime > restartArmed) {
+        restartArmed = realTime + 4;
+        $('restart').textContent = '한 번 더 눌러 시작';
+        setTimeout(() => { $('restart').textContent = '새로 시작'; }, 4000);
+        return;
+    } newWorld(); setMode('play'); updateHUD(); });
+    $('rulesToggle').addEventListener('click', () => { $('rules').hidden = !$('rules').hidden; $('rulesToggle').textContent = $('rules').hidden ? '세포와 생존 규칙 ＋' : '세포와 생존 규칙 −'; });
+    $('sound').addEventListener('click', () => { soundOn = !soundOn; if (soundOn) {
+        initAudio();
+        chime('evolve');
+    } $('sound').textContent = soundOn ? '소리 끄기' : '소리 켜기'; });
+    $('save').addEventListener('click', () => { try {
+        const blob = new Blob([JSON.stringify(snapshot())], { type: 'application/json' }), url = URL.createObjectURL(blob), a = document.createElement('a');
+        a.href = url;
+        a.download = `celltide-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        saveLocal();
+        toast('저장 파일을 만들었습니다');
+    }
+    catch {
+        toast('저장에 실패했습니다. 브라우저 공간을 확인하세요.');
+    } });
+    $('load').addEventListener('click', () => $('loadFile').click());
+    $('loadFile').addEventListener('change', async (event) => { const file = event.target.files[0]; if (!file)
+        return; try {
+        if (file.size > 25 * 1024 * 1024)
+            throw Error('25MB 이하의 저장 파일만 지원합니다.');
+        const data = JSON.parse(await file.text());
+        restore(data);
+    }
+    catch (err) {
+        toast(err.message || '파일을 불러올 수 없습니다.');
+    } event.target.value = ''; });
+    sea.addEventListener('pointerdown', event => { if (mode !== 'play' || input.id !== null)
+        return; event.preventDefault(); const r = sea.getBoundingClientRect(); input = { id: event.pointerId, x: event.clientX - r.left, y: event.clientY - r.top, dx: 0, dy: 0, active: true }; try {
+        sea.setPointerCapture(event.pointerId);
+    }
+    catch { } });
+    sea.addEventListener('pointermove', event => { if (!input.active || event.pointerId !== input.id)
+        return; event.preventDefault(); const r = sea.getBoundingClientRect(); input.dx = event.clientX - r.left - input.x; input.dy = event.clientY - r.top - input.y; });
+    function releasePointer(event) { if (event.pointerId !== input.id)
+        return; input.active = false; input.id = null; input.dx = 0; input.dy = 0; }
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture'])
+        sea.addEventListener(name, releasePointer);
+    window.addEventListener('keydown', event => { const k = event.key.toLowerCase(); if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(k)) {
+        if (mode === 'play') {
+            event.preventDefault();
+            keys.add(k);
+        }
+    }
+    else if (k === 'escape') {
+        if (mode === 'play')
+            $('pause').click();
+        else if (mode === 'menu' || mode === 'choices')
+            setMode('play');
+        else if (mode === 'editor')
+            openChoices();
+    } });
+    window.addEventListener('keyup', event => keys.delete(event.key.toLowerCase()));
+    window.addEventListener('blur', () => { input.active = false; input.id = null; keys.clear(); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) {
+        saveLocal();
+        input.active = false;
+        input.id = null;
+        keys.clear();
+        if (mode === 'play') {
+            $('sessionTime').textContent = formatTime(W.time);
+            setMode('menu');
+        }
+    } lastFrame = 0; accumulator = 0; });
+    window.addEventListener('pagehide', saveLocal);
+    window.addEventListener('resize', resize);
+    window.addEventListener('error', event => { $('error').hidden = false; $('error').textContent = `실행 오류: ${event.message}. 새로고침 후 저장한 바다를 불러와 주세요.`; });
+    function frame(now) { const dt = lastFrame ? Math.min(.08, (now - lastFrame) / 1000) : 1 / 60; lastFrame = now; realTime += dt; if (mode === 'play') {
+        accumulator = Math.min(.1, accumulator + dt);
+        while (accumulator >= 1 / 60) {
+            step(1 / 60);
+            accumulator -= 1 / 60;
+        }
+    } render(dt); hudTimer += dt; if (hudTimer >= .12) {
+        hudTimer = 0;
+        updateHUD();
+    } requestAnimationFrame(frame); }
+    // Debug hooks are opt-in and excluded from normal gameplay. Used by the included tests.
+    if (new URLSearchParams(location.search).has('test'))
+        window.CELLTIDE = { get world() { return W; }, get player() { return player; }, get mode() { return mode; }, get editorView() { return editorView; }, get slots() { return editorSlots; }, get selection() { return selection; }, get active() { return active; }, get foodVisible() { return foodVisible; }, get unit() { return unit; }, targetUnit, getReturnUrl, exitGame, config: CFG, types: TYPES, newWorld, step, render, statsFor, connected, symmetric, canonical, normalize, legalSlots, mutatedCells, drawOptions, makeEntity, rebuild, worldCells, impactBudget, armorLayers, distributeDamage, poisonComponent, addPoison, metabolism, absorb, nutrientContact, updateFood, relocateFood, eat, kill, rememberShape, chooseWildShape, observationBounds, inObservation, spawnPending, generateChunk, emerging, inheritanceCandidates, healthScore, evolveEntity, moveEntity, collectLights, validateSave, snapshot, restore, prepareActive, ensureWorld, collide, setMode, updateHUD, openChoices, openEditor, drawBuilder, rng, forceReady() { player.energy = player.cap; player.ready = true; updateHUD(); }, isolate() { W.entities = [player]; W.chunks = new Map(); W.loose = []; active = [player]; foodVisible = []; foodHash = new SpatialHash(3); }, setPlayer(e) { player = e; camera = { x: e.x, y: e.y }; prepareActive(); } };
+    resize();
+    newWorld();
+    setMode('splash');
+    try {
+        $('continue').hidden = !localStorage.getItem('celltide-save-v1');
+    }
+    catch { }
+    updateHUD();
+    requestAnimationFrame(frame);
+})();
+
+</script>
+</body>
+</html>

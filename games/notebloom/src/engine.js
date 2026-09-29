@@ -90,4 +90,4 @@ export function analyzeSamples(samples, sampleRate) {
   return { bpm: 60 / (bestLag * hop / sampleRate), beat: bestLag * hop / sampleRate, offset: phase * hop / sampleRate, peaks: peaks.map(p => p / max), beatTimes: detectBeatTimes(samples, sampleRate) };
 }
 
-export { makeChart, GameState, LANE_COUNT, laneX } from './combat.js?v=4c780c7b917d';
+export { makeChart, GameState, LANE_COUNT, laneX } from './combat.js?v=375ab583a975';

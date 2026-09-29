@@ -1,10 +1,11 @@
-import { TRACKS, MusicPlayer, localTrackFromFile } from './music.js?v=4c780c7b917d';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=4c780c7b917d';
-import { World } from './scene.js?v=4c780c7b917d';
-import { weaponForId } from './weapons.js?v=4c780c7b917d';
-import { UPGRADES, loadProfile, freshProfile, buyUpgrade, upgradeCost, creditRun } from './progression.js?v=4c780c7b917d';
-import { exitGame } from './launch.js?v=4c780c7b917d';
-import { setupFullscreen } from './fullscreen.js?v=4c780c7b917d';
+import { TRACKS, MusicPlayer } from './music.js?v=375ab583a975';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=375ab583a975';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=375ab583a975';
+import { World } from './scene.js?v=375ab583a975';
+import { weaponForId } from './weapons.js?v=375ab583a975';
+import { UPGRADES, loadProfile, freshProfile, buyUpgrade, upgradeCost, creditRun } from './progression.js?v=375ab583a975';
+import { exitGame } from './launch.js?v=375ab583a975';
+import { setupFullscreen } from './fullscreen.js?v=375ab583a975';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -62,29 +63,49 @@ for (const track of TRACKS) {
 }
 selectTrack(selected);
 $('trackButton').addEventListener('click', () => $('trackDialog').showModal());
-let localTrack = null, localSerial = 0;
+const localTracks = new Map();
+function addLocalTrack(track, saved = true) {
+  if (localTracks.has(track.id)) {
+    if (saved) {
+      const row = [...$('trackList').children].find(button => button.dataset.id === track.id);
+      if (row) row.querySelector('small').textContent = '내 보관함 · 기기에 저장됨';
+    }
+    return localTracks.get(track.id);
+  }
+  localTracks.set(track.id, track);
+  const button = document.createElement('button');
+  button.className = 'track-option'; button.dataset.id = track.id;
+  const art = document.createElement('span'); art.className = 'album-art'; art.textContent = '♫';
+  const label = document.createElement('span'), title = document.createElement('strong'), subtitle = document.createElement('small');
+  title.textContent = track.title; subtitle.textContent = saved ? '내 보관함 · 기기에 저장됨' : '내 노래 · 이번 탭에서만 사용'; label.append(title, subtitle);
+  const check = document.createElement('span'); check.className = 'check';
+  button.append(art, label, check);
+  button.addEventListener('click', () => { selectTrack(track); $('trackDialog').close(); });
+  $('trackList').prepend(button);
+  return track;
+}
+loadLibraryTracks().then(tracks => {
+  for (const track of tracks) if (track.localFile && track.id) addLocalTrack(track);
+  selectTrack(selected);
+}).catch(() => { $('localMusicError').textContent = '저장된 음원을 불러오지 못했어요. 파일 선택으로 이번 탭에서 플레이할 수 있어요.'; });
 $('localMusicButton').addEventListener('click', () => $('localMusicFile').click());
-$('localMusicFile').addEventListener('change', () => {
+$('localMusicFile').addEventListener('change', async () => {
   const file = $('localMusicFile').files?.[0];
   $('localMusicFile').value = '';
   if (!file) return;
   $('localMusicError').textContent = '';
+  $('localMusicButton').disabled = true;
   try {
-    const track = localTrackFromFile(file, ++localSerial);
-    if (localTrack) { audio.cache.delete(localTrack.id); analyses.delete(localTrack.id); }
-    localTrack = track;
-    $('localTrackOption')?.remove();
-    const button = document.createElement('button');
-    button.id = 'localTrackOption'; button.className = 'track-option'; button.dataset.id = track.id;
-    const art = document.createElement('span'); art.className = 'album-art'; art.textContent = '♫';
-    const label = document.createElement('span'), title = document.createElement('strong'), subtitle = document.createElement('small');
-    title.textContent = track.title; subtitle.textContent = '내 기기 · MY MUSIC'; label.append(title, subtitle);
-    const check = document.createElement('span'); check.className = 'check';
-    button.append(art, label, check);
-    button.addEventListener('click', () => { selectTrack(track); $('trackDialog').close(); });
-    $('trackList').prepend(button);
-    selectTrack(track); $('homeError').textContent = ''; $('trackDialog').close();
+    const track = libraryTrack(file);
+    let saved = true;
+    try { await saveLibraryTrack(track); }
+    catch { saved = false; }
+    const stored = addLocalTrack(track, saved);
+    selectTrack(stored); $('homeError').textContent = '';
+    if (saved) $('trackDialog').close();
+    else $('localMusicError').textContent = '기기 저장 공간을 사용할 수 없어 이번 탭에서만 보관해요. 노래는 선택되어 있으니 닫고 플레이할 수 있어요.';
   } catch (error) { $('localMusicError').textContent = error.message; }
+  finally { $('localMusicButton').disabled = false; }
 });
 $('helpButton').addEventListener('click', () => $('helpDialog').showModal());
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));

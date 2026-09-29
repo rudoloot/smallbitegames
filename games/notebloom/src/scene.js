@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { weaponForId } from './weapons.js?v=4c780c7b917d';
-import { buildWeaponModel } from './weapon-model.js?v=4c780c7b917d';
-import { bossPose, projectilePoint } from './projectiles.js?v=4c780c7b917d';
+import { weaponForId } from './weapons.js?v=375ab583a975';
+import { buildWeaponModel } from './weapon-model.js?v=375ab583a975';
+import { bossPose, projectilePoint } from './projectiles.js?v=375ab583a975';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
