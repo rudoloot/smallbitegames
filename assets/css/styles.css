@@ -59,3 +59,11 @@
 .game-list{grid-template-columns:minmax(0,1fr)}
 .game-entry{min-width:0}
 @media(max-width:350px){.wordmark{font-size:16px}}
+
+/* Gameplay-inspired key art: full-bleed banners with mobile-safe focal points. */
+.game-entry,.game-card{height:auto}
+.art-standalone{display:block;width:100%;height:auto;min-height:150px;aspect-ratio:3/1;overflow:hidden}
+.art-standalone img:not(.preview-backdrop){position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
+.game-card:focus-visible .art-standalone img{transform:scale(1.035)}
+@media(hover:hover){.game-card:hover .art-standalone img{transform:scale(1.035)}}
+@media(prefers-reduced-motion:reduce){.art-standalone img:not(.preview-backdrop){transition:none}.game-card:hover .art-standalone img,.game-card:focus-visible .art-standalone img{transform:none}}
