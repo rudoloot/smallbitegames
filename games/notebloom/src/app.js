@@ -1,9 +1,10 @@
-import { TRACKS, MusicPlayer, localTrackFromFile } from './music.js?v=f2875b1ee594';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=f2875b1ee594';
-import { World } from './scene.js?v=f2875b1ee594';
-import { weaponForLevel } from './weapons.js?v=f2875b1ee594';
-import { exitGame } from './launch.js?v=f2875b1ee594';
-import { setupFullscreen } from './fullscreen.js?v=f2875b1ee594';
+import { TRACKS, MusicPlayer, localTrackFromFile } from './music.js?v=414b8bcdc222';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=414b8bcdc222';
+import { World } from './scene.js?v=414b8bcdc222';
+import { weaponForId } from './weapons.js?v=414b8bcdc222';
+import { UPGRADES, loadProfile, freshProfile, buyUpgrade, upgradeCost, creditRun } from './progression.js?v=414b8bcdc222';
+import { exitGame } from './launch.js?v=414b8bcdc222';
+import { setupFullscreen } from './fullscreen.js?v=414b8bcdc222';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -16,6 +17,32 @@ let selected = TRACKS[0], difficulty = 'easy', state = null, mode = 'home', play
 let preparing = false, countdownTimer = null, countdownRemaining = 3, feedbackUntil = 0, damageUntil = 0;
 let drag = null, lastFrame = performance.now(), elapsed = 0;
 const analyses = new Map();
+let profile;
+try { profile = loadProfile(window.localStorage); } catch { profile = freshProfile(); }
+let runId = '', storageFailed = false;
+function persistProfile() {
+  try { localStorage.setItem('notebloom.progress.v1', JSON.stringify(profile)); storageFailed = false; }
+  catch { storageFailed = true; }
+}
+function bankXP() {
+  if (state && runId && creditRun(profile, runId, state.xp)) persistProfile();
+}
+function renderProgression() {
+  $('profileXP').textContent = `보유 ${profile.xp} XP · 레벨 ${1 + Object.values(profile.levels).reduce((a, b) => a + b, 0)}`;
+  $('progressSave').textContent = storageFailed ? '저장 공간을 사용할 수 없어 이번 탭에서만 유지됩니다.' : '이 브라우저에 저장됩니다. 강화 효과는 다음 게임부터 적용됩니다.';
+  $('upgradeList').replaceChildren();
+  for (const item of UPGRADES) {
+    const level = profile.levels[item.id] || 0, cost = upgradeCost(profile, item.id);
+    const button = document.createElement('button'); button.className = 'upgrade-choice';
+    const title = document.createElement('strong'); title.textContent = `${item.name} · ${level}/${item.max}`;
+    const detail = document.createElement('span'); detail.textContent = item.detail;
+    const price = document.createElement('small'); price.textContent = level >= item.max ? '최대 단계' : `${cost} XP`;
+    button.append(title, detail, price); button.disabled = level >= item.max || profile.xp < cost;
+    button.addEventListener('click', () => { if (buyUpgrade(profile, item.id)) { persistProfile(); renderProgression(); } });
+    $('upgradeList').append(button);
+  }
+}
+for (const id of ['progressButton', 'resultProgressButton']) $(id).addEventListener('click', () => { renderProgression(); $('progressDialog').showModal(); });
 const formatTime = seconds => `${Math.floor(Math.max(0, seconds) / 60)}:${String(Math.floor(Math.max(0, seconds) % 60)).padStart(2, '0')}`;
 const panels = ['home', 'hud', 'loading', 'pausePanel', 'result', 'countdown'];
 function show(...ids) { for (const id of panels) $(id).classList.toggle('hidden', !ids.includes(id)); }
@@ -68,6 +95,7 @@ document.querySelectorAll('[data-difficulty]').forEach(button => button.addEvent
 
 async function start() {
   if (preparing || !world) return;
+  bankXP();
   preparing = true; clearInterval(countdownTimer); audio.stop();
   switchMode('loading'); show('loading'); $('homeError').textContent = ''; $('loadingText').textContent = `${selected.title} · 음악을 불러오는 중`;
   try {
@@ -79,9 +107,10 @@ async function start() {
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     let analysis = analyses.get(selected.id);
     if (!analysis) { analysis = analyzeSamples(buffer.getChannelData(0), buffer.sampleRate); analyses.set(selected.id, analysis); }
-    const seed = [...selected.id].reduce((n, c) => n * 31 + c.charCodeAt(0) >>> 0, 7);
-    state = new GameState(makeChart(buffer.duration, analysis, difficulty, seed), difficulty);
-    playerX = 0; feedbackUntil = 0; damageUntil = 0; world.clearGameObjects();
+    const seed = ([...selected.id].reduce((n, c) => n * 31 + c.charCodeAt(0) >>> 0, 7) ^ Math.floor(Math.random() * 0x100000000)) >>> 0;
+    state = new GameState(makeChart(buffer.duration, analysis, difficulty, seed, profile.levels), difficulty, profile.levels);
+    runId = `${Date.now()}-${Math.random()}`;
+    playerX = -.5; feedbackUntil = 0; damageUntil = 0; world.clearGameObjects();
     $('playingTitle').textContent = selected.title; $('feedback').classList.remove('show'); updateHUD();
     countdownRemaining = 3;
     if (document.hidden) { switchMode('paused'); show('hud', 'pausePanel'); }
@@ -114,6 +143,7 @@ async function resume() {
   } catch { $('pauseDescription').textContent = '음악을 재개하지 못했어요. 계속 플레이를 다시 눌러 주세요.'; }
 }
 function stopGame() {
+  bankXP();
   clearInterval(countdownTimer); audio.stop(); state = null; countdownRemaining = 0;
   switchMode('home'); world?.clearGameObjects(); $('damageFlash').classList.remove('active');
 }
@@ -130,12 +160,13 @@ function returnToLauncher() {
   });
 }
 function finish() {
+  bankXP();
   audio.pause(); switchMode('result'); show('result'); world.clearGameObjects();
   const won = state.status === 'won';
   $('resultSymbol').textContent = won ? '✳' : '☾';
   $('resultEyebrow').textContent = won ? 'THE WORLD BLOOMS AGAIN' : 'EVERY JOURNEY IS A NEW BEGINNING';
   $('resultTitle').textContent = won ? '다시, 피어난 음악.' : state.status === 'lost-health' ? '잠시, 리듬을 놓쳤어요.' : '조금만 더, 닿을 수 있어요.';
-  $('resultMessage').textContent = won ? '보스를 물리쳤어요! 음표 주민들이 돌아왔어요.' : state.status === 'lost-health' ? '아리아의 에너지가 다했어요. 음표를 만나 회복해 주세요.' : '보스가 주민들을 다시 데려갔어요. 양끝 레인에서 더 공격해 보세요.';
+  $('resultMessage').textContent = `${won ? '보스를 물리쳤어요!' : '다음 여정을 위해 성장해요.'} 이번 게임 +${state.xp} XP · 보유 ${profile.xp} XP`;
   $('resultSaved').textContent = state.saved; $('resultCombo').textContent = state.maxCombo; $('resultPower').textContent = state.power;
   $('result').querySelector('.result-stats small').textContent = won ? '구출한 음표' : '이번 판 만난 음표';
   $('resultDetail').textContent = won ? `${formatTime(state.defeatedAt)}에 보스 격파 · 지뢰 피격 ${state.hits}회` : `코스 ${Math.round(state.time / state.chart.duration * 100)}% · 보스 체력 ${Math.ceil(state.boss / state.chart.bossMax * 100)}% 남음`;
@@ -147,22 +178,23 @@ function updateHUD() {
   const boss = state.boss / state.chart.bossMax * 100, course = state.time / state.chart.duration * 100;
   $('bossFill').style.width = `${boss}%`; $('bossValue').textContent = `${Math.ceil(boss)}%`; $('bossMeter').setAttribute('aria-valuenow', Math.ceil(boss));
   $('courseFill').style.height = `${course}%`; $('courseValue').textContent = `${Math.floor(course)}%`; $('courseMeter').setAttribute('aria-valuenow', Math.floor(course));
-  $('healthFill').style.height = `${state.health}%`; $('healthValue').textContent = state.health; $('healthMeter').setAttribute('aria-valuenow', state.health); document.querySelector('.health').classList.toggle('low', state.health < 30);
+  $('healthFill').style.height = `${state.health / state.maxHealth * 100}%`; $('healthValue').textContent = Number(state.health.toFixed(1)); $('healthMeter').setAttribute('aria-valuenow', state.health); $('healthMeter').setAttribute('aria-valuemax', state.maxHealth); document.querySelector('.health').classList.toggle('low', state.health < state.maxHealth * .3);
   $('savedValue').textContent = state.saved; $('comboValue').textContent = state.combo > 1 ? `${state.combo} COMBO` : '음표를 구해요'; $('powerValue').textContent = state.power;
-  const weaponName = weaponForLevel(state.weaponLevel).name;
-  $('weaponName').textContent = `${weaponName} · LV.${state.weaponLevel} · ${state.saved % 50}/50`;
+  const weaponName = weaponForId(state.weaponId).name;
+  $('weaponName').textContent = `${weaponName} · 탄약 ${state.ammo === Infinity ? '∞' : state.ammo} · ${state.xp} XP`;
   $('timeValue').textContent = `${formatTime(state.time)} / ${formatTime(state.chart.duration)}`;
   const bonus = state.boss <= 0, attack = !bonus && state.attackWindow;
   $('phase').classList.toggle('attack', attack); $('phase').classList.toggle('bonus', bonus);
-  $('phase').querySelector('span').textContent = bonus ? '보스 격파! 남은 주민을 구해요' : attack ? '← 양끝 레인에서 공격 →' : '중앙에서 구출 · 체력 회복';
+  $('phase').querySelector('span').textContent = bonus ? '보스 격파! 경험치를 모아요' : '전방 자동 사격 · 음표로 회복 + XP';
   $('bossName').textContent = bonus ? 'HARMONY RESTORED · 구출 타임' : 'DISSONANCE · 불협화음';
 }
 function handleEffects(effects) {
   for (const effect of effects) {
     if (effect.type === 'save') { world.burst(effect.lane, 0xb6f6d9); audio.sound('save'); }
-    if (effect.type === 'upgrade') world.showUpgrade(effect.level, effect.power);
-    if (effect.type === 'shot') { world.shoot(effect.lane); world.showDamage(effect.damage); audio.sound('shot'); }
-    if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${state.rules.mine}`, true); }
+    if (effect.type === 'weapon') world.showUpgrade(effect.weapon, effect.ammo);
+    if (effect.type === 'shield') feedback('보호막이 지뢰를 막았어요');
+    if (effect.type === 'shot') { world.shoot(effect.lane, effect.weapon, effect.pellets); if (effect.damage > 0) world.showDamage(effect.damage); audio.sound('shot'); }
+    if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${effect.damage}`, true); }
     if (effect.type === 'victory') { world.burst(2, 0xe0bcff); feedback('보스 격파 · RESCUE TIME!', false, 2300); }
     if (effect.type === 'save' && state.saved % 10 === 0) feedback(`+${state.rules.heal} HP · ${state.saved} RESCUED`);
   }
@@ -181,14 +213,14 @@ stage.addEventListener('pointerdown', e => {
 stage.addEventListener('pointermove', e => {
   if (!drag || drag.id !== e.pointerId || mode !== 'playing') return;
   const lanePixels = stage.clientWidth * .135;
-  playerX = clamp(drag.player + (e.clientX - drag.x) / lanePixels, -2, 2);
+  playerX = clamp(drag.player + (e.clientX - drag.x) / lanePixels, -1.5, 1.5);
 });
 const release = e => { if (drag?.id === e.pointerId) drag = null; };
 stage.addEventListener('pointerup', release); stage.addEventListener('pointercancel', release); stage.addEventListener('lostpointercapture', release);
 document.addEventListener('keydown', e => {
   if (document.querySelector('dialog[open]') || e.target.matches('input')) return;
   if (['ArrowLeft', 'ArrowRight', 'a', 'A', 'd', 'D'].includes(e.key) && mode === 'playing') {
-    e.preventDefault(); if (!e.repeat) playerX = clamp(Math.round(playerX) + (['ArrowLeft', 'a', 'A'].includes(e.key) ? -1 : 1), -2, 2);
+    e.preventDefault(); if (!e.repeat) playerX = clamp(Math.round(playerX + 1.5) - 1.5 + (['ArrowLeft', 'a', 'A'].includes(e.key) ? -1 : 1), -1.5, 1.5);
   }
   if ((e.key === 'Escape' || e.code === 'Space') && ['playing', 'paused', 'countdown'].includes(mode)) { e.preventDefault(); if (mode === 'paused') resume(); else pause(); }
 });
@@ -200,7 +232,7 @@ function frame(now) {
   if (mode === 'playing' && state) {
     if (audio.context.state !== 'running') pause('오디오가 중단되어 잠시 멈췄어요. 계속 플레이를 눌러 주세요.');
     else {
-      const lane = clamp(Math.round(playerX) + 2, 0, 4);
+      const lane = clamp(Math.round(playerX + 1.5), 0, 3);
       handleEffects(state.advance(audio.time, lane)); updateHUD();
       if (state.status !== 'playing') finish();
     }
@@ -211,3 +243,4 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+

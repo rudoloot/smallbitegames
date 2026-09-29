@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { weaponForLevel } from './weapons.js?v=f2875b1ee594';
+import { weaponForId } from './weapons.js?v=414b8bcdc222';
+import { buildWeaponModel } from './weapon-model.js?v=414b8bcdc222';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -65,30 +66,30 @@ export class World {
     for (let i = 0; i < 45; i++) { const mote = this.mesh(this.scene, geo, this.materials.mint, [Math.sin(i * 5.8) * 12, 1 + i % 8, -i * 1.5]); this.dust.push(mote); }
   }
   buildRoad() {
-    this.box(this.scene, this.materials.road, [0, -.23, -32], [6.1, .4, 100]);
+    this.box(this.scene, this.materials.road, [0, -.23, -32], [4.88, .4, 100]);
     this.attackFloors = [];
-    for (let i = 0; i < 5; i++) {
-      const x = (i - 2) * 1.22;
-      const attack = i === 0 || i === 4;
+    for (let i = 0; i < 4; i++) {
+      const x = (i - 1.5) * 1.22;
+      const attack = false;
       const mat = material(attack ? 0x9983c9 : i === 2 ? 0x718a96 : 0x667687, .12);
-      // Five broad road surfaces; objects travel through their centers, not on lines.
+      // Four broad road surfaces; objects travel through their centers, not on lines.
       this.box(this.scene, mat, [x, -.014, -32], [1.18, .04, 100]);
       if (attack) this.attackFloors.push(mat);
     }
-    for (let i = 1; i < 5; i++) {
-      this.box(this.scene, material(0xb9e8e0, .25), [(i - 2.5) * 1.22, .006, -32], [.035, .02, 100]);
+    for (let i = 1; i < 4; i++) {
+      this.box(this.scene, material(0xb9e8e0, .25), [(i - 2) * 1.22, .006, -32], [.035, .02, 100]);
     }
     for (const side of [-1, 1]) {
-      this.box(this.scene, this.materials.edge, [side * 3.05, .035, -32], [.065, .09, 100]);
-      this.box(this.scene, this.materials.white, [side * 3.15, -.12, -32], [.12, .28, 100]);
+      this.box(this.scene, this.materials.edge, [side * 2.44, .035, -32], [.065, .09, 100]);
+      this.box(this.scene, this.materials.white, [side * 2.54, -.12, -32], [.12, .28, 100]);
     }
     this.beatLines = [];
-    for (let i = 0; i < 26; i++) this.beatLines.push(this.box(this.scene, material(0x8a8caa), [0, .007, -i * 3], [6.1, .015, .027]));
-    this.box(this.scene, material(0xb9ffe0, .9), [0, .04, 3.25], [6.1, .026, .06]);
+    for (let i = 0; i < 26; i++) this.beatLines.push(this.box(this.scene, material(0x8a8caa), [0, .007, -i * 3], [4.88, .015, .027]));
+    this.box(this.scene, material(0xb9ffe0, .9), [0, .04, 3.25], [4.88, .026, .06]);
     const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 64;
     const ctx = canvas.getContext('2d'); ctx.fillStyle = '#e8ddff'; ctx.font = 'bold 35px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⌁', 64, 42);
     const tex = new THREE.CanvasTexture(canvas), mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
-    for (const side of [-1, 1]) { const m = this.mesh(this.scene, new THREE.PlaneGeometry(.8, .5), mat, [side * 2.44, .04, 1.8]); m.rotation.x = -Math.PI / 2; }
+    for (const side of [-1, 1]) { const m = this.mesh(this.scene, new THREE.PlaneGeometry(.8, .5), mat, [side * 1.83, .04, 1.8]); m.rotation.x = -Math.PI / 2; }
   }
   buildGarden() {
     this.garden = [];
@@ -151,10 +152,7 @@ export class World {
       root.add(arm); this.arms.push(arm);
     }
     this.gun = new THREE.Group(); this.gun.position.set(.39, 1.02, -.3);
-    this.box(this.gun, m.dark, [0, 0, -.17], [.17, .2, .44]);
-    this.box(this.gun, m.white, [0, .09, -.21], [.2, .09, .45]);
-    this.box(this.gun, m.mint, [0, .02, -.41], [.12, .08, .07]);
-    this.box(this.gun, m.dark, [0, -.12, 0], [.13, .2, .13]); root.add(this.gun);
+    root.add(this.gun); this.gunModels = new Map();
     this.head = new THREE.Group(); this.head.position.y = 1.9; root.add(this.head);
     this.ball(this.head, material(0xffe7e3), [0, 0, -.025], [.39, .4, .35]);
     this.ball(this.head, m.hair, [0, .09, .05], [.47, .45, .41]);
@@ -257,9 +255,13 @@ export class World {
     }
     for (let i = 0; i < 3; i++) this.mesh(boss, new THREE.OctahedronGeometry(.24), this.materials.lilac, [(i - 1) * .55, -1.05, 0], [.5, 1.4, .5]);
   }
-  createNote(type) {
+  createNote(type, weaponId) {
     const root = new THREE.Group();
-    if (type === 'note') {
+    if (type === 'weapon') {
+      const model = this.weaponModel(weaponId); model.rotation.y = Math.PI / 2; model.position.set(-.2, .65, 0); model.scale.setScalar(.85); root.add(model);
+      const halo = this.mesh(root, new THREE.TorusGeometry(.55, .035, 6, 24), this.materials.mint, [0, .55, 0]);
+      halo.rotation.y = .2;
+    } else if (type === 'note') {
       this.ball(root, this.materials.mint, [-.06, .18, 0], [.22, .17, .16]);
       this.cylinder(root, this.materials.mint, [.1, .45, 0], [.035, .53, .035]);
       const flag = this.box(root, this.materials.mint, [.23, .67, 0], [.28, .1, .07]); flag.rotation.z = -.32;
@@ -280,19 +282,18 @@ export class World {
   burst(lane, color) {
     for (let i = 0; i < 8; i++) {
       const mat = new THREE.MeshBasicMaterial({ color, transparent: true });
-      const mesh = this.mesh(this.scene, new THREE.OctahedronGeometry(.07), mat, [(lane - 2) * 1.22, .6, 3.25]);
+      const mesh = this.mesh(this.scene, new THREE.OctahedronGeometry(.07), mat, [(lane - 1.5) * 1.22, .6, 3.25]);
       this.effects.push({ mesh, age: 0, life: .65, velocity: new THREE.Vector3(Math.sin(i * 3) * 2, 1.5 + i % 3, Math.cos(i * 3) * 1.5) });
     }
   }
-  shoot(lane) {
-    this.character.updateWorldMatrix(true, true);
-    const muzzleZ = (this.gunLevel || 1) === 1 ? -.45 : weaponForLevel(this.gunLevel).kind === 'smg' ? -.75 : -1.05;
-    const muzzle = this.gun.localToWorld(new THREE.Vector3(0, .02, muzzleZ));
-    const mesh = this.mesh(this.scene, new THREE.SphereGeometry(.14, 8, 6), new THREE.MeshBasicMaterial({ color: 0xfff8ce, toneMapped: false, fog: false }), muzzle.toArray(), [1, 1, 5]);
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(.23, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffc547, transparent: true, opacity: .48, depthWrite: false, toneMapped: false, fog: false }));
-    mesh.add(glow);
-    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), this.boss.position.clone().sub(muzzle).normalize());
-    this.effects.push({ mesh, age: 0, life: .24, start: muzzle, target: this.boss.position.clone(), shot: true });
+  shoot(lane, weaponId = 'pistol', pellets = 1) {
+    const weapon = weaponForId(weaponId);
+    for (let i = 0; i < pellets; i++) {
+      const start = new THREE.Vector3((lane - 1.5) * 1.22 + (pellets > 1 ? (i ? -.26 : .26) : .22), .8, 2.65);
+      const mesh = this.mesh(this.scene, new THREE.SphereGeometry(.11, 8, 6), new THREE.MeshBasicMaterial({ color: weapon.color, toneMapped: false, fog: false }), start.toArray(), weaponId === 'rail' ? [.5,.5,45] : weaponId === 'rocket' ? [2,2,5] : [1,1,6]);
+      const target = start.clone(); target.z = -32;
+      this.effects.push({ mesh, age: 0, life: weaponId === 'rail' ? .13 : .3, start, target, shot: true });
+    }
   }
   showDamage(damage) {
     const label = document.createElement('span'); label.className = 'boss-damage';
@@ -301,36 +302,24 @@ export class World {
     this.damageNumbers.push({ label, age: 0, anchor: this.boss.position.clone().add(new THREE.Vector3(0, 1.2, 0)), offset: (this.damageSerial++ % 3 - 1) * 22 });
     this.hitFlash = .14;
   }
-  showUpgrade(level, power) {
+  showUpgrade(weaponId, ammo) {
     this.upgradeNotice?.label.remove();
     const label = document.createElement('div'); label.className = 'upgrade-notice';
-    const weapon = weaponForLevel(level);
-    label.innerHTML = `<strong>UPGRADE</strong><svg viewBox="0 0 100 50" aria-hidden="true"><path d="${weapon.path}" fill="#e5f8ff" stroke="#243455" stroke-width="3"/><path d="M27 12h30v5H27z" fill="#b6f6d9"/></svg><small>${weapon.name}</small><small>LV.${level} · ATK ${power}</small>`;
-    this.damageLayer.appendChild(label); this.upgradeNotice = { label, age: 0 };
+    const title = document.createElement('strong'); title.textContent = weaponId === 'pistol' ? '기본 권총 복귀' : 'WEAPON GET';
+    const name = document.createElement('small'); name.textContent = weaponForId(weaponId).name;
+    const count = document.createElement('small'); count.textContent = ammo === Infinity ? '탄약 무한' : '탄약 ' + ammo;
+    label.append(title, name, count); this.damageLayer.appendChild(label); this.upgradeNotice = { label, age: 0 };
   }
   disposeEffect(mesh) {
     mesh.traverse(child => { if (child.isMesh) { child.geometry.dispose(); child.material.dispose(); } });
     this.scene.remove(mesh);
   }
-  setGunLevel(level) {
-    if (this.gunLevel === level) return;
-    this.gunLevel = level;
-    this.gunAttachment?.removeFromParent();
-    const attachment = new THREE.Group(); this.gun.add(attachment); this.gunAttachment = attachment;
-    // Attachments share scene-owned geometry/materials and allocate no GPU resources.
-    if (level < 2) return;
-    const kind = weaponForLevel(level).kind;
-    this.box(attachment, this.materials.dark, [0, 0, .16], [.2, .18, .3]);
-    this.box(attachment, this.materials.white, [0, -.19, -.12], [.14, .3, .18]);
-    const length = kind === 'smg' ? .25 : .55;
-    const count = kind === 'minigun' ? 6 : 1;
-    for (let i = 0; i < count; i++) {
-      const angle = i * Math.PI / 3, radius = count === 1 ? 0 : .09;
-      const barrel = this.cylinder(attachment, this.materials.dark, [Math.cos(angle) * radius, Math.sin(angle) * radius, -.5 - length / 2], [.045, length, .045]);
-      barrel.rotation.x = Math.PI / 2;
-    }
-    if (kind === 'machine') this.box(attachment, this.materials.lilac, [.14, -.15, -.1], [.22, .25, .25]);
-    this.box(attachment, this.materials.mint, [0, .15, -.26], [.1, .035, .22]);
+  weaponModel(id) { return buildWeaponModel(id, this.materials, { box: this.boxGeo, sphere: this.sphereGeo, cylinder: this.cylinderGeo }); }
+  setGunLevel(id) {
+    if (this.gunId === id) return;
+    this.gunId = id;
+    if (!this.gunModels.has(id)) { const model = this.weaponModel(id); this.gunModels.set(id, model); this.gun.add(model); }
+    for (const [key, model] of this.gunModels) model.visible = key === id;
   }
   clearGameObjects() {
     for (const note of this.notes.values()) this.disposeObject(note);
@@ -370,8 +359,9 @@ export class World {
     this.arms[0].rotation.x = -.15 + Math.sin(run) * .16; this.arms[1].rotation.x = -.2;
     this.head.rotation.z = Math.sin(time * 2) * .03;
     this.aura.scale.setScalar(1 + Math.sin(time * 5) * .04);
-    this.gun.scale.setScalar(1 + Math.min(5, (state?.weaponLevel || 1) - 1) * .16);
-    this.setGunLevel(state?.weaponLevel || 1);
+    this.gun.scale.setScalar(1.2);
+    this.setGunLevel(state?.weaponId || 'pistol');
+    const rotor = this.gunModels.get(this.gunId)?.userData.rotor; if (rotor && moving) rotor.rotation.z += dt * 24;
     this.boss.visible = !state || state.boss > 0 || showHome;
     this.boss.position.x = Math.sin(time * .7) * 1.7; this.boss.position.y = 3.6 + Math.sin(time * 2) * .3;
     this.boss.rotation.z = Math.sin(time) * .1; this.bossCore.rotation.y = time; this.bossRing.rotation.z = time * .3;
@@ -388,8 +378,8 @@ export class World {
         if (until < -.1 || (event.type === 'mine' && state.boss <= 0)) continue;
         visible.add(event.id);
         let mesh = this.notes.get(event.id);
-        if (!mesh) { mesh = this.createNote(event.type); this.notes.set(event.id, mesh); }
-        mesh.position.set((event.lane - 2) * 1.22, .12, 3.25 - until * 14 * SCROLL_SPEED);
+        if (!mesh) { mesh = this.createNote(event.type, event.weapon); this.notes.set(event.id, mesh); }
+        mesh.position.set((event.lane - 1.5) * 1.22, .12, 3.25 - until * 14 * SCROLL_SPEED);
         mesh.rotation.y = event.type === 'mine' ? time * 1.6 : Math.sin(time * 3 + event.id) * .2;
       }
     }
