@@ -1,6 +1,7 @@
 import * as THREE from 'three';
-import { weaponForId } from './weapons.js?v=414b8bcdc222';
-import { buildWeaponModel } from './weapon-model.js?v=414b8bcdc222';
+import { weaponForId } from './weapons.js?v=4c780c7b917d';
+import { buildWeaponModel } from './weapon-model.js?v=4c780c7b917d';
+import { bossPose, projectilePoint } from './projectiles.js?v=4c780c7b917d';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -286,20 +287,35 @@ export class World {
       this.effects.push({ mesh, age: 0, life: .65, velocity: new THREE.Vector3(Math.sin(i * 3) * 2, 1.5 + i % 3, Math.cos(i * 3) * 1.5) });
     }
   }
-  shoot(lane, weaponId = 'pistol', pellets = 1) {
+  shoot(lane, weaponId = 'pistol', pellets = 1, projectiles = []) {
     const weapon = weaponForId(weaponId);
     for (let i = 0; i < pellets; i++) {
       const start = new THREE.Vector3((lane - 1.5) * 1.22 + (pellets > 1 ? (i ? -.26 : .26) : .22), .8, 2.65);
       const mesh = this.mesh(this.scene, new THREE.SphereGeometry(.11, 8, 6), new THREE.MeshBasicMaterial({ color: weapon.color, toneMapped: false, fog: false }), start.toArray(), weaponId === 'rail' ? [.5,.5,45] : weaponId === 'rocket' ? [2,2,5] : [1,1,6]);
       const target = start.clone(); target.z = -32;
-      this.effects.push({ mesh, age: 0, life: weaponId === 'rail' ? .13 : .3, start, target, shot: true });
+      this.effects.push({ mesh, age: 0, life: .6, start, target, shot: true, projectile: projectiles[i] });
     }
   }
-  showDamage(damage) {
+  impact(hit) {
+    for (let i = this.effects.length - 1; i >= 0; i--) {
+      const effect = this.effects[i];
+      if (effect.projectile?.id === hit.id) { this.disposeEffect(effect.mesh); this.effects.splice(i, 1); }
+    }
+    const point = hit.point, color = weaponForId(hit.weapon).color;
+    const ring = this.mesh(this.scene, new THREE.TorusGeometry(.26, .055, 6, 20), new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, toneMapped: false }), [point.x, point.y, point.z + .04]);
+    this.effects.push({ mesh: ring, age: 0, life: .22, impact: true, velocity: new THREE.Vector3() });
+    for (let i = 0; i < 8; i++) {
+      const mesh = this.mesh(this.scene, new THREE.OctahedronGeometry(.065), new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, toneMapped: false }), [point.x, point.y, point.z]);
+      this.effects.push({ mesh, age: 0, life: .28, velocity: new THREE.Vector3(Math.cos(i * Math.PI / 4) * 2.5, Math.sin(i * Math.PI / 4) * 2.5, 1.2) });
+    }
+    this.showDamage(hit.damage, point);
+  }
+  showDamage(damage, point) {
+    while (this.damageNumbers.length >= 4) this.damageNumbers.shift().label.remove();
     const label = document.createElement('span'); label.className = 'boss-damage';
     label.textContent = `−${Number(damage.toFixed(1)).toLocaleString()}`;
     this.damageLayer.appendChild(label);
-    this.damageNumbers.push({ label, age: 0, anchor: this.boss.position.clone().add(new THREE.Vector3(0, 1.2, 0)), offset: (this.damageSerial++ % 3 - 1) * 22 });
+    this.damageNumbers.push({ label, age: 0, anchor: point ? new THREE.Vector3(point.x, point.y + 1, point.z) : this.boss.position.clone().add(new THREE.Vector3(0, 1.2, 0)), offset: (this.damageSerial++ % 3 - 1) * 22 });
     this.hitFlash = .14;
   }
   showUpgrade(weaponId, ammo) {
@@ -363,8 +379,8 @@ export class World {
     this.setGunLevel(state?.weaponId || 'pistol');
     const rotor = this.gunModels.get(this.gunId)?.userData.rotor; if (rotor && moving) rotor.rotation.z += dt * 24;
     this.boss.visible = !state || state.boss > 0 || showHome;
-    this.boss.position.x = Math.sin(time * .7) * 1.7; this.boss.position.y = 3.6 + Math.sin(time * 2) * .3;
-    this.boss.rotation.z = Math.sin(time) * .1; this.bossCore.rotation.y = time; this.bossRing.rotation.z = time * .3;
+    const bossPosition = bossPose(time); this.boss.position.set(bossPosition.x, bossPosition.y, bossPosition.z);
+    this.boss.rotation.z = 0; this.bossCore.rotation.y = time; this.bossRing.rotation.z = time * .3;
     for (let i = 0; i < this.beatLines.length; i++) this.beatLines[i].position.z = 9 - ((i * 3 + 80 - time * 7 * SCROLL_SPEED % 78) % 78);
     for (let i = 0; i < this.garden.length; i++) { this.garden[i].position.z = 13 - ((i * 3.1 + 105 - time * 3 * SCROLL_SPEED % 99.2) % 99.2); }
     for (let i = 0; i < this.dust.length; i++) { this.dust[i].position.y += Math.sin(elapsed + i) * dt * .12; this.dust[i].rotation.y += dt; }
@@ -386,9 +402,15 @@ export class World {
     for (const [id, mesh] of this.notes) if (!visible.has(id)) { this.disposeObject(mesh); this.notes.delete(id); }
     for (let i = this.effects.length - 1; i >= 0; i--) {
       const e = this.effects[i]; if (mode !== 'paused') e.age += dt;
+      if (e.projectile) {
+        const point = projectilePoint(e.projectile, state?.time ?? e.projectile.time);
+        if (point.z < -40) { this.disposeEffect(e.mesh); this.effects.splice(i, 1); }
+        else e.mesh.position.set(point.x, point.y, point.z);
+        continue;
+      }
       if (e.age >= e.life) { this.disposeEffect(e.mesh); this.effects.splice(i, 1); continue; }
       if (e.shot) e.mesh.position.lerpVectors(e.start, e.target, e.age / e.life);
-      else { const effectDt = mode === 'paused' ? 0 : dt; e.mesh.position.addScaledVector(e.velocity, effectDt); e.mesh.material.opacity = 1 - e.age / e.life; e.mesh.rotation.x += effectDt * 4; }
+      else { const effectDt = mode === 'paused' ? 0 : dt; e.mesh.position.addScaledVector(e.velocity, effectDt); e.mesh.material.opacity = 1 - e.age / e.life; if (e.impact) e.mesh.scale.setScalar(1 + e.age * 9); else e.mesh.rotation.x += effectDt * 4; }
     }
     const effectDt = mode === 'paused' ? 0 : dt;
     if (this.upgradeNotice) {

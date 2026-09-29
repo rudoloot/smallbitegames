@@ -1,8 +1,9 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=414b8bcdc222';
-import { weaponForId, DROP_WEAPONS } from './weapons.js?v=414b8bcdc222';
+import { clamp, seededRandom, RULES } from './engine.js?v=4c780c7b917d';
+import { weaponForId, DROP_WEAPONS } from './weapons.js?v=4c780c7b917d';
+import { projectileSpeed, projectilePoint, intersectBoss } from './projectiles.js?v=4c780c7b917d';
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
-export function makeChart(duration, analysis, difficulty = 'easy', seed = 42, upgrades = {}) {
+export function makeChart(duration, analysis, difficulty = 'normal', seed = 42, upgrades = {}) {
   const random = seededRandom(seed), beat = analysis.beat || .5, events = [];
   const start = Math.ceil(3.5 / beat) * beat + (analysis.offset || 0);
   const times = Array.isArray(analysis.beatTimes) ? analysis.beatTimes.filter(t => t >= 3.5 && t <= duration - 1)
@@ -29,26 +30,30 @@ export function makeChart(duration, analysis, difficulty = 'easy', seed = 42, up
       for (let l = Math.min(before.lane, after.lane); l <= Math.max(before.lane, after.lane); l++) blocked.add(l);
     }
     const pattern = patterns[(Math.floor(i / 4) + seed) % patterns.length];
-    for (const l of pattern.filter(l => !blocked.has(l)).slice(0, difficulty === 'easy' ? 2 : 3)) events.push({ type: 'mine', time, lane: l, pattern: Math.floor(i / 4) % patterns.length });
+    for (const l of pattern.filter(l => !blocked.has(l)).slice(0, 3)) events.push({ type: 'mine', time, lane: l, pattern: Math.floor(i / 4) % patterns.length });
   }
   events.sort((a, b) => a.time - b.time || (a.type === 'note' ? -1 : 1));
   events.forEach((event, id) => { event.id = id; });
   const chart = { duration, events, beat, bpm: analysis.bpm, sections: [], noteCount: events.filter(e => e.type === 'note').length, bossMax: 1e12, perfectDefeatTime: duration * .9 };
   // Calibrate with baseline weapons; permanent attack bonuses can beat the boss earlier.
   const simulation = new GameState(chart, difficulty);
-  const stops = [...new Set([...events.filter(e => e.time <= duration * .9).map(e => e.time), duration * .9])].sort((a, b) => a - b);
-  let total = 0;
+  const stops = [...new Set([...events.map(e => e.time), duration])].sort((a, b) => a - b);
+  let total = 0, lastBefore = null, firstAfter = null;
   for (const time of stops) {
     const reward = events.find(e => e.time === time && (e.type === 'note' || e.type === 'weapon'));
     const safe = reward?.lane ?? [0, 1, 2, 3].find(l => !events.some(e => e.time === time && e.lane === l && e.type === 'mine')) ?? 1;
-    for (const effect of simulation.advance(time, safe)) if (effect.type === 'shot') total += effect.damage;
+    for (const effect of simulation.advance(time, safe)) if (effect.type === 'hit') {
+      if (effect.time < duration * .9) { total += effect.damage; lastBefore = effect.time; }
+      else firstAfter ??= effect.time;
+    }
   }
-  chart.bossMax = Math.max(100, total); chart.perfectDefeatTime = simulation.lastShot;
+  chart.bossMax = Math.max(1, total + (firstAfter === null ? 0 : 1));
+  chart.perfectDefeatTime = firstAfter ?? lastBefore ?? duration;
   return chart;
 }
 
 export class GameState {
-  constructor(chart, difficulty = 'easy', upgrades = {}) {
+  constructor(chart, difficulty = 'normal', upgrades = {}) {
     this.chart = chart; this.rules = RULES[difficulty]; this.upgrades = { ...upgrades };
     this.maxHealth = 100 + 15 * (upgrades.health || 0); this.health = this.maxHealth;
     this.time = 0; this.boss = chart.bossMax; this.saved = 0; this.missed = 0; this.hits = 0;
@@ -56,6 +61,7 @@ export class GameState {
     this.combo = 0; this.maxCombo = 0; this.index = 0; this.lastShot = 0;
     this.nextShot = this.interval; this.stunnedUntil = 0; this.invincibleUntil = 0;
     this.defeatedAt = null; this.status = 'playing';
+    this.projectiles = []; this.projectileSerial = 0; this.physicsStep = 1;
   }
   get weapon() { return weaponForId(this.weaponId); }
   get power() { return Math.round(this.weapon.damage * (1 + .08 * (this.upgrades.damage || 0))); }
@@ -68,9 +74,10 @@ export class GameState {
     const effects = [];
     while (true) {
       const event = this.chart.events[this.index], eventTime = event?.time ?? Infinity;
-      const tick = Math.min(eventTime, this.nextShot);
+      const physicsTime = this.physicsStep / 120;
+      const tick = Math.min(eventTime, this.nextShot, physicsTime);
       if (tick > time) break;
-      if (eventTime <= this.nextShot) {
+      if (eventTime <= this.nextShot && eventTime <= physicsTime) {
         this.index++;
         if (event.type === 'note') {
           if (event.lane === lane && tick >= this.stunnedUntil) {
@@ -94,17 +101,34 @@ export class GameState {
             effects.push({ type: 'mine', lane, damage, time: tick });
           }
         }
-      } else {
+      } else if (this.nextShot <= physicsTime) {
         this.lastShot = tick;
         if (tick >= this.stunnedUntil) {
           const weapon = this.weapon, pellets = Math.min(weapon.pellets, this.ammo);
-          const damage = Math.min(this.boss, this.power * pellets); this.boss -= damage;
-          effects.push({ type: 'shot', weapon: this.weaponId, lane, time: tick, damage, pellets });
+          const projectiles = Array.from({ length: pellets }, (_, i) => ({
+            id: this.projectileSerial++, weapon: this.weaponId, time: tick, damage: this.power,
+            x: laneX(lane) + (pellets > 1 ? (i ? -.26 : .26) : .22), y: .8, z: 2.65,
+            speed: projectileSpeed(this.weaponId), checkedAt: tick,
+          }));
+          this.projectiles.push(...projectiles);
+          effects.push({ type: 'shot', weapon: this.weaponId, lane, time: tick, pellets, projectiles });
           this.ammo -= pellets;
-          if (this.boss === 0 && this.defeatedAt === null) { this.defeatedAt = tick; effects.push({ type: 'victory', time: tick }); }
           if (this.ammo <= 0) { this.weaponId = 'pistol'; this.ammo = Infinity; effects.push({ type: 'weapon', weapon: 'pistol', ammo: Infinity, time: tick }); }
         }
         this.nextShot = tick + this.interval;
+      } else {
+        this.physicsStep++;
+        this.projectiles = this.projectiles.filter(projectile => {
+          const point = this.boss > 0 ? intersectBoss(projectile, projectile.checkedAt, tick) : null;
+          projectile.checkedAt = tick;
+          if (point) {
+            const damage = Math.min(this.boss, projectile.damage); this.boss -= damage; this.lastHit = tick;
+            effects.push({ type: 'hit', id: projectile.id, weapon: projectile.weapon, damage, point, time: tick });
+            if (this.boss === 0) { this.defeatedAt = tick; effects.push({ type: 'victory', time: tick }); }
+            return false;
+          }
+          return projectilePoint(projectile, tick).z > -40;
+        });
       }
       if (this.health <= 0) { this.status = 'lost-health'; break; }
     }

@@ -1,6 +1,5 @@
 export const STARTING_POWER = 100;
 export const RULES = {
-  easy: { miss: 2, mine: 32, heal: 5, mineEvery: 4 },
   normal: { miss: 4, mine: 48, heal: 4, mineEvery: 3 },
 };
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
@@ -91,4 +90,4 @@ export function analyzeSamples(samples, sampleRate) {
   return { bpm: 60 / (bestLag * hop / sampleRate), beat: bestLag * hop / sampleRate, offset: phase * hop / sampleRate, peaks: peaks.map(p => p / max), beatTimes: detectBeatTimes(samples, sampleRate) };
 }
 
-export { makeChart, GameState, LANE_COUNT, laneX } from './combat.js?v=414b8bcdc222';
+export { makeChart, GameState, LANE_COUNT, laneX } from './combat.js?v=4c780c7b917d';

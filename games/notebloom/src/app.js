@@ -1,10 +1,10 @@
-import { TRACKS, MusicPlayer, localTrackFromFile } from './music.js?v=414b8bcdc222';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=414b8bcdc222';
-import { World } from './scene.js?v=414b8bcdc222';
-import { weaponForId } from './weapons.js?v=414b8bcdc222';
-import { UPGRADES, loadProfile, freshProfile, buyUpgrade, upgradeCost, creditRun } from './progression.js?v=414b8bcdc222';
-import { exitGame } from './launch.js?v=414b8bcdc222';
-import { setupFullscreen } from './fullscreen.js?v=414b8bcdc222';
+import { TRACKS, MusicPlayer, localTrackFromFile } from './music.js?v=4c780c7b917d';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=4c780c7b917d';
+import { World } from './scene.js?v=4c780c7b917d';
+import { weaponForId } from './weapons.js?v=4c780c7b917d';
+import { UPGRADES, loadProfile, freshProfile, buyUpgrade, upgradeCost, creditRun } from './progression.js?v=4c780c7b917d';
+import { exitGame } from './launch.js?v=4c780c7b917d';
+import { setupFullscreen } from './fullscreen.js?v=4c780c7b917d';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -13,7 +13,8 @@ let world;
 try { world = new World($('scene')); }
 catch (error) { $('homeError').textContent = '3D 화면을 시작하지 못했어요. WebGL을 지원하는 브라우저에서 하드웨어 가속을 켜고 다시 열어 주세요.'; $('startButton').disabled = true; console.error(error); }
 const audio = new MusicPlayer();
-let selected = TRACKS[0], difficulty = 'easy', state = null, mode = 'home', playerX = 0;
+const difficulty = 'normal';
+let selected = TRACKS[0], state = null, mode = 'home', playerX = 0;
 let preparing = false, countdownTimer = null, countdownRemaining = 3, feedbackUntil = 0, damageUntil = 0;
 let drag = null, lastFrame = performance.now(), elapsed = 0;
 const analyses = new Map();
@@ -88,10 +89,6 @@ $('localMusicFile').addEventListener('change', () => {
 $('helpButton').addEventListener('click', () => $('helpDialog').showModal());
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
 document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', e => { if (e.target === dialog) { const r = dialog.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close(); } }));
-document.querySelectorAll('[data-difficulty]').forEach(button => button.addEventListener('click', () => {
-  difficulty = button.dataset.difficulty;
-  document.querySelectorAll('[data-difficulty]').forEach(b => { b.classList.toggle('active', b === button); b.setAttribute('aria-pressed', String(b === button)); });
-}));
 
 async function start() {
   if (preparing || !world) return;
@@ -193,7 +190,8 @@ function handleEffects(effects) {
     if (effect.type === 'save') { world.burst(effect.lane, 0xb6f6d9); audio.sound('save'); }
     if (effect.type === 'weapon') world.showUpgrade(effect.weapon, effect.ammo);
     if (effect.type === 'shield') feedback('보호막이 지뢰를 막았어요');
-    if (effect.type === 'shot') { world.shoot(effect.lane, effect.weapon, effect.pellets); if (effect.damage > 0) world.showDamage(effect.damage); audio.sound('shot'); }
+    if (effect.type === 'shot') { world.shoot(effect.lane, effect.weapon, effect.pellets, effect.projectiles); audio.sound('shot'); }
+    if (effect.type === 'hit') world.impact(effect);
     if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${effect.damage}`, true); }
     if (effect.type === 'victory') { world.burst(2, 0xe0bcff); feedback('보스 격파 · RESCUE TIME!', false, 2300); }
     if (effect.type === 'save' && state.saved % 10 === 0) feedback(`+${state.rules.heal} HP · ${state.saved} RESCUED`);
