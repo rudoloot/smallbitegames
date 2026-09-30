@@ -1,0 +1,107 @@
+'use strict';
+const ED = (() => {
+ const data = typeof ED_DATA !== 'undefined' ? ED_DATA : require('./data.js');
+ const cards = data.cards, byId = Object.fromEntries(cards.map(c=>[c.id,c]));
+ const elements = {fire:{name:'불',color:'#fa876b',glyph:'火'},water:{name:'물',color:'#77c6f7',glyph:'水'},wood:{name:'나무',color:'#a5d38e',glyph:'木'},earth:{name:'땅',color:'#dbb779',glyph:'土'},wind:{name:'바람',color:'#9de6d5',glyph:'風'},neutral:{name:'무속성',color:'#ffffff',glyph:'◇'}};
+ const strong = {fire:'wood',wood:'earth',earth:'wind',wind:'water',water:'fire'};
+ const names=['철제 룬석','까마귀 깃털','황금 고리','불씨 부적','해일 진주','고목의 씨앗','산맥의 파편','백색 수정','여행자의 성배','쌍둥이 룬'];
+ const descriptions=['방어 행동값 +2','바람 공격 +2','전투 골드 +20%','불 공격 +2','물 공격 +2','나무 공격 +2','땅 공격 +2','무속성 공격 +2','승리 시 체력 +5','오른쪽 주사위 2개 이상: 공격 +3'];
+ const items={potion:{name:'체력포션',desc:'체력 30 회복',max:3,buy:15,sell:7},mana:{name:'마나포션',desc:'이번 맵 최대·현재 마나 +1 (상한 10)',max:3,buy:35,sell:17},revive:{name:'부활석',desc:'사망 시 체력 30 부활 예약',max:1,buy:60,sell:30}};
+ const artifacts=names.map((name,i)=>{const id='A'+String(i+1).padStart(2,'0');items[id]={name,desc:descriptions[i],max:1,buy:70,sell:35,artifact:true};return id;});
+ const kinds=['normal','normal','normal','town','normal','normal','elite','town','normal','normal','boss'];
+ let seq=0;
+ const uid=p=>p+Date.now().toString(36)+'_'+(++seq).toString(36);
+ const copy=x=>JSON.parse(JSON.stringify(x));
+ const pick=(a,rng=Math.random)=>a[Math.floor(rng()*a.length)];
+ function shuffle(a,rng=Math.random){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+ function initial(){return {version:2,collection:Object.fromEntries(data.initial.map(id=>[id,1])),deck:[...data.initial],initialGranted:true,run:null,result:null};}
+ function newRun(state,culture,rng=Math.random){
+  if(state.run)throw Error('진행 중인 원정을 먼저 마쳐 주세요.');
+  if(!data.cultures.includes(culture))throw Error('신화권을 선택해 주세요.');
+  if(state.deck.length<10)throw Error('덱은 최소 10장이 필요합니다.');
+  const counts={};for(const id of state.deck){counts[id]=(counts[id]||0)+1;if(!byId[id]||counts[id]>(state.collection[id]||0))throw Error('보유 카드 수를 확인해 주세요.');}
+  const pool=cards.filter(c=>c.culture===culture),tier=t=>pool.filter(c=>c.tier===t).map(c=>c.id);
+  const stages=kinds.map((kind,i)=>{let enemies=[];
+   if(kind==='boss')enemies=[tier('정예')[0],tier('정예')[0],tier('정예')[0],tier('보스')[0]];
+   else if(kind==='elite')enemies=[pick(tier('중급'),rng),pick(tier('상급'),rng),tier('정예')[0]];
+   else if(kind==='normal')enemies=i<2?[pick(tier('하급'),rng),pick(tier('하급'),rng)]:i===2?[pick(tier('하급'),rng),pick(tier('중급'),rng)]:i<6?[pick(tier('중급'),rng),pick(tier('상급'),rng)]:[pick(tier('상급'),rng),pick(tier('상급'),rng),tier('정예')[0]];
+   return {kind,enemies};});
+  state.result=null;state.run={uid:uid('r'),culture,hp:100,maxHp:100,mana:3,maxMana:3,gold:0,revive:false,deck:[...state.deck],inventory:[{id:pick(artifacts,rng),count:1},null,null,null,null,null],node:0,scene:'map',stages,towns:{},battle:null,reward:null,startArtifactGranted:true,encountered:[],wins:0};return state.run;
+ }
+ function endRun(state,status){const r=state.run;if(!r)return;state.result={status,culture:r.culture,wins:r.wins};state.run=null;}
+ function makeCard(id,side,pos,boss=false){const c=byId[id];return {uid:uid(side),id,side,pos,boss,hp:c.hp,dead:false,L:[],R:[],used:false,shield:null};}
+ const role=c=>c.pos<3?'defense':'attack';
+ function clear(c){c.L=[];c.R=[];c.used=false;c.shield=null;}
+ function matchup(a,t){return strong[a]===t?1.5:strong[t]===a?.5:1;}
+ function action(c,inventory=[]){
+  const def=byId[c.id],all=[...c.L,...c.R],colors=[...new Set(all.map(d=>d.element).filter(e=>e!=='neutral'))];
+  const candidate=colors.length===1?colors[0]:'neutral',mode=role(c);
+  const element=candidate!=='neutral'&&(mode==='attack'?def.attacks.includes(candidate):def.element===candidate)?candidate:'neutral';
+  const sum=c.L.reduce((s,d)=>s+d.value,0),mult=Math.max(1,c.R.length),base=sum*mult;
+  const valid=!c.dead&&c.L.length>0&&c.L.length<=4&&c.R.length<=4&&new Set(c.R.map(d=>d.value)).size<=1;
+  if(!valid)return {value:0,base:0,bonus:0,artifact:0,element,valid:false,sum,mult};
+  const e=def.effect,met=e.condition==='right2'?c.R.length>=2:e.condition==='six'?c.L.some(d=>d.value===6):c.L.length>=2;
+  const bonus=e.role===mode&&met?e.bonus:0,owned=new Set(inventory.filter(Boolean).map(x=>x.id));let artifact=0;
+  if(mode==='defense'&&owned.has('A01'))artifact+=2;
+  const matching={wind:'A02',fire:'A04',water:'A05',wood:'A06',earth:'A07',neutral:'A08'};
+  if(mode==='attack'){if(owned.has(matching[element]))artifact+=2;if(c.R.length>=2&&owned.has('A10'))artifact+=3;}
+  return {value:base+bonus+artifact,base,bonus,artifact,element,valid,sum,mult};
+ }
+ function roll(cs,rng=Math.random){return cs.filter(c=>!c.dead).flatMap(c=>Object.entries(byId[c.id].dice).flatMap(([element,n])=>Array.from({length:n},()=>({uid:uid('d'),element,value:1+Math.floor(rng()*6)}))));}
+ const sorted=ds=>[...ds].sort((a,b)=>a.value-b.value);
+ function startBattle(r,rng=Math.random){const stage=r.stages[r.node];if(stage.kind==='town')return;if(r.battle)return r.battle;
+  const enemies=stage.enemies.map((id,i)=>makeCard(id,'e',i===3?4:i,stage.kind==='boss'&&i===3));
+  r.encountered=[...new Set([...r.encountered,...stage.enemies])];
+  const b={uid:uid('b'),kind:stage.kind,phase:'e_roll',round:0,opening:true,enemies,players:[],deck:shuffle(r.deck,rng),discard:[],pPool:[],ePool:roll(enemies,rng),rollDisplay:[],plan:[],planIndex:0,queue:[],queueIndex:0,log:[],initialEnemies:[...stage.enemies]};
+  b.rollDisplay=copy(b.ePool);r.battle=b;r.scene='battle';return b;
+ }
+ function draw(r,rng=Math.random){const b=r.battle;let count=0;while(r.mana>0&&b.players.length<6){
+   if(!b.deck.length){if(!b.discard.length)break;b.deck=shuffle(b.discard,rng);b.discard=[];}
+   const id=b.deck.shift(),pos=[3,4,5,0,1,2].find(p=>!b.players.some(c=>c.pos===p));b.players.push(makeCard(id,'p',pos));r.mana=Math.max(0,r.mana-byId[id].cost);count++;
+  }return count;
+ }
+ function preparePlayer(r,rng=Math.random){const b=r.battle;b.discard.push(...b.players.map(c=>c.id));b.players=[];b.pPool=[];b.round++;b.opening=false;r.mana=r.maxMana;b.phase='p_prep';draw(r,rng);}
+ function rollPlayer(r,rng=Math.random){const b=r.battle;if(b.phase!=='p_prep')return false;b.players.forEach(clear);b.pPool=roll(b.players,rng);b.rollDisplay=copy(b.pPool);b.phase='p_roll';return true;}
+ function finishPlayerRoll(r){const b=r.battle;if(b.phase==='p_roll'){b.pPool=sorted(b.pPool);b.phase='p_place';}}
+ function moveCard(b,id,pos){if(!['p_place','p_prep'].includes(b.phase))return false;const c=b.players.find(c=>c.uid===id);if(!c||pos<0||pos>5||!Number.isInteger(pos))return false;const other=b.players.find(x=>x.pos===pos);if(other)other.pos=c.pos;c.pos=pos;return true;}
+ function placeDie(b,dieId,cardId,side){if(b.phase!=='p_place'||!['L','R'].includes(side))return false;const c=b.players.find(c=>c.uid===cardId),die=b.pPool.find(d=>d.uid===dieId);if(!c||!die||c[side].length>=4)return false;if(side==='R'&&c.R.some(d=>d.value!==die.value))return false;b.pPool=b.pPool.filter(d=>d.uid!==dieId);c[side].push(die);return true;}
+ function removeDie(b,cardId,side,index){if(b.phase!=='p_place'||!['L','R'].includes(side))return false;const c=b.players.find(c=>c.uid===cardId);if(!c||!c[side][index])return false;b.pPool=sorted([...b.pPool,c[side].splice(index,1)[0]]);return true;}
+ function confirm(r){const b=r.battle;if(b.phase!=='p_place')return false;for(const c of b.players){const a=action(c,r.inventory);c.shield=role(c)==='defense'&&a.valid?{value:a.value,element:a.element}:null;}b.pPool=[];b.phase='p_attack';return true;}
+ function attackPreview(attacker,target,inv=[]){const a=action(attacker,inv),element=target.side==='p'?byId[target.id].element:target.shield?.element||byId[target.id].element,mult=matchup(a.element,element),value=Math.floor(a.value*mult),defense=target.shield?.value||0;return {value,damage:Math.max(0,value-defense),breaks:value>defense,mult,defense,element:a.element};}
+ function hit(r,attacker,target){if(!attacker||!target||attacker.dead||target.dead||attacker.used||role(attacker)!=='attack')return null;const a=action(attacker,attacker.side==='p'?r.inventory:[]);if(!a.valid)return null;
+  const result=attackPreview(attacker,target,attacker.side==='p'?r.inventory:[]);
+  if(result.breaks&&target.shield){target.shield=null;target.L=[];target.R=[];}
+  if(target.side==='e'){target.hp=Math.max(0,target.hp-result.damage);if(!target.hp){target.dead=true;clear(target);}}else{r.hp=Math.max(0,r.hp-result.damage);if(!r.hp&&r.revive){r.hp=30;r.revive=false;}}
+  attacker.L=[];attacker.R=[];attacker.used=true;r.battle.log.push(`${byId[attacker.id].name} → ${byId[target.id].name}: ${result.value} 공격 − ${result.defense} 방어 = ${result.damage} 피해`);r.battle.log=r.battle.log.slice(-60);return result;
+ }
+ function playerAttack(r,from,to){const b=r.battle;if(b.phase!=='p_attack')return null;return hit(r,b.players.find(c=>c.uid===from),b.enemies.find(c=>c.uid===to));}
+ function beginEnemy(r,rng=Math.random){const b=r.battle;if(b.phase!=='p_attack')return false;b.players.forEach(c=>{if(role(c)==='attack'){c.L=[];c.R=[];}});
+  const live=b.enemies.filter(c=>!c.dead);live.forEach(clear);const boss=live.find(c=>c.boss),others=shuffle(live.filter(c=>!c.boss),rng);if(boss)boss.pos=4;
+  const positions=boss?[0,3,5,1,2]:b.round%2?[3,4,0,5,1,2]:[3,0,4,5,1,2];others.forEach((c,i)=>c.pos=positions[i]);
+  b.ePool=roll(live,rng);b.rollDisplay=copy(b.ePool);b.plan=[];b.planIndex=0;b.queue=[];b.queueIndex=0;b.phase='e_roll';return true;
+ }
+ function bestLoadout(c,pool,budget){let best={L:[],R:[],score:-1};const domains=[pool,...Object.keys(elements).map(e=>pool.filter(d=>d.element===e||d.element==='neutral'))];
+  for(const ds of domains)for(let value=0;value<=6;value++)for(let n=0;n<=4;n++){if(value===0&&n!==0||value>0&&n===0)continue;const R=ds.filter(d=>d.value===value).slice(0,n);if(R.length!==n||n>=budget)continue;const rem=ds.filter(d=>!R.includes(d)).sort((a,b)=>b.value-a.value);for(let k=1;k<=Math.min(4,budget-n,rem.length);k++){const L=rem.slice(0,k),score=action({...c,L,R}).value;if(score>best.score)best={L,R,score};}}return best;
+ }
+ function planEnemy(r){const b=r.battle;if(b.phase!=='e_roll')return;let pool=sorted(b.ePool);const eligible=b.enemies.filter(c=>!c.dead&&(!b.opening||role(c)==='defense'));b.plan=[];
+  eligible.forEach((c,i)=>{const budget=Math.min(8,Math.max(1,Math.ceil(pool.length/(eligible.length-i)))),p=bestLoadout(c,pool,budget),used=new Set([...p.L,...p.R].map(d=>d.uid));pool=pool.filter(d=>!used.has(d.uid));b.plan.push({uid:c.uid,L:p.L,R:p.R});});b.ePool=sorted(b.ePool);b.planIndex=0;b.phase='e_place';
+ }
+ function enemyPlacementStep(r){const b=r.battle;if(b.phase!=='e_place')return false;if(b.planIndex<b.plan.length){const p=b.plan[b.planIndex++],c=b.enemies.find(c=>c.uid===p.uid);c.L=p.L;c.R=p.R;const used=new Set([...p.L,...p.R].map(d=>d.uid));b.ePool=b.ePool.filter(d=>!used.has(d.uid));const a=action(c);c.shield=role(c)==='defense'&&a.valid?{value:a.value,element:a.element}:null;return true;}b.ePool=[];b.queue=b.opening?[]:b.enemies.filter(c=>!c.dead&&role(c)==='attack'&&action(c).valid).map(c=>c.uid);b.queueIndex=0;b.phase='e_attack';return false;}
+ function enemyAttackStep(r){const b=r.battle;if(b.phase!=='e_attack'||b.queueIndex>=b.queue.length)return null;const id=b.queue[b.queueIndex++],c=b.enemies.find(c=>c.uid===id),targets=b.players.filter(t=>!t.dead).sort((a,z)=>attackPreview(c,z).damage-attackPreview(c,a).damage);return hit(r,c,targets[0]);}
+ function won(r){return r.battle.enemies.every(c=>c.dead);}
+ const has=(r,id)=>r.inventory.some(s=>s?.id===id);
+ function addItem(r,id){const def=items[id];if(!def)return false;const slot=r.inventory.find(s=>s?.id===id&&s.count<def.max);if(slot){slot.count++;return true;}const i=r.inventory.indexOf(null);if(i<0)return false;r.inventory[i]={id,count:1};return true;}
+ function useItem(r,index){const slot=r.inventory[index],b=r.battle;if(!slot||!b||!['p_prep','p_place'].includes(b.phase))return false;if(slot.id==='potion'){if(r.hp===r.maxHp)return false;r.hp=Math.min(r.maxHp,r.hp+30);}else if(slot.id==='mana'){if(r.maxMana>=10)return false;r.maxMana++;r.mana=Math.min(r.maxMana,r.mana+1);if(b.phase==='p_prep')draw(r);}else if(slot.id==='revive'){if(r.revive)return false;r.revive=true;}else return false;if(--slot.count===0)r.inventory[index]=null;return true;}
+ function victory(state,rng=Math.random){const r=state.run,b=r.battle;if(!won(r)||r.reward)return;const kind=b.kind;let gold=kind==='boss'?0:kind==='elite'?50:20;if(has(r,'A03'))gold=Math.floor(gold*1.2);r.gold+=gold;r.wins++;if(has(r,'A09'))r.hp=Math.min(r.maxHp,r.hp+5);
+  const card=kind==='normal'?pick(b.initialEnemies,rng):kind==='boss'?pick([...new Set(r.encountered)],rng):null;r.reward={kind,gold,card,choice:kind==='normal'?null:'done',items:kind==='elite'?Array.from({length:2},()=>({id:pick(Object.keys(items),rng),status:'pending'})):[]};if(kind==='boss')state.collection[card]=(state.collection[card]||0)+1;b.phase='won';r.scene='reward';
+ }
+ function chooseReward(state,choice){const r=state.run,q=r?.reward;if(!q||q.kind!=='normal'||q.choice!==null||!['card','mana'].includes(choice))return false;if(choice==='mana'){if(r.maxMana>=10)return false;r.maxMana++;r.mana=Math.min(r.maxMana,r.mana+1);}else state.collection[q.card]=(state.collection[q.card]||0)+1;q.choice=choice;return true;}
+ function resolveRewardItem(r,index,replace){const it=r.reward?.items[index];if(!it||it.status!=='pending')return false;if(replace==='skip'){it.status='declined';return true;}if(Number.isInteger(replace)&&replace>=0&&replace<6){r.inventory[replace]={id:it.id,count:1};it.status='received';return true;}if(addItem(r,it.id)){it.status='received';return true;}return false;}
+ function rewardNext(state){const r=state.run,q=r?.reward;if(!q||q.choice===null||q.items.some(i=>i.status==='pending'))return false;if(q.kind==='boss'){endRun(state,'cleared');return true;}r.node++;r.battle=null;r.reward=null;r.scene='map';return true;}
+ function enterTown(r,rng=Math.random){if(!r.towns[r.node]){const stock={potion:3,mana:3,revive:1,[pick(artifacts,rng)]:1};let event='조용한 마을에서 잠시 쉬어 갑니다.',pending=null;if(rng()<.3){const type=pick(['gold','heal','gift'],rng);if(type==='gold'){r.gold+=15;event='여행 주머니에서 15골드를 얻었습니다.';}else if(type==='heal'){r.hp=Math.min(r.maxHp,r.hp+15);event='룬샘에서 체력을 15 회복했습니다.';}else{event='까마귀가 체력포션을 가져왔습니다.';if(!addItem(r,'potion'))pending='potion';}}r.towns[r.node]={stock,event,pending};}r.scene='town';}
+ function buy(r,id){const t=r.towns[r.node],it=items[id];if(r.scene!=='town'||!it||!t?.stock[id]||r.gold<it.buy||!addItem(r,id))return false;r.gold-=it.buy;t.stock[id]--;return true;}
+ function sell(r,index){const s=r.inventory[index];if(r.scene!=='town'||!s)return false;r.gold+=items[s.id].sell;if(--s.count===0)r.inventory[index]=null;return true;}
+ function validate(b){const errors=[];for(const [cs,pool]of [[b.players,b.pPool],[b.enemies,b.ePool]]){const ids=pool.map(d=>d.uid),pos=new Set();for(const c of cs){if(pos.has(c.pos)&&!c.dead)errors.push('position');if(!c.dead)pos.add(c.pos);if(c.boss&&c.pos!==4)errors.push('boss position');if(c.L.length>4||c.R.length>4||new Set(c.R.map(d=>d.value)).size>1)errors.push('slots');ids.push(...c.L.map(d=>d.uid),...c.R.map(d=>d.uid));}if(new Set(ids).size!==ids.length)errors.push('duplicate dice');}return errors;}
+ return {data,cards,byId,elements,items,artifacts,kinds,copy,pick,shuffle,initial,newRun,endRun,makeCard,role,clear,matchup,action,roll,sorted,startBattle,draw,preparePlayer,rollPlayer,finishPlayerRoll,moveCard,placeDie,removeDie,confirm,attackPreview,hit,playerAttack,beginEnemy,planEnemy,enemyPlacementStep,enemyAttackStep,won,has,addItem,useItem,victory,chooseReward,resolveRewardItem,rewardNext,enterTown,buy,sell,validate};
+})();
+if(typeof module!=='undefined')module.exports=ED;

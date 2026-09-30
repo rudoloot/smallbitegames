@@ -1,0 +1,14 @@
+{
+  "count": 220,
+  "width": 384,
+  "format": "WebP",
+  "quality": 82,
+  "method": 4,
+  "original_bytes": 550306307,
+  "output_bytes": 10693596,
+  "mean_bytes": 48607,
+  "min_bytes": 18574,
+  "max_bytes": 64846,
+  "reduction_percent": 98.06,
+  "verification": "All outputs decoded and dimensions checked; original SHA-256 unchanged."
+}

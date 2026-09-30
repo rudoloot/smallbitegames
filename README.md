@@ -26,7 +26,7 @@ smallbitegames/
 
 이미지·CSS·JavaScript 경로는 모두 상대 경로이므로 일반 프로젝트 사이트(`사용자명.github.io/저장소명/`)에서도 사용할 수 있습니다.
 
-현재 등록된 게임은 `마인런`, `마지막 전사`, `데드콰이엇`, `XenoTide Defense`, `LaundryDone`, `디바인드랍`, `노트블룸`입니다. 게임을 추가할 때는 [games/README.md](games/README.md)를 참고하세요. 데드콰이엇은 방장의 모바일 브라우저가 게임을 진행하며, Cloudflare Worker로 방 목록과 연결 정보를 교환합니다. 현재 TURN 중계는 설정하지 않아 모바일망 환경에 따라 연결되지 않을 수 있습니다.
+현재 등록된 게임은 `마인런`, `마지막 전사`, `데드콰이엇`, `XenoTide Defense`, `LaundryDone`, `디바인드랍`, `노트블룸`, `Evolatrix`, `GoFlickDuel`, `엘리멘탈 다이스`입니다. 게임을 추가할 때는 [games/README.md](games/README.md)를 참고하세요. 데드콰이엇은 방장의 모바일 브라우저가 게임을 진행하며, Cloudflare Worker로 방 목록과 연결 정보를 교환합니다. 현재 TURN 중계는 설정하지 않아 모바일망 환경에 따라 연결되지 않을 수 있습니다.
 
 카드의 하트 버튼으로 게임을 즐겨찾기에 추가할 수 있습니다. 즐겨찾기는 사용 중인 브라우저에 저장되며, 카테고리 메뉴의 `즐겨찾기`에서 모아 볼 수 있습니다.
 
