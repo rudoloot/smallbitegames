@@ -21,7 +21,13 @@ export function analyzeMood(samples, sampleRate, bpm) {
   const dynamics = Math.min(1, Math.sqrt(levels.reduce((sum, v) => sum + (v - mean) ** 2, 0) / levels.length) / Math.max(mean, .001));
   const energy = Math.min(1, rms * 3);
   const pace = Math.max(0, Math.min(1, ((bpm || 100) - 70) / 110));
-  // Calm/dark sounds: blue/teal; brighter, stronger music: violet/rose/amber.
-  const hue = (.48 + brightness * .28 + energy * .18 + pace * .09 + dynamics * .06) % 1;
-  return { hue, saturation: .42 + energy * .28, energy, brightness };
+  // Real mixed music has a narrow brightness range (~.05–.25), not 0–1.
+  // Map two centered acoustic features around the whole wheel instead of
+  // adding small positive offsets that compress everything into purple.
+  // Fixed references keep imported songs independent of library order/size.
+  const spectralAxis = (brightness - .13) / .10;
+  const energyAxis = (energy - .76) / .25;
+  const angle = Math.atan2(energyAxis, spectralAxis) / (2 * Math.PI);
+  const hue = (angle + pace * .07 + dynamics * .06 - .08 + 1) % 1;
+  return { hue, saturation: .54 + energy * .20, energy, brightness, dynamics, pace };
 }

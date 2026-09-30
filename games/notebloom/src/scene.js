@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { terrainSlope } from './terrain.js?v=04ad012e4b86';
-import { weaponForId } from './weapons.js?v=04ad012e4b86';
-import { buildWeaponModel } from './weapon-model.js?v=04ad012e4b86';
-import { bossPose, projectilePoint } from './projectiles.js?v=04ad012e4b86';
+import { terrainSlope } from './terrain.js?v=b3c1948aa802';
+import { weaponForId } from './weapons.js?v=b3c1948aa802';
+import { buildWeaponModel } from './weapon-model.js?v=b3c1948aa802';
+import { bossPose, projectilePoint } from './projectiles.js?v=b3c1948aa802';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
