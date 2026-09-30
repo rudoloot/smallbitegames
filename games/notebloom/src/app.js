@@ -1,11 +1,11 @@
-import { TRACKS, MusicPlayer } from './music.js?v=375ab583a975';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=375ab583a975';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=375ab583a975';
-import { World } from './scene.js?v=375ab583a975';
-import { weaponForId } from './weapons.js?v=375ab583a975';
-import { UPGRADES, loadProfile, freshProfile, buyUpgrade, upgradeCost, creditRun } from './progression.js?v=375ab583a975';
-import { exitGame } from './launch.js?v=375ab583a975';
-import { setupFullscreen } from './fullscreen.js?v=375ab583a975';
+import { TRACKS, MusicPlayer } from './music.js?v=04ad012e4b86';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=04ad012e4b86';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=04ad012e4b86';
+import { World } from './scene.js?v=04ad012e4b86';
+import { weaponForId } from './weapons.js?v=04ad012e4b86';
+import { UPGRADES, loadProfile, freshProfile, buyUpgrade, upgradeCost, creditRun } from './progression.js?v=04ad012e4b86';
+import { exitGame } from './launch.js?v=04ad012e4b86';
+import { setupFullscreen } from './fullscreen.js?v=04ad012e4b86';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');

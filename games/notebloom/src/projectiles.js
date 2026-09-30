@@ -1,5 +1,5 @@
 // Shared world-space geometry for simulation and rendering. Bullets never home.
-export const bossPose = time => ({ x: Math.sin(time * .7) * 1.7, y: 1.05 + Math.sin(time * 2) * .12, z: -23 });
+export const bossPose = time => ({ x: Math.sin(time * .7) * 1.7, y: 1.05 + Math.sin(time * 2) * .12, z: -52 });
 export const projectileSpeed = weapon => weapon === 'rail' ? 260 : weapon === 'rocket' ? 85 : 115;
 export const projectileRadius = weapon => weapon === 'rocket' ? .18 : weapon === 'rail' ? .045 : .07;
 const parts = [

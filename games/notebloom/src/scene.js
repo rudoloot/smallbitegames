@@ -1,7 +1,8 @@
 import * as THREE from 'three';
-import { weaponForId } from './weapons.js?v=375ab583a975';
-import { buildWeaponModel } from './weapon-model.js?v=375ab583a975';
-import { bossPose, projectilePoint } from './projectiles.js?v=375ab583a975';
+import { terrainSlope } from './terrain.js?v=04ad012e4b86';
+import { weaponForId } from './weapons.js?v=04ad012e4b86';
+import { buildWeaponModel } from './weapon-model.js?v=04ad012e4b86';
+import { bossPose, projectilePoint } from './projectiles.js?v=04ad012e4b86';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -34,7 +35,7 @@ export class World {
     this.damageNumbers = []; this.damageSerial = 0; this.hitFlash = 0;
     this.damageLayer = document.createElement('div'); this.damageLayer.className = 'damage-numbers';
     this.damageLayer.setAttribute('aria-hidden', 'true'); container.appendChild(this.damageLayer);
-    this.buildSky(); this.buildRoad(); this.buildGarden(); this.prepareEnvironment(); this.buildCharacter(); this.buildBoss();
+    this.buildSky(); this.course = new THREE.Group(); this.scene.add(this.course); this.buildRoad(); this.buildGarden(); this.prepareEnvironment(); this.buildCharacter(); this.buildBoss();
     this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(container);
     this.resize();
   }
@@ -67,30 +68,30 @@ export class World {
     for (let i = 0; i < 45; i++) { const mote = this.mesh(this.scene, geo, this.materials.mint, [Math.sin(i * 5.8) * 12, 1 + i % 8, -i * 1.5]); this.dust.push(mote); }
   }
   buildRoad() {
-    this.box(this.scene, this.materials.road, [0, -.23, -32], [4.88, .4, 100]);
+    this.box(this.course, this.materials.road, [0, -.23, -32], [4.88, .4, 100]);
     this.attackFloors = [];
     for (let i = 0; i < 4; i++) {
       const x = (i - 1.5) * 1.22;
       const attack = false;
       const mat = material(attack ? 0x9983c9 : i === 2 ? 0x718a96 : 0x667687, .12);
       // Four broad road surfaces; objects travel through their centers, not on lines.
-      this.box(this.scene, mat, [x, -.014, -32], [1.18, .04, 100]);
+      this.box(this.course, mat, [x, -.014, -32], [1.18, .04, 100]);
       if (attack) this.attackFloors.push(mat);
     }
     for (let i = 1; i < 4; i++) {
-      this.box(this.scene, material(0xb9e8e0, .25), [(i - 2) * 1.22, .006, -32], [.035, .02, 100]);
+      this.box(this.course, material(0xb9e8e0, .25), [(i - 2) * 1.22, .006, -32], [.035, .02, 100]);
     }
     for (const side of [-1, 1]) {
-      this.box(this.scene, this.materials.edge, [side * 2.44, .035, -32], [.065, .09, 100]);
-      this.box(this.scene, this.materials.white, [side * 2.54, -.12, -32], [.12, .28, 100]);
+      this.box(this.course, this.materials.edge, [side * 2.44, .035, -32], [.065, .09, 100]);
+      this.box(this.course, this.materials.white, [side * 2.54, -.12, -32], [.12, .28, 100]);
     }
     this.beatLines = [];
-    for (let i = 0; i < 26; i++) this.beatLines.push(this.box(this.scene, material(0x8a8caa), [0, .007, -i * 3], [4.88, .015, .027]));
-    this.box(this.scene, material(0xb9ffe0, .9), [0, .04, 3.25], [4.88, .026, .06]);
+    for (let i = 0; i < 26; i++) this.beatLines.push(this.box(this.course, material(0x8a8caa), [0, .007, -i * 3], [4.88, .015, .027]));
+    this.box(this.course, material(0xb9ffe0, .9), [0, .04, 3.25], [4.88, .026, .06]);
     const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 64;
     const ctx = canvas.getContext('2d'); ctx.fillStyle = '#e8ddff'; ctx.font = 'bold 35px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⌁', 64, 42);
     const tex = new THREE.CanvasTexture(canvas), mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
-    for (const side of [-1, 1]) { const m = this.mesh(this.scene, new THREE.PlaneGeometry(.8, .5), mat, [side * 1.83, .04, 1.8]); m.rotation.x = -Math.PI / 2; }
+    for (const side of [-1, 1]) { const m = this.mesh(this.course, new THREE.PlaneGeometry(.8, .5), mat, [side * 1.83, .04, 1.8]); m.rotation.x = -Math.PI / 2; }
   }
   buildGarden() {
     this.garden = [];
@@ -108,7 +109,7 @@ export class World {
       this.mesh(tree, new THREE.IcosahedronGeometry(1, 0), leaves, [0, 2.2, 0], [1.35, 1.5, 1.1]);
       this.mesh(tree, new THREE.IcosahedronGeometry(1, 0), leaves, [.75, 1.85, .1], [.75, .8, .8]);
       this.mesh(group, new THREE.OctahedronGeometry(.4), this.materials.lilac, [-1, .4, .2], [.45, 1.4, .45]);
-      this.scene.add(group); this.garden.push(group);
+      this.course.add(group); this.garden.push(group);
     }
     // Floating gates frame the path without obscuring the notes.
     this.gates = [];
@@ -119,12 +120,12 @@ export class World {
         this.box(group, this.materials.mint, [side * 3.8, 3.9, .17], [.1, .9, .035]);
       }
       const arch = this.mesh(group, new THREE.TorusGeometry(3.8, .12, 6, 24, Math.PI), material(0xd4c9ef), [0, 4.5, 0]);
-      group.position.z = -18 - i * 22; this.scene.add(group); this.gates.push(group);
+      group.position.z = -18 - i * 22; this.course.add(group); this.gates.push(group);
     }
   }
   buildCharacter() {
     const m = this.materials, root = new THREE.Group(); this.character = root; root.position.set(0, .06, 3.25);
-    this.scene.add(root);
+    this.course.add(root);
     // The character faces -Z: bob-cut android, sailor-collar combat uniform.
     this.legs = [];
     for (const side of [-1, 1]) {
@@ -189,6 +190,7 @@ export class World {
     const crystalMat = new THREE.MeshStandardMaterial({ color: 0x11131f, metalness: .72, roughness: .18, emissive: 0x281c44, emissiveIntensity: .12 });
     const thornGeo = new THREE.ConeGeometry(1, 1, 4);
     const thornMat = new THREE.MeshStandardMaterial({ color: 0x242033, metalness: .58, roughness: .22, emissive: 0x413053, emissiveIntensity: .22 });
+    this.thornMaterials = [crystalMat, thornMat];
     for (let i = 0; i < this.garden.length; i++) {
       const group = new THREE.Group(); this.garden[i].add(group);
       // Replace the rounded canopy with a tall spear and sharp, branching barbs.
@@ -215,6 +217,23 @@ export class World {
     this.updateEnvironment(null);
   }
   updateEnvironment(state) {
+    const mood = state?.chart?.mood;
+    const hue = mood?.hue ?? .58, saturation = mood?.saturation ?? .45;
+    const paletteKey = `${hue}:${saturation}`;
+    if (paletteKey !== this.paletteKey) {
+      this.paletteKey = paletteKey; this.themeBlend = -1;
+      for (const item of this.environmentMaterials) {
+        item.dark.setHSL(hue, saturation, item.luminous ? .43 : .19);
+        item.darkEmissive.setHSL(hue, saturation, item.luminous ? .47 : .13);
+      }
+      this.darkSky.forEach((color, i) => color.setHSL(hue, saturation, [.045, .105, .20, .13][i]));
+      this.darkFog.setHSL(hue, saturation, .12);
+      this.moodLight = new THREE.Color().setHSL(hue, saturation * .65, .78);
+      for (const mat of this.thornMaterials) {
+        mat.color.setHSL(hue, saturation, .15);
+        mat.emissive.setHSL(hue, saturation, .20);
+      }
+    }
     const progress = state && state.boss <= 0 ? THREE.MathUtils.clamp((state.time - (state.defeatedAt ?? state.time)) / 2.4, 0, 1) : 0;
     const blend = progress * progress * (3 - 2 * progress);
     if (blend === this.themeBlend) return;
@@ -229,7 +248,10 @@ export class World {
     this.scene.fog.color.lerpColors(this.darkFog, this.brightFog, blend);
     this.ambientLight.intensity = THREE.MathUtils.lerp(1.15, 2.2, blend);
     this.sunlight.intensity = THREE.MathUtils.lerp(1.65, 3.1, blend);
-    this.sunlight.color.set(blend === 1 ? 0xffe6f4 : 0xb9b5ee).lerp(new THREE.Color(0xffe6f4), blend);
+    this.sunlight.color.copy(this.moodLight).lerp(new THREE.Color(0xffe6f4), blend);
+    this.fillLight.color.copy(this.moodLight).lerp(new THREE.Color(0xa0ffeb), blend);
+    this.ambientLight.color.copy(this.moodLight).lerp(new THREE.Color(0xf4efff), blend);
+    this.ambientLight.groundColor.copy(this.darkFog).lerp(new THREE.Color(0x657296), blend);
     this.fillLight.intensity = THREE.MathUtils.lerp(.85, 1.4, blend);
     for (const crystal of this.obsidian) {
       crystal.visible = blend < 1;
@@ -244,7 +266,7 @@ export class World {
     ctx.fillStyle = gradient; ctx.fillRect(0, 0, 8, 256); this.skyTexture.needsUpdate = true;
   }
   buildBoss() {
-    const boss = new THREE.Group(); this.boss = boss; boss.position.set(0, 3.8, -23); this.scene.add(boss);
+    const boss = new THREE.Group(); this.boss = boss; boss.position.set(0, 1.05, -52); this.course.add(boss);
     this.mesh(boss, new THREE.IcosahedronGeometry(1.05, 1), this.materials.black, [0, 0, 0], [1, .78, .7]);
     this.bossCore = this.mesh(boss, new THREE.OctahedronGeometry(.55), this.materials.pink, [0, 0, .6]);
     this.bossRing = this.mesh(boss, new THREE.TorusGeometry(1.32, .055, 6, 36), this.materials.lilac, [0, 0, 0]);
@@ -278,12 +300,12 @@ export class World {
       }
       this.box(root, this.materials.pink, [0, .3, .28], [.23, .045, .03]);
     }
-    this.scene.add(root); return root;
+    this.course.add(root); return root;
   }
   burst(lane, color) {
     for (let i = 0; i < 8; i++) {
       const mat = new THREE.MeshBasicMaterial({ color, transparent: true });
-      const mesh = this.mesh(this.scene, new THREE.OctahedronGeometry(.07), mat, [(lane - 1.5) * 1.22, .6, 3.25]);
+      const mesh = this.mesh(this.course, new THREE.OctahedronGeometry(.07), mat, [(lane - 1.5) * 1.22, .6, 3.25]);
       this.effects.push({ mesh, age: 0, life: .65, velocity: new THREE.Vector3(Math.sin(i * 3) * 2, 1.5 + i % 3, Math.cos(i * 3) * 1.5) });
     }
   }
@@ -291,7 +313,7 @@ export class World {
     const weapon = weaponForId(weaponId);
     for (let i = 0; i < pellets; i++) {
       const start = new THREE.Vector3((lane - 1.5) * 1.22 + (pellets > 1 ? (i ? -.26 : .26) : .22), .8, 2.65);
-      const mesh = this.mesh(this.scene, new THREE.SphereGeometry(.11, 8, 6), new THREE.MeshBasicMaterial({ color: weapon.color, toneMapped: false, fog: false }), start.toArray(), weaponId === 'rail' ? [.5,.5,45] : weaponId === 'rocket' ? [2,2,5] : [1,1,6]);
+      const mesh = this.mesh(this.course, new THREE.SphereGeometry(.11, 8, 6), new THREE.MeshBasicMaterial({ color: weapon.color, toneMapped: false, fog: false }), start.toArray(), weaponId === 'rail' ? [.5,.5,45] : weaponId === 'rocket' ? [2,2,5] : [1,1,6]);
       const target = start.clone(); target.z = -32;
       this.effects.push({ mesh, age: 0, life: .6, start, target, shot: true, projectile: projectiles[i] });
     }
@@ -302,10 +324,10 @@ export class World {
       if (effect.projectile?.id === hit.id) { this.disposeEffect(effect.mesh); this.effects.splice(i, 1); }
     }
     const point = hit.point, color = weaponForId(hit.weapon).color;
-    const ring = this.mesh(this.scene, new THREE.TorusGeometry(.26, .055, 6, 20), new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, toneMapped: false }), [point.x, point.y, point.z + .04]);
+    const ring = this.mesh(this.course, new THREE.TorusGeometry(.26, .055, 6, 20), new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, toneMapped: false }), [point.x, point.y, point.z + .04]);
     this.effects.push({ mesh: ring, age: 0, life: .22, impact: true, velocity: new THREE.Vector3() });
     for (let i = 0; i < 8; i++) {
-      const mesh = this.mesh(this.scene, new THREE.OctahedronGeometry(.065), new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, toneMapped: false }), [point.x, point.y, point.z]);
+      const mesh = this.mesh(this.course, new THREE.OctahedronGeometry(.065), new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, toneMapped: false }), [point.x, point.y, point.z]);
       this.effects.push({ mesh, age: 0, life: .28, velocity: new THREE.Vector3(Math.cos(i * Math.PI / 4) * 2.5, Math.sin(i * Math.PI / 4) * 2.5, 1.2) });
     }
     this.showDamage(hit.damage, point);
@@ -328,7 +350,7 @@ export class World {
   }
   disposeEffect(mesh) {
     mesh.traverse(child => { if (child.isMesh) { child.geometry.dispose(); child.material.dispose(); } });
-    this.scene.remove(mesh);
+    mesh.removeFromParent();
   }
   weaponModel(id) { return buildWeaponModel(id, this.materials, { box: this.boxGeo, sphere: this.sphereGeo, cylinder: this.cylinderGeo }); }
   setGunLevel(id) {
@@ -349,7 +371,7 @@ export class World {
   disposeObject(object) {
     // Shared geometry/materials remain owned by the scene.
     object.traverse(child => { if (child.isMesh && ![this.boxGeo, this.sphereGeo, this.cylinderGeo].includes(child.geometry)) child.geometry.dispose(); });
-    this.scene.remove(object);
+    object.removeFromParent();
   }
   resize() {
     const w = this.container.clientWidth, h = this.container.clientHeight;
@@ -363,6 +385,11 @@ export class World {
     this.updateEnvironment(state);
     const active = !!state && ['playing', 'paused', 'countdown'].includes(mode);
     const time = active ? state.time : elapsed * .28;
+    const slope = state ? terrainSlope(state.chart.terrain, state.time) : 0;
+    this.course.rotation.x = slope;
+    // Pivot at the collection line so the runner stays stable.
+    this.course.position.set(0, 3.25 * Math.sin(slope), 3.25 * (1 - Math.cos(slope)));
+    this.course.updateMatrixWorld(true);
     const moving = mode === 'playing' || mode === 'home';
     const run = moving ? time * 12 * SCROLL_SPEED : 0;
     const showHome = mode === 'home' || mode === 'loading';
@@ -404,7 +431,7 @@ export class World {
       const e = this.effects[i]; if (mode !== 'paused') e.age += dt;
       if (e.projectile) {
         const point = projectilePoint(e.projectile, state?.time ?? e.projectile.time);
-        if (point.z < -40) { this.disposeEffect(e.mesh); this.effects.splice(i, 1); }
+        if (point.z < -70) { this.disposeEffect(e.mesh); this.effects.splice(i, 1); }
         else e.mesh.position.set(point.x, point.y, point.z);
         continue;
       }
@@ -429,7 +456,7 @@ export class World {
     for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
       const number = this.damageNumbers[i]; number.age += effectDt;
       if (number.age >= .95) { number.label.remove(); this.damageNumbers.splice(i, 1); continue; }
-      const projected = number.anchor.clone().project(this.camera);
+      const projected = this.course.localToWorld(number.anchor.clone()).project(this.camera);
       const x = (projected.x * .5 + .5) * this.container.clientWidth + number.offset;
       const y = (-projected.y * .5 + .5) * this.container.clientHeight - number.age * 38;
       number.label.style.left = `${x}px`; number.label.style.top = `${y}px`;

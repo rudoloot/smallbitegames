@@ -1,6 +1,6 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=375ab583a975';
-import { weaponForId, DROP_WEAPONS } from './weapons.js?v=375ab583a975';
-import { projectileSpeed, projectilePoint, intersectBoss } from './projectiles.js?v=375ab583a975';
+import { clamp, seededRandom, RULES } from './engine.js?v=04ad012e4b86';
+import { weaponForId, DROP_WEAPONS } from './weapons.js?v=04ad012e4b86';
+import { projectileSpeed, projectilePoint, intersectBoss } from './projectiles.js?v=04ad012e4b86';
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
 export function makeChart(duration, analysis, difficulty = 'normal', seed = 42, upgrades = {}) {
@@ -34,21 +34,26 @@ export function makeChart(duration, analysis, difficulty = 'normal', seed = 42, 
   }
   events.sort((a, b) => a.time - b.time || (a.type === 'note' ? -1 : 1));
   events.forEach((event, id) => { event.id = id; });
-  const chart = { duration, events, beat, bpm: analysis.bpm, sections: [], noteCount: events.filter(e => e.type === 'note').length, bossMax: 1e12, perfectDefeatTime: duration * .9 };
-  // Calibrate with baseline weapons; permanent attack bonuses can beat the boss earlier.
+  const chart = { duration, events, beat, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm, sections: [], noteCount: events.filter(e => e.type === 'note').length, bossMax: 1e12, referenceDamage: 0, targetRemaining: .2 };
+  // Baseline route avoids notes/mines and visits every weapon drop.
+  // Ignore runner health only in calibration: missed notes otherwise end this
+  // hypothetical run early. Real play retains all health penalties.
   const simulation = new GameState(chart, difficulty);
+  simulation.maxHealth = simulation.health = 1e9;
   const stops = [...new Set([...events.map(e => e.time), duration])].sort((a, b) => a - b);
-  let total = 0, lastBefore = null, firstAfter = null;
+  let total = 0, previousLane = 1;
   for (const time of stops) {
-    const reward = events.find(e => e.time === time && (e.type === 'note' || e.type === 'weapon'));
-    const safe = reward?.lane ?? [0, 1, 2, 3].find(l => !events.some(e => e.time === time && e.lane === l && e.type === 'mine')) ?? 1;
-    for (const effect of simulation.advance(time, safe)) if (effect.type === 'hit') {
-      if (effect.time < duration * .9) { total += effect.damage; lastBefore = effect.time; }
-      else firstAfter ??= effect.time;
-    }
+    const here = events.filter(e => e.time === time);
+    const weapon = here.find(e => e.type === 'weapon');
+    const safe = [0, 1, 2, 3].filter(l => !here.some(e => e.type === 'mine' && e.lane === l));
+    const empty = safe.filter(l => !here.some(e => e.type === 'note' && e.lane === l));
+    const candidates = empty.length ? empty : safe;
+    const lane = weapon?.lane ?? candidates.sort((a, b) => Math.abs(a - previousLane) - Math.abs(b - previousLane))[0] ?? previousLane;
+    previousLane = lane;
+    for (const effect of simulation.advance(time, lane)) if (effect.type === 'hit') total += effect.damage;
   }
-  chart.bossMax = Math.max(1, total + (firstAfter === null ? 0 : 1));
-  chart.perfectDefeatTime = firstAfter ?? lastBefore ?? duration;
+  chart.referenceDamage = total;
+  chart.bossMax = Math.max(1, Math.ceil(total / (1 - chart.targetRemaining)));
   return chart;
 }
 
@@ -127,7 +132,7 @@ export class GameState {
             if (this.boss === 0) { this.defeatedAt = tick; effects.push({ type: 'victory', time: tick }); }
             return false;
           }
-          return projectilePoint(projectile, tick).z > -40;
+          return projectilePoint(projectile, tick).z > -70;
         });
       }
       if (this.health <= 0) { this.status = 'lost-health'; break; }
