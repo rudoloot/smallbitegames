@@ -5,8 +5,8 @@ const ED = (() => {
  const elements = {fire:{name:'불',color:'#fa876b',glyph:'🔥'},water:{name:'물',color:'#77c6f7',glyph:'💧'},wood:{name:'나무',color:'#a5d38e',glyph:'♣'},earth:{name:'땅',color:'#dbb779',glyph:'▲'},wind:{name:'바람',color:'#9de6d5',glyph:'≋'},neutral:{name:'무속성',color:'#ffffff',glyph:'◇'}};
  const strong = {fire:'wood',wood:'earth',earth:'wind',wind:'water',water:'fire'};
  const names=['철제 룬석','까마귀 깃털','황금 고리','불씨 부적','해일 진주','고목의 씨앗','산맥의 파편','백색 수정','여행자의 성배','쌍둥이 룬'];
- const descriptions=['방어 행동값 +2','바람 공격 +2','전투 골드 +20%','불 공격 +2','물 공격 +2','나무 공격 +2','땅 공격 +2','무속성 공격 +2','승리 시 체력 +5','오른쪽 주사위 2개 이상: 공격 +3'];
- const items={potion:{name:'체력포션',desc:'체력 30 회복',max:3,buy:15,sell:7},mana:{name:'마나포션',desc:'이번 맵 최대·현재 마나 +1 (상한 10)',max:3,buy:35,sell:17},revive:{name:'부활석',desc:'사망 시 체력 30 부활 예약',max:1,buy:60,sell:30}};
+ const descriptions=['방어 행동값 +2','바람 공격 +2','전투 골드 +20%','불 공격 +2','물 공격 +2','나무 공격 +2','땅 공격 +2','무속성 공격 +2','전투 시작 시 아군 카드 체력 +5','오른쪽 주사위 2개 이상: 공격 +3'];
+ const items={potion:{name:'체력포션',desc:'선택한 생존 카드 체력 30 회복',max:3,buy:15,sell:7},mana:{name:'마나포션',desc:'이번 맵 최대·현재 마나 +1 (상한 10)',max:3,buy:35,sell:17},revive:{name:'수호석',desc:'선택한 카드의 치명타를 한 번 막고 체력 30 회복',max:1,buy:60,sell:30}};
  const artifacts=names.map((name,i)=>{const id='A'+String(i+1).padStart(2,'0');items[id]={name,desc:descriptions[i],max:1,buy:70,sell:35,artifact:true};return id;});
  const kinds=['normal','normal','normal','town','normal','normal','elite','town','normal','normal','boss'];
  let seq=0;
@@ -14,8 +14,17 @@ const ED = (() => {
  const copy=x=>JSON.parse(JSON.stringify(x));
  const pick=(a,rng=Math.random)=>a[Math.floor(rng()*a.length)];
  function shuffle(a,rng=Math.random){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
- function initial(){return {version:2,balanceVersion:4,collection:Object.fromEntries(data.initial.map(id=>[id,1])),deck:[...data.initial],initialGranted:true,run:null,result:null};}
+ function initial(){return {version:2,balanceVersion:4,rulesVersion:3,collection:Object.fromEntries(data.initial.map(id=>[id,1])),deck:[...data.initial],initialGranted:true,run:null,result:null};}
  function migrateBalance(state){
+  if(state.rulesVersion!==3){
+   const r=state.run;
+   if(r){delete r.hp;delete r.maxHp;delete r.revive;r.roster=r.deck.map(id=>({uid:uid('roster'),id,fallen:false}));
+    // Preserve collection/map rewards, restart only an incompatible active encounter.
+    if(r.battle&&r.scene!=='reward'){r.battle=null;r.scene='map';r.mana=r.maxMana;}
+   }
+   state.rulesVersion=3;
+  }
+
   if(state.balanceVersion===4)return state;
   const r=state.run,b=r?.battle;
   if(b){
@@ -43,7 +52,7 @@ const ED = (() => {
    else if(kind==='elite')enemies=[pick(tier('중급'),rng),pick(tier('상급'),rng),tier('정예')[0]];
    else if(kind==='normal')enemies=i<2?[pick(tier('하급'),rng),pick(tier('하급'),rng)]:i===2?[pick(tier('하급'),rng),pick(tier('중급'),rng)]:i<6?[pick(tier('중급'),rng),pick(tier('상급'),rng)]:[pick(tier('상급'),rng),pick(tier('상급'),rng),tier('정예')[0]];
    return {kind,enemies};});
-  state.result=null;state.run={uid:uid('r'),culture,hp:100,maxHp:100,mana:3,maxMana:3,gold:0,revive:false,deck:[...state.deck],inventory:[{id:pick(artifacts,rng),count:1},null,null,null,null,null],node:0,scene:'map',stages,towns:{},battle:null,reward:null,startArtifactGranted:true,encountered:[],wins:0};return state.run;
+  state.result=null;state.run={uid:uid('r'),culture,mana:3,maxMana:3,gold:0,deck:[...state.deck],roster:state.deck.map(id=>({uid:uid('roster'),id,fallen:false})),inventory:[{id:pick(artifacts,rng),count:1},null,null,null,null,null],node:0,scene:'map',stages,towns:{},battle:null,reward:null,startArtifactGranted:true,encountered:[],wins:0};return state.run;
  }
  function endRun(state,status){const r=state.run;if(!r)return;state.result={status,culture:r.culture,wins:r.wins};state.run=null;}
  function makeCard(id,side,pos,boss=false){const c=byId[id];return {uid:uid(side),id,side,pos,boss,hp:c.hp,dead:false,L:[],R:[],used:false,shield:null};}
@@ -89,26 +98,39 @@ const ED = (() => {
  function startBattle(r,rng=Math.random){const stage=r.stages[r.node];if(stage.kind==='town')return;if(r.battle)return r.battle;
   const enemies=stage.enemies.map((id,i)=>makeCard(id,'e',i===3?4:i,stage.kind==='boss'&&i===3));
   r.encountered=[...new Set([...r.encountered,...stage.enemies])];
-  const b={uid:uid('b'),kind:stage.kind,phase:'e_roll',round:0,opening:true,enemies,players:[],deck:shuffle(r.deck,rng),discard:[],pPool:[],ePool:roll(enemies,rng),rollDisplay:[],plan:[],planIndex:0,queue:[],queueIndex:0,log:[],initialEnemies:[...stage.enemies]};
-  b.rollDisplay=copy(b.ePool);r.battle=b;r.scene='battle';return b;
+  const b={uid:uid('b'),kind:stage.kind,phase:'p_select',round:0,opening:true,enemies,players:[],selection:[],deck:[],discard:[],pPool:[],ePool:roll(enemies,rng),rollDisplay:[],plan:[],planIndex:0,queue:[],queueIndex:0,log:[],initialEnemies:[...stage.enemies]};
+  b.ePool=[];r.mana=r.maxMana;b.rollDisplay=[];r.battle=b;r.scene='battle';return b;
  }
- function draw(r,rng=Math.random){const b=r.battle;let count=0;while(r.mana>0&&b.players.length<6){
-   if(!b.deck.length){if(!b.discard.length)break;b.deck=shuffle(b.discard,rng);b.discard=[];}
-   const id=b.deck.shift(),pos=[3,4,5,0,1,2].find(p=>!b.players.some(c=>c.pos===p));b.players.push(makeCard(id,'p',pos));r.mana=Math.max(0,r.mana-byId[id].cost);count++;
-  }return count;
+ function availableCards(r){return r.roster.filter(c=>!c.fallen);}
+ function toggleCard(r,rosterId){const b=r.battle;if(b.phase!=='p_select')return false;
+  const entry=availableCards(r).find(c=>c.uid===rosterId);if(!entry)return false;
+  const index=b.selection.indexOf(rosterId);
+  if(index>=0){b.selection.splice(index,1);r.mana+=byId[entry.id].cost;return true;}
+  if(b.selection.length>=6||byId[entry.id].cost>r.mana)return false;
+  b.selection.push(rosterId);r.mana-=byId[entry.id].cost;return true;
  }
- function preparePlayer(r,rng=Math.random){const b=r.battle;b.discard.push(...b.players.map(c=>c.id));b.players=[];b.pPool=[];b.round++;b.opening=false;r.mana=r.maxMana;b.phase='p_prep';draw(r,rng);}
+ function deploy(r,rng=Math.random){const b=r.battle;if(b.phase!=='p_select'||!b.selection.length)return false;
+  const entries=b.selection.map(id=>availableCards(r).find(c=>c.uid===id));
+  if(entries.some(c=>!c)||entries.reduce((n,c)=>n+byId[c.id].cost,0)>r.maxMana)return false;
+  b.players=entries.map((entry,i)=>({...makeCard(entry.id,'p',[3,4,5,0,1,2][i]),rosterUid:entry.uid}));
+  if(has(r,'A09'))b.players.forEach(c=>{c.hp+=5;c.maxHp=byId[c.id].hp+5;});
+  b.ePool=roll(b.enemies,rng);b.rollDisplay=copy(b.ePool);b.phase='e_roll';return true;
+ }
+ function preparePlayer(r){const b=r.battle;b.pPool=[];b.players.forEach(clear);b.round++;b.opening=false;b.phase='p_prep';}
  function rollPlayer(r,rng=Math.random){const b=r.battle;if(b.phase!=='p_prep')return false;b.players.forEach(clear);b.pPool=roll(b.players,rng);b.rollDisplay=copy(b.pPool);b.phase='p_roll';return true;}
  function finishPlayerRoll(r){const b=r.battle;if(b.phase==='p_roll'){b.pPool=sorted(b.pPool);b.phase='p_place';}}
- function moveCard(b,id,pos){if(!['p_place','p_prep'].includes(b.phase))return false;const c=b.players.find(c=>c.uid===id);if(!c||pos<0||pos>5||!Number.isInteger(pos))return false;const other=b.players.find(x=>x.pos===pos);if(other)other.pos=c.pos;c.pos=pos;return true;}
- function placeDie(b,dieId,cardId,side){if(b.phase!=='p_place'||!['L','R'].includes(side))return false;const c=b.players.find(c=>c.uid===cardId),die=b.pPool.find(d=>d.uid===dieId);if(!c||!die)return false;const def=byId[c.id];if(c[side].length>=(side==='L'?def.leftSlots:def.rightSlots))return false;if(side==='R'&&c.R.some(d=>d.value!==die.value))return false;b.pPool=b.pPool.filter(d=>d.uid!==dieId);c[side].push(die);return true;}
+ function moveCard(b,id,pos){if(!['p_place','p_prep'].includes(b.phase))return false;const c=b.players.find(c=>c.uid===id);if(!c||c.dead||pos<0||pos>5||!Number.isInteger(pos))return false;const other=b.players.find(x=>x.pos===pos&&!x.dead);if(other)other.pos=c.pos;c.pos=pos;return true;}
+ function placeDie(b,dieId,cardId,side){if(b.phase!=='p_place'||!['L','R'].includes(side))return false;const c=b.players.find(c=>c.uid===cardId),die=b.pPool.find(d=>d.uid===dieId);if(!c||c.dead||!die)return false;const def=byId[c.id];if(c[side].length>=(side==='L'?def.leftSlots:def.rightSlots))return false;if(side==='R'&&c.R.some(d=>d.value!==die.value))return false;b.pPool=b.pPool.filter(d=>d.uid!==dieId);c[side].push(die);return true;}
  function removeDie(b,cardId,side,index){if(b.phase!=='p_place'||!['L','R'].includes(side))return false;const c=b.players.find(c=>c.uid===cardId);if(!c||!c[side][index])return false;b.pPool=sorted([...b.pPool,c[side].splice(index,1)[0]]);return true;}
  function confirm(r){const b=r.battle;if(b.phase!=='p_place')return false;for(const c of b.players){const a=action(c,r.inventory,b);c.shield=role(c)==='defense'&&a.valid?{value:a.value,element:a.element}:null;}b.pPool=[];b.phase='p_attack';return true;}
- function attackPreview(attacker,target,inv=[],battle=null){const a=action(attacker,inv,battle),element=target.side==='p'?byId[target.id].element:target.shield?.element||byId[target.id].element,mult=matchup(a.element,element),value=Math.floor(a.value*mult),defense=target.shield?.value||0;return {value,damage:Math.max(0,value-defense),breaks:value>defense,mult,defense,element:a.element};}
+ function attackPreview(attacker,target,inv=[],battle=null){const a=action(attacker,inv,battle),element=target.shield?.element||byId[target.id].element,mult=matchup(a.element,element),value=Math.floor(a.value*mult),defense=target.shield?.value||0;return {value,damage:Math.max(0,value-defense),breaks:value>defense,mult,defense,element:a.element};}
  function hit(r,attacker,target){if(!attacker||!target||attacker.dead||target.dead||attacker.used||role(attacker)!=='attack')return null;const a=action(attacker,attacker.side==='p'?r.inventory:[],r.battle);if(!a.valid)return null;
   const result=attackPreview(attacker,target,attacker.side==='p'?r.inventory:[],r.battle);
   if(result.breaks&&target.shield){target.shield=null;target.L=[];target.R=[];}
-  if(target.side==='e'){target.hp=Math.max(0,target.hp-result.damage);if(!target.hp){target.dead=true;clear(target);}}else{r.hp=Math.max(0,r.hp-result.damage);if(!r.hp&&r.revive){r.hp=30;r.revive=false;}}
+  target.hp=Math.max(0,target.hp-result.damage);
+  if(!target.hp&&target.guard){target.hp=Math.min(target.maxHp||byId[target.id].hp,30);target.guard=false;}
+  if(!target.hp){target.dead=true;clear(target);if(target.side==='p'){const entry=r.roster.find(c=>c.uid===target.rosterUid);if(entry)entry.fallen=true;}}
+  result.from=attacker.uid;result.to=target.uid;
   attacker.L=[];attacker.R=[];attacker.used=true;r.battle.log.push(`${byId[attacker.id].name} → ${byId[target.id].name}: ${result.value} 공격 − ${result.defense} 방어 = ${result.damage} 피해`);r.battle.log=r.battle.log.slice(-60);return result;
  }
  function playerAttack(r,from,to){const b=r.battle;if(b.phase!=='p_attack')return null;return hit(r,b.players.find(c=>c.uid===from),b.enemies.find(c=>c.uid===to));}
@@ -131,19 +153,26 @@ const ED = (() => {
  function enemyPlacementStep(r){const b=r.battle;if(b.phase!=='e_place')return false;if(b.planIndex<b.plan.length){const p=b.plan[b.planIndex++],c=b.enemies.find(c=>c.uid===p.uid);c.L=p.L;c.R=p.R;const used=new Set([...p.L,...p.R].map(d=>d.uid));b.ePool=b.ePool.filter(d=>!used.has(d.uid));const a=action(c,[],b);c.shield=role(c)==='defense'&&a.valid?{value:a.value,element:a.element}:null;return true;}b.ePool=[];b.queue=b.opening?[]:b.enemies.filter(c=>!c.dead&&role(c)==='attack'&&action(c,[],b).valid).map(c=>c.uid);b.queueIndex=0;b.phase='e_attack';return false;}
  function enemyAttackStep(r){const b=r.battle;if(b.phase!=='e_attack'||b.queueIndex>=b.queue.length)return null;const id=b.queue[b.queueIndex++],c=b.enemies.find(c=>c.uid===id),targets=b.players.filter(t=>!t.dead).sort((a,z)=>attackPreview(c,z,[],b).damage-attackPreview(c,a,[],b).damage);return hit(r,c,targets[0]);}
  function won(r){return r.battle.enemies.every(c=>c.dead);}
+ function lost(r){return r.battle.phase!=='p_select'&&r.battle.players.length>0&&r.battle.players.every(c=>c.dead);}
  const has=(r,id)=>r.inventory.some(s=>s?.id===id);
  function addItem(r,id){const def=items[id];if(!def)return false;const slot=r.inventory.find(s=>s?.id===id&&s.count<def.max);if(slot){slot.count++;return true;}const i=r.inventory.indexOf(null);if(i<0)return false;r.inventory[i]={id,count:1};return true;}
- function useItem(r,index){const slot=r.inventory[index],b=r.battle;if(!slot||!b||!['p_prep','p_place'].includes(b.phase))return false;if(slot.id==='potion'){if(r.hp===r.maxHp)return false;r.hp=Math.min(r.maxHp,r.hp+30);}else if(slot.id==='mana'){if(r.maxMana>=10)return false;r.maxMana++;r.mana=Math.min(r.maxMana,r.mana+1);if(b.phase==='p_prep')draw(r);}else if(slot.id==='revive'){if(r.revive)return false;r.revive=true;}else return false;if(--slot.count===0)r.inventory[index]=null;return true;}
- function victory(state,rng=Math.random){const r=state.run,b=r.battle;if(!won(r)||r.reward)return;const kind=b.kind;let gold=kind==='boss'?0:kind==='elite'?50:20;if(has(r,'A03'))gold=Math.floor(gold*1.2);r.gold+=gold;r.wins++;if(has(r,'A09'))r.hp=Math.min(r.maxHp,r.hp+5);
+ function useItem(r,index,cardId){const slot=r.inventory[index],b=r.battle;if(!slot||!b||!['p_select','p_prep','p_place'].includes(b.phase))return false;
+  const target=b.players.find(c=>c.uid===cardId&&!c.dead);
+  if(slot.id==='potion'){if(!target||target.hp>=(target.maxHp||byId[target.id].hp))return false;target.hp=Math.min(target.maxHp||byId[target.id].hp,target.hp+30);}
+  else if(slot.id==='mana'){if(r.maxMana>=10)return false;r.maxMana++;r.mana++;}
+  else if(slot.id==='revive'){if(!target||target.guard)return false;target.guard=true;}
+  else return false;if(--slot.count===0)r.inventory[index]=null;return true;
+ }
+ function victory(state,rng=Math.random){const r=state.run,b=r.battle;if(!won(r)||r.reward)return;const kind=b.kind;let gold=kind==='boss'?0:kind==='elite'?50:20;if(has(r,'A03'))gold=Math.floor(gold*1.2);r.gold+=gold;r.wins++;
   const card=kind==='normal'?pick(b.initialEnemies,rng):kind==='boss'?pick([...new Set(r.encountered)],rng):null;r.reward={kind,gold,card,choice:kind==='normal'?null:'done',items:kind==='elite'?Array.from({length:2},()=>({id:pick(Object.keys(items),rng),status:'pending'})):[]};if(kind==='boss')state.collection[card]=(state.collection[card]||0)+1;b.phase='won';r.scene='reward';
  }
  function chooseReward(state,choice){const r=state.run,q=r?.reward;if(!q||q.kind!=='normal'||q.choice!==null||!['card','mana'].includes(choice))return false;if(choice==='mana'){if(r.maxMana>=10)return false;r.maxMana++;r.mana=Math.min(r.maxMana,r.mana+1);}else state.collection[q.card]=(state.collection[q.card]||0)+1;q.choice=choice;return true;}
  function resolveRewardItem(r,index,replace){const it=r.reward?.items[index];if(!it||it.status!=='pending')return false;if(replace==='skip'){it.status='declined';return true;}if(Number.isInteger(replace)&&replace>=0&&replace<6){r.inventory[replace]={id:it.id,count:1};it.status='received';return true;}if(addItem(r,it.id)){it.status='received';return true;}return false;}
  function rewardNext(state){const r=state.run,q=r?.reward;if(!q||q.choice===null||q.items.some(i=>i.status==='pending'))return false;if(q.kind==='boss'){endRun(state,'cleared');return true;}r.node++;r.battle=null;r.reward=null;r.scene='map';return true;}
- function enterTown(r,rng=Math.random){if(!r.towns[r.node]){const stock={potion:3,mana:3,revive:1,[pick(artifacts,rng)]:1};let event='조용한 마을에서 잠시 쉬어 갑니다.',pending=null;if(rng()<.3){const type=pick(['gold','heal','gift'],rng);if(type==='gold'){r.gold+=15;event='여행 주머니에서 15골드를 얻었습니다.';}else if(type==='heal'){r.hp=Math.min(r.maxHp,r.hp+15);event='룬샘에서 체력을 15 회복했습니다.';}else{event='까마귀가 체력포션을 가져왔습니다.';if(!addItem(r,'potion'))pending='potion';}}r.towns[r.node]={stock,event,pending};}r.scene='town';}
+ function enterTown(r,rng=Math.random){if(!r.towns[r.node]){const stock={potion:3,mana:3,revive:1,[pick(artifacts,rng)]:1};let event='조용한 마을에서 잠시 쉬어 갑니다.',pending=null;if(rng()<.3){const type=pick(['gold','heal','gift'],rng);if(type==='gold'){r.gold+=15;event='여행 주머니에서 15골드를 얻었습니다.';}else if(type==='heal'){if(!addItem(r,'potion'))pending='potion';event='룬샘에서 카드 회복 포션을 얻었습니다.';}else{event='까마귀가 체력포션을 가져왔습니다.';if(!addItem(r,'potion'))pending='potion';}}r.towns[r.node]={stock,event,pending};}r.scene='town';}
  function buy(r,id){const t=r.towns[r.node],it=items[id];if(r.scene!=='town'||!it||!t?.stock[id]||r.gold<it.buy||!addItem(r,id))return false;r.gold-=it.buy;t.stock[id]--;return true;}
  function sell(r,index){const s=r.inventory[index];if(r.scene!=='town'||!s)return false;r.gold+=items[s.id].sell;if(--s.count===0)r.inventory[index]=null;return true;}
  function validate(b){const errors=[];for(const [cs,pool]of [[b.players,b.pPool],[b.enemies,b.ePool]]){const ids=pool.map(d=>d.uid),pos=new Set();for(const c of cs){if(pos.has(c.pos)&&!c.dead)errors.push('position');if(!c.dead)pos.add(c.pos);if(c.boss&&c.pos!==4)errors.push('boss position');if(c.L.length>byId[c.id].leftSlots||c.R.length>byId[c.id].rightSlots||new Set(c.R.map(d=>d.value)).size>1)errors.push('slots');ids.push(...c.L.map(d=>d.uid),...c.R.map(d=>d.uid));}if(new Set(ids).size!==ids.length)errors.push('duplicate dice');}return errors;}
- return {data,cards,byId,elements,items,artifacts,kinds,copy,pick,shuffle,initial,migrateBalance,newRun,endRun,makeCard,role,clear,matchup,conditionMet,action,roll,sorted,startBattle,draw,preparePlayer,rollPlayer,finishPlayerRoll,moveCard,placeDie,removeDie,confirm,attackPreview,hit,playerAttack,beginEnemy,planEnemy,enemyPlacementStep,enemyAttackStep,won,has,addItem,useItem,victory,chooseReward,resolveRewardItem,rewardNext,enterTown,buy,sell,validate};
+ return {data,cards,byId,elements,items,artifacts,kinds,copy,pick,shuffle,initial,migrateBalance,newRun,endRun,makeCard,role,clear,matchup,conditionMet,action,roll,sorted,startBattle,availableCards,toggleCard,deploy,preparePlayer,rollPlayer,finishPlayerRoll,moveCard,placeDie,removeDie,confirm,attackPreview,hit,playerAttack,beginEnemy,planEnemy,enemyPlacementStep,enemyAttackStep,won,lost,has,addItem,useItem,victory,chooseReward,resolveRewardItem,rewardNext,enterTown,buy,sell,validate};
 })();
 if(typeof module!=='undefined')module.exports=ED;

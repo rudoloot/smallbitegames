@@ -86,3 +86,24 @@
 
 /* Total action value sits immediately above the centered two-row dice array. */
 .board .card-power,.board .card.placing .card-power{top:calc(42.5% - 22cqi - 3px);bottom:auto;left:50%;right:auto;transform:translate(-50%,-100%);width:max-content;text-align:center;white-space:nowrap}
+/* Persistent battle controls: dice pool and controls scroll as one fixed dock. */
+.battle{padding-bottom:250px}
+.battle-dock{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,580px);z-index:14;background:#0b1722f5;border-top:1px solid #fff2;backdrop-filter:blur(14px)}
+.battle-dock .battle-footer{position:static;transform:none;width:100%;display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:16px;align-items:center;padding:10px 12px max(10px,env(safe-area-inset-bottom));border:0;background:none;backdrop-filter:none}
+.battle-dock .dice-zone,.battle-dock .dice-zone.rolling{margin:0;border:0;border-bottom:1px solid #c5ae773d;border-radius:0;min-height:78px;max-height:150px;padding:8px 12px;overflow:auto;overscroll-behavior:contain}
+.battle-dock .dice-head{margin-bottom:6px}.battle-dock .dice-hint{display:none}
+.battle-footer .resources{gap:6px}.battle-footer .resources small{font-size:10px;color:#8ad7ed}
+.battle-footer .mana-gems{flex-direction:column;gap:6px}.mana-gems i.locked{background:#1d303c;opacity:.5}.mana-gems i.spent{background:#345260}
+.battle-footer .inventory{grid-template-columns:repeat(3,30px);gap:4px}.battle-footer .inventory button{min-height:26px}
+.battle-footer .primary{height:56px;white-space:normal;padding:6px}
+.card-mana{top:auto;bottom:3px;right:3px;z-index:3;display:block;max-width:none;background:#08283bea;border:1px solid #8ad7ed77;border-radius:4px;padding:2px 4px;font-size:11px;font-weight:700;color:#a5eaff}
+.board .card-desc,.board .card.placing .card-desc{padding-right:27px}.card-hp{z-index:3;font-size:11px}
+.selection-panel{padding:16px 4px}.selection-panel h2{font-size:20px}.selection-panel p{font-size:12px;color:#a8bfcb;margin:10px 0}.selection-panel .catalog{margin-top:14px}
+.selection-panel .chosen{outline:2px solid #8ad7ed;border-radius:8px}.selection-panel .fallen{opacity:.45;filter:grayscale(1)}.selection-panel .catalog-entry>button{font-size:11px;padding:5px;margin-top:5px}
+.attack-projectile{position:fixed;z-index:90;pointer-events:none;font-size:36px;color:var(--e);text-shadow:0 0 12px var(--e),0 0 25px var(--e);border-radius:50%;filter:drop-shadow(0 0 8px var(--e))}
+.projectile-water{font-size:40px}.projectile-earth{font-size:44px}.projectile-wind{font-size:48px}.projectile-wood{font-size:42px}.projectile-neutral{font-size:40px}
+.card-slots .card-slot-column{height:100%;align-content:center}
+@media(max-width:360px){.battle-dock .battle-footer{gap:8px;padding-inline:8px}.battle-footer .inventory{grid-template-columns:repeat(3,25px)}.mana-gems .gem-row{gap:2px}.mana-gems i{width:8px}.battle-footer .resources{gap:3px}.card-hp{font-size:9px;padding:2px}.card-mana{font-size:9px}}
+
+.battle{padding-bottom:calc(var(--battle-dock-height,230px) + 18px)}
+.board .card{scroll-margin-top:70px;scroll-margin-bottom:calc(var(--battle-dock-height,230px) + 12px)}
