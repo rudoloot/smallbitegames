@@ -2,7 +2,7 @@
 const ED = (() => {
  const data = typeof ED_DATA !== 'undefined' ? ED_DATA : require('./data.js');
  const cards = data.cards, byId = Object.fromEntries(cards.map(c=>[c.id,c]));
- const elements = {fire:{name:'불',color:'#fa876b',glyph:'火'},water:{name:'물',color:'#77c6f7',glyph:'水'},wood:{name:'나무',color:'#a5d38e',glyph:'木'},earth:{name:'땅',color:'#dbb779',glyph:'土'},wind:{name:'바람',color:'#9de6d5',glyph:'風'},neutral:{name:'무속성',color:'#ffffff',glyph:'◇'}};
+ const elements = {fire:{name:'불',color:'#fa876b',glyph:'🔥'},water:{name:'물',color:'#77c6f7',glyph:'💧'},wood:{name:'나무',color:'#a5d38e',glyph:'♣'},earth:{name:'땅',color:'#dbb779',glyph:'▲'},wind:{name:'바람',color:'#9de6d5',glyph:'≋'},neutral:{name:'무속성',color:'#ffffff',glyph:'◇'}};
  const strong = {fire:'wood',wood:'earth',earth:'wind',wind:'water',water:'fire'};
  const names=['철제 룬석','까마귀 깃털','황금 고리','불씨 부적','해일 진주','고목의 씨앗','산맥의 파편','백색 수정','여행자의 성배','쌍둥이 룬'];
  const descriptions=['방어 행동값 +2','바람 공격 +2','전투 골드 +20%','불 공격 +2','물 공격 +2','나무 공격 +2','땅 공격 +2','무속성 공격 +2','승리 시 체력 +5','오른쪽 주사위 2개 이상: 공격 +3'];
