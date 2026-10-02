@@ -10,7 +10,7 @@
 @media(min-width:500px){.board .card,.field-cell{max-height:185px}.catalog{grid-template-columns:repeat(4,minmax(0,1fr))}.battle{padding-inline:16px}.card-bottom{font-size:10px}}
 @media(max-width:350px){.content{padding:18px 12px}.battle{padding-inline:6px}.board{gap:4px;padding:4px}.card-bottom{font-size:7px;left:3px;right:3px}.card-mana i{width:4px;height:7px}.die{width:29px;height:29px;min-height:29px}.slots{gap:7px}.slot-group{gap:3px}.hero{padding-inline:22px}.health{width:39px;height:39px}.resources{gap:6px}.inventory{grid-template-columns:repeat(3,26px)}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
-.card-image{visibility:hidden}.card.loaded .card-image{visibility:visible}.battle .card{touch-action:none}
+.card-image{visibility:hidden}.card.loaded .card-image{visibility:visible}.battle .card{touch-action:pan-y pinch-zoom}
 .card-bottom{bottom:20%;font-size:8px}.card-desc{position:absolute;bottom:3%;left:7%;right:7%;font-size:8px;line-height:1.35;max-height:16%;overflow:hidden;text-shadow:0 1px 3px #000;color:#f1f0e3}.damage-preview{position:absolute;top:38%;left:4px;right:4px;text-align:center;padding:5px 2px;background:#382b1eea;border:1px solid #e1b785;border-radius:4px;color:#ffe2b7;font-size:11px;pointer-events:none}.detail-card .card-desc{font-size:12px}.card-power{bottom:31%}.mini-dice{bottom:31%}
 
 /* Direct dice placement on the battlefield cards. */
@@ -107,3 +107,12 @@
 
 .battle{padding-bottom:calc(var(--battle-dock-height,230px) + 18px)}
 .board .card{scroll-margin-top:70px;scroll-margin-bottom:calc(var(--battle-dock-height,230px) + 12px)}
+
+/* Card swipes belong to native page scrolling; only pool dice capture touch drags. */
+.card,.card .slot,.card .die{touch-action:pan-y pinch-zoom}
+.battle-dock .battle-footer{grid-template-columns:minmax(0,1fr) auto minmax(100px,1.2fr);gap:14px;padding-inline:16px}
+.battle-footer .resources{justify-content:center}
+.battle-footer .mana-gems{gap:5px}.battle-footer .mana-gems .gem-row{gap:4px}.battle-footer .mana-gems i{width:12px;height:17px}
+.battle-footer .inventory{grid-template-columns:repeat(3,32px);gap:4px}.battle-footer .inventory button{height:28px;min-height:28px}
+.battle-footer .primary{height:46px;min-height:46px;max-width:144px;width:100%;justify-self:center;font-size:11px;padding:5px 8px}
+@media(max-width:360px){.battle-dock .battle-footer{grid-template-columns:minmax(0,1fr) auto minmax(90px,1.2fr);gap:10px;padding-inline:10px}.battle-footer .inventory{grid-template-columns:repeat(3,28px)}.battle-footer .mana-gems .gem-row{gap:3px}.battle-footer .mana-gems i{width:10px;height:15px}}
