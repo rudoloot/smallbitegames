@@ -1,6 +1,6 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=bc355bd9d3f0';
-import { weaponForId, DROP_WEAPONS } from './weapons.js?v=bc355bd9d3f0';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose } from './projectiles.js?v=bc355bd9d3f0';
+import { clamp, seededRandom, RULES } from './engine.js?v=6881de7cd7ab';
+import { weaponForId, DROP_WEAPONS } from './weapons.js?v=6881de7cd7ab';
+import { projectileSpeed, projectilePoint, intersectBoss, bossPose } from './projectiles.js?v=6881de7cd7ab';
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
 export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) {
@@ -34,7 +34,7 @@ export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) 
   }
   events.sort((a, b) => a.time - b.time || (a.type === 'note' ? -1 : 1));
   events.forEach((event, id) => { event.id = id; });
-  const chart = { duration, events, beat, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm, sections: [], noteCount: events.filter(e => e.type === 'note').length, bossMax: 1e12 };
+  const chart = { duration, events, beat, seed, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm, sections: [], noteCount: events.filter(e => e.type === 'note').length, bossMax: 1e12 };
   // Upper bound: collect every usable drop, no stun, and all bullets that can
   // arrive before song end hit. Actual dodge/misses reduce realized damage.
   const drops = events.filter(e => e.type === 'weapon');
@@ -47,7 +47,7 @@ export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) 
     }
   }
   chart.maximumDamage = maximumDamage;
-  chart.bossMax = Math.max(1, Math.round(maximumDamage * .7));
+  chart.bossMax = Math.max(1, Math.round(maximumDamage * .5));
   return chart;
 }
 
@@ -60,7 +60,9 @@ export class GameState {
     this.combo = 0; this.maxCombo = 0; this.index = 0; this.lastShot = 0;
     this.nextShot = this.interval; this.stunnedUntil = 0; this.invincibleUntil = 0;
     this.defeatedAt = null; this.status = 'playing';
-    this.bossMotion = { from: 0, to: 0, start: 0, end: 0 };
+    this.bossLane = 1; this.bossMoveAt = Infinity;
+    this.bossRandom = seededRandom(Math.imul(chart.seed ?? 42, 0x9e3779b1) ^ 0x7b05);
+    this.bossMotion = { from: laneX(this.bossLane), to: laneX(this.bossLane), start: 0, end: 0 };
     this.projectiles = []; this.projectileSerial = 0; this.physicsStep = 1;
   }
   get weapon() { return weaponForId(this.weaponId); }
@@ -105,7 +107,7 @@ export class GameState {
         if (tick >= this.stunnedUntil) {
           const weapon = this.weapon, pellets = Math.min(weapon.pellets, this.ammo);
           const projectiles = Array.from({ length: pellets }, (_, i) => ({
-            id: this.projectileSerial++, weapon: this.weaponId, time: tick, damage: this.power,
+            id: this.projectileSerial++, lane, weapon: this.weaponId, time: tick, damage: this.power,
             x: laneX(lane) + (pellets > 1 ? (i ? -.26 : .26) : .22), y: .8, z: 2.65,
             speed: projectileSpeed(this.weaponId), checkedAt: tick,
           }));
@@ -117,18 +119,22 @@ export class GameState {
         this.nextShot = tick + this.interval;
       } else {
         this.physicsStep++;
+        if (this.boss > 0 && tick >= this.bossMoveAt) {
+          const choices = [0, 1, 2, 3].filter(l => l !== this.bossLane);
+          this.bossLane = choices[Math.floor(this.bossRandom() * choices.length)];
+          const x = laneX(this.bossLane);
+          this.bossMotion = { from: x, to: x, start: tick, end: tick };
+          this.bossMoveAt = Infinity;
+          effects.push({ type: 'boss-move', lane: this.bossLane, time: tick });
+        }
         this.projectiles = this.projectiles.filter(projectile => {
-          const point = this.boss > 0 ? intersectBoss(projectile, projectile.checkedAt, tick, t => bossPose(t, this.bossMotion)) : null;
+          const point = this.boss > 0 && projectile.lane === this.bossLane ? intersectBoss(projectile, projectile.checkedAt, tick, t => bossPose(t, this.bossMotion)) : null;
           projectile.checkedAt = tick;
           if (point) {
             const damage = Math.min(this.boss, projectile.damage); this.boss -= damage; this.lastHit = tick;
             effects.push({ type: 'hit', id: projectile.id, weapon: projectile.weapon, damage, point, time: tick });
-            if (this.boss > 0 && tick >= this.bossMotion.end + .6) {
-              const current = bossPose(tick, this.bossMotion).x;
-              const target = projectile.x >= current ? -2.1 : 2.1;
-              // If cornered, cross to the other side instead of moving off-road.
-              this.bossMotion = { from: current, to: Math.abs(target-current) < .3 ? -target : target, start: tick, end: tick + 1.1 };
-            }
+            // Subsequent hits never restart the first-hit countdown.
+            if (this.boss > 0 && this.bossMoveAt === Infinity) this.bossMoveAt = tick + 2;
             if (this.boss === 0) { this.defeatedAt = tick; effects.push({ type: 'victory', time: tick }); }
             return false;
           }

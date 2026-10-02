@@ -1,5 +1,5 @@
 // Shared world-space geometry for simulation and rendering. Bullets never home.
-export function bossPose(time, motion = { from: 0, to: 0, start: 0, end: 0 }) {
+export function bossPose(time, motion = { from: -.61, to: -.61, start: 0, end: 0 }) {
   const t = motion.end > motion.start ? Math.max(0, Math.min(1, (time - motion.start) / (motion.end - motion.start))) : 1;
   const blend = t * t * (3 - 2 * t);
   return { x: motion.from + (motion.to - motion.from) * blend, y: 1.05, z: -52 };
