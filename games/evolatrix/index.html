@@ -64,7 +64,7 @@ html,body{background:#85dcd9}body{background:#85dcd9}#app{max-width:none;backgro
     const hypot = Math.hypot, dist = (a, b) => hypot(a.x - b.x, a.y - b.y);
     const angleDelta = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
     const key = (x, y) => `${x},${y}`;
-    const CFG = Object.freeze({ baseSpeed: 2.25, forceSpeed: 2.25, baseTurn: 4.4, turnBonus: 1, acceleration: 1.08, braking: 2.475, foodRadius: .38, foodRestitution: .75, foodDrag: 1.8, spawnMargin: 6, playerScreenY: 1 / 3, archiveLimit: 100, archiveMinCells: 10, birthSeconds: .75, metabolism: .035, moveMetabolism: .45, starvation: .32, armor: 5, poisonFractionPerSecond: .01, poisonSeconds: 5, energyPerCell: 10, foodEnergy: 5, healthPerCell: 5, fatHealthBonus: 20, healingFraction: .01, cellMeters: .001, foodPerSquareMeterMinute: 60000, baseSight: 3.7, eyeSight: 5, chunk: 18, activeLimit: 96, aiCellLimit: 25, birthGrace: 4, hitCooldown: .7, autoSaveSeconds: 15 });
+    const CFG = Object.freeze({ baseSpeed: 2.25, forceSpeed: 2.25, baseTurn: 4.4, turnBonus: 1, acceleration: 1.08, braking: 2.475, foodRadius: .38, rainLifetime: 120, foodRestitution: .75, foodDrag: 1.8, spawnMargin: 6, playerScreenY: 1 / 3, archiveLimit: 100, archiveMinCells: 10, birthSeconds: .75, metabolism: .035, moveMetabolism: .45, starvation: .32, armor: 5, poisonFractionPerSecond: .01, poisonSeconds: 5, energyPerCell: 10, foodEnergy: 5, healthPerCell: 5, fatHealthBonus: 20, healingFraction: .01, cellMeters: .001, foodPerSquareMeterMinute: 60000, baseSight: 3.7, eyeSight: 5, chunk: 18, activeLimit: 96, aiCellLimit: 25, birthGrace: 4, hitCooldown: .7, autoSaveSeconds: 15 });
     const TYPES = {
         normal: { name: '일반세포', color: '#57a961', desc: '양분 흡수 · 체력 +5', icon: '<circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>' },
         fat: { name: '지방세포', color: '#e2b55c', desc: '체력 +25 (기본 5 + 지방 20) · 흡수 불가', icon: '<circle cx="8" cy="9" r="4"/><circle cx="16" cy="15" r="5"/>' },
@@ -368,9 +368,19 @@ html,body{background:#85dcd9}body{background:#85dcd9}#app{max-width:none;backgro
         return f;
     }
     function rainFood() {
-        const b = observationBounds(24);
+        for(const f of W.loose) if(f.drop && W.time-f.born>=CFG.rainLifetime) f.alive=false;
+        const b = observationBounds(CFG.spawnMargin);
         for (const ch of W.chunks.values()) {
-            if ((ch.cx+1)*CFG.chunk < b.left || ch.cx*CFG.chunk > b.right || (ch.cy+1)*CFG.chunk < b.top || ch.cy*CFG.chunk > b.bottom) continue;
+            // Only rainfall expires; corpse nutrients and the initial food retain their rules.
+            for (const f of ch.foods) if (f.drop && W.time-f.born >= CFG.rainLifetime) f.alive=false;
+            ch.foods=ch.foods.filter(f=>f.alive);
+            const elapsed=Math.max(0,W.time-(ch.rainCheckedAt??W.time));ch.rainCheckedAt=W.time;
+            if ((ch.cx+1)*CFG.chunk < b.left || ch.cx*CFG.chunk > b.right || (ch.cy+1)*CFG.chunk < b.top || ch.cy*CFG.chunk > b.bottom) {
+                if(Number.isFinite(ch.nextDrop)) ch.nextDrop+=elapsed;
+                continue;
+            }
+            // Old saves may contain hours of inactive rainfall debt.
+            if(ch.nextDrop < W.time-CFG.rainLifetime) ch.nextDrop=W.time+rainDelay(ch.cx,ch.cy,ch.rainIndex||0);
             if (!Number.isFinite(ch.nextDrop)) { ch.rainIndex=0; ch.nextDrop=W.time+rainDelay(ch.cx,ch.cy,0); }
             while (ch.nextDrop <= W.time) {
                 spawnDrop(ch, ch.nextDrop, ch.rainIndex);
@@ -479,7 +489,7 @@ html,body{background:#85dcd9}body{background:#85dcd9}#app{max-width:none;backgro
         const k = key(cx, cy);
         if (W.chunks.has(k)) return W.chunks.get(k);
         const r = rng(hash2(cx, cy, W.seed));
-        const chunk = { cx, cy, foods: [], pending: [], rocks: makeRocks(cx, cy), rainIndex: 0, nextDrop: W.time + rainDelay(cx, cy, 0) };
+        const chunk = { cx, cy, foods: [], pending: [], rocks: makeRocks(cx, cy), rainIndex: 0, nextDrop: W.time + rainDelay(cx, cy, 0), rainCheckedAt: W.time };
         W.chunks.set(k, chunk);
         const n = 2 + Math.floor(r() * 2);
         for (let i = 0; i < n; i++) {
@@ -1164,7 +1174,7 @@ html,body{background:#85dcd9}body{background:#85dcd9}#app{max-width:none;backgro
         }
         W.nextId = Math.max(data.nextId, ...W.entities.map(e => e.id + 1));
         for (const c of data.chunks)
-            W.chunks.set(key(c.cx, c.cy), { cx: c.cx, cy: c.cy, rocks: makeRocks(c.cx, c.cy), rainIndex: c.rainIndex || 0, nextDrop: c.nextDrop ?? W.time + rainDelay(c.cx, c.cy, 0), pending: (c.pending || []).map(p => ({ ...p })), foods: c.foods.filter(f => f.alive).map(f => ({ ...f, vx: f.vx || 0, vy: f.vy || 0, chunkKey: key(c.cx, c.cy) })) });
+            W.chunks.set(key(c.cx, c.cy), { cx: c.cx, cy: c.cy, rocks: makeRocks(c.cx, c.cy), rainCheckedAt: W.time, rainIndex: c.rainIndex || 0, nextDrop: c.nextDrop ?? W.time + rainDelay(c.cx, c.cy, 0), pending: (c.pending || []).map(p => ({ ...p })), foods: c.foods.filter(f => f.alive).map(f => ({ ...f, vx: f.vx || 0, vy: f.vy || 0, chunkKey: key(c.cx, c.cy) })) });
         player = W.entities.find(e => e.id === data.playerId);
         for (const h of data.history || []) W.history.set(canonical(h.cells), { cells: normalize(h.cells), generation: h.generation });
         // Old saves did not track player-design history. Preserve existing organisms,
@@ -1208,11 +1218,45 @@ html,body{background:#85dcd9}body{background:#85dcd9}#app{max-width:none;backgro
         if (r < 1)
             value = Math.max(value, clamp((1 - r) * 2.4, 0, 1));
     } return value; }
+    // Fixed world-space regions: growth changes the view, never moves biome boundaries.
+    const SEA_THEMES=[
+        {name:'얕은 바다',color:[24,133,148],accent:'#b6e8ca'},
+        {name:'해초 숲',color:[22,103,100],accent:'#70c99b'},
+        {name:'산호 정원',color:[46,96,139],accent:'#eda0bd'},
+        {name:'생물발광 해역',color:[29,46,94],accent:'#72e9ed'},
+        {name:'열수 심해',color:[20,35,53],accent:'#cf966e'}
+    ];
+    function seaTheme(x,y){
+        const origin=W.playerBirth||{x:0,y:0},dx=x-origin.x,dy=y-origin.y,d=hypot(dx,dy);
+        const distance=d*(1+.12*Math.sin(Math.atan2(dy,dx)*3));
+        const stops=[0,90,210,390,660];let i=0;
+        while(i<stops.length-2&&distance>stops[i+1])i++;
+        const t=clamp((distance-stops[i])/(stops[i+1]-stops[i]),0,1),blend=t*t*(3-2*t);
+        return {index:i,blend,distance:d,scale:1+3*(1-Math.exp(-d/260)),color:SEA_THEMES[i].color.map((c,k)=>lerp(c,SEA_THEMES[i+1].color[k],blend))};
+    }
+    function drawSeabed(){
+        const grid=24,b=observationBounds(18);
+        for(let gx=Math.floor(b.left/grid);gx<=Math.floor(b.right/grid);gx++)for(let gy=Math.floor(b.top/grid);gy<=Math.floor(b.bottom/grid);gy++){
+            const random=rng(hash2(gx,gy,W.seed^0x6b92)),x=(gx+random())*grid,y=(gy+random())*grid,p=seaTheme(x,y);
+            if(random()>1/Math.sqrt(p.scale))continue;
+            const size=(.8+random()*.9)*p.scale,phase=random()*TAU;
+            for(const [index,weight] of [[p.index,1-p.blend],[p.index+1,p.blend]]){
+                if(weight<.005)continue;
+                ctx.save();ctx.translate(sx(x),sy(y));ctx.scale(unit*size,unit*size);ctx.globalAlpha=weight*.38;ctx.strokeStyle=SEA_THEMES[index].accent;ctx.fillStyle=SEA_THEMES[index].accent;ctx.lineWidth=.055;
+                if(index===0){for(let j=0;j<3;j++){ctx.beginPath();ctx.ellipse(0,j*.3,1.2,.22,0,Math.PI,TAU);ctx.stroke();}}
+                else if(index===1||index===2){for(let j=-2;j<=2;j++){const bend=Math.sin(realTime*.6+phase+j)*.18;ctx.beginPath();ctx.moveTo(j*.18,0);ctx.bezierCurveTo(j*.2+.3,-.5,j*.24+bend,-1.1,j*.32+bend,-1.8+Math.abs(j)*.25);ctx.stroke();if(index===2){for(let k=1;k<4;k++){ctx.beginPath();ctx.moveTo(j*.2,-k*.35);ctx.lineTo(j*.2+(k%2?-.35:.35),-k*.35-.24);ctx.stroke();}}}}
+                else if(index===3){for(let j=0;j<5;j++){const a=j*TAU/5+phase;ctx.beginPath();ctx.ellipse(Math.cos(a)*.8,Math.sin(a)*.6,.18,.32,a,0,TAU);ctx.fill();}}
+                else{ctx.beginPath();ctx.moveTo(-.6,.3);ctx.lineTo(-.3,-1.2);ctx.lineTo(.12,-1.5);ctx.lineTo(.45,.3);ctx.closePath();ctx.fill();for(let j=0;j<4;j++){const rise=(realTime*.18+j*.4)%1.6;ctx.beginPath();ctx.arc(Math.sin(phase+j)*.12,-1.5-rise,.08+rise*.15,0,TAU);ctx.stroke();}}
+                ctx.restore();
+            }
+        }
+    }
     function water() {
         const bg=ctx.createLinearGradient(0,0,screenW,screenH);
-        bg.addColorStop(0,'#238f9c');bg.addColorStop(.45,'#147e90');bg.addColorStop(1,'#075269');ctx.fillStyle=bg;ctx.fillRect(0,0,screenW,screenH);
+        const p=seaTheme(camera.x,camera.y),rgb=(c,m)=>'rgb('+c.map(v=>Math.round(v*m)).join(',')+')';
+        bg.addColorStop(0,rgb(p.color,1.15));bg.addColorStop(.45,rgb(p.color,1));bg.addColorStop(1,rgb(p.color,.65));ctx.fillStyle=bg;ctx.fillRect(0,0,screenW,screenH);
         const sun=ctx.createRadialGradient(screenW*.32,-screenH*.08,0,screenW*.32,0,screenH*.95);
-        sun.addColorStop(0,'#c3fff4ba');sun.addColorStop(.23,'#58e6da55');sun.addColorStop(1,'#38c9cc00');ctx.fillStyle=sun;ctx.fillRect(0,0,screenW,screenH);
+        ctx.save();ctx.globalAlpha=Math.max(.12,1-p.distance/700);sun.addColorStop(0,'#c3fff4ba');sun.addColorStop(.23,'#58e6da55');sun.addColorStop(1,'#38c9cc00');ctx.fillStyle=sun;ctx.fillRect(0,0,screenW,screenH);
         ctx.save();ctx.globalCompositeOperation='screen';
         for(let i=0;i<8;i++){
             const x=screenW*(.1+i*.087)+Math.sin(realTime*.09+i)*18,w=screenW*(.032+(i%3)*.019);
@@ -1220,7 +1264,8 @@ html,body{background:#85dcd9}body{background:#85dcd9}#app{max-width:none;backgro
             const ray=ctx.createRadialGradient(0,0,0,0,0,1);ray.addColorStop(0,'#dcfff960');ray.addColorStop(.3,'#b3fff32a');ray.addColorStop(.7,'#80efe00c');ray.addColorStop(1,'#80efff00');
             ctx.fillStyle=ray;ctx.fillRect(-1,-1,2,2);ctx.restore();
         }
-        ctx.restore();
+        ctx.restore();ctx.restore();
+        drawSeabed();
         // Irregular soft refracted light, with no tiled outlines on the water.
         for(let i=0;i<12;i++){
             const random=rng(hash2(i,975,W.seed)),x=random()*screenW+Math.sin(realTime*.08+i)*20,y=random()*screenH;
@@ -1242,7 +1287,7 @@ html,body{background:#85dcd9}body{background:#85dcd9}#app{max-width:none;backgro
     function drawFood(f) {
         drawSplash(f);const visible=visibilityAt(f.x,f.y);if(visible<.015)return;
         const x=sx(f.x),y=sy(f.y),r=unit*CFG.foodRadius;if(x<-r||y<-r||x>screenW+r||y>screenH+r)return;
-        ctx.save();ctx.globalAlpha=visible*(f.drop?clamp((W.time-f.born)/.25,.15,1):1);
+        ctx.save();ctx.globalAlpha=f.drop?clamp((CFG.rainLifetime-(W.time-f.born))/10,0,1):1;ctx.globalAlpha*=visible*(f.drop?clamp((W.time-f.born)/.25,.15,1):1);
         const halo=ctx.createRadialGradient(x,y,r*.3,x,y,r*1.9);halo.addColorStop(0,f.poison?'#dca0fa65':'#ffe38765');halo.addColorStop(1,'#ffe38700');ctx.fillStyle=halo;ctx.beginPath();ctx.arc(x,y,r*1.9,0,TAU);ctx.fill();
         const orb=ctx.createRadialGradient(x-r*.35,y-r*.4,r*.05,x,y,r);
         orb.addColorStop(0,f.poison?'#fff0ff':'#fffbd3');orb.addColorStop(.32,f.poison?'#dfb1f4':'#ffe486');orb.addColorStop(.75,f.poison?'#a261c5':'#dca83e');orb.addColorStop(1,f.poison?'#764299':'#aa761e');
@@ -1820,7 +1865,7 @@ html,body{background:#85dcd9}body{background:#85dcd9}#app{max-width:none;backgro
     } requestAnimationFrame(frame); }
     // Debug hooks are opt-in and excluded from normal gameplay. Used by the included tests.
     if (new URLSearchParams(location.search).has('test'))
-        window.CELLTIDE = { get world() { return W; }, get player() { return player; }, get mode() { return mode; }, get editorView() { return editorView; }, get slots() { return editorSlots; }, get selection() { return selection; }, get active() { return active; }, get foodVisible() { return foodVisible; }, get unit() { return unit; }, sy, archiveKey: ARCHIVE_KEY, get archive(){return rankArchive(creatureArchive);}, rankArchive, readArchive, reloadArchive, rememberEndedCreature, get rocks() { return rocksVisible; }, rainRate, rainDelay, spawnDrop, rainFood, rockProfile, makeRocks, connectedGroups, rockAt, circleRock, polygonContact, collideRocks, bounceFoodOnRocks, contactPoison, mutationWeights: MUTATION_WEIGHTS, targetUnit, getReturnUrl, exitGame, rearrangementLimit, wildDistanceProfile, rearrangedCells, rearrangementDraft, relocationSlots, aiRearrangement, get rearrangeMoves(){return rearrangeMoves;}, config: CFG, types: TYPES, newWorld, step, render, statsFor, connected, symmetric, canonical, normalize, legalSlots, mutatedCells, drawOptions, makeEntity, rebuild, worldCells, impactBudget, armorLayers, distributeDamage, poisonComponent, addPoison, metabolism, absorb, nutrientContact, updateFood, relocateFood, eat, kill, rememberShape, chooseWildShape, observationBounds, inObservation, spawnPending, generateChunk, emerging, inheritanceCandidates, healthScore, evolveEntity, moveEntity, collectLights, validateSave, snapshot, restore, prepareActive, ensureWorld, collide, setMode, updateHUD, openChoices, openEditor, drawBuilder, rng, forceReady(auto = false) { player.energy = player.cap; player.ready = true; player.evolutionPrompted = !auto; updateHUD(); }, isolate() { W.entities = [player]; W.chunks = new Map(); W.loose = []; active = [player]; foodVisible = []; foodHash = new SpatialHash(3); rocksVisible = []; rockHash = new SpatialHash(8); }, setPlayer(e) { player = e; camera = { x: e.x, y: e.y }; prepareActive(); } };
+        window.CELLTIDE = { get world() { return W; }, get player() { return player; }, get mode() { return mode; }, get editorView() { return editorView; }, get slots() { return editorSlots; }, get selection() { return selection; }, get active() { return active; }, get foodVisible() { return foodVisible; }, get unit() { return unit; }, sy, archiveKey: ARCHIVE_KEY, get archive(){return rankArchive(creatureArchive);}, rankArchive, readArchive, reloadArchive, rememberEndedCreature, get rocks() { return rocksVisible; }, seaTheme, rainRate, rainDelay, spawnDrop, rainFood, rockProfile, makeRocks, connectedGroups, rockAt, circleRock, polygonContact, collideRocks, bounceFoodOnRocks, contactPoison, mutationWeights: MUTATION_WEIGHTS, targetUnit, getReturnUrl, exitGame, rearrangementLimit, wildDistanceProfile, rearrangedCells, rearrangementDraft, relocationSlots, aiRearrangement, get rearrangeMoves(){return rearrangeMoves;}, config: CFG, types: TYPES, newWorld, step, render, statsFor, connected, symmetric, canonical, normalize, legalSlots, mutatedCells, drawOptions, makeEntity, rebuild, worldCells, impactBudget, armorLayers, distributeDamage, poisonComponent, addPoison, metabolism, absorb, nutrientContact, updateFood, relocateFood, eat, kill, rememberShape, chooseWildShape, observationBounds, inObservation, spawnPending, generateChunk, emerging, inheritanceCandidates, healthScore, evolveEntity, moveEntity, collectLights, validateSave, snapshot, restore, prepareActive, ensureWorld, collide, setMode, updateHUD, openChoices, openEditor, drawBuilder, rng, forceReady(auto = false) { player.energy = player.cap; player.ready = true; player.evolutionPrompted = !auto; updateHUD(); }, isolate() { W.entities = [player]; W.chunks = new Map(); W.loose = []; active = [player]; foodVisible = []; foodHash = new SpatialHash(3); rocksVisible = []; rockHash = new SpatialHash(8); }, setPlayer(e) { player = e; camera = { x: e.x, y: e.y }; prepareActive(); } };
     resize();
     newWorld();
     setMode('splash');
