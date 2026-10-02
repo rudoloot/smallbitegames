@@ -1,5 +1,9 @@
 // Shared world-space geometry for simulation and rendering. Bullets never home.
-export const bossPose = time => ({ x: Math.sin(time * .7) * 1.7, y: 1.05 + Math.sin(time * 2) * .12, z: -52 });
+export function bossPose(time, motion = { from: 0, to: 0, start: 0, end: 0 }) {
+  const t = motion.end > motion.start ? Math.max(0, Math.min(1, (time - motion.start) / (motion.end - motion.start))) : 1;
+  const blend = t * t * (3 - 2 * t);
+  return { x: motion.from + (motion.to - motion.from) * blend, y: 1.05, z: -52 };
+}
 export const projectileSpeed = weapon => weapon === 'rail' ? 260 : weapon === 'rocket' ? 85 : 115;
 export const projectileRadius = weapon => weapon === 'rocket' ? .18 : weapon === 'rail' ? .045 : .07;
 const parts = [
@@ -11,9 +15,9 @@ export function projectilePoint(projectile, time) {
   return { x: projectile.x, y: projectile.y, z: projectile.z - projectile.speed * (time - projectile.time) };
 }
 // Swept ellipsoid intersection includes boss motion and avoids tunnelling at low FPS.
-export function intersectBoss(projectile, fromTime, toTime) {
+export function intersectBoss(projectile, fromTime, toTime, pose = bossPose) {
   const from = projectilePoint(projectile, fromTime), to = projectilePoint(projectile, toTime);
-  const bossFrom = bossPose(fromTime), bossTo = bossPose(toTime), radius = projectileRadius(projectile.weapon);
+  const bossFrom = pose(fromTime), bossTo = pose(toTime), radius = projectileRadius(projectile.weapon);
   let first = Infinity;
   for (const part of parts) {
     const p = ['x', 'y', 'z'].map(axis => (from[axis] - bossFrom[axis] - part[axis]) / (part['r' + axis] + radius));

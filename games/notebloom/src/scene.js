@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { terrainSlope } from './terrain.js?v=b3c1948aa802';
-import { weaponForId } from './weapons.js?v=b3c1948aa802';
-import { buildWeaponModel } from './weapon-model.js?v=b3c1948aa802';
-import { bossPose, projectilePoint } from './projectiles.js?v=b3c1948aa802';
+import { terrainSlope } from './terrain.js?v=bc355bd9d3f0';
+import { weaponForId } from './weapons.js?v=bc355bd9d3f0';
+import { buildWeaponModel } from './weapon-model.js?v=bc355bd9d3f0';
+import { bossPose, projectilePoint } from './projectiles.js?v=bc355bd9d3f0';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -406,7 +406,7 @@ export class World {
     this.setGunLevel(state?.weaponId || 'pistol');
     const rotor = this.gunModels.get(this.gunId)?.userData.rotor; if (rotor && moving) rotor.rotation.z += dt * 24;
     this.boss.visible = !state || state.boss > 0 || showHome;
-    const bossPosition = bossPose(time); this.boss.position.set(bossPosition.x, bossPosition.y, bossPosition.z);
+    const bossPosition = bossPose(time, state?.bossMotion); this.boss.position.set(bossPosition.x, bossPosition.y, bossPosition.z);
     this.boss.rotation.z = 0; this.bossCore.rotation.y = time; this.bossRing.rotation.z = time * .3;
     for (let i = 0; i < this.beatLines.length; i++) this.beatLines[i].position.z = 9 - ((i * 3 + 80 - time * 7 * SCROLL_SPEED % 78) % 78);
     for (let i = 0; i < this.garden.length; i++) { this.garden[i].position.z = 13 - ((i * 3.1 + 105 - time * 3 * SCROLL_SPEED % 99.2) % 99.2); }
