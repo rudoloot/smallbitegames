@@ -1,6 +1,6 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=6881de7cd7ab';
-import { weaponForId, DROP_WEAPONS } from './weapons.js?v=6881de7cd7ab';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose } from './projectiles.js?v=6881de7cd7ab';
+import { clamp, seededRandom, RULES } from './engine.js?v=d1310a12066c';
+import { weaponForId, DROP_WEAPONS } from './weapons.js?v=d1310a12066c';
+import { projectileSpeed, projectilePoint, intersectBoss, bossPose } from './projectiles.js?v=d1310a12066c';
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
 export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) {
@@ -120,15 +120,19 @@ export class GameState {
       } else {
         this.physicsStep++;
         if (this.boss > 0 && tick >= this.bossMoveAt) {
+          const from = bossPose(tick, this.bossMotion).x;
           const choices = [0, 1, 2, 3].filter(l => l !== this.bossLane);
           this.bossLane = choices[Math.floor(this.bossRandom() * choices.length)];
           const x = laneX(this.bossLane);
-          this.bossMotion = { from: x, to: x, start: tick, end: tick };
+          const travel = .55 + Math.abs(x - from) / 1.22 * .15;
+          this.bossMotion = { from, to: x, start: tick, end: tick + travel };
           this.bossMoveAt = Infinity;
           effects.push({ type: 'boss-move', lane: this.bossLane, time: tick });
         }
         this.projectiles = this.projectiles.filter(projectile => {
-          const point = this.boss > 0 && projectile.lane === this.bossLane ? intersectBoss(projectile, projectile.checkedAt, tick, t => bossPose(t, this.bossMotion)) : null;
+          let point = this.boss > 0 ? intersectBoss(projectile, projectile.checkedAt, tick, t => bossPose(t, this.bossMotion)) : null;
+          // Use the lane visibly occupied at impact, not the destination lane.
+          if (point && projectile.lane !== clamp(Math.round(bossPose(point.time, this.bossMotion).x / 1.22 + 1.5), 0, 3)) point = null;
           projectile.checkedAt = tick;
           if (point) {
             const damage = Math.min(this.boss, projectile.damage); this.boss -= damage; this.lastHit = tick;
