@@ -1,7 +1,23 @@
 import * as THREE from 'three';
+import { weaponForId } from './weapons.js?v=40db8754166d';
+const palettes = new WeakMap();
+export function weaponMaterials(kind, materials) {
+  if (!palettes.has(materials)) palettes.set(materials, new Map());
+  const cache = palettes.get(materials);
+  if (!cache.has(kind)) {
+    const color = new THREE.Color(weaponForId(kind).color);
+    const colored = (lightness, glow) => new THREE.MeshStandardMaterial({
+      color: color.clone().multiplyScalar(lightness), emissive: color,
+      emissiveIntensity: glow, roughness: .35, metalness: .4,
+    });
+    cache.set(kind, { dark: colored(.22, .08), white: colored(.85, .25),
+      lilac: colored(.55, .3), mint: colored(1, .9) });
+  }
+  return cache.get(kind);
+}
 // Every weapon faces -Z. Distinct receivers, magazines, vents and muzzle hardware.
 export function buildWeaponModel(kind, materials, geometries) {
-  const root = new THREE.Group(), { dark, white, mint, lilac } = materials;
+  const root = new THREE.Group(), { dark, white, mint, lilac } = weaponMaterials(kind, materials);
   const part = (geo, mat, position, scale, parent = root) => {
     const mesh = new THREE.Mesh(geo, mat); mesh.position.set(...position); mesh.scale.set(...scale); parent.add(mesh); return mesh;
   };
@@ -37,6 +53,7 @@ export function buildWeaponModel(kind, materials, geometries) {
     }
     for (const x of [-.12, .12]) box(dark, [x, -.17, -.95], [.035, .35, .04]).rotation.z = -x * 2;
   } else if (kind === 'minigun') {
+    root.scale.set(1.3, 1.3, 1.05);
     const rotor = new THREE.Group(); root.add(rotor); root.userData.rotor = rotor;
     tube(dark, [0, 0, -.35], .23, .28);
     for (let i = 0; i < 6; i++) {
@@ -49,6 +66,7 @@ export function buildWeaponModel(kind, materials, geometries) {
     box(white, [0, .32, -.1], [.25, .06, .3]);
     for (const x of [-.1, .1]) box(dark, [x, .23, -.1], [.04, .18, .05]);
   } else if (kind === 'rocket') {
+    root.scale.set(1.35, 1.35, 1.15);
     tube(lilac, [0, .08, -.48], .22, 1.25);
     for (const z of [-1.11, .16]) tube(dark, [0, .08, z], .25, .09);
     tube(mint, [0, .08, -1.165], .17, .02);
@@ -56,6 +74,7 @@ export function buildWeaponModel(kind, materials, geometries) {
     box(dark, [.23, .29, -.28], [.07, .04, .24]);
     for (let i = 0; i < 3; i++) box(mint, [-.23, .08, -.12 - i * .1], [.025, .16, .045]);
   } else if (kind === 'rail') {
+    root.scale.set(.9, .9, 1.25);
     for (const x of [-.12, .12]) {
       box(white, [x, .02, -.87], [.08, .15, .94]);
       box(mint, [x * .55, .02, -.87], [.026, .07, .88]);

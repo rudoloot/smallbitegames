@@ -1,10 +1,10 @@
-import { TRACKS, MusicPlayer } from './music.js?v=d1310a12066c';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=d1310a12066c';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=d1310a12066c';
-import { World } from './scene.js?v=d1310a12066c';
-import { weaponForId } from './weapons.js?v=d1310a12066c';
-import { exitGame } from './launch.js?v=d1310a12066c';
-import { setupFullscreen } from './fullscreen.js?v=d1310a12066c';
+import { TRACKS, MusicPlayer } from './music.js?v=40db8754166d';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=40db8754166d';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=40db8754166d';
+import { World } from './scene.js?v=40db8754166d';
+import { weaponForId } from './weapons.js?v=40db8754166d';
+import { exitGame } from './launch.js?v=40db8754166d';
+import { setupFullscreen } from './fullscreen.js?v=40db8754166d';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -168,7 +168,8 @@ function updateHUD() {
   $('healthFill').style.height = `${state.health / state.maxHealth * 100}%`; $('healthValue').textContent = Number(state.health.toFixed(1)); $('healthMeter').setAttribute('aria-valuenow', state.health); $('healthMeter').setAttribute('aria-valuemax', state.maxHealth); document.querySelector('.health').classList.toggle('low', state.health < state.maxHealth * .3);
   $('savedValue').textContent = state.saved; $('comboValue').textContent = state.combo > 1 ? `${state.combo} COMBO` : '음표를 구해요'; $('powerValue').textContent = state.power;
   const weaponName = weaponForId(state.weaponId).name;
-  $('weaponName').textContent = `${weaponName} · 탄약 ${state.ammo === Infinity ? '∞' : state.ammo}`;
+  $('weaponName').style.color = '#' + weaponForId(state.weaponId).color.toString(16).padStart(6, '0');
+  $('weaponName').textContent = `${weaponName} · 탄약 ${state.ammo === Infinity ? '∞' : state.ammo} · 공격 +${Math.round(state.attackBonus * 100)}%`;
   $('timeValue').textContent = `${formatTime(state.time)} / ${formatTime(state.chart.duration)}`;
   const bonus = state.boss <= 0, attack = !bonus && state.attackWindow;
   $('phase').classList.toggle('attack', attack); $('phase').classList.toggle('bonus', bonus);
@@ -178,12 +179,13 @@ function updateHUD() {
 function handleEffects(effects) {
   for (const effect of effects) {
     if (effect.type === 'save') { world.burst(effect.lane, 0xb6f6d9); audio.sound('save'); }
+    if (effect.type === 'power-up') feedback(`공격력 상승! +${Math.round(effect.bonus * 100)}%`, false, 2000);
     if (effect.type === 'weapon') world.showUpgrade(effect.weapon, effect.ammo);
     if (effect.type === 'shot') { world.shoot(effect.lane, effect.weapon, effect.pellets, effect.projectiles); audio.sound('shot'); }
     if (effect.type === 'hit') world.impact(effect);
     if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${effect.damage}`, true); }
     if (effect.type === 'victory') { world.burst(2, 0xe0bcff); feedback('보스 격파 · RESCUE TIME!', false, 2300); }
-    if (effect.type === 'save' && state.saved % 10 === 0) feedback(`+${state.rules.heal} HP · ${state.saved} RESCUED`);
+    if (effect.type === 'save' && state.saved % 10 === 0 && state.saved % 50 !== 0) feedback(`+${state.rules.heal} HP · ${state.saved} RESCUED`);
   }
 }
 function feedback(text, hurt = false, duration = 750) { $('feedback').textContent = text; $('feedback').classList.toggle('hurt', hurt); feedbackUntil = performance.now() + duration; }

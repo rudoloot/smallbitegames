@@ -1,6 +1,6 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=d1310a12066c';
-import { weaponForId, DROP_WEAPONS } from './weapons.js?v=d1310a12066c';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose } from './projectiles.js?v=d1310a12066c';
+import { clamp, seededRandom, RULES } from './engine.js?v=40db8754166d';
+import { weaponForId, DROP_WEAPONS } from './weapons.js?v=40db8754166d';
+import { projectileSpeed, projectilePoint, intersectBoss, bossPose } from './projectiles.js?v=40db8754166d';
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
 export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) {
@@ -37,11 +37,11 @@ export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) 
   const chart = { duration, events, beat, seed, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm, sections: [], noteCount: events.filter(e => e.type === 'note').length, bossMax: 1e12 };
   // Upper bound: collect every usable drop, no stun, and all bullets that can
   // arrive before song end hit. Actual dodge/misses reduce realized damage.
-  const drops = events.filter(e => e.type === 'weapon');
-  const simulation = new GameState({ ...chart, events: drops }, difficulty);
+  const calibrationRewards = events.filter(e => e.type !== 'mine');
+  const simulation = new GameState({ ...chart, events: calibrationRewards }, difficulty);
   let maximumDamage = 0;
-  for (const time of [...drops.map(e => e.time), duration]) {
-    const lane = drops.find(e => e.time === time)?.lane ?? 1;
+  for (const time of [...new Set([...calibrationRewards.map(e => e.time), duration])]) {
+    const lane = calibrationRewards.find(e => e.time === time)?.lane ?? 1;
     for (const effect of simulation.advance(time, lane)) if (effect.type === 'shot') {
       for (const p of effect.projectiles) if (p.time + (p.z + 52) / p.speed <= duration) maximumDamage += p.damage;
     }
@@ -66,7 +66,8 @@ export class GameState {
     this.projectiles = []; this.projectileSerial = 0; this.physicsStep = 1;
   }
   get weapon() { return weaponForId(this.weaponId); }
-  get power() { return this.weapon.damage; }
+  get attackBonus() { return Math.floor(this.saved / 50) * .05; }
+  get power() { return this.weapon.damage * (1 + this.attackBonus); }
   get interval() { return this.weapon.interval; }
   get attackWindow() { return false; }
   hurt(amount) { this.health = clamp(this.health - amount, 0, this.maxHealth); this.combo = 0; }
@@ -84,6 +85,7 @@ export class GameState {
         if (event.type === 'note') {
           if (event.lane === lane && tick >= this.stunnedUntil) {
             this.saved++;
+            if (this.saved % 50 === 0) effects.push({ type: 'power-up', bonus: this.attackBonus, time: tick });
             this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
             this.health = clamp(this.health + this.rules.heal, 0, this.maxHealth);
             effects.push({ type: 'save', lane, time: tick });

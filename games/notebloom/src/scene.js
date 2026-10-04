@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { terrainSlope } from './terrain.js?v=d1310a12066c';
-import { weaponForId } from './weapons.js?v=d1310a12066c';
-import { buildWeaponModel } from './weapon-model.js?v=d1310a12066c';
-import { bossPose, projectilePoint } from './projectiles.js?v=d1310a12066c';
+import { terrainSlope } from './terrain.js?v=40db8754166d';
+import { weaponForId } from './weapons.js?v=40db8754166d';
+import { buildWeaponModel, weaponMaterials } from './weapon-model.js?v=40db8754166d';
+import { bossPose, projectilePoint } from './projectiles.js?v=40db8754166d';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -281,8 +281,8 @@ export class World {
   createNote(type, weaponId) {
     const root = new THREE.Group();
     if (type === 'weapon') {
-      const model = this.weaponModel(weaponId); model.rotation.y = Math.PI / 2; model.position.set(-.2, .65, 0); model.scale.setScalar(.85); root.add(model);
-      const halo = this.mesh(root, new THREE.TorusGeometry(.55, .035, 6, 24), this.materials.mint, [0, .55, 0]);
+      const model = this.weaponModel(weaponId); model.rotation.y = Math.PI / 2; model.position.set(-.2, .65, 0); model.scale.multiplyScalar(.95); root.add(model);
+      const halo = this.mesh(root, new THREE.TorusGeometry(.65, .045, 6, 24), weaponMaterials(weaponId, this.materials).mint, [0, .55, 0]);
       halo.rotation.y = .2;
     } else if (type === 'note') {
       this.ball(root, this.materials.mint, [-.06, .18, 0], [.22, .17, .16]);
@@ -344,7 +344,7 @@ export class World {
     this.upgradeNotice?.label.remove();
     const label = document.createElement('div'); label.className = 'upgrade-notice';
     const title = document.createElement('strong'); title.textContent = weaponId === 'pistol' ? '기본 권총 복귀' : 'WEAPON GET';
-    const name = document.createElement('small'); name.textContent = weaponForId(weaponId).name;
+    const name = document.createElement('small'); name.textContent = weaponForId(weaponId).name; name.style.color = '#' + weaponForId(weaponId).color.toString(16).padStart(6, '0');
     const count = document.createElement('small'); count.textContent = ammo === Infinity ? '탄약 무한' : '탄약 ' + ammo;
     label.append(title, name, count); this.damageLayer.appendChild(label); this.upgradeNotice = { label, age: 0 };
   }
