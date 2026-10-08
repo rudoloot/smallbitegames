@@ -39,7 +39,8 @@ const GL3D = (()=>{
   function shader(type,src){let s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
   const program=gl?gl.createProgram():null;if(gl){gl.attachShader(program,shader(gl.VERTEX_SHADER,vert));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,frag));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));gl.useProgram(program);}
   const pos=gl?gl.getAttribLocation(program,'aPos'):0,color=gl?gl.getAttribLocation(program,'aColor'):0,camLoc=gl?gl.getUniformLocation(program,'uCam'):null,scaleLoc=gl?gl.getUniformLocation(program,'uScale'):null;
-  const staticBuffer=gl?gl.createBuffer():null,dynamicBuffer=gl?gl.createBuffer():null,alphaBuffer=gl?gl.createBuffer():null;let staticCount=0,staticData=null;
+  const staticBuffer=gl?gl.createBuffer():null,dynamicBuffer=gl?gl.createBuffer():null,alphaBuffer=gl?gl.createBuffer():null;let staticCount=0,staticData=null,staticChunks=[],staticRevision=0;
+  const stats={staticVertices:0,visibleStaticVertices:0,visibleChunks:0,dynamicVertices:0,alphaVertices:0,terrainCacheHit:false};
   let W=390,H=844,DPR=1;const cam={x:-48,y:0,z:41,span:48};const colors=new Map();
   function rgb(c){if(Array.isArray(c))return c;if(colors.has(c))return colors.get(c);let n=typeof c==='number'?c:parseInt(c.replace('#',''),16);let a=[((n>>16)&255)/255,((n>>8)&255)/255,(n&255)/255];colors.set(c,a);return a;}
   const faces=[[[0,1,0],[-1,1,-1],[1,1,-1],[1,1,1],[-1,1,1]],[[0,-1,0],[-1,-1,1],[1,-1,1],[1,-1,-1],[-1,-1,-1]],[[0,0,1],[-1,-1,1],[-1,1,1],[1,1,1],[1,-1,1]],[[0,0,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,-1]],[[1,0,0],[1,-1,1],[1,1,1],[1,1,-1],[1,-1,-1]],[[-1,0,0],[-1,-1,-1],[-1,1,-1],[-1,1,1],[-1,-1,1]]];
@@ -52,6 +53,7 @@ const GL3D = (()=>{
     ring(x,y,z,r,col,alpha=1,width=.08,start=0,end=Math.PI*2){let c=rgb(col),sides=Math.ceil((end-start)*r*4+20);for(let i=0;i<sides;i++){let a=start+(end-start)*i/sides,b=start+(end-start)*(i+1)/sides;let p=[x+Math.cos(a)*r,y,z+Math.sin(a)*r],q=[x+Math.cos(b)*r,y,z+Math.sin(b)*r],t=[x+Math.cos(a)*(r-width),y,z+Math.sin(a)*(r-width)],u=[x+Math.cos(b)*(r-width),y,z+Math.sin(b)*(r-width)];for(let v of [p,q,u,p,u,t])this.vertex(...v,c,1,alpha);}}
     oct(x,y,z,r,col){let c=rgb(col);const pts=[[x,y+r,z],[x,y-r,z],[x+r,y,z],[x,y,z+r],[x-r,y,z],[x,y,z-r]];for(let i=2;i<6;i++){let j=i===5?2:i+1;for(let v of [pts[0],pts[i],pts[j]])this.vertex(...v,c,.75+(i-2)*.1);for(let v of [pts[1],pts[j],pts[i]])this.vertex(...v,c,.7);}}
     data(){return new Float32Array(this.a);}
+    appendTransformed(data,x,y,z,angle=0){const cs=Math.cos(angle),sn=Math.sin(angle),out=this.a;for(let i=0;i<data.length;i+=7)out.push(x+data[i]*cs-data[i+2]*sn,y+data[i+1],z+data[i]*sn+data[i+2]*cs,data[i+3],data[i+4],data[i+5],data[i+6]);}
     armor(x,y,z,w,h,d,col,angle=0,alpha=1,taper=.86){
       // Chamfered, tapered panels replace the uniformly square robot silhouette.
       const c=rgb(col),cs=Math.cos(angle),sn=Math.sin(angle),cut=.20;
@@ -65,21 +67,23 @@ const GL3D = (()=>{
     }
   }
   function bind(buf){gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.vertexAttribPointer(pos,3,gl.FLOAT,false,28,0);gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(color,4,gl.FLOAT,false,28,12);gl.enableVertexAttribArray(color);}
-  function setStatic(batch){let data=batch instanceof Batch?batch.data():batch;staticData=data;if(gl){bind(staticBuffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);}staticCount=data.length/7;}
+  function setStatic(batch,chunks=[]){let data=batch instanceof Batch?batch.data():batch;staticData=data;staticChunks=chunks;staticRevision++;if(gl){bind(staticBuffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);}staticCount=data.length/7;stats.staticVertices=staticCount;}
   function resize(w,h){W=w;H=h;DPR=Math.min(window.devicePixelRatio||1,1.6);canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);if(gl)gl.viewport(0,0,canvas.width,canvas.height);else soft.setTransform(DPR,0,0,DPR,0,0);}
   function project(x,y,z){let k=H/cam.span;return{x:W/2+(x-cam.x)*k,y:H/2-((y-cam.y)*.573576-(z-cam.z)*.819152)*k};}
   function unproject(x,y,height=0){let k=H/cam.span;return{x:cam.x+(x-W/2)/k,z:cam.z+((y-H/2)/k+(height-cam.y)*.573576)/.819152};}
-  function draw(dynamic,alpha){if(!gl){drawSoftware(dynamic,alpha);return;}gl.useProgram(program);gl.clearColor(.78,.75,.69,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniform3f(camLoc,cam.x,cam.y,cam.z);gl.uniform2f(scaleLoc,2/(cam.span*W/H),2/cam.span);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);bind(staticBuffer);gl.drawArrays(gl.TRIANGLES,0,staticCount);if(dynamic){let d=dynamic.data();bind(dynamicBuffer);gl.bufferData(gl.ARRAY_BUFFER,d,gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,d.length/7);}if(alpha&&alpha.a.length){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);let a=alpha.data();bind(alphaBuffer);gl.bufferData(gl.ARRAY_BUFFER,a,gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,a.length/7);gl.depthMask(true);gl.disable(gl.BLEND);}}
+  function visibleBounds(minX,maxX,minY,maxY,minZ,maxZ,margin=0){const k=H/cam.span,left=W/2+(minX-cam.x)*k,right=W/2+(maxX-cam.x)*k,top=H/2-((maxY-cam.y)*.573576-(minZ-cam.z)*.819152)*k,bottom=H/2-((minY-cam.y)*.573576-(maxZ-cam.z)*.819152)*k;return right>=-margin&&left<=W+margin&&bottom>=-margin&&top<=H+margin;}
+  function visiblePoint(x,y,z,r=3,h=4){return visibleBounds(x-r,x+r,y-.1,y+h,z-r,z+r,2);}
+  function visibleRanges(){const ranges=staticChunks.length?staticChunks.filter(c=>visibleBounds(c.minX,c.maxX,c.minY,c.maxY,c.minZ,c.maxZ)):[{first:0,count:staticCount}];stats.visibleChunks=ranges.length;stats.visibleStaticVertices=ranges.reduce((n,c)=>n+c.count,0);return ranges;}
+  function draw(dynamic,alpha){stats.dynamicVertices=(dynamic?.a.length||0)/7;stats.alphaVertices=(alpha?.a.length||0)/7;const ranges=visibleRanges();if(!gl){drawSoftware(dynamic,alpha,ranges);return;}gl.useProgram(program);gl.clearColor(.78,.75,.69,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniform3f(camLoc,cam.x,cam.y,cam.z);gl.uniform2f(scaleLoc,2/(cam.span*W/H),2/cam.span);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE);gl.disable(gl.BLEND);gl.depthMask(true);bind(staticBuffer);for(const c of ranges)gl.drawArrays(gl.TRIANGLES,c.first,c.count);if(dynamic){let d=dynamic.data();bind(dynamicBuffer);gl.bufferData(gl.ARRAY_BUFFER,d,gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,d.length/7);}if(alpha&&alpha.a.length){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);let a=alpha.data();bind(alphaBuffer);gl.bufferData(gl.ARRAY_BUFFER,a,gl.DYNAMIC_DRAW);gl.drawArrays(gl.TRIANGLES,0,a.length/7);gl.depthMask(true);gl.disable(gl.BLEND);}}
   // Z-buffered CPU fallback for environments where WebGL is disabled.
   // It uses exactly the same geometry/projection, rather than a separate 2D game.
   const softCanvas=document.createElement('canvas');
-  let softCtx=null,softImage=null,softPixels=null,softDepth=null,SW=0,SH=0;
-  function drawSoftware(dynamic,alpha){
+  let softCtx=null,softImage=null,softPixels=null,softDepth=null,terrainPixels=null,terrainDepth=null,terrainKey='',SW=0,SH=0;
+  function drawSoftware(dynamic,alpha,ranges){
     const ratio=Math.min(.9,420/W),rw=Math.max(1,Math.round(W*ratio)),rh=Math.max(1,Math.round(H*ratio));
-    if(rw!==SW||rh!==SH){SW=rw;SH=rh;softCanvas.width=SW;softCanvas.height=SH;softCtx=softCanvas.getContext('2d',{alpha:false});softImage=softCtx.createImageData(SW,SH);softPixels=new Uint32Array(softImage.data.buffer);softDepth=new Float32Array(SW*SH);}
-    softPixels.fill(0xffafbfc7);softDepth.fill(-1e10);
+    if(rw!==SW||rh!==SH){SW=rw;SH=rh;softCanvas.width=SW;softCanvas.height=SH;softCtx=softCanvas.getContext('2d',{alpha:false});softImage=softCtx.createImageData(SW,SH);softPixels=new Uint32Array(softImage.data.buffer);softDepth=new Float32Array(SW*SH);terrainPixels=new Uint32Array(SW*SH);terrainDepth=new Float32Array(SW*SH);terrainKey='';}
     const k=SH/cam.span;
-    function raster(a,transparent){if(!a)return;for(let i=0;i<a.length;i+=21){
+    function raster(a,transparent,first=0,end=a?.length||0){if(!a)return;for(let i=first;i<end;i+=21){
       const x0=SW*.5+(a[i]-cam.x)*k,y0=SH*.5-((a[i+1]-cam.y)*.573576-(a[i+2]-cam.z)*.819152)*k,
             x1=SW*.5+(a[i+7]-cam.x)*k,y1=SH*.5-((a[i+8]-cam.y)*.573576-(a[i+9]-cam.z)*.819152)*k,
             x2=SW*.5+(a[i+14]-cam.x)*k,y2=SH*.5-((a[i+15]-cam.y)*.573576-(a[i+16]-cam.z)*.819152)*k;
@@ -98,11 +102,14 @@ const GL3D = (()=>{
         }
       }row0+=dy0;row1+=dy1;rowZ+=zdy;}
     }}
-    raster(staticData,false);raster(dynamic&&dynamic.a,false);raster(alpha&&alpha.a,true);
+    const key=[staticRevision,SW,SH,cam.x,cam.y,cam.z,cam.span].join('|');stats.terrainCacheHit=terrainKey===key;
+    if(!stats.terrainCacheHit){softPixels.fill(0xffafbfc7);softDepth.fill(-1e10);for(const c of ranges)raster(staticData,false,c.first*7,(c.first+c.count)*7);terrainPixels.set(softPixels);terrainDepth.set(softDepth);terrainKey=key;}
+    else{softPixels.set(terrainPixels);softDepth.set(terrainDepth);}
+    raster(dynamic&&dynamic.a,false);raster(alpha&&alpha.a,true);
     softCtx.putImageData(softImage,0,0);soft.imageSmoothingEnabled=true;soft.drawImage(softCanvas,0,0,W,H);
   }
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();const el=document.getElementById('errorBox');el.hidden=false;el.innerHTML='그래픽 연결이 중단됐어.<br>페이지를 다시 열어 작전을 재시작해.';});
-  return{Batch,rgb,cam,project,unproject,draw,resize,setStatic,get width(){return W},get height(){return H},get context(){return gl},software:!gl};
+  return{Batch,rgb,cam,project,unproject,draw,resize,setStatic,visibleBounds,visiblePoint,stats,get width(){return W},get height(){return H},get context(){return gl},software:!gl};
 })();
 </script><script>/* PAPERFALL · BLOCKFIELD v2 — metric voxel terrain.
  * A horizontal cell is exactly 1 x 1 m. Floors use whole cubes and 0.5 m slabs.
@@ -180,9 +187,9 @@ function applyMissionTerrain(){
 }
 function refreshTerrain(){applyMissionTerrain();applyCustomTerrain();worldRevision++;visionCache.clear();S.dirty=true;}
 // Authoritative continuous movement. The radius cannot overlap a tall neighboring block.
+const FOOT_OFFSETS=[0,0,.25,0,-.25,0,0,.25,0,-.25,.18,.18,-.18,.18,.18,-.18,-.18,-.18];
 function landingAt(x,z,fromY,drop=1){
- const r=.25,points=[[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.72,r*.72],[-r*.72,r*.72],[r*.72,-r*.72],[-r*.72,-r*.72]];
- let highest=-Infinity;for(let [dx,dz]of points){if(isVoid(x+dx,z+dz))return null;highest=Math.max(highest,floorY(x+dx,z+dz));}
+ let highest=-Infinity;for(let n=0;n<FOOT_OFFSETS.length;n+=2){const i=indexAt(x+FOOT_OFFSETS[n],z+FOOT_OFFSETS[n+1]);if(i<0||voidGrid[i])return null;highest=Math.max(highest,heightGrid[i]);if(highest>fromY+.501)return null;}
  if(highest>fromY+.501||highest<fromY-drop-.001)return null;return highest;
 }
 function clearWalk(a,b){let n=Math.max(1,Math.ceil(dist(a,b)/.18)),y=a.y??floorY(a.x,a.z);for(let i=1;i<=n;i++){let h=landingAt(lerp(a.x,b.x,i/n),lerp(a.z,b.z,i/n),y);if(h===null)return false;y=h;}return true;}
@@ -209,13 +216,15 @@ function ballisticLOS(a,b,targetLift=1.3){
  * Ground detection and its rendered orange cells use this SAME predicate.
  */
 function terrainVisible(e,p){
- const base=e.y??floorY(e.x,e.z),targetH=p.y??floorY(p.x,p.z),ray=traceCells(e,p);
- let high=0;
- for(let i=1;i<ray.length;i++){
-  const q=ray[i],h=floorY(q.x,q.z),last=i===ray.length-1;
+ const base=e.y??floorY(e.x,e.z),targetH=p.y??floorY(p.x,p.z);
+ let x=Math.floor(e.x+.5),z=Math.floor(e.z+.5);const ex=Math.floor(p.x+.5),ez=Math.floor(p.z+.5),dx=p.x-e.x,dz=p.z-e.z,sx=Math.sign(dx),sz=Math.sign(dz),ddx=dx?Math.abs(1/dx):Infinity,ddz=dz?Math.abs(1/dz):Infinity;
+ let tx=dx?((x+(sx>0?.5:-.5))-e.x)/dx:Infinity,tz=dz?((z+(sz>0?.5:-.5))-e.z)/dz:Infinity,high=0,count=0;
+ while((x!==ex||z!==ez)&&count++<WORLD.nx+WORLD.nz+4){
+  let entry;if(Math.abs(tx-tz)<1e-9){entry=tx;x+=sx;z+=sz;tx+=ddx;tz+=ddz;}else if(tx<tz){entry=tx;x+=sx;tx+=ddx;}else{entry=tz;z+=sz;tz+=ddz;}
+  const h=floorY(x,z),last=x===ex&&z===ez;
   if(h>=base+2-.001){high++;if(high>1||!last)return false;}
   else if(high)return false;
-  if(!last&&!isVoid(q.x,q.z)){let t=ray[i+1]?.t??q.t,eye=lerp(base+1.75,targetH+1.25,(q.t+t)*.5);if(h>eye+.01)return false;}
+  if(!last&&!isVoid(x,z)){const exit=clamp(Math.min(tx,tz),0,1),eye=lerp(base+1.75,targetH+1.25,(clamp(entry,0,1)+exit)*.5);if(h>eye+.01)return false;}
  }
  return true;
 }
@@ -225,20 +234,37 @@ function viewTest(e,p,checkCone=true){
  return terrainVisible(e,p);
 }
 const visionCache=new Map();
+function visionBounds(e){
+ const half=Math.min(Math.PI,e.fov/2),angles=[e.angle-half,e.angle+half];for(const a of [0,Math.PI/2,Math.PI,-Math.PI/2])if(Math.abs(wrap(a-e.angle))<=half)angles.push(a);
+ let minX=e.x,maxX=e.x,minZ=e.z,maxZ=e.z;for(const a of angles){const x=e.x+Math.sin(a)*e.vision,z=e.z-Math.cos(a)*e.vision;minX=Math.min(minX,x);maxX=Math.max(maxX,x);minZ=Math.min(minZ,z);maxZ=Math.max(maxZ,z);}return{minX:Math.max(WORLD.minX,Math.ceil(minX)),maxX:Math.min(WORLD.maxX,Math.floor(maxX)),minZ:Math.max(WORLD.minZ,Math.ceil(minZ)),maxZ:Math.min(WORLD.maxZ,Math.floor(maxZ))};
+}
 function visionTiles(e){
- let key=[worldRevision,Math.round(e.x*4),Math.round(e.z*4),Math.round(e.angle*30),e.y,e.vision].join('|'),cached=visionCache.get(e.id);
+ let key=[worldRevision,Math.round(e.x*4),Math.round(e.z*4),Math.round(e.angle*30),e.y,e.vision,e.fov].join('|'),cached=visionCache.get(e.id);
  if(cached?.key===key)return cached.tiles;
- let tiles=[];for(let z=Math.ceil(e.z-e.vision);z<=Math.floor(e.z+e.vision);z++)for(let x=Math.ceil(e.x-e.vision);x<=Math.floor(e.x+e.vision);x++){
+ const bounds=visionBounds(e);let tiles=[];for(let z=bounds.minZ;z<=bounds.maxZ;z++)for(let x=bounds.minX;x<=bounds.maxX;x++){
   if(isVoid(x,z))continue;let p={x,z,y:floorY(x,z)};if(viewTest(e,p))tiles.push(p);
  }
- visionCache.set(e.id,{key,tiles});return tiles;
+ const set=new Set(tiles.map(p=>indexAt(p.x,p.z)));for(const p of tiles)p.edges=(!set.has(indexAt(p.x+1,p.z))?1:0)|(!set.has(indexAt(p.x-1,p.z))?2:0)|(!set.has(indexAt(p.x,p.z+1))?4:0)|(!set.has(indexAt(p.x,p.z-1))?8:0);
+ const runs=[],groups=new Map();
+ for(const p of tiles){const last=runs[runs.length-1];if(last&&last.z===p.z&&last.y===p.y&&last.maxX===p.x-1)last.maxX=p.x;else runs.push({minX:p.x,maxX:p.x,z:p.z,y:p.y});
+  for(const bit of [1,2,4,8])if(p.edges&bit){const vertical=bit<4,line=vertical?p.x:p.z,at=vertical?p.z:p.x,k=[bit,line,p.y].join('|');let group=groups.get(k);if(!group){group={bit,line,y:p.y,points:[]};groups.set(k,group);}group.points.push(at);}
+ }
+ const outlines=[];for(const group of groups.values()){const {bit,line,y}=group,vertical=bit<4,points=group.points.sort((a,b)=>a-b);let lo=points[0],hi=lo;
+  const flush=()=>outlines.push({x:vertical?line+(bit===1?.496:-.496):(lo+hi)/2,z:vertical?(lo+hi)/2:line+(bit===4?.496:-.496),y:y+.045,w:vertical?.045:hi-lo+1,d:vertical?hi-lo+1:.045});
+  for(let i=1;i<points.length;i++){if(points[i]===hi+1)hi=points[i];else{flush();lo=hi=points[i];}}flush();
+ }
+ visionCache.set(e.id,{key,tiles,runs,outlines});return tiles;
 }
 function shadeHex(c,f){let rgb=GL3D.rgb(c);return rgb.map(v=>clamp(v*f,0,1));}
 function rebuildStatic(){
- let b=new GL3D.Batch();
+ let b=new GL3D.Batch(),chunks=[];
  function quad(v,c){b.tri(v[0],v[1],v[2],c);b.tri(v[0],v[2],v[3],c);}
- for(let i=0;i<cellCount;i++){
-  const {x,z}=cellOf(i),h=heightGrid[i],c=colorGrid[i],tag=tagGrid[i];
+ // Each 16m chunk keeps the original per-cell shading and exposed contours.
+ for(let cz=WORLD.minZ;cz<=WORLD.maxZ;cz+=16)for(let cx=WORLD.minX;cx<=WORLD.maxX;cx+=16){
+ const first=b.a.length/7,maxX=Math.min(cx+15,WORLD.maxX),maxZ=Math.min(cz+15,WORLD.maxZ),tops=[],width=maxX-cx+1,depth=maxZ-cz+1;let minY=Infinity,maxY=-Infinity;
+ for(let z=cz;z<=maxZ;z++)for(let x=cx;x<=maxX;x++){const i=indexAt(x,z);
+  const h=heightGrid[i],c=colorGrid[i],tag=tagGrid[i];
+  minY=Math.min(minY,h);maxY=Math.max(maxY,h+.012);
   let light=1;
   if(preferences.shadows){
    // Sun from southwest: bake terrain occlusion onto the actual receiving cell.
@@ -246,7 +272,7 @@ function rebuildStatic(){
    const neighbors=[floorY(x-1,z),floorY(x+1,z),floorY(x,z-1),floorY(x,z+1)].filter(y=>y>h+.5).length;light*=1-neighbors*.055;
   }
   const fill=shadeHex(c,light);
-  quad([[x-.5,h,z-.5],[x+.5,h,z-.5],[x+.5,h,z+.5],[x-.5,h,z+.5]],fill);
+  tops.push({h,c,light,fill});
   // Only exposed height boundaries receive a contour; adjacent blocks share a face.
   const ink=shadeHex(c,light*.53),w=.035,y=h+.012;
   if(floorY(x-1,z)<h)quad([[x-.5,y,z-.5],[x-.5+w,y,z-.5],[x-.5+w,y,z+.5],[x-.5,y,z+.5]],ink);
@@ -255,11 +281,21 @@ function rebuildStatic(){
   if(floorY(x,z+1)<h)quad([[x-.5,y,z+.5-w],[x+.5,y,z+.5-w],[x+.5,y,z+.5],[x-.5,y,z+.5]],ink);
   let south=floorY(x,z+1);if(z===WORLD.maxZ)south=-1;
   if(h>south){const low=Math.max(south,-4),side=['archive','wall','tower','warehouse','hq','custom-wall','custom-roof'].includes(tag)?PAL.wall:c;
+   minY=Math.min(minY,low);
    quad([[x-.5,low,z+.5],[x+.5,low,z+.5],[x+.5,h,z+.5],[x-.5,h,z+.5]],shadeHex(side,.73));
   }
 
  }
- GL3D.setStatic(b);S.dirty=false;
+ // Greedily merge only equal-height, equal-material, identically shaded cells.
+ const used=new Uint8Array(tops.length),same=(i,p)=>!used[i]&&tops[i].h===p.h&&tops[i].c===p.c&&tops[i].light===p.light;
+ for(let rz=0;rz<depth;rz++)for(let rx=0;rx<width;rx++){const at=rz*width+rx;if(used[at])continue;const p=tops[at];let rw=1,rh=1;while(rx+rw<width&&same(at+rw,p))rw++;
+  rows:while(rz+rh<depth){for(let j=0;j<rw;j++)if(!same((rz+rh)*width+rx+j,p))break rows;rh++;}
+  for(let zz=0;zz<rh;zz++)for(let xx=0;xx<rw;xx++)used[(rz+zz)*width+rx+xx]=1;
+  const x=cx+rx-.5,z=cz+rz-.5;quad([[x,p.h,z],[x+rw,p.h,z],[x+rw,p.h,z+rh],[x,p.h,z+rh]],p.fill);
+ }
+ chunks.push({first,count:b.a.length/7-first,minX:cx-.5,maxX:maxX+.5,minZ:cz-.5,maxZ:maxZ+.5,minY,maxY});
+ }
+ GL3D.setStatic(b,chunks);S.dirty=false;
 }
 class MinHeap{constructor(){this.a=[];}push(n){let a=this.a,i=a.length;a.push(n);while(i){let p=(i-1)>>1;if(a[p].f<=n.f)break;a[i]=a[p];i=p;}a[i]=n;}pop(){let a=this.a,t=a[0],e=a.pop();if(a.length){let i=0;for(;;){let l=i*2+1,r=l+1;if(l>=a.length)break;let k=r<a.length&&a[r].f<a[l].f?r:l;if(a[k].f>=e.f)break;a[i]=a[k];i=k;}a[i]=e;}return t;}get length(){return this.a.length;}}
 function pathTo(a,dest,quiet=false,useLadders=true){
@@ -864,7 +900,7 @@ function updateEnemies(dt){
   if(e.disabled>0){e.disabled=Math.max(0,e.disabled-dt);e.suspicion=0;continue;}
   if(e.climbing){advanceClimb(e,dt);e.viewY=lerp(e.viewY,e.y,Math.min(1,dt*14));continue;}
   e.held=Math.max(0,e.held-dt);e.home??={x:e.x,z:e.z,y:e.y};e.path??=[];
-  const seen=e.held>0?null:S.actors.filter(a=>enemyCanSee(e,a)).sort((p,q)=>dist(e,p)-dist(e,q))[0];
+  let seen=null,nearest=Infinity;if(e.held<=0)for(const a of S.actors){const d=(a.x-e.x)**2+(a.z-e.z)**2;if(d<nearest&&d<=e.vision**2&&enemyCanSee(e,a)){seen=a;nearest=d;}}
   if(seen){pursue(e,seen);if(dist(e,seen)<.7){seen.cloak=false;seen.reveal=1.5;}}
   else if(e.behavior==='chase'&&S.t-e.lastSeenAt>=10){
    e.behavior='return';e.alert=false;e.suspicion=0;e.chaseTarget=null;e.lastSeen=null;e.engaged=false;e.assisted=false;e.path=[];e.pathTimer=0;
@@ -904,7 +940,22 @@ function updateEnemies(dt){
 }
 </script><script>/* Fixed-heading orthographic presentation and metric robot models. */
 'use strict';
+const robotModels=new Map();
 function modelRobot(batch,u,enemyMode=false){
+ if(enemyMode&&2.2*H/GL3D.cam.span<13){modelRobotDistant(batch,u);return;}
+ const role=enemyMode?u.type:['op','hunter','spy','engineer'][u.id],heading=Math.round((u.angle||0)*32)/32;
+ const sway=u.moving?Math.round(Math.sin(u.walk||S.t*8)*20):0,cloth=['op','hunter','spy'].includes(role)?Math.floor(S.t*15):0;
+ const key=[role,heading,sway,cloth,!!u.dead,u.hp<=0,!!u.cloak,!!u.disguise,!!u.hacked].join('|');
+ let data=robotModels.get(key);if(!data){const local=new GL3D.Batch();buildRobotModel(local,{...u,x:0,z:0,y:0,viewY:0,worldX:u.x,angle:heading},enemyMode);data=local.data();if(robotModels.size>=768)robotModels.clear();robotModels.set(key,data);}
+ batch.appendTransformed(data,u.x,u.viewY??u.y??0,u.z,(u.angle||0)-heading);
+}
+function modelRobotDistant(batch,u){
+ const y=u.viewY??u.y??0,a=u.angle||0,armor=u.hacked?'#a2c9c1':'#eab178',dark='#263641';
+ if(u.dead){batch.box(u.x,y+.3,u.z,.9,.45,1.3,armor,a);return;}
+ if(u.type==='turret'){batch.box(u.x,y+.35,u.z,1.2,.7,1.2,'#71828d');batch.box(u.x,y+1.5,u.z,1.15,.8,1.0,armor,a);batch.box(u.x+Math.sin(a)*.7,y+1.4,u.z-Math.cos(a)*.7,.5,.25,1.3,dark,a);return;}
+ const heavy=u.type==='heavy',r=heavy?.75:.5;batch.box(u.x,y+.5,u.z,r,.9,.4,dark,a);batch.box(u.x,y+1.22,u.z,heavy?1.15:.78,.65,.55,armor,a);batch.box(u.x,y+1.82,u.z,.57,.5,.48,armor,a);batch.box(u.x+Math.sin(a)*.25,y+1.74,u.z-Math.cos(a)*.25,.46,.1,.08,'#ffce83',a);batch.box(u.x+Math.sin(a)*.65,y+1.15,u.z-Math.cos(a)*.65,.25,.2,1.0,dark,a);
+}
+function buildRobotModel(batch,u,enemyMode=false){
  const a=u.angle||0,cs=Math.cos(a),sn=Math.sin(a),Y=u.viewY??u.y??0,alpha=u.cloak?.17:1;
  const role=enemyMode?u.type:['op','hunter','spy','engineer'][u.id],heavy=role==='heavy',scale=heavy?.72:.65,disguised=!enemyMode&&u.id===2&&u.disguise;
  const hostile=(enemyMode||disguised)&&!u.hacked,blue=hostile?'#ffce83':'#55d9ff',armor=hostile?'#eab178':'#d8d7cd',dark='#263641',trim=role==='engineer'?'#b6894d':'#48637f';
@@ -938,7 +989,7 @@ function modelRobot(batch,u,enemyMode=false){
  for(const x of [-.29,.29]){box(x,1.35,-.33,.19,.23,.16,trim);box(x,1.37,-.421,.12,.055,.03,'#b9ced6');}
  if(role==='op'){
   plate(0,2.21,0,1.10,.20,.73,'#3e6eae',.95);box(0,2.24,-.445,.57,.16,.12,'#558bcc');
-  const flutter=Math.sin(S.t*4+u.x)*.12;
+  const flutter=Math.sin(S.t*4+(u.worldX??u.x))*.12;
   cloth([[-.4,2.25,.37],[-1.4,2.10,.8+flutter],[-1.14,1.74,.83]],'#416da5');
   cloth([[-.4,2.25,.37],[-1.14,1.74,.83],[-.52,1.96,.55]],'#6993bf');
   plate(.82,1.26,-.87,.09,.13,1.38,'#c9e2e7',.8);box(.82,1.26,-.49,.28,.05,.11,trim);box(-.72,1.3,-.54,.29,.32,.43,dark);joint(-.73,1.54,-.42,.13,.14,blue);
@@ -973,6 +1024,7 @@ function modelRobot(batch,u,enemyMode=false){
 }
 function robotShadow(batch,u){
  if(!preferences.shadows||u.carriedBy)return;
+ if(2.2*H/GL3D.cam.span<13){batch.cyl(u.x,floorY(u.x,u.z)+.02,u.z,.65,.012,'#142736',6,.20);return;}
  const foot=floorY(u.x,u.z),height=Math.max(0,(u.viewY??u.y)-foot),length=1.25+height*.65;
  for(let layer=0;layer<3;layer++){
   const radius=.48+layer*.18,opacity=.13-layer*.032,cx=u.x+length*.30,cz=u.z-length*.45;
@@ -983,18 +1035,15 @@ function robotShadow(batch,u){
 const G=$('game'),O=$('overlay'),ctx=O.getContext('2d');let W=390,H=844;
 function drawVision(batch,e){
  const color=e.suspicion>.65||S.alarm>0?'#ee4225':'#ff981e';
- for(const p of visionTiles(e)){
-  const y=p.y+.035,r=.5,v=[[p.x-r,y,p.z-r],[p.x+r,y,p.z-r],[p.x+r,y,p.z+r],[p.x-r,y,p.z+r]];
+ visionTiles(e);const cached=visionCache.get(e.id);
+ for(const p of cached.runs){
+  if(!GL3D.visibleBounds(p.minX-.5,p.maxX+.5,p.y,p.y+.05,p.z-.5,p.z+.5,2))continue;
+  const y=p.y+.035,v=[[p.minX-.5,y,p.z-.5],[p.maxX+.5,y,p.z-.5],[p.maxX+.5,y,p.z+.5],[p.minX-.5,y,p.z+.5]];
   batch.tri(v[0],v[1],v[2],color,.43);batch.tri(v[0],v[2],v[3],color,.43);
  }
  // A strong terrain-conforming outer contour prevents color blending into the ground.
- const tiles=visionTiles(e),set=new Set(tiles.map(p=>p.x+','+p.z));
- for(const p of tiles){
-  const y=p.y+.045,w=.045,r=.496;
-  if(!set.has((p.x+1)+','+p.z))batch.box(p.x+r,y,p.z,w,.018,1,color,0,.82);
-  if(!set.has((p.x-1)+','+p.z))batch.box(p.x-r,y,p.z,w,.018,1,color,0,.82);
-  if(!set.has(p.x+','+(p.z+1)))batch.box(p.x,y,p.z+r,1,.018,w,color,0,.82);
-  if(!set.has(p.x+','+(p.z-1)))batch.box(p.x,y,p.z-r,1,.018,w,color,0,.82);
+ for(const p of cached.outlines){
+  if(GL3D.visibleBounds(p.x-p.w/2,p.x+p.w/2,p.y-.01,p.y+.01,p.z-p.d/2,p.z+p.d/2,2))batch.box(p.x,p.y,p.z,p.w,.018,p.d,color,0,.82);
  }
 }
 function worldPoint(p,lift=.05){return{x:p.x,y:Math.max(0,floorY(p.x,p.z))+lift,z:p.z};}
@@ -1009,7 +1058,7 @@ function drawScene(){
    if(t.known&&!(t.powerOffUntil>S.t)){b.box(t.x,y+.7,t.z,t.w,.06,.06,'#ff6054');b.box(t.x,y+.73,t.z,t.w,.015,.1,'#ffceb6');}
   }
  }
- for(const e of S.enemies){if(e.carriedBy)continue;robotShadow(alpha,e);modelRobot(b,e,true);if(e.detected&&!e.dead&&!e.hacked&&e.disabled<=0)drawVision(alpha,e);if((e.disabled>0||e.hacked)&&!e.dead)alpha.ring(e.x,e.y+.055,e.z,.8,e.hacked?'#87f5ce':'#a3e2ff',.95,.08);}
+ for(const e of S.enemies){if(e.carriedBy)continue;const visible=GL3D.visiblePoint(e.x,e.viewY??e.y,e.z,3,4);if(visible){robotShadow(alpha,e);modelRobot(b,e,true);}if(e.detected&&!e.dead&&!e.hacked&&e.disabled<=0&&GL3D.visibleBounds(e.x-e.vision-1,e.x+e.vision+1,-4,12,e.z-e.vision-1,e.z+e.vision+1))drawVision(alpha,e);if(visible&&(e.disabled>0||e.hacked)&&!e.dead)alpha.ring(e.x,e.y+.055,e.z,.8,e.hacked?'#87f5ce':'#a3e2ff',.95,.08);}
  for(const d of S.doors){const y=floorY(d.x,d.z);b.box(d.x,y+.6,d.z,.55,1.2,.35,'#344b5d');b.box(d.x,y+.82,d.z+.19,.36,.34,.045,d.hacked?'#74f0ba':'#ffaa57');}
  for(const l of S.ladders){if(!ladderLinks(indexAt(l.low.x,l.low.z)).some(link=>link.ladder.id===l.id))continue;const dx=l.high.x-l.low.x,dz=l.high.z-l.low.z,x=l.low.x+dx*.45,z=l.low.z+dz*.45,rx=-dz,rz=dx,h=l.high.y-l.low.y+.45,angle=Math.atan2(-rz,rx);
   for(const side of [-1,1])b.box(x+rx*.28*side,l.low.y+h/2,z+rz*.28*side,.065,h,.065,'#acc6cc');
@@ -1017,6 +1066,7 @@ function drawScene(){
  }
  const members=S.mode==='squad'?squadMembers():[activeActor()];
  for(const a of S.actors){
+  if(!GL3D.visiblePoint(a.x,a.viewY??a.y,a.z,3,4))continue;
   robotShadow(alpha,a);modelRobot(a.cloak?alpha:b,a);
   if(members.includes(a)&&a.hp>0){alpha.ring(a.x,a.y+.055,a.z,.7,a===activeActor()?'#a9efff':'#59d3ff',.97,.075);
    const fx=Math.sin(a.angle),fz=-Math.cos(a.angle),rx=Math.cos(a.angle),rz=Math.sin(a.angle);alpha.tri([a.x+fx*1.03,a.y+.075,a.z+fz*1.03],[a.x+fx*.8+rx*.13,a.y+.075,a.z+fz*.8+rz*.13],[a.x+fx*.8-rx*.13,a.y+.075,a.z+fz*.8-rz*.13],'#b5f2ff',.95);}
@@ -1219,6 +1269,7 @@ function selectSquad(){
 }
 function toggleSolo(){if(S.cinematic||S.complete)return;if(S.mode==='squad'){toast('먼저 단독 지정할 캐릭터를 선택해.');return;}const a=activeActor();a.solo=!a.solo;toast(a.solo?a.name+' 단독 지정 · 부대 이동에서 제외.':a.name+' 부대 복귀 · 부대 키로 함께 이동.');updateUI(true);}
 function updateUI(force=false){
+ if(force)lastSceneKey='';
  if(!S.actors.length)return;const a=activeActor(),q=currentTask();
  $('squadCount').textContent=squadMembers().length;$('squadKey').classList.toggle('active',S.mode==='squad');
  for(const el of $('squad').querySelectorAll('[data-unit]')){const id=+el.dataset.unit,p=S.actors[id];el.classList.toggle('active',S.mode==='unit'&&id===S.selected);el.classList.toggle('member',S.mode==='squad'&&!p.solo&&p.hp>0);el.querySelector('.hp i').style.width=(p.hp/p.maxHP*100)+'%';const state=el.querySelector('.ustate');state.textContent=p.hp<=0?'정지':p.solo?'단독':p.cloak?'은신':p.disguise?'위장':'';state.classList.toggle('solo',p.solo);}
@@ -1298,23 +1349,26 @@ window.addEventListener('keydown',e=>{
 function clearInput(){S.keys={};S.joystick={x:0,z:0};pointers.clear();joyId=null;pinchDist=0;resetStick();}
 window.addEventListener('blur',clearInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInput();});
 function resize(){const r=G.getBoundingClientRect();W=r.width;H=r.height;GL3D.resize(W,H);const d=Math.min(window.devicePixelRatio||1,1.6);O.width=Math.round(W*d);O.height=Math.round(H*d);ctx.setTransform(d,0,0,d,0,0);}
-let last=0,uiClock=0;
+let last=0,uiClock=0,lastSceneKey='';
+function cameraLerp(from,to,factor){return Math.abs(from-to)<.0001?to:lerp(from,to,factor);}
 function frame(now){
  let dt=Math.min(.045,(now-last)/1000||.016);last=now;update(dt);const cam=GL3D.cam;
- if(S.cinematic){cam.x=lerp(cam.x,BASE.archive.x,Math.min(1,dt*3));cam.z=lerp(cam.z,SO.bomb.z+2,Math.min(1,dt*3));cam.y=lerp(cam.y,2.5,Math.min(1,dt*3));cam.span=lerp(cam.span,64,Math.min(1,dt*3));}
+ if(S.cinematic){cam.x=cameraLerp(cam.x,BASE.archive.x,Math.min(1,dt*3));cam.z=cameraLerp(cam.z,SO.bomb.z+2,Math.min(1,dt*3));cam.y=cameraLerp(cam.y,2.5,Math.min(1,dt*3));cam.span=cameraLerp(cam.span,64,Math.min(1,dt*3));}
  else if(S.started&&!S.modal){
-  if(S.scope&&S.scopeAim){let e=S.enemies.find(e=>e.id===S.snap),p=e||S.scopeAim;cam.x=lerp(cam.x,S.scopeAim.x,Math.min(1,dt*9));cam.z=lerp(cam.z,S.scopeAim.z+4,Math.min(1,dt*9));cam.y=lerp(cam.y,e?.y??Math.max(0,floorY(p.x,p.z)),Math.min(1,dt*8));}
-  else if(S.focus){cam.x=lerp(cam.x,S.focus.x,Math.min(1,dt*7));cam.z=lerp(cam.z,S.focus.z,Math.min(1,dt*7));cam.y=lerp(cam.y,S.focus.y??0,Math.min(1,dt*7));}
-  else if(S.followCam){const a=activeActor();cam.x=lerp(cam.x,a.x,Math.min(1,dt*6));cam.z=lerp(cam.z,a.z+4.3,Math.min(1,dt*6));cam.y=lerp(cam.y,a.viewY??a.y,Math.min(1,dt*6));}
+  if(S.scope&&S.scopeAim){let e=S.enemies.find(e=>e.id===S.snap),p=e||S.scopeAim;cam.x=cameraLerp(cam.x,S.scopeAim.x,Math.min(1,dt*9));cam.z=cameraLerp(cam.z,S.scopeAim.z+4,Math.min(1,dt*9));cam.y=cameraLerp(cam.y,e?.y??Math.max(0,floorY(p.x,p.z)),Math.min(1,dt*8));}
+  else if(S.focus){cam.x=cameraLerp(cam.x,S.focus.x,Math.min(1,dt*7));cam.z=cameraLerp(cam.z,S.focus.z,Math.min(1,dt*7));cam.y=cameraLerp(cam.y,S.focus.y??0,Math.min(1,dt*7));}
+  else if(S.followCam){const a=activeActor();cam.x=cameraLerp(cam.x,a.x,Math.min(1,dt*6));cam.z=cameraLerp(cam.z,a.z+4.3,Math.min(1,dt*6));cam.y=cameraLerp(cam.y,a.viewY??a.y,Math.min(1,dt*6));}
  }
- const shake=S.camShake>0?(Math.random()-.5)*Math.min(S.camShake,.5)*.7:0;cam.x+=shake;if(S.started&&S.modal!=='editor')drawScene();cam.x-=shake;
+ const shake=S.camShake>0?(Math.random()-.5)*Math.min(S.camShake,.5)*.7:0;cam.x+=shake;
+ const sceneKey=[S.t,S.cinematic,S.modal,S.paused,S.selected,S.mode,S.autoTarget?.id,S.snap,cam.x,cam.y,cam.z,cam.span,W,H,preferences.shadows].join('|');
+ if(S.started&&S.modal!=='editor'&&(S.dirty||sceneKey!==lastSceneKey)){drawScene();lastSceneKey=sceneKey;}cam.x-=shake;
  if(S.started&&!S.modal&&!S.paused){saveClock+=dt;if(saveClock>5){saveClock=0;saveGame();}}
  uiClock+=dt;if(uiClock>.13){uiClock=0;updateUI();}requestAnimationFrame(frame);
 }
 window.addEventListener('error',e=>console.error('[BLOCKFIELD]',e.error||e.message));
 loadPreferences();buildWorld();initUnits();initUI();bindUI();bindSession();bindEditor();resize();showHome();new ResizeObserver(resize).observe(G);requestAnimationFrame(frame);
 /* Read-only test surface. Mission functions are not replaced by test-only implementations. */
-window.STEELAGENTS=window.STTELAGENTS=window.PAPERFALL={version:'3.4.0',getState:()=>({version:'3.4.0',started:S.started,modal:S.modal,task:currentTask().id,flags:{...S.flags},mode:S.mode,selected:S.selected,actors:S.actors.map(a=>({id:a.id,x:a.x,z:a.z,y:a.y,hp:a.hp,maxHP:a.maxHP,speed:a.speed,charges:{...a.charges},solo:a.solo,cloak:a.cloak,disguise:a.disguise,hasScan:!!a.copy,climbing:!!a.climbing,path:a.path.length})),enemies:S.enemies.map(e=>({id:e.id,x:e.x,z:e.z,y:e.y,angle:e.angle,behavior:e.behavior,duty:e.duty,floorLevel:e.floorLevel,quadrant:e.quadrant,fov:e.fov,lastSeenAt:e.lastSeenAt,detected:e.detected,dead:e.dead})),target:S.autoTarget?{id:S.autoTarget.id,kind:S.autoTarget.kind}:null,world:{...WORLD},base:{...BASE},fail:S.fail,ammo:S.ammo,scope:S.scope,snap:S.snap,bomb:!!S.flags.bomb,exploded:S.exploded,complete:S.complete,cinematic:S.cinematic,alarm:S.alarm,renderer:GL3D.software?'software':'WebGL',block:1,step:.5}),cell:(x,z)=>({height:floorY(x,z),void:isVoid(x,z),tag:tagGrid[indexAt(x,z)]})};
+window.STEELAGENTS=window.STTELAGENTS=window.PAPERFALL={version:'3.4.1',getState:()=>({version:'3.4.1',started:S.started,modal:S.modal,task:currentTask().id,flags:{...S.flags},mode:S.mode,selected:S.selected,actors:S.actors.map(a=>({id:a.id,x:a.x,z:a.z,y:a.y,hp:a.hp,maxHP:a.maxHP,speed:a.speed,charges:{...a.charges},solo:a.solo,cloak:a.cloak,disguise:a.disguise,hasScan:!!a.copy,climbing:!!a.climbing,path:a.path.length})),enemies:S.enemies.map(e=>({id:e.id,x:e.x,z:e.z,y:e.y,angle:e.angle,behavior:e.behavior,duty:e.duty,floorLevel:e.floorLevel,quadrant:e.quadrant,fov:e.fov,lastSeenAt:e.lastSeenAt,detected:e.detected,dead:e.dead})),target:S.autoTarget?{id:S.autoTarget.id,kind:S.autoTarget.kind}:null,world:{...WORLD},base:{...BASE},fail:S.fail,ammo:S.ammo,scope:S.scope,snap:S.snap,bomb:!!S.flags.bomb,exploded:S.exploded,complete:S.complete,cinematic:S.cinematic,alarm:S.alarm,renderer:GL3D.software?'software':'WebGL',block:1,step:.5}),cell:(x,z)=>({height:floorY(x,z),void:isVoid(x,z),tag:tagGrid[indexAt(x,z)]})};
 </script><script>
 /* SmallBiteGames launch contract: save before an explicit exit. */
 function exitSteelAgents(){
