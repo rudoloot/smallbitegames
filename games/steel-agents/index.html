@@ -113,7 +113,7 @@
 <label class="settingrow"><span>FPS 표시<small>좌측 상단에 초당 프레임 수 표시</small></span><input type="checkbox" id="pref-showFPS"></label>
 <label class="settingrow"><span>성능 우선<small>간소화 모델과 효과 · 60 FPS 목표 · 기본 꺼짐</small></span><input type="checkbox" id="pref-performance"></label><label class="settingrow"><span>효과음<small>이동과 전술 행동의 효과음</small></span><input type="checkbox" id="pref-sound"></label><label class="settingrow"><span>그림자<small>건물과 요원의 그림자 · 성능 우선에서는 생략</small></span><input type="checkbox" id="pref-shadows"></label><label class="settingrow"><span>목표 위치 안내<small>주 목표의 방향과 위치 표시 · 기본 꺼짐</small></span><input type="checkbox" id="pref-guidance"></label><div class="unithelp"><b>나만의 작전 맵</b><p>지형을 칠하고 적의 위치와 바라보는 방향을 설정해. JSON 파일로 내보내거나 다시 불러올 수 있어.</p></div><button id="editorBtn" class="primary">맵 편집기 열기</button><p id="settingsNotice" class="fine"></p></div></section>
 <section class="modal" id="editor" hidden><div class="modalhead"><div><strong>맵 편집기</strong><small>1m GRID / 지형 · 적 배치</small></div><button id="editorBackBtn" class="secondary">뒤로</button></div><div class="modalbody"><div class="editorcontrols"><label>도구<select id="editorTool"><option value="pan">지도 이동 · 드래그</option><option value="floor">바닥 · 콘크리트</option><option value="wall">벽 · 석재</option><option value="roof">지붕 · 금속</option><option value="ground">지면 · 모래</option><option value="pit">구멍</option><option value="restore">기본 지형 복원</option><option value="guard">경비병 배치</option><option value="chaser">추격자 배치</option><option value="heavy">전투병 배치</option><option value="admin">관리자 배치</option><option value="turret">터렛 배치</option><option value="erase-enemy">적 지우기</option></select></label><label>높이 (m)<input id="editorHeight" type="number" min="0" max="12" step="0.5" value="0"></label><label>브러시<select id="editorBrush"><option value="1">1 × 1</option><option value="2">3 × 3</option><option value="3">5 × 5</option></select></label><label>적 방향<select id="editorAngle"><option value="0">북쪽 ↑</option><option value="90">동쪽 →</option><option value="180">남쪽 ↓</option><option value="270">서쪽 ←</option></select></label></div><div class="editorviewport"><canvas id="editorCanvas" aria-label="지형 및 적 배치 지도"></canvas></div><p id="editorStatus" class="fine" role="status"></p><div class="menuactions"><button id="editorSaveBtn" class="primary">맵 저장</button><button id="editorExportBtn" class="secondary">JSON 내보내기</button><button id="editorImportBtn" class="secondary">JSON 불러오기</button><button id="editorResetBtn" class="secondary">기본 맵 복원</button></div><input id="editorFile" type="file" accept=".json,application/json" hidden><p class="fine">지도 이동 도구로 드래그 / 스크롤하여 전체 지도 확인 · 밝은 초록 표시: 시작 / 폭탄 / 철수<br>저장한 맵은 다음 새 작전에 적용됩니다. 기존 이어하기는 저장 당시의 맵을 사용합니다.<br>기본 기지에는 바닥과 천장 사이로 들어갈 수 있는 건물이 있습니다. 이 편집 도구는 지형 바닥과 벽 높이를 수정합니다.</p></div></section>
-<section class="modal" id="menu" hidden><div class="modalhead"><div><strong>FIELD TERMINAL</strong><small>Steel Agents · PAPERFALL</small></div><button class="secondary" id="resumeBtn">게임 복귀</button></div><div class="modalbody"><div class="current"><small id="missionProgress">MISSION</small><strong id="taskTitle"></strong><p id="taskHint"></p><div class="progress"><i id="progressFill"></i></div></div><div class="menuactions"><button id="menuSaveBtn" class="secondary">저장</button><button id="menuLoadBtn" class="secondary" disabled>로드</button><button id="objectiveBtn" class="secondary">현재 목표 위치 보기</button><button id="overviewBtn" class="secondary">전체 맵 보기</button><button id="restartBtn" class="secondary">작전 다시 시작</button><button id="gameSettingsBtn" class="secondary">환경설정</button><button id="homeBtn" class="secondary">메인 화면</button></div><details open><summary>선택 전술 기록 · 완료 의무 없음</summary><div id="checklist"></div></details><details><summary>조작과 상호작용</summary><div class="legend"><p>왼쪽 원 주변: 이동 · 오른쪽 원 주변: 시야 회전. 원보다 조금 바깥에서도 터치할 수 있으며, 손가락이 처음 닿은 위치가 중심입니다. 왼쪽 이동은 처음 닿은 위치에서 벗어난 방향으로 움직이며 중심으로 돌아오면 멈춥니다. 오른쪽 시야는 드래그한 거리만큼 회전하고 손가락을 멈추면 그 자리에서 멈춥니다. 손을 떼고 다시 터치해 계속 회전할 수 있습니다. 상하와 좌우의 감도는 같습니다. 적 또는 바닥을 조준하고 왼쪽 1시 반의 시야 보기 버튼을 누르세요. 바닥을 설정하면 표시된 지점을 가장 최근에 바라본 적의 시야로 자동 전환됩니다. 적과 바닥을 합쳐 한 곳만 설정할 수 있습니다. 평소 녹색, 경계 노란색, 공격 빨간색이며 안쪽 70%는 진하게, 바깥쪽 30%는 연하게 표시됩니다. 같은 적이나 같은 바닥 블록을 다시 선택하면 시야 보기가 해제됩니다. 화면 중앙의 빈 원이 조준점입니다. 좌측 상단 1–4번으로 캐릭터를 변경합니다.</p><p>적이 없어도 전방으로 공격할 수 있어. 빗나간 공격도 공격 간격과 탄약·횟수를 소비해. 적이 공격한 요원을 인지하기 전이면 피해가 2배야.</p><p>행동 소음 반경: 카타나 2m · 갈고리 2m · 저격 10m · 샷건 10m · 단검 1m · EMP 3m · 덫 작동 5m. 소음은 행동한 요원 위치에서 발생하며, 설치한 덫은 작동 시 현재 조작 중인 요원 위치가 중심이야. 범위 안 적은 벽 너머에서도 소리를 듣고 3초간 그 위치를 바라봐. 소리만으로 바로 발각되지는 않고 실제로 보면 1초 동안 인지해. 효과음을 꺼도 적은 소음을 감지해.</p><p>오른쪽 9시: 공격 · 10시 반: 특수기술 · 12시: 점프. 왼쪽 3시: 웅크리기 · 12시: 상호작용. 점프 높이는 1.5m이며 웅크린 이동 속도는 절반입니다. 적 시야의 멀리 있는 30% 구역은 웅크려 통과할 수 있습니다.</p><p>2m 이내 오브젝트를 조준하면 세로 목록이 나타납니다. 시야를 움직여 원하는 항목에 원을 맞춘 뒤 상호작용을 누르세요. 목록은 캐릭터에 따라 달라집니다. 아군을 조준하면 같이 가기 / 대기를 선택할 수 있습니다. 합류한 순서대로 뒤를 따라오고 웅크리기도 따라 합니다. 낮은 턱은 점프로, 높은 건물은 사다리로 이동합니다. 따라갈 대상은 명령을 내린 요원으로 유지됩니다. 다른 캐릭터로 전환해도 대상이 바뀌지 않고, 직접 선택한 요원만 같이 가기가 해제됩니다. 운반 중에는 바닥을 조준하지 않아도 상호작용을 누르면 현재 위치에 내려놓습니다. 위장한 스파이의 대화는 이동하거나 상호작용을 다시 누르면 끝납니다.</p><p>헌터 공격은 1인칭 스코프입니다. 오른쪽 9시: 줌 해제 · 10시 반: 발사 · 12시: 스코프 확대/축소. 조준하지 않은 발사도 탄약을 소비합니다.</p><p>아군은 벽 뒤에서도 파란 아웃라인으로 보입니다. 인식한 적은 가려져도 아웃라인으로 확인할 수 있습니다. 운반 중인 시체는 2m 이내 하수구나 쓰레기통을 조준하고 시체 넣기를 선택하여 숨길 수 있습니다. 숨긴 시체는 적이 발견하지 못합니다.</p><p>상단 저장 버튼 왼쪽의 일시 정지 버튼을 다시 누르면 게임이 재개됩니다. FPS 표시는 환경설정에서 켜거나 끌 수 있습니다.</p><p>PC: WASD 이동 · 마우스 이동으로 시야 회전 · 화면 클릭 시 마우스 고정 · Esc 고정 해제/메뉴 · 1–4 캐릭터 · E 상호작용 · Space 점프 · 왼클릭 일반공격 · 오른클릭 특수기술 · Ctrl 웅크리기 켜기/끄기 · Q 시야 보기 · 스코프에서 마우스 휠 또는 +/− 확대·축소 · M 메뉴 · P 일시 정지. 헌터는 왼클릭으로 레이저 샷건, 오른클릭으로 스나이퍼 조준을 사용합니다. 스코프에서는 왼클릭 발사, 오른클릭 줌 해제이며 이동도 가능합니다. 마우스 감도도 환경설정의 시야 드래그 감도로 조정합니다.</p></div></details><details><summary>지형 · 높은 곳의 시야 규칙</summary><div class="legend"><p>기본 블록은 1×1×1m, 슬래브는 1×1×0.5m. 아군과 적 모두 0.5m 높이 차이를 넘을 수 있어. 1m 턱은 점프로 올라갈 수 있고 점프 최고 높이는 1.5m입니다. 모든 요원과 적은 절벽 가장자리에서 아래로 내려갈 수 있습니다.</p><p>오퍼레이터는 벽을 향해 점프하면 붙고, 이동 입력으로 상하좌우로 이동해. 입력을 놓으면 매달려 있고, 점프를 다시 누르면 떨어져. 외곽벽과 건물의 고정 사다리는 모든 요원이 이용할 수 있어.</p><p>적의 발밑보다 <strong>2m 이상 높은 지형</strong>은 적 쪽에서 보이는 <strong>가장자리 한 칸</strong>만 관측 가능해. 그 뒤 타일은 보이지 않아. 실제 발각 판정과 선택한 적의 시야 표시가 같은 규칙을 사용해.</p></div></details><details><summary>캐릭터 장비와 잠입 규칙</summary><div class="unithelp"><b>오퍼레이터 · 체력 8 / 이동 8m/s</b><p>패시브: 벽타기 · 2단 점프. 공중에서 점프를 한 번 더 사용할 수 있고 착지하면 다시 사용할 수 있어. 벽을 향해 점프하면 붙고, 이동 조이스틱 또는 WASD로 상하좌우로 이동해. 입력을 놓으면 매달린 위치를 유지하며, 점프를 다시 누르면 벽에서 떨어져. 갈고리는 맞은 적을 발밑까지 끌어오며 높은 발판 위로도 끌어올려. 쓰러진 적은 발 위치에, 살아남은 적은 몸이 겹치지 않는 바로 앞이나 옆에 놓아. 고정형 포탑은 끌려오지 않아. 갈고리 9m / 피해 5 / 2초 간격 / 작전당 5회 · 카타나 2.5m / 피해 6 / 0.7초 간격.</p></div><div class="unithelp"><b>헌터 · 체력 12 / 이동 6m/s</b><p>일반 공격: 레이저 샷건 · 특수 기술: 스나이퍼. 저격 모드의 9시 버튼은 발사, 10시 반 버튼은 줌 해제이며 이동 중에도 조준과 발사가 가능해. 스나이퍼 사거리 무제한 / 피해 20 / 1.5초 간격 / 5발 · 레이저 샷건 6m / 5발. 샷건은 전방 60°에 피해 20, 공격 간격 1.5초야. 탄약은 작전 중 보충되지 않아.</p></div><div class="unithelp"><b>스파이 · 체력 7 / 이동 6m/s</b><p>은신은 없어. 일반공격: 단검 2.3m / 피해 4 / 0.5초. 특수기술: 교란 비콘 · 12m 이내 바닥을 조준하고 상호작용으로 투척해. 비콘 주변 19m 안의 경비병을 20초 동안 유인하며, 2m 이내에서 회수하면 다시 사용할 수 있어. 죽은 인간형 적에게 상대 복사를 하면 복사 후 2초 동안 위장을 준비해. 이후 가까운 대상의 복사 외형 위장 / 위장 해제 상호작용으로 다시 사용할 수 있어. 이동·점프·캐릭터 전환은 준비를 취소하지 않고, 공격·발각·피격은 위장을 해제해. 적을 운반하다 발각되어도 위장이 풀려. 위장한 상태에서는 살아 있는 경비병·전투병과 대화할 수 있어.</p></div><div class="unithelp"><b>엔지니어 · 체력 10 / 이동 6m/s</b><p>덫 설치: 보유 3개. 적 지뢰를 2m 이내에서 조준하면 해체하기가 나와. 지뢰 상호작용은 해체하기만 가능하며 2초 동안 정지해야 완료돼. 이동하거나 다른 요원으로 전환하면 취소되고 덫 수량은 늘어나지 않아. PC에서는 크로스헤어로 6m 이내 바닥을 조준하고 마우스 우클릭하면 덫을 즉시 설치해. 모바일은 특수기술을 누른 뒤 바닥을 조준하고 상호작용으로 설치해. 자신이 설치한 미작동 덫도 해체하기만 가능해. 문서고 폭탄은 설치 소켓을 조준하여 상호작용으로 설치해. EMP 권총 12m / 반경 2m / 5초 정지 / 10초 간격 · 해킹 / 회복 / 수리는 2m 이내 상호작용. 일반문 잠금 장치는 문을 바라볼 때 오른쪽 벽에 있어. 잠금 패널을 해킹한 후 문 열기를 선택해. 정문은 남쪽 정문 제어실, 철수 게이트는 문서고 내부의 지정 버튼으로 열어. 포탑 해킹은 모든 공격을 중지시키고 지뢰는 해킹할 수 없어. 아군 회복은 체력 5를 회복하며 총 5회 사용할 수 있어. 최대 체력을 넘지 않고, 오브젝트 수리는 최대 내구도 절반을 회복해.</p></div><div class="legend">공통: 적을 운반하는 동안 공격·특수기술·웅크리기는 사용할 수 없어. 적을 타겟팅하거나 그 적이 요원을 발견하면 적을 인식해. 시야는 적이나 바닥 한 곳을 조준 후 시야 보기 버튼으로 설정해. 바닥에서는 그 지점을 가장 최근에 본 적 한 명의 시야를 표시해.<br>적 체력: 경비병 8 · 전투병 15 · 관리병 8 · 추격자 8 · 포탑 20.<br>추격자는 카타나로 2.5m 이내에서 피해 4 / 1초 간격으로 공격해.<br>모든 적 시야각 80° · 적 시야 20m · 일반 적 공격 20m · 추격자 공격 2.5m · 포탑 시야·공격 40m ·  요원이 시야에 1초 연속 노출되면 인지해. 인지 중에는 화면 가장자리가 붉게 표시되며 시야에서 벗어나면 인지 시간이 초기화돼. 인지 후에는 7m/s로 추격·공격하고 공격자 주변 5m의 적이 지원해. 놓치면 마지막 발견 위치까지 이동한 뒤 주변을 10초간 수색하고 원래 자리로 돌아가. 시체를 발견해도 해당 위치를 확인한 뒤 10초간 주변을 수색해.<br>비콘과 발견한 미작동 지뢰는 2m 이내에서 회수 가능해. 경비병 소총은 피해 4 / 1초, 전투병 기관총은 피해 4 / 0.5초, 관리병 권총은 피해 3 / 1초, 포탑은 피해 4 / 0.5초야. 지뢰와 레이저 함정은 각각 피해 5를 줘. 엔지니어가 설치한 지뢰도 피해 5야.<br><strong>요원 한 명이라도 사망하면 즉시 게임오버.</strong> 시작 지점은 좌하단 착륙장이며 북동쪽의 기지가 목표야.<br>경비는 넓은 구역을 이동하는 순찰 보초와 제자리에서 시선을 돌리는 고정 보초로 나뉘어. 관리자 네 명은 북서·북동·남서·남동 구역을 각각 순찰해. 전투병은 주요 건물의 1층 입구에서 80° 시야로 경계해.<br>차량 정비고·숙영동·동서 창고·문서고의 2층 경계 데크와 옥상에 보초 10명이 있어. 고정 사다리 13개를 모든 요원과 추격하는 적이 사용할 수 있어. 건물 11곳은 5블록 높이의 실내와 지붕, 실제로 열고 닫는 출입문을 갖추고 있어.</div></details><details><summary>원본 아트워크 / 작전 지도</summary><img id="fullMap" class="mapart" alt="원본 지도"><p class="fine">가로와 세로가 각각 두 배인 250×198m 맵이야. 기지 자체도 150×106m로 확장했어. 숙영동, 차량 정비고, 공작소, 통신 시설, 관측 데크, 보급 컨테이너와 북측 정비문을 추가했으며 실제 배치는 전체 보기에서 확인해. 회색 외곽벽과 붉은 표식, 중앙 본부, 동력 시설, 문서고와 주변 암벽·순환 도로를 블록 형태로 재구성했어. 시작: 좌하단 · 목표: 기지 우측 상단 · 탈출: 우상단 외곽.</p></details></div></section>
+<section class="modal" id="menu" hidden><div class="modalhead"><div><strong>FIELD TERMINAL</strong><small>Steel Agents · PAPERFALL</small></div><button class="secondary" id="resumeBtn">게임 복귀</button></div><div class="modalbody"><div class="current"><small id="missionProgress">MISSION</small><strong id="taskTitle"></strong><p id="taskHint"></p><div class="progress"><i id="progressFill"></i></div></div><div class="menuactions"><button id="menuSaveBtn" class="secondary">저장</button><button id="menuLoadBtn" class="secondary" disabled>로드</button><button id="objectiveBtn" class="secondary">현재 목표 위치 보기</button><button id="overviewBtn" class="secondary">전체 맵 보기</button><button id="restartBtn" class="secondary">작전 다시 시작</button><button id="gameSettingsBtn" class="secondary">환경설정</button><button id="homeBtn" class="secondary">메인 화면</button></div><details open><summary>선택 전술 기록 · 완료 의무 없음</summary><div id="checklist"></div></details><details><summary>조작과 상호작용</summary><div class="legend"><p>왼쪽 원 주변: 이동 · 오른쪽 원 주변: 시야 회전. 원보다 조금 바깥에서도 터치할 수 있으며, 손가락이 처음 닿은 위치가 중심입니다. 왼쪽 이동은 처음 닿은 위치에서 벗어난 방향으로 움직이며 중심으로 돌아오면 멈춥니다. 오른쪽 시야는 드래그한 거리만큼 회전하고 손가락을 멈추면 그 자리에서 멈춥니다. 손을 떼고 다시 터치해 계속 회전할 수 있습니다. 상하와 좌우의 감도는 같습니다. 적 또는 바닥을 조준하고 왼쪽 1시 반의 시야 보기 버튼을 누르세요. 바닥을 설정하면 표시된 지점을 가장 최근에 바라본 적의 시야로 자동 전환됩니다. 적과 바닥을 합쳐 한 곳만 설정할 수 있습니다. 평소 녹색, 경계 노란색, 공격 빨간색이며 안쪽 70%는 진하게, 바깥쪽 30%는 연하게 표시됩니다. 같은 적이나 같은 바닥 블록을 다시 선택하면 시야 보기가 해제됩니다. 화면 중앙의 빈 원이 조준점입니다. 좌측 상단 1–4번으로 캐릭터를 변경합니다.</p><p>적이 없어도 전방으로 공격할 수 있어. 빗나간 공격도 공격 간격과 탄약·횟수를 소비해. 적이 공격한 요원을 인지하기 전이면 피해가 2배야.</p><p>행동 소음 반경: 카타나 2m · 갈고리 2m · 저격 10m · 샷건 10m · 단검 1m · EMP 3m · 덫 작동 5m. 소음은 행동한 요원 위치에서 발생하며, 설치한 덫은 작동 시 현재 조작 중인 요원 위치가 중심이야. 범위 안 적은 벽 너머에서도 소리를 듣고 3초간 그 위치를 바라봐. 소리만으로 바로 발각되지는 않고 실제로 보면 1초 동안 인지해. 효과음을 꺼도 적은 소음을 감지해.</p><p>오른쪽 9시: 공격 · 10시 반: 특수기술 · 12시: 점프. 왼쪽 3시: 웅크리기 · 12시: 상호작용. 점프 높이는 1.5m이며 웅크린 이동 속도는 절반입니다. 적 시야의 멀리 있는 30% 구역은 웅크려 통과할 수 있습니다.</p><p>2m 이내 오브젝트를 조준하면 세로 목록이 나타납니다. 시야를 움직여 원하는 항목에 원을 맞춘 뒤 상호작용을 누르세요. 목록은 캐릭터에 따라 달라집니다. 아군을 조준하면 같이 가기 / 대기를 선택할 수 있습니다. 합류한 순서대로 뒤를 따라오고 웅크리기도 따라 합니다. 낮은 턱은 점프로, 높은 건물은 사다리로 이동합니다. 따라갈 대상은 명령을 내린 요원으로 유지됩니다. 다른 캐릭터로 전환해도 대상이 바뀌지 않고, 직접 선택한 요원만 같이 가기가 해제됩니다. 운반 중에는 바닥을 조준하지 않아도 상호작용을 누르면 현재 위치에 내려놓습니다. 위장한 스파이의 대화는 이동하거나 상호작용을 다시 누르면 끝납니다.</p><p>헌터 공격은 1인칭 스코프입니다. 오른쪽 9시: 줌 해제 · 10시 반: 발사 · 12시: 스코프 확대/축소. 조준하지 않은 발사도 탄약을 소비합니다.</p><p>적들은 이동 중 서로 밀쳐질 수 있어. 밀려난 보초는 마지막 접촉 후 1.5초를 기다리고 원래 위치나 순찰 경로로 돌아가.</p><p>아군은 벽 뒤에서도 파란 아웃라인으로 보입니다. 인식한 적은 가려져도 아웃라인으로 확인할 수 있습니다. 운반 중인 시체는 2m 이내 하수구나 쓰레기통을 조준하고 시체 넣기를 선택하여 숨길 수 있습니다. 숨긴 시체는 적이 발견하지 못합니다.</p><p>상단 저장 버튼 왼쪽의 일시 정지 버튼을 다시 누르면 게임이 재개됩니다. FPS 표시는 환경설정에서 켜거나 끌 수 있습니다.</p><p>PC: WASD 이동 · 마우스 이동으로 시야 회전 · 화면 클릭 시 마우스 고정 · Esc 고정 해제/메뉴 · 1–4 캐릭터 · E 상호작용 · Space 점프 · 왼클릭 일반공격 · 오른클릭 특수기술 · Ctrl 웅크리기 켜기/끄기 · Q 시야 보기 · 스코프에서 마우스 휠 또는 +/− 확대·축소 · M 메뉴 · P 일시 정지. 헌터는 왼클릭으로 레이저 샷건, 오른클릭으로 스나이퍼 조준을 사용합니다. 스코프에서는 왼클릭 발사, 오른클릭 줌 해제이며 이동도 가능합니다. 마우스 감도도 환경설정의 시야 드래그 감도로 조정합니다.</p></div></details><details><summary>지형 · 높은 곳의 시야 규칙</summary><div class="legend"><p>기본 블록은 1×1×1m, 슬래브는 1×1×0.5m. 아군과 적 모두 0.5m 높이 차이를 넘을 수 있어. 1m 턱은 점프로 올라갈 수 있고 점프 최고 높이는 1.5m입니다. 모든 요원과 적은 절벽 가장자리에서 아래로 내려갈 수 있습니다.</p><p>오퍼레이터는 벽을 향해 점프하면 붙고, 이동 입력으로 상하좌우로 이동해. 입력을 놓으면 매달려 있고, 점프를 다시 누르면 떨어져. 외곽벽과 건물의 고정 사다리는 모든 요원이 이용할 수 있어.</p><p>적의 발밑보다 <strong>2m 이상 높은 지형</strong>은 적 쪽에서 보이는 <strong>가장자리 한 칸</strong>만 관측 가능해. 그 뒤 타일은 보이지 않아. 실제 발각 판정과 선택한 적의 시야 표시가 같은 규칙을 사용해.</p></div></details><details><summary>캐릭터 장비와 잠입 규칙</summary><div class="unithelp"><b>오퍼레이터 · 체력 8 / 이동 8m/s</b><p>패시브: 벽타기 · 2단 점프. 공중에서 점프를 한 번 더 사용할 수 있고 착지하면 다시 사용할 수 있어. 벽을 향해 점프하면 붙고, 이동 조이스틱 또는 WASD로 상하좌우로 이동해. 입력을 놓으면 매달린 위치를 유지하며, 점프를 다시 누르면 벽에서 떨어져. 갈고리는 맞은 적을 발밑까지 끌어오며 높은 발판 위로도 끌어올려. 쓰러진 적은 발 위치에, 살아남은 적은 몸이 겹치지 않는 바로 앞이나 옆에 놓아. 고정형 포탑은 끌려오지 않아. 갈고리 9m / 피해 5 / 2초 간격 / 작전당 5회 · 카타나 2.5m / 피해 6 / 0.7초 간격.</p></div><div class="unithelp"><b>헌터 · 체력 12 / 이동 6m/s</b><p>일반 공격: 레이저 샷건 · 특수 기술: 스나이퍼. 저격 모드의 9시 버튼은 발사, 10시 반 버튼은 줌 해제이며 이동 중에도 조준과 발사가 가능해. 스나이퍼 사거리 무제한 / 피해 20 / 1.5초 간격 / 5발 · 레이저 샷건 6m / 5발. 샷건은 전방 60°에 피해 20, 공격 간격 1.5초야. 탄약은 작전 중 보충되지 않아.</p></div><div class="unithelp"><b>스파이 · 체력 7 / 이동 6m/s</b><p>은신은 없어. 일반공격: 단검 2.3m / 피해 4 / 0.5초. 특수기술: 위장 · 죽은 인간형 적에게 상대 복사를 하면 외형을 저장해. 특수기술 버튼으로 위장을 시작하고, 2초 준비 후 완료돼. 위장 중 특수기술을 다시 누르면 즉시 해제돼. 이동·점프·캐릭터 전환은 준비를 취소하지 않고, 공격·발각·피격은 위장을 해제해. 적을 운반하다 발각되어도 위장이 풀려. 위장한 상태에서는 살아 있는 경비병·전투병과 대화할 수 있어.</p></div><div class="unithelp"><b>엔지니어 · 체력 10 / 이동 6m/s</b><p>덫 설치: 보유 3개. 적 지뢰를 2m 이내에서 조준하면 해체하기가 나와. 지뢰 상호작용은 해체하기만 가능하며 2초 동안 정지해야 완료돼. 이동하거나 다른 요원으로 전환하면 취소되고 덫 수량은 늘어나지 않아. PC에서는 크로스헤어로 6m 이내 바닥을 조준하고 마우스 우클릭하면 덫을 즉시 설치해. 모바일은 특수기술을 누른 뒤 바닥을 조준하고 상호작용으로 설치해. 자신이 설치한 미작동 덫도 해체하기만 가능해. 문서고 폭탄은 설치 소켓을 조준하여 상호작용으로 설치해. EMP 권총 12m / 반경 2m / 5초 정지 / 10초 간격 · 해킹 / 회복 / 수리는 2m 이내 상호작용. 일반문 잠금 장치는 문을 바라볼 때 오른쪽 벽에 있어. 잠금 패널을 해킹한 후 문 열기를 선택해. 정문은 남쪽 정문 제어실, 철수 게이트는 문서고 내부의 지정 버튼으로 열어. 포탑 해킹은 모든 공격을 중지시키고 지뢰는 해킹할 수 없어. 아군 회복은 체력 5를 회복하며 총 5회 사용할 수 있어. 최대 체력을 넘지 않고, 오브젝트 수리는 최대 내구도 절반을 회복해.</p></div><div class="legend">공통: 적을 운반하는 동안 공격·특수기술·웅크리기는 사용할 수 없어. 적을 타겟팅하거나 그 적이 요원을 발견하면 적을 인식해. 시야는 적이나 바닥 한 곳을 조준 후 시야 보기 버튼으로 설정해. 바닥에서는 그 지점을 가장 최근에 본 적 한 명의 시야를 표시해.<br>적 체력: 경비병 8 · 전투병 15 · 관리병 8 · 추격자 8 · 포탑 20.<br>추격자는 카타나로 2.5m 이내에서 피해 4 / 1초 간격으로 공격해.<br>모든 적 시야각 80° · 적 시야 20m · 일반 적 공격 20m · 추격자 공격 2.5m · 포탑 시야·공격 40m ·  요원이 시야에 1초 연속 노출되면 인지해. 인지 중에는 화면 가장자리가 붉게 표시되며 시야에서 벗어나면 인지 시간이 초기화돼. 인지 후에는 7m/s로 추격·공격하고 공격자 주변 5m의 적이 지원해. 놓치면 마지막 발견 위치까지 이동한 뒤 주변을 10초간 수색하고 원래 자리로 돌아가. 시체를 발견해도 해당 위치를 확인한 뒤 10초간 주변을 수색해.<br>비콘과 발견한 미작동 지뢰는 2m 이내에서 회수 가능해. 경비병 소총은 피해 4 / 1초, 전투병 기관총은 피해 4 / 0.5초, 관리병 권총은 피해 3 / 1초, 포탑은 피해 4 / 0.5초야. 지뢰와 레이저 함정은 각각 피해 5를 줘. 엔지니어가 설치한 지뢰도 피해 5야.<br><strong>요원 한 명이라도 사망하면 즉시 게임오버.</strong> 시작 지점은 좌하단 착륙장이며 북동쪽의 기지가 목표야.<br>경비는 넓은 구역을 이동하는 순찰 보초와 제자리에서 시선을 돌리는 고정 보초로 나뉘어. 관리자 네 명은 북서·북동·남서·남동 구역을 각각 순찰해. 전투병은 주요 건물의 1층 입구에서 80° 시야로 경계해.<br>차량 정비고·숙영동·동서 창고·문서고의 2층 경계 데크와 옥상에 보초 10명이 있어. 고정 사다리 13개를 모든 요원과 추격하는 적이 사용할 수 있어. 건물 11곳은 5블록 높이의 실내와 지붕, 실제로 열고 닫는 출입문을 갖추고 있어.</div></details><details><summary>원본 아트워크 / 작전 지도</summary><img id="fullMap" class="mapart" alt="원본 지도"><p class="fine">가로와 세로가 각각 두 배인 250×198m 맵이야. 기지 자체도 150×106m로 확장했어. 숙영동, 차량 정비고, 공작소, 통신 시설, 관측 데크, 보급 컨테이너와 북측 정비문을 추가했으며 실제 배치는 전체 보기에서 확인해. 회색 외곽벽과 붉은 표식, 중앙 본부, 동력 시설, 문서고와 주변 암벽·순환 도로를 블록 형태로 재구성했어. 시작: 좌하단 · 목표: 기지 우측 상단 · 탈출: 우상단 외곽.</p></details></div></section>
 <div class="cinema" id="cinema" hidden><div class="cinlabel">ALL UNITS SAFE / DETONATION</div><div id="countdown">3</div><div id="cinFoot">원격 기폭 준비</div></div>
 <section class="modal complete" id="complete" hidden><div class="seal">✓</div><div class="eyebrow">OPERATION PAPERFALL</div><h1>MISSION<br>COMPLETE</h1><p>문서고 파괴 확인.<br>특수부대 4명 전원 복귀.</p><div class="stats"><div><b id="timeStat">00:00</b><small>작전 시간</small></div><div><b>4 / 4</b><small>복귀 요원</small></div><div><b id="alarmStat">0</b><small>경보 횟수</small></div></div><p>당신이 선택한 전술로 작전 완료</p><button id="againBtn" class="primary">메인 화면으로　→</button></section>
 <section class="modal gameover-screen" id="gameover" hidden><div class="gameover-actions"><button id="failLoadBtn" class="primary" disabled>마지막 저장 데이터 불러오기</button><button id="retryBtn" class="secondary">다시 시작</button><button id="failHomeBtn" class="secondary">메인 화면</button><button id="failQuitBtn" class="secondary">게임 종료</button></div><div class="gameover-summary"><div class="eyebrow">OPERATION FAILED</div><h1>GAME OVER</h1><p id="failReason"></p><p>요원 한 명이라도 사망하면 작전이 종료됩니다.</p></div></section>
@@ -343,7 +343,7 @@ const wrap=a=>Math.atan2(Math.sin(a),Math.cos(a));
 const facing=(a,b)=>Math.atan2(b.x-a.x,-(b.z-a.z));
 function turnTowards(a,target,rate,dt){a.angle+=clamp(wrap(target-a.angle),-rate*dt,rate*dt);a.angle=wrap(a.angle);}
 const WORLD={minX:-125,maxX:124,minZ:-99,maxZ:98,nx:250,nz:198,cell:1,step:.5};
-const SO={start:{x:-98,z:74},safe:{x:98,z:-74},decoy:{x:-86,z:56},climb:{x:-76,z:42},checkpoint:{x:-54,z:14},hide:{x:-46,z:-6},trap:{x:-22,z:-24},wall:{x:38,z:-6},floor:{x:46,z:-12},stairs:{x:46,z:-24},bomb:{x:50,z:-34}};
+const SO={start:{x:-98,z:74},safe:{x:98,z:-74},climb:{x:-76,z:42},checkpoint:{x:-54,z:14},hide:{x:-46,z:-6},trap:{x:-22,z:-24},wall:{x:38,z:-6},floor:{x:46,z:-12},stairs:{x:46,z:-24},bomb:{x:50,z:-34}};
 const PAL={sand:'#b6a884',sand2:'#c4b693',stone:'#6e7b89',rock:'#958878',wall:'#bfc0bc',dark:'#343a3e',roof:'#505458',road:'#727776',orange:'#ca3636',blue:'#79bfe0'};
 const cellCount=WORLD.nx*WORLD.nz;
 let heightGrid=new Float32Array(cellCount),colorGrid=new Array(cellCount),tagGrid=new Array(cellCount),voidGrid=new Uint8Array(cellCount),staticDetails=[],worldRevision=0;
@@ -382,7 +382,7 @@ function landingAt(x,z,fromY,drop=Infinity,height=2.1,ignore=null){
 function clearWalk(a,b){let n=Math.max(1,Math.ceil(dist(a,b)/.18)),y=a.y??floorY(a.x,a.z);for(let i=1;i<=n;i++){let h=landingAt(lerp(a.x,b.x,i/n),lerp(a.z,b.z,i/n),y);if(h===null)return false;y=h;}return b.y===undefined||Math.abs(y-b.y)<.51;}
 function boundedWalk(a,b,bounds){
  if(!clearWalk(a,b))return false;if(!bounds)return true;
- const n=Math.max(1,Math.ceil(dist(a,b)/.12));for(let i=0;i<=n;i++){const x=lerp(a.x,b.x,i/n),z=lerp(a.z,b.z,i/n),h=landingAt(x,z,bounds.maxY??floorY(x,z),Infinity);if(x<bounds.minX||x>bounds.maxX||z<bounds.minZ||z>bounds.maxZ||h===null||h>(bounds.maxY??Infinity))return false;}return true;
+ const n=Math.max(1,Math.ceil(dist(a,b)/.12));for(let i=0;i<=n;i++){const x=lerp(a.x,b.x,i/n),z=lerp(a.z,b.z,i/n),h=landingAt(x,z,bounds.maxY??floorY(x,z),Infinity);if(x<bounds.minX||x>bounds.maxX||z<bounds.minZ||z>bounds.maxZ||h===null||h<(bounds.minY??-Infinity)||h>(bounds.maxY??Infinity))return false;}return true;
 }
 // Grid DDA enumerates every crossed cell, without skipping thin barriers or revisiting a cell.
 function traceCells(a,b){
@@ -496,14 +496,18 @@ class MinHeap{constructor(){this.a=[];}push(n){let a=this.a,i=a.length;a.push(n)
 // Searches are synchronous; share scratch storage without changing route semantics.
 const pathScratch={g:new Float32Array(cellCount*2),prev:new Int32Array(cellCount*2),closed:new Uint8Array(cellCount*2),edgeLadder:new Map(),edgeJump:new Map(),heap:new MinHeap()};
 // Search ground and roof surfaces independently; a roof is never an indoor floor.
+function navigationRouteClear(a,b,blocked=a.navigationBlocked){
+ if(!blocked)return true;const steps=Math.max(1,Math.ceil(dist(a,b)/.2));
+ for(let j=0;j<=steps;j++){const x=lerp(a.x,b.x,j/steps),z=lerp(a.z,b.z,j/steps),y=floorY(x,z,(a.y??0)+.501),i=indexAt(x,z)+(y>heightGrid[indexAt(x,z)]+.501?cellCount:0);if(blocked.has(i))return false;}return true;
+}
 function pathTo(a,dest,quiet=false,useLadders=true,allowJump=false){
  if(a.hp<=0||a.climbing)return false;
- if(boundedWalk(a,dest,a.navigationBounds)){a.path=[{...dest}];a.pathTarget={...dest};return true;}
+ if(boundedWalk(a,dest,a.navigationBounds)&&navigationRouteClear(a,dest)){a.path=[{...dest}];a.pathTarget={...dest};return true;}
  const heightCache=new Map(),allowedCache=new Map(),cell=i=>cellOf(i%cellCount),height=i=>{if(heightCache.has(i))return heightCache.get(i);const p=cell(i),base=i>=cellCount?topY(p.x,p.z):heightGrid[i];let h=base;for(const b of nearbyScenery(p.x,p.z))if(b.hi<=base+.502)h=Math.max(h,b.hi);heightCache.set(i,h);return h;};
  const node=(x,z,y)=>{const i=indexAt(x,z);return i<0?-1:i+(y>heightGrid[i]+.501?cellCount:0);};
  const start=node(a.x,a.z,a.y),goal=node(dest.x,dest.z,dest.y??floorY(dest.x,dest.z,a.y+.501));if(start<0||goal<0)return false;
  const {g,prev,closed,edgeLadder,edgeJump,heap}=pathScratch;g.fill(Infinity);prev.fill(-1);closed.fill(0);edgeLadder.clear();edgeJump.clear();heap.a.length=0;
- const bodyHeight=a.crouched?1.25:2.1,bounds=a.navigationBounds,allowed=i=>{if(allowedCache.has(i))return allowedCache.get(i);if(i<0||voidGrid[i%cellCount])return false;const p=cell(i),h=height(i),ok=headroomAt(p.x,p.z,h,bodyHeight)&&objectBodyClear(p.x,h,p.z,bodyHeight)&&(!bounds||(p.x>=bounds.minX&&p.x<=bounds.maxX&&p.z>=bounds.minZ&&p.z<=bounds.maxZ&&h<=(bounds.maxY??Infinity)));allowedCache.set(i,ok);return ok;};if(!allowed(goal))return false;
+ const bodyHeight=a.crouched?1.25:2.1,bounds=a.navigationBounds,allowed=i=>{if(allowedCache.has(i))return allowedCache.get(i);if(i<0||voidGrid[i%cellCount]||a.navigationBlocked?.has(i))return false;const p=cell(i),h=height(i),ok=headroomAt(p.x,p.z,h,bodyHeight)&&objectBodyClear(p.x,h,p.z,bodyHeight)&&(!bounds||(p.x>=bounds.minX&&p.x<=bounds.maxX&&p.z>=bounds.minZ&&p.z<=bounds.maxZ&&h>=(bounds.minY??-Infinity)&&h<=(bounds.maxY??Infinity)));allowedCache.set(i,ok);return ok;};if(!allowed(goal))return false;
  const goalP=cell(goal),heur=i=>{const p=cell(i);return Math.hypot(p.x-goalP.x,p.z-goalP.z);};g[start]=0;heap.push({id:start,f:heur(start)});let found=false;
  const link=(n,j,cost,ladderId,jumpFrom)=>{const ng=g[n]+cost;if(allowed(j)&&!closed[j]&&ng<g[j]){g[j]=ng;prev[j]=n;if(ladderId)edgeLadder.set(j,ladderId);else edgeLadder.delete(j);if(jumpFrom)edgeJump.set(j,jumpFrom);else edgeJump.delete(j);heap.push({id:j,f:ng+heur(j)});}};
  while(heap.length){const n=heap.pop().id;if(closed[n])continue;if(n===goal){found=true;break;}closed[n]=1;const p=cell(n),h=height(n);
@@ -519,7 +523,7 @@ function pathTo(a,dest,quiet=false,useLadders=true,allowJump=false){
   }
  }
  if(!found){a.path=[];if(!quiet)toast('통로가 막혔어. 문이나 다른 진입로를 확인해.');return false;}
- const pathClear=(p,q)=>boundedWalk(p,q,bounds);let ids=[],n=goal;while(n!==start&&n>=0){ids.push(n);n=prev[n];}ids.reverse();const raw=ids.map(i=>({...cell(i),y:height(i),ladderId:edgeLadder.get(i),jumpFrom:edgeJump.get(i)})),out=[];let anchor={x:a.x,z:a.z,y:a.y};
+ const pathClear=(p,q)=>boundedWalk(p,q,bounds)&&navigationRouteClear(p,q,a.navigationBlocked);let ids=[],n=goal;while(n!==start&&n>=0){ids.push(n);n=prev[n];}ids.reverse();const raw=ids.map(i=>({...cell(i),y:height(i),ladderId:edgeLadder.get(i),jumpFrom:edgeJump.get(i)})),out=[];let anchor={x:a.x,z:a.z,y:a.y};
  for(let i=0;i<raw.length;i++)if(raw[i].ladderId||raw[i+1]?.ladderId||raw[i].jumpFrom||raw[i+1]?.jumpFrom||i===raw.length-1||!pathClear(anchor,raw[i+1])){out.push(raw[i]);anchor=raw[i];}
  if(pathClear(anchor,dest))out.push({...dest});a.path=out;a.pathTarget={...dest};return true;
 }
@@ -695,6 +699,29 @@ function livingBodyClear(a,x,y,z,allowEscape=false,height=unitHeight(a)){
   if(allowEscape&&u.y<a.y+unitHeight(a)-.025&&u.y+unitHeight(u)>a.y+.025&&distance>(a.x-u.x)**2+(a.z-u.z)**2+1e-8)continue;return false;
  }return true;
 }
+function enemyMovementLanding(e,x,z,dt){
+ const clear=movementLanding(e,x,z);if(clear!==null)return clear;
+ if(!e.type||e.type==='turret'||e.jump||e.climbing)return null;
+ const y=landingAt(x,z,e.y,Infinity,unitHeight(e));if(y===null||Math.abs(y-e.y)>.501||y>(e.navigationBounds?.maxY??Infinity)||y<(e.navigationBounds?.minY??-Infinity))return null;
+ const blockers=nearbyLivingUnits(e,x,z).filter(u=>u.y<y+unitHeight(e)-.025&&u.y+unitHeight(u)>y+.025&&(x-u.x)**2+(z-u.z)**2<(unitRadius(e)+unitRadius(u))**2-1e-8);
+ if(!blockers.length||blockers.some(u=>!u.type||u.type==='turret'||u.jump||u.climbing))return null;
+ const moved=[];
+ for(const u of blockers){
+  const dx=u.x-x,dz=u.z-z,d=Math.hypot(dx,dz),r=unitRadius(e)+unitRadius(u),amount=Math.min(.25,r-d+.012),nx=d>1e-6?dx/d:(x-e.x)/Math.max(1e-6,dist(e,{x,z})),nz=d>1e-6?dz/d:(z-e.z)/Math.max(1e-6,dist(e,{x,z}));
+  let landing=null;
+  for(const angle of [0,.6,-.6,1,-1]){
+   const cs=Math.cos(angle),sn=Math.sin(angle),px=u.x+(nx*cs-nz*sn)*amount,pz=u.z+(nx*sn+nz*cs)*amount;
+   if((px-x)**2+(pz-z)**2<r*r)continue;
+   const py=landingAt(px,pz,u.y,.501,unitHeight(u));if(py===null||Math.abs(py-u.y)>.501||!objectWalkClear(u,{x:px,y:py,z:pz},unitHeight(u))||!livingBodyClear(u,px,py,pz,true))continue;
+   landing={x:px,y:py,z:pz};break;
+  }
+  if(!landing){for(const m of moved){Object.assign(m.unit,m.before);refreshLiveBody(m.unit);}return null;}
+  moved.push({unit:u,before:{x:u.x,y:u.y,z:u.z,viewY:u.viewY},landing});Object.assign(u,landing,{viewY:landing.y});refreshLiveBody(u);
+ }
+ if(!livingBodyClear(e,x,y,z,true)){for(const m of moved){Object.assign(m.unit,m.before);refreshLiveBody(m.unit);}return null;}
+ for(const {unit:u}of moved){u.displacedUntil=S.t+1.5;u.path=[];u.pathTimer=.2;u.failedPath=null;}
+ return y;
+}
 function livingFloorY(a,fromY){let floor=-Infinity;for(const u of nearbyLivingUnits(a,a.x,a.z)){const r=unitRadius(a)+unitRadius(u),top=u.y+unitHeight(u);if((a.x-u.x)**2+(a.z-u.z)**2<r*r&&top<=fromY+.001)floor=Math.max(floor,top);}return floor;}
 function livingCeilingAt(a,feet){let ceiling=Infinity;for(const u of nearbyLivingUnits(a,a.x,a.z)){const r=unitRadius(a)+unitRadius(u);if((a.x-u.x)**2+(a.z-u.z)**2<r*r&&u.y>=feet+unitHeight(a)-.025)ceiling=Math.min(ceiling,u.y-unitHeight(a));}return ceiling;}
 let sceneryStatic=new Map(),sceneryDynamic=new Map(),sceneryDetails=null,sceneryDetailCount=-1,sceneryStamp=null;
@@ -729,7 +756,6 @@ function trapSolidBoxes(t,b){
   else b.box(t.x,y+.02,t.z,.12,.04,.12);
  }else for(const sign of [-1,1])b.box(t.x+sign*t.w/2,y+.5,t.z,.5,1,.5);
 }
-function beaconBoxes(p,b){b.box(p.x,p.y+.18,p.z,.4,.35,.4,'#566f82');b.box(p.x,p.y+.4,p.z,.15,.1,.15,p.active===false?'#788d99':'#96e5ff');}
 function bombBoxes(b){b.box(SO.bomb.x,.78,SO.bomb.z,.8,.55,.6,'#354454');b.box(SO.bomb.x,1.06,SO.bomb.z,.3,.05,.35,Math.sin(S.t*6)>0?'#ffb658':'#fa692e');}
 function addSceneryBox(hash,owner,x,y,z,w,h,d,color,angle=0){
  const c=Math.cos(angle),s=Math.sin(angle),hx=w/2,hz=d/2,ex=Math.abs(c)*hx+Math.abs(s)*hz,ez=Math.abs(s)*hx+Math.abs(c)*hz,box={owner,x,z,c,s,hx,hz,lo:y-h/2,hi:y+h/2};
@@ -737,11 +763,11 @@ function addSceneryBox(hash,owner,x,y,z,w,h,d,color,angle=0){
 }
 function syncScenery(force=false){
  if(sceneryDetails!==staticDetails||sceneryDetailCount!==staticDetails.length){sceneryStatic.clear();for(const s of staticDetails)addSceneryBox(sceneryStatic,s,s.x,s.y,s.z,s.w,s.h,s.d);sceneryDetails=staticDetails;sceneryDetailCount=staticDetails.length;}
- const c=sceneryStamp;if(!force&&c&&c[0]===S.t&&c[1]===worldRevision&&c[2]===S.doors&&c[3]===S.doors.length&&c[4]===S.disposals&&c[5]===S.disposals.length&&c[6]===S.ladders&&c[7]===S.ladders.length&&c[8]===S.traps&&c[9]===S.traps.length&&c[10]===S.enemies&&c[11]===S.enemies.length&&c[12]===S.beacon&&c[13]===S.flags.bomb&&c[14]===S.exploded)return;
- sceneryStamp=[S.t,worldRevision,S.doors,S.doors.length,S.disposals,S.disposals.length,S.ladders,S.ladders.length,S.traps,S.traps.length,S.enemies,S.enemies.length,S.beacon,S.flags.bomb,S.exploded];sceneryDynamic.clear();const sink=owner=>({box:(...args)=>addSceneryBox(sceneryDynamic,owner,...args)});
+ const c=sceneryStamp;if(!force&&c&&c[0]===S.t&&c[1]===worldRevision&&c[2]===S.doors&&c[3]===S.doors.length&&c[4]===S.disposals&&c[5]===S.disposals.length&&c[6]===S.ladders&&c[7]===S.ladders.length&&c[8]===S.traps&&c[9]===S.traps.length&&c[10]===S.enemies&&c[11]===S.enemies.length&&c[12]===S.flags.bomb&&c[13]===S.exploded)return;
+ sceneryStamp=[S.t,worldRevision,S.doors,S.doors.length,S.disposals,S.disposals.length,S.ladders,S.ladders.length,S.traps,S.traps.length,S.enemies,S.enemies.length,S.flags.bomb,S.exploded];sceneryDynamic.clear();const sink=owner=>({box:(...args)=>addSceneryBox(sceneryDynamic,owner,...args)});
  for(const o of S.disposals)disposalBoxes(o,sink(o));for(const d of S.doors)doorBoxes(d,sink(d));
  for(const l of S.ladders)if(ladderLinks(indexAt(l.low.x,l.low.z)).some(p=>p.ladder===l))ladderBoxes(l,sink(l));
- for(const t of S.traps)trapSolidBoxes(t,sink(t));if(S.beacon)beaconBoxes(S.beacon,sink(S.beacon));if(S.flags.bomb&&!S.exploded)bombBoxes(sink('bomb'));
+ for(const t of S.traps)trapSolidBoxes(t,sink(t));if(S.flags.bomb&&!S.exploded)bombBoxes(sink('bomb'));
  // The tower's fixed base and column remain solid even when disabled or hacked.
  for(const e of S.enemies)if(e.type==='turret'&&!e.disposed&&!e.carriedBy){const b=sink(e);b.box(e.x,e.y+.2,e.z,1.32,.4,1.32);if(!e.dead){b.box(e.x,e.y+1.26,e.z,.6,1.72,.6);b.box(e.x,e.y+1.48,e.z,1.05,.45,1.66,undefined,e.angle+Math.PI);}}
 }
@@ -827,13 +853,44 @@ function configureSecurity(){
   ['administrator','NW','북서',-36,-6,[[-36,-6],[-66,-16],[-66,-46],[-6,-46],[-6,-16],[-34,-16]],{minX:-69,maxX:-1,minZ:-47,maxZ:-1,maxY:.5}],
   ['administrator-ne','NE','북동',34,-4,[[34,-4],[68,-4],[68,-32],[32,-32],[32,-46],[4,-46],[4,-16]],{minX:1,maxX:70,minZ:-47,maxZ:-1,maxY:.5}],
   ['administrator-sw','SW','남서',-66,16,[[-66,16],[-66,46],[-16,46],[-16,16],[-34,16]],{minX:-69,maxX:-1,minZ:1,maxZ:48,maxY:.5}],
-  ['administrator-se','SE','남동',16,18,[[16,18],[16,46],[66,45],[68,22],[36,22]],{minX:1,maxX:70,minZ:1,maxZ:48,maxY:.5}]
+  ['administrator-se','SE','남동',16,18,[[16,18],[24,46],[66,45],[68,28],[30,28]],{minX:1,maxX:70,minZ:1,maxZ:48,maxY:.5}]
  ];
  for(const [id,quadrant,sector,x,z,route,patrolBounds]of quadrants)addEnemy(id,'admin',x,z,{angle:0,duty:'patrol',floorLevel:1,quadrant,sector,patrol:route.map(([x,z])=>({x,z})),patrolBounds,speed:1.6});
  const heavyPosts=[['lookout',-4,15,Math.PI,'본부'],['mainHeavy',66,-36,Math.PI/2,'문서고'],['garage-heavy',-65,1,-Math.PI/2,'차량 정비고'],['barracks-heavy',-30,42,Math.PI,'숙영동'],['supply-heavy',50,20,Math.PI,'동측 창고'],['comms-heavy',20,-30,Math.PI,'통신 시설']];
  for(const [id,x,z,angle,sector]of heavyPosts){const e=S.enemies.find(e=>e.id===id);if(!e)continue;Object.assign(e,{x,z,y:floorY(x,z),viewY:floorY(x,z),angle,watchAngle:angle,watchSweep:.7,sector,fov:ENEMY_FOV,duty:'sentry',floorLevel:1,patrol:[],home:{x,z,y:floorY(x,z)}});}
  // Existing mission defenders are relocated if their old spawn overlaps new walls.
  for(const e of S.enemies){if(landingAt(e.x,e.z,e.y,Infinity,2.1,e)!==null)continue;let found=null;for(let r=1;r<=5&&!found;r++)for(let dz=-r;dz<=r&&!found;dz++)for(let dx=-r;dx<=r;dx++){const x=e.x+dx,z=e.z+dz,y=floorY(x,z);if(y===0&&landingAt(x,z,y,Infinity,2.1,e)!==null){found={x,z,y};break;}}if(found){Object.assign(e,found,{viewY:found.y,home:{...found},path:[]});}}
+}
+function patrolNavigationBlocks(e){
+ const blocked=new Set();
+ for(const other of S.enemies){
+  if(other===e||!solidLivingUnit(other))continue;const p=other.home??other,r=unitRadius(e)+unitRadius(other)+.4+Math.SQRT1_2;
+  for(let z=Math.floor(p.z-r);z<=Math.ceil(p.z+r);z++)for(let x=Math.floor(p.x-r);x<=Math.ceil(p.x+r);x++){
+   const i=indexAt(x,z);if(i<0||(x-p.x)**2+(z-p.z)**2>r*r)continue;
+   for(const level of [0,1]){const y=level?topY(x,z):heightGrid[i];if(p.y<y+unitHeight(e)-.025&&p.y+unitHeight(other)>y+.025)blocked.add(i+level*cellCount);}
+  }
+ }
+ return blocked;
+}
+function prepareDefaultPatrols(){
+ syncScenery(true);
+ for(const e of S.enemies){
+  if(e.patrolPrepared||e.duty!=='patrol'||!e.patrol.length||!solidLivingUnit(e))continue;
+  const origin={...(e.home??e)},bounds={minX:WORLD.minX,maxX:WORLD.maxX,minZ:WORLD.minZ,maxZ:WORLD.maxZ,minY:origin.y-.501,maxY:origin.y+.501,...e.patrolBounds},blocked=patrolNavigationBlocks(e);
+  const probe={...e,...origin,path:[],navigationBounds:bounds,navigationBlocked:blocked},route=[{x:origin.x,y:origin.y,z:origin.z}];
+  const append=target=>{
+   const p={x:target.x,z:target.z,y:target.y??floorY(target.x,target.z,origin.y+.501)};
+   if(dist(probe,p)<.1&&Math.abs(probe.y-p.y)<.1)return true;
+   if(!pathTo(probe,p,true,false))return false;
+   for(const v of probe.path)if(dist(route.at(-1),v)>.1||Math.abs(route.at(-1).y-v.y)>.1)route.push({x:v.x,y:v.y,z:v.z});
+   Object.assign(probe,p);return true;
+  };
+  for(const p of e.patrol)append(p);
+  if(route.length>1)append(origin);
+  if(route.length<3||dist(route.at(-1),origin)>.1){e.duty='sentry';e.patrol=[];e.watchAngle=e.angle;}
+  else{route.pop();e.patrol=route;e.patrolBounds=bounds;e.pi=0;}
+  e.patrolPrepared=true;e.path=[];e.pathTimer=0;e.failedPath=null;
+ }
 }
 function enemyLabel(e){return(e.type==='guard'?(e.duty==='patrol'?'순찰 보초':'고정 보초'):NAMES[e.type])+(e.type==='admin'&&e.sector?' · '+e.sector:'')+(e.type==='heavy'?' · 1층 경계':e.floorLevel===2?' · 2층':'');}
 function advanceClimb(a,dt){
@@ -959,7 +1016,7 @@ function fireWeapon(kind,a,explicit=null){
  if(kind==='emp'){empBurst(a,impact);return true;}
  let primaryHit=false;victims.forEach((q,i)=>{if(!q.dead&&Math.hypot(a.x-q.x,a.y-q.y,a.z-q.z)<=RANGE[kind]&&ballisticLOS(a,q,1.2)){weaponDamage(q,kind,a,surprise[i]&&!knowsAttacker(q,a));if(q===e)primaryHit=true;}});
  if(kind==='wire'&&primaryHit&&e.type!=='turret'){
-  pullEnemyToFeet(e,a);if(S.beacon)markDone('decoy','교란 유인 성공.');
+  pullEnemyToFeet(e,a);
  }
  updateUI(true);
  });updateUI(true);return true;
@@ -1132,13 +1189,13 @@ function advanceWallGrip(a,dt){
 }
 </script><script>/* Simulation and mission rules. No external libraries or server are required. */
 'use strict';
-const S={started:false,paused:false,modal:null,t:0,selected:0,mode:'unit',flags:{},actors:[],enemies:[],traps:[],doors:[],ladders:[],disposals:[],visionEnemyId:null,visionGroundPoint:null,placement:null,effects:[],particles:[],pulses:[],alarm:0,alarmCount:0,lastAlarm:-20,scope:false,snap:null,scopeAim:null,scopeX:0,scopeY:0,ammo:SKILL_LIMITS.snipe,reload:0,channel:null,beacon:null,cinematic:0,exploded:false,complete:false,fail:false,dirty:true,sound:true,toastTimer:0,joystick:{x:0,z:0},lookJoystick:{x:0,z:0},scopeZoom:4,keys:{},followCam:true,focus:null,autoTarget:null,trail:[],trailLeader:null,moveMarker:null,buildMenu:false,spyWait:0,stats:{kills:0},camShake:0};
+const S={started:false,paused:false,modal:null,t:0,selected:0,mode:'unit',flags:{},actors:[],enemies:[],traps:[],doors:[],ladders:[],disposals:[],visionEnemyId:null,visionGroundPoint:null,placement:null,effects:[],particles:[],pulses:[],alarm:0,alarmCount:0,lastAlarm:-20,scope:false,snap:null,scopeAim:null,scopeX:0,scopeY:0,ammo:SKILL_LIMITS.snipe,reload:0,channel:null,cinematic:0,exploded:false,complete:false,fail:false,dirty:true,sound:true,toastTimer:0,joystick:{x:0,z:0},lookJoystick:{x:0,z:0},scopeZoom:4,keys:{},followCam:true,focus:null,autoTarget:null,trail:[],trailLeader:null,moveMarker:null,buildMenu:false,spyWait:0,stats:{kills:0},camShake:0};
 const ENEMY_FOV=80*Math.PI/180;
 const ENEMY_RANGE={guard:20,heavy:20,admin:20,chaser:20,turret:40};
 const NAMES={guard:'경비병',heavy:'전투병',admin:'관리병',chaser:'추격자',turret:'감시 터렛'};
 const UNIT_NAMES=['오퍼레이터','헌터','스파이','엔지니어'];
 const PLAYER_SPEEDS=[8,6,6,6];
-const RANGE={wire:9,shotgun:6,mimic:8,katana:2.5,beacon:12,scope:Infinity,scan:20,disarm:2,trap:6,dagger:2.3,spyScan:8,talk:4,emp:12,repair:4,wall:6,floor:6,stairs:6,ladder:6,hack:4,bomb:2.6,carry:2.5,recover:2.5};
+const RANGE={wire:9,shotgun:6,mimic:8,katana:2.5,scope:Infinity,scan:20,disarm:2,trap:6,dagger:2.3,spyScan:8,talk:4,emp:12,repair:4,wall:6,floor:6,stairs:6,ladder:6,hack:4,bomb:2.6,carry:2.5,recover:2.5};
 function makeActor(id,x,z){return{id,name:UNIT_NAMES[id],x,z,y:floorY(x,z),viewY:floorY(x,z),angle:id===3?Math.PI:0,hp:PLAYER_HEALTH[id],maxHP:PLAYER_HEALTH[id],charges:{grapple:id===0?SKILL_LIMITS.wire:0,shotgun:id===1?SKILL_LIMITS.shotgun:0,trap:id===3?3:0,heal:id===3?5:0},path:[],pathTarget:null,solo:false,following:false,followTarget:null,followOrder:0,crouched:false,jump:null,airJumpUsed:false,talkingTo:null,carry:null,climbing:null,wallPush:0,walk:0,moving:false,still:0,reveal:0,cloak:false,disguise:false,copy:null,cool:{},speed:PLAYER_SPEEDS[id],followTimer:0,climbUsed:false};}
 function addEnemy(id,type,x,z,opt={}){let e={id,type,x,z,y:floorY(x,z),viewY:floorY(x,z),angle:Math.PI,hp:ENEMY_HEALTH[type],maxHP:ENEMY_HEALTH[type],awarePlayers:[],recognitionTarget:null,recognitionTime:0,dead:false,disabled:0,detected:false,hacked:false,fov:ENEMY_FOV,suspicion:0,alert:false,patrol:[],pi:0,speed:1.35,turnRate:type==='turret'?.42:type==='heavy'?.50:.62,wait:0,held:0,cool:0,moving:false,walk:0,...opt};e.fov=ENEMY_FOV;e.vision=ENEMY_RANGE[type];e.attackRange=type==="chaser"?2.5:ENEMY_RANGE[type];e.duty??=e.patrol.length?'patrol':'sentry';e.floorLevel??=e.y>=2?2:1;e.watchAngle??=e.angle;e.watchSweep??=e.duty==='sentry'&&type!=='turret'?.55:0;e.bodyCheckAt=S.t+(S.enemies.length%16)*.016;e.home={x,z,y:e.y};e.behavior='patrol';e.path=[];e.pathTimer=0;e.lastSeenAt=-Infinity;S.enemies.push(e);return e;}
 function initUnits(){
@@ -1162,7 +1219,7 @@ function initUnits(){
  S.traps.forEach(t=>{t.x*=2;t.z*=2;if(t.w)t.w*=2;});
  S.traps.push(...[[-65,25],[-40,44],[34,24],[66,-27],[-18,-29],[9,33]].map(([x,z],i)=>({id:'sector-mine-'+i,type:'mine',x,z,known:false,removed:false})));
  applyCustomEnemies();
- if(levelBlueprint.enemies===null){addReinforcements();addExpandedDefenders();configureSecurity();}
+ if(levelBlueprint.enemies===null){addReinforcements();addExpandedDefenders();configureSecurity();initDisposals();prepareDefaultPatrols();}
 }
 const TASKS=[
  {id:'repair',who:3,skill:'repair',title:'손상된 아군 / 오브젝트 수리',hint:'엔지니어가 손상된 생존 아군, 포탑, 문, 사다리를 조준 → 2m 이내 상호작용 목록에서 회복 / 수리.',target:'ally1'},
@@ -1170,12 +1227,11 @@ const TASKS=[
  {id:'snipe',who:1,skill:'scope',title:'외곽 전투병 저격',hint:'스코프로 전투병을 조준하고 발사. 이동하면서도 저격할 수 있어.',target:'lookout'},
  {id:'scan',who:1,skill:'scan',title:'진입로 지뢰 탐지',hint:'접근로 지뢰에서 20m 이내. 헌터의 지역 스캔 사용.',target:'approachMine'},
  {id:'mineHack',who:3,skill:'disarm',title:'지뢰 해체',hint:'엔지니어가 2m 이내 지뢰를 조준 → 해체하기. 2초 동안 정지하면 해체 완료.',target:'approachMine'},
- {id:'decoy',who:2,skill:'beacon',title:'교란 비콘으로 경비 유인',hint:'스파이 특수기술 → 12m 이내 바닥 조준 후 상호작용. 유인이 끝난 뒤 가까이서 회수 가능.',point:'decoy'},
- {id:'wire',who:0,skill:'wire',title:'경비 갈고리 제압',hint:'유인된 경비를 바라봐. 9m 이내에서 갈고리 · 작전당 5회.',target:'lureGuard'},
+ {id:'wire',who:0,skill:'wire',title:'경비 갈고리 제압',hint:'경비를 바라봐. 9m 이내에서 갈고리 · 작전당 5회.',target:'lureGuard'},
  {id:'climb',who:0,skill:'climb',title:'서측 정비벽 넘어 문 개방',hint:'오퍼레이터로 서측 벽을 향해 점프하여 붙은 뒤 위로 올라가. 벽을 넘어 안쪽으로 내려와 지정 버튼으로 게이트를 열어.',point:'climb'},
  {id:'katana',who:0,skill:'katana',title:'내부 경비 근접 제압',hint:'내부 경비를 향해 접근. 2.5m 이내에서 카타나.',target:'relayGuard'},
  {id:'spyScan',who:2,skill:'mimic',title:'스파이 · 상대 복사 / 위장',hint:'죽은 적을 바라보고 2m 이내 상호작용으로 상대 복사. 특수기술로 위장을 켜.',target:'checkpointGuard'},
- {id:'disguise',who:2,skill:'disguise',title:'복사한 외형으로 위장',hint:'죽은 적의 상대 복사 후 2초 동안 위장 준비. 복사 외형 위장 상호작용으로 다시 위장 가능. 관리자는 간파해.',point:'checkpoint'},
+ {id:'disguise',who:2,skill:'disguise',title:'복사한 외형으로 위장',hint:'죽은 적의 상대 복사 후 특수기술로 위장 시작 / 해제. 위장 준비는 2초이며 관리자는 간파해.',point:'checkpoint'},
  {id:'talk',who:2,skill:'talk',title:'검문 경비와 대화 / 인증',hint:'위장 상태로 검문 경비를 스냅하고 2m 이내 상호작용으로 대화.',target:'checkpointGuard'},
  {id:'dagger',who:2,skill:'dagger',title:'관리자 제거 / 접근키 회수',hint:'관리자를 바라보고 2.3m 이내에서 단검. 정지 은신으로 접근 시점을 잡아.',target:'administrator'},
  {id:'trap',who:3,skill:'trap',title:'순찰로에 덫 설치',hint:'덫 스킬 선택 → 6m 이내 원하는 바닥 선택. 작동 전 가까이서 회수 가능.',point:'trap'},
@@ -1239,12 +1295,10 @@ function targetCandidates(a=activeActor()){
   (d.panels||[]).forEach((p,i)=>out.push({kind:'lockPanel',id:d.id+'-panel-'+i,doorId:d.id,ref:d,x:p.x,z:p.z,y:0,lift:1.4,name:d.name+' 잠금 패널'}));
   if(d.control)out.push({kind:'gateButton',id:d.id+'-control',doorId:d.id,ref:d,x:d.control.x,z:d.control.z,y:0,lift:1.4,name:d.name+' 제어 버튼'});
  }
- if(S.beacon)out.push({kind:'beacon',id:'beacon',ref:S.beacon,x:S.beacon.x,z:S.beacon.z,y:S.beacon.y,name:'회수 가능한 비콘',lift:.3});
- const labels={decoy:'교란 비콘 지점',climb:'정비벽',checkpoint:'검문 인증',hide:'은신 지점',trap:'덫 설치 지점',wall:'차폐벽 소켓',floor:'바닥 소켓',stairs:'계단 소켓',bomb:'폭탄 설치 소켓',safe:'안전 구역'};
+ const labels={climb:'정비벽',checkpoint:'검문 인증',hide:'은신 지점',trap:'덫 설치 지점',wall:'차폐벽 소켓',floor:'바닥 소켓',stairs:'계단 소켓',bomb:'폭탄 설치 소켓',safe:'안전 구역'};
  for(const [id,p]of Object.entries(SO)){
-  if(['start','hide','climb','safe','decoy','trap','wall','floor','stairs'].includes(id)||S.flags[id])continue;
+  if(['start','hide','climb','safe','trap','wall','floor','stairs'].includes(id)||S.flags[id])continue;
   if(id==='checkpoint'&&!S.enemies.find(e=>e.id==='checkpointGuard')?.dead)continue;
-  if(id==='decoy'&&S.beacon)continue;
   const y=floorY(p.x,p.z);out.push({kind:'socket',id,ref:p,x:p.x,z:p.z,y:y<0?0:y,name:labels[id],lift:.3});
  }
  return out;
@@ -1271,11 +1325,10 @@ function skillStatus(kind,target=S.autoTarget){
  if(kind==='trap'&&a.charges.trap<=0)return{ok:false,label:'덫 0/3'};
  if(FREE_ATTACKS.has(kind))return{ok:a.id===WEAPON_STATS[kind].owner,label:WEAPON_STATS[kind].interval+'초 · 전방 공격'};
  if(kind==='cloak')return{ok:false,label:'은신 기능 제거됨'};
- if(kind==='mimic'&&(a.copy||a.disguise))return{ok:true,label:a.disguise?'위장 해제':'복사 외형 위장 · 2초'};
  if(kind==='scan')return{ok:true,label:'반경 20m · 적 / 함정'};
- if(kind==='disguise')return{ok:!!a.copy||a.disguise,label:a.disguise?'위장 해제':a.copy?'위장 준비 · 2초':'스캔 필요'};
+ if(kind==='disguise')return{ok:a.id===2&&(!!a.copy||a.disguise),label:a.disguise?'위장 해제':a.copy?'위장 준비 · 2초':'상대 복사 필요'};
  if(kind==='climb')return{ok:true,label:'점프 후 벽 이동',passive:true};
- if(PLACEMENT_SKILLS.has(kind))return{ok:kind!=='beacon'||!S.beacon,label:kind==='beacon'&&S.beacon?'비콘 회수 필요':S.placement?.kind===kind?'맵에서 위치 선택':r+'m · 위치 선택'};
+ if(PLACEMENT_SKILLS.has(kind))return{ok:true,label:S.placement?.kind===kind?'맵에서 위치 선택':r+'m · 위치 선택'};
  if(kind==='carry'&&a.carry)return{ok:true,label:'내려놓기'};
  if(!t)return{ok:false,label:'전방 대상 없음'};
  let valid=false,why='대상 불일치';
@@ -1286,7 +1339,6 @@ function skillStatus(kind,target=S.autoTarget){
   case 'hack':valid=t.kind==='lockPanel'&&t.ref.locked&&!t.ref.gate||t.kind==='door'&&!t.ref.gate&&!t.ref.panels&&!t.ref.hacked||t.kind==='enemy'&&t.ref.type==='turret'&&!t.ref.dead&&!t.ref.hacked;break;
   case 'disarm':valid=t.kind==='trap'&&canDisarmMine(a,t.ref);why='해체 가능한 지뢰 필요';break;
   case 'trap':valid=t.kind==='socket'&&t.id==='trap';break;
-  case 'beacon':valid=t.kind==='socket'&&t.id==='decoy'||t.kind==='enemy';break;
   case 'wall':case 'floor':case 'stairs':case 'bomb':valid=t.kind==='socket'&&t.id===kind;break;
   case 'carry':valid=t.kind==='enemy'&&canCarryEnemy(a,t.ref);why=t.ref.type==='turret'?'터렛 운반 불가':t.ref.type==='heavy'&&t.ref.dead&&a.id!==1?'전투병 시체는 헌터만 운반 가능':'운반 가능한 적 필요';break;
  }
@@ -1322,10 +1374,10 @@ function doSkill(kind,explicitTarget=null){
  case 'disarm':
   if(a.id!==3)return;e.known=true;beginChannel('disarm',2,t);toast('지뢰 해체 중 · 2초 동안 정지해.');return;
  case 'mimic':
-  if(a.id!==2)return;if(a.copy||a.disguise){toggleSpyDisguise();}else{beginChannel('spyScan',.85,t);S.channel.autoDisguise=true;effectsLine(a,e,'#cbadff',.8);}return;
+  if(a.id!==2)return;beginChannel('spyScan',.85,t);effectsLine(a,e,'#cbadff',.8);return;
  case 'cloak':return;
  case 'spyScan':
-  if(a.id!==2)return;beginChannel('spyScan',.85,t);S.channel.autoDisguise=true;effectsLine(a,e,'#cbadff',.8);return;
+  if(a.id!==2)return;beginChannel('spyScan',.85,t);effectsLine(a,e,'#cbadff',.8);return;
  case 'disguise':
   if(a.id!==2)return;toggleSpyDisguise();return;
  case 'talk':
@@ -1352,7 +1404,7 @@ function finishChannel(c){
  if(c.kind==='disarm'){const mine=S.traps.find(m=>m.id===c.target?.id);if(c.t+1e-9<2||!canDisarmMine(a,mine))return;mine.known=true;mine.removed=true;mine.refundable=false;a.cool.disarm=.5;S.flags.disarm=true;markDone('mineHack','지뢰 해체 완료.');beep(600,.1);updateTarget();updateUI(true);return;}
  if(c.kind==='hack'){finishHack(c);return;}
  if(c.kind==='ladder'){S.ladders.push({...c.target.ladder,id:'ladder-'+S.t+'-'+S.ladders.length,hp:4,maxHP:4});toast('사다리 완성 · 네 요원 모두 이용 가능.');return;}
- if(c.kind==='spyScan'){const e=S.enemies.find(e=>e.id===c.target?.id);if(a.id!==2||!spyCopyable(e)){toast('죽은 적만 상대 복사할 수 있어.');return;}a.copy={type:e.type,id:e.id};a.cool.spyScan=1;if(c.autoDisguise&&!a.disguise)toggleSpyDisguise();markDone('spyScan','죽은 적 외형 복사 완료 · 위장 가능.');return;}
+ if(c.kind==='spyScan'){const e=S.enemies.find(e=>e.id===c.target?.id);if(a.id!==2||!spyCopyable(e)){toast('죽은 적만 상대 복사할 수 있어.');return;}a.copy={type:e.type,id:e.id};a.cool.spyScan=1;markDone('spyScan','죽은 적 외형 복사 완료 · 특수기술로 위장 가능.');return;}
  if(['wall','floor','stairs'].includes(c.kind)){markDone(c.kind,{wall:'차폐벽 완성 · 터렛 시야 차단.',floor:'바닥 완성 · 도랑 통과 가능.',stairs:'0.5m 계단 완성 · 테라스 접근 가능.'}[c.kind]);refreshTerrain();return;}
  if(c.kind==='bomb'){markDone('bomb','폭탄 설치 완료. 전원 안전 구역으로 철수해.',4);refreshTerrain();S.actors.forEach(a=>a.path=[]);}
 }
@@ -1415,7 +1467,6 @@ function update(dt){
  if(S.channel?.kind==='disguise'&&S.channel.t+1e-9>=S.channel.total){const c=S.channel;S.channel=null;finishChannel(c);}
  updateScope(dt);updateTarget();
  updateVisionInspection();
- if(S.beacon){S.beacon.t+=dt;if(S.beacon.active!==false&&S.beacon.t>S.beacon.life){S.beacon.active=false;S.enemies.forEach(e=>e.lure=null);}}
  updateEffects(dt);
  if(S.flags.bomb&&S.actors.every(a=>a.hp>0&&dist(a,SO.safe)<5.8&&a.y<.5)){
   S.flags.extract=true;S.cinematic=.001;S.scope=false;S.channel=null;S.actors.forEach(a=>a.path=[]);$('hud').hidden=true;$('cinema').hidden=false;
@@ -1428,9 +1479,9 @@ function updateCinema(dt){S.cinematic+=dt;let t=S.cinematic;$('countdown').textC
 function formatTime(n){return String(Math.floor(n/60)).padStart(2,'0')+':'+String(Math.floor(n%60)).padStart(2,'0');}
 </script><script>/* Placement, reusable equipment, hacking and climbable ladder links. */
 'use strict';
-const PLACEMENT_SKILLS=new Set(['beacon','trap','bomb']);
-const PLACEMENT_OWNERS={beacon:2,trap:3,emp:3,wall:3,floor:3,stairs:3,ladder:3,bomb:3};
-const PLACEMENT_NAMES={beacon:'교란 비콘',trap:'덫',emp:'EMP',wall:'벽',floor:'바닥',stairs:'계단',ladder:'사다리',bomb:'폭탄'};
+const PLACEMENT_SKILLS=new Set(['trap','bomb']);
+const PLACEMENT_OWNERS={trap:3,emp:3,wall:3,floor:3,stairs:3,ladder:3,bomb:3};
+const PLACEMENT_NAMES={trap:'덫',emp:'EMP',wall:'벽',floor:'바닥',stairs:'계단',ladder:'사다리',bomb:'폭탄'};
 const DOOR_DEFS=[
  {id:'mainGate',name:'정문',x:0,z:52.5,gate:true,cells:[-7,52,7,53],control:{x:14,z:40.6,baseX:14,baseZ:40}},
  {id:'westGate',name:'서측 게이트',x:-73.5,z:42,gate:true,cells:[-74,39,-73,45],control:{x:-68,z:37.6,baseX:-68,baseZ:37}},
@@ -1482,7 +1533,6 @@ function placementStatus(kind,p,picked=null){
  if(kind==='trap'&&a.charges.trap<=0)return fail('남은 덫이 없어.');
  if(a.cool[kind]>0)return fail('스킬 재사용 대기 중.');
  let point={x:Math.round(p.x),z:Math.round(p.z)};point.y=floorY(point.x,point.z,(p.y??a.y)+.15);
- if(kind==='beacon'&&S.beacon)return fail('기존 비콘을 먼저 회수해.');
  if(kind==='emp'){
   const e=picked?.kind==='enemy'?picked.ref:S.enemies.filter(e=>!e.dead&&dist(e,point)<1.6).sort((p,q)=>dist(p,point)-dist(q,point))[0];
   if(!e||e.dead||e.hacked)return fail('EMP를 적용할 적을 선택해.');
@@ -1510,14 +1560,10 @@ function placementStatus(kind,p,picked=null){
 function placeSkill(p,picked=null){
  if(!S.placement||S.paused||S.modal||S.channel||S.cinematic)return false;
  const {kind,who}=S.placement;if(who!==S.selected){cancelPlacement();return false;}
- if(['trap','beacon'].includes(kind)&&activeActor().carry){cancelPlacement();updateUI(true);return false;}
+ if(kind==='trap'&&activeActor().carry){cancelPlacement();updateUI(true);return false;}
  const st=placementStatus(kind,p,picked);S.placement.point=p;if(!st.ok){toast(st.label);updateUI(true);return false;}
  const a=activeActor(),point=st.point;cancelPlacement();a.angle=facing(a,point);a.path=[];
- if(kind==='beacon'){
-  S.beacon={x:point.x,z:point.z,y:point.y,t:0,life:20,active:true};
-  for(const e of S.enemies)if(!e.dead&&!e.hacked&&e.type==='guard'&&dist(e,point)<19){e.lure={x:point.x,z:point.z};e.held=0;e.wait=0;}
-  a.cool.beacon=2.5;revealAction(a);beep(870,.1);toast('교란 비콘 투척 · 근처에서 회수 가능.');
- }else if(kind==='trap'){
+ if(kind==='trap'){
   a.charges.trap--;S.traps.push({id:'friendly-'+S.t+'-'+S.traps.length,type:'mine',x:point.x,z:point.z,y:point.y,known:true,removed:false,friendly:true,spent:false,owner:a.id,refundable:true});markDone('trap','선택한 위치에 덫 설치 완료.');revealAction(a);
  }else if(kind==='emp'){
   const e=st.enemy;fireWeapon('emp',a,{kind:'enemy',ref:e,x:e.x,y:e.y,z:e.z});
@@ -1536,15 +1582,14 @@ function finishHack(c){
  S.actors[c.who].cool.hack=.8;
 }
 function recoverables(a=activeActor()){
- const out=[];if(S.beacon)out.push({kind:'beacon',ref:S.beacon,x:S.beacon.x,z:S.beacon.z,y:S.beacon.y});
+ const out=[];
  for(const t of S.traps)if(a.id!==3&&t.type==='mine'&&t.known&&!t.removed&&!t.spent)out.push({kind:'trap',ref:t,x:t.x,z:t.z,y:t.y??floorY(t.x,t.z)});
  return out.filter(p=>Math.hypot(a.x-p.x,a.z-p.z,a.y-p.y)<=RANGE.recover&&ballisticLOS(a,p,.2)).sort((p,q)=>dist(a,p)-dist(a,q));
 }
 function recoverEquipment(target=null){
  if(!S.started||S.paused||S.modal||S.channel||S.cinematic||S.complete||S.fail||activeActor().hp<=0||activeActor().climbing)return;
- const all=recoverables();const p=target?all.find(p=>p.kind===target.kind&&p.ref===target.ref):all[0];if(!p){toast('2.5m 이내의 비콘 또는 발견한 미작동 지뢰에 접근해.');return;}
- if(p.kind==='beacon'){S.beacon=null;S.enemies.forEach(e=>e.lure=null);S.actors[PLACEMENT_OWNERS.beacon].cool.beacon=0;toast('교란 비콘 회수 · 다시 투척할 수 있어.');}
- else{p.ref.removed=true;if(p.ref.friendly&&p.ref.owner===3&&p.ref.refundable){S.actors[3].charges.trap=Math.min(3,S.actors[3].charges.trap+1);p.ref.refundable=false;}S.actors[3].cool.trap=0;toast('미작동 함정 회수.');}
+ const all=recoverables();const p=target?all.find(p=>p.kind===target.kind&&p.ref===target.ref):all[0];if(!p){toast('2.5m 이내의 발견한 미작동 지뢰에 접근해.');return;}
+ p.ref.removed=true;if(p.ref.friendly&&p.ref.owner===3&&p.ref.refundable){S.actors[3].charges.trap=Math.min(3,S.actors[3].charges.trap+1);p.ref.refundable=false;}S.actors[3].cool.trap=0;toast('미작동 함정 회수.');
  revealAction(activeActor());updateTarget();updateUI(true);
 }
 function ladderLinks(index){
@@ -1649,28 +1694,31 @@ function harm(a,dmg,attacker=null){
  refreshContinue();
 }
 function enemyWalk(e,dest,dt){
- if(!dest||e.type==='turret'||dist(e,dest)<.2){e.path=[];return;}
+ const arrival=e.displacedUntil&&e.duty==='sentry'?.03:.2;
+ if(!dest||e.type==='turret'||dist(e,dest)<arrival){e.path=[];return;}
  e.pathTimer=Math.max(0,(e.pathTimer||0)-dt);
  e.navigationBounds=e.behavior==='patrol'&&!e.lure?e.patrolBounds:null;
+ const failed=e.failedPath;if(failed){if(failed.revision===worldRevision&&S.t<failed.until&&dist(e,failed.from)<.25&&Math.abs(e.y-failed.from.y)<.1&&dist(dest,failed.target)<.1&&Math.abs((dest.y??e.y)-failed.target.y)<.1)return;e.failedPath=null;e.pathTimer=0;}
  if(e.pathTimer<=0&&(!e.path.length||!e.pathTarget||dist(e.pathTarget,dest)>.6||e.pathRevision!==worldRevision)){
   if(boundedWalk(e,dest,e.navigationBounds)){e.path=[{...dest}];e.pathTarget={...dest};}
-  else pathTo(e,dest,true,true);
+  else if(!pathTo(e,dest,true,true)){e.failedPath={from:{x:e.x,y:e.y,z:e.z},target:{...dest,y:dest.y??e.y},revision:worldRevision,until:S.t+3};e.pathTimer=3;return;}
+  e.failedPath=null;
   e.pathTimer=.5;e.pathRevision=worldRevision;
  }
- while(e.path.length&&dist(e,e.path[0])<.2)e.path.shift();
+ while(e.path.length&&dist(e,e.path[0])<arrival)e.path.shift();
  const p=e.path[0];if(!p)return;if(p.ladderId&&startPathLadder(e,p))return;const urgent=e.behavior==='chase'||e.behavior==='investigate'&&e.searchKind==='player',d=dist(e,p),step=Math.min(d,(urgent?7:e.speed)*dt,.23);
  const beforeX=e.x,beforeZ=e.z;
- const x=e.x+(p.x-e.x)/d*step,z=e.z+(p.z-e.z)/d*step,y=movementLanding(e,x,z);
+ const x=e.x+(p.x-e.x)/d*step,z=e.z+(p.z-e.z)/d*step,y=enemyMovementLanding(e,x,z,dt);
  turnTowards(e,facing(e,p),urgent?3.5:e.turnRate,dt);
  const usable=h=>h!==null&&h<=(e.navigationBounds?.maxY??Infinity);
  if(usable(y)){e.x=x;e.z=z;applyLanding(e,y);e.moving=true;}
  else{
-  const sx=movementLanding(e,x,e.z);if(usable(sx)){e.x=x;applyLanding(e,sx);e.moving=true;}
-  const sz=movementLanding(e,e.x,z);if(usable(sz)){e.z=z;applyLanding(e,sz);e.moving=true;}
+  const sx=enemyMovementLanding(e,x,e.z,dt);if(usable(sx)){e.x=x;applyLanding(e,sx);e.moving=true;}
+  const sz=enemyMovementLanding(e,e.x,z,dt);if(usable(sz)){e.z=z;applyLanding(e,sz);e.moving=true;}
   if(!e.moving)e.path=[];
  }
  e.moving=Math.hypot(e.x-beforeX,e.z-beforeZ)>1e-6;
- if(e.moving){refreshLiveBody(e);CharacterModels.noteSpeed(e,Math.hypot(e.x-beforeX,e.z-beforeZ)/dt);e.walk+=dt*9;}else{e.path=[];e.pathTimer=0;}
+ if(e.moving){e.blockedFor=0;refreshLiveBody(e);CharacterModels.noteSpeed(e,Math.hypot(e.x-beforeX,e.z-beforeZ)/dt);e.walk+=dt*9;}else{e.blockedFor=(e.blockedFor||0)+dt;if(e.blockedFor>=.5){e.path=[];e.pathTimer=.25;e.blockedFor=0;}}
 }
 function updateEnemies(dt){
  if(S.fail)return;
@@ -1718,12 +1766,14 @@ function updateEnemies(dt){
    if(!dest)turnTowards(e,e.searchFacing+(S.t-e.searchStarted)*.8,1.5,dt);
   }else if(e.behavior==='return'){
    dest=e.home;if(dist(e,e.home)<.35||e.type==='turret'){e.behavior='patrol';e.path=[];dest=null;}
-  }else if(e.lure&&S.beacon?.active!==false&&S.beacon){
-   dest=e.lure;if(dist(e,dest)<1){e.wait+=dt;markDone('decoy');if(e.wait>6){e.lure=null;e.wait=0;}}
+  }else if(e.displacedUntil>S.t){
+   e.path=[];
   }else if(e.duty==='patrol'&&e.patrol.length){
+   delete e.displacedUntil;
    dest=e.patrol[e.pi];if(dist(e,dest)<.3){e.pi=(e.pi+1)%e.patrol.length;dest=e.patrol[e.pi];}
   }else if(e.duty==='sentry'&&e.type!=='turret'){
-   turnTowards(e,(e.watchAngle??e.angle)+Math.sin(S.t*.24+e.x*.07)*(e.watchSweep??.55),e.turnRate,dt);
+   if(e.displacedUntil&&dist(e,e.home)>.05)dest=e.home;
+   else{delete e.displacedUntil;turnTowards(e,(e.watchAngle??e.angle)+Math.sin(S.t*.24+e.x*.07)*(e.watchSweep??.55),e.turnRate,dt);}
   }else if(e.type==='turret'){
    e.baseAngle??=e.angle;turnTowards(e,e.baseAngle+Math.sin(S.t*.22+e.x*.07)*.42,e.turnRate,dt);
   }
@@ -1965,7 +2015,6 @@ function drawScene(){
   if(!GL3D.visiblePoint(a.x,a.viewY??a.y,a.z,3,4))continue;
   robotShadow(alpha,a);modelRobot(a.cloak?alpha:b,a);
  }
- if(S.beacon)beaconBoxes(S.beacon,b);
  if(S.placement?.point){const p=S.placement.point,st=placementStatus(S.placement.kind,p);alpha.box(p.x,Math.max(0,p.y??floorY(p.x,p.z))+.12,p.z,.55,.24,.55,st.ok?'#86f5c4':'#ff8f7b',0,.6);}
  if(S.flags.bomb&&!S.exploded)bombBoxes(b);
  for(const p of S.pulses){if(p.t<0)continue;alpha.ring(p.x,Math.max(0,p.y??floorY(p.x,p.z))+.07,p.z,.2+p.t*(p.max||5)/1.4,p.c,Math.max(0,.75-p.t*.5),.055);}
@@ -2089,7 +2138,7 @@ function loadPreferences(){const p=stored(STORE.prefs);for(const key of BOOLEAN_
 function validSave(data){return data?.version===2&&data.layout===BASE.revision&&data.state&&validVisionGround(data.state.visionGroundPoint)&&Array.isArray(data.state.actors)&&data.state.actors.length===4&&data.state.actors.every((a,i)=>a.id===i&&[a.x,a.z,a.y,a.hp].every(Number.isFinite)&&a.hp>0&&(a.following===undefined||typeof a.following==='boolean')&&(a.followTarget===undefined||a.followTarget===null||Number.isInteger(a.followTarget)&&a.followTarget>=0&&a.followTarget<4&&a.followTarget!==a.id)&&(a.followOrder===undefined||Number.isSafeInteger(a.followOrder)&&a.followOrder>=0)&&[LEGACY_PLAYER_HEALTH[i],PLAYER_HEALTH[i]].includes(a.maxHP)&&a.hp<=a.maxHP&&(a.speed===[5,3,4,3][i]||a.speed===PLAYER_SPEEDS[i])&&a.charges&&(a.charges.trap===undefined||Number.isInteger(a.charges.trap)&&a.charges.trap>=0&&a.charges.trap<=3)&&(a.charges.heal===undefined||Number.isInteger(a.charges.heal)&&a.charges.heal>=0&&a.charges.heal<=5)&&Number.isInteger(a.charges.grapple)&&a.charges.grapple>=0&&a.charges.grapple<=SKILL_LIMITS.wire&&Number.isInteger(a.charges.shotgun)&&a.charges.shotgun>=0&&a.charges.shotgun<=SKILL_LIMITS.shotgun&&indexAt(a.x,a.z)>=0)&&Array.isArray(data.state.enemies)&&data.state.enemies.every(e=>Object.hasOwn(ENEMY_HEALTH,e.type)&&[e.x,e.z,e.y,e.hp].every(Number.isFinite)&&(e.awarePlayers===undefined||Array.isArray(e.awarePlayers)&&e.awarePlayers.length<=4&&e.awarePlayers.every(id=>Number.isInteger(id)&&id>=0&&id<4)))&&Array.isArray(data.state.traps)&&typeof data.state.flags==='object'&&Number.isFinite(data.state.t)&&!data.state.complete&&!data.state.fail&&Number.isInteger(data.state.ammo)&&data.state.ammo>=0&&data.state.ammo<=SKILL_LIMITS.snipe;}
 function saveGame(){
  if(!S.started||S.fail||S.complete||S.cinematic)return false;
- const keys=['t','selected','mode','flags','actors','enemies','traps','alarm','alarmCount','lastAlarm','ammo','reload','beacon','doors','ladders','disposals','visionEnemyId','visionGroundPoint','spyWait','stats','exploded'];
+ const keys=['t','selected','mode','flags','actors','enemies','traps','alarm','alarmCount','lastAlarm','ammo','reload','doors','ladders','disposals','visionEnemyId','visionGroundPoint','spyWait','stats','exploded'];
  const state=Object.fromEntries(keys.map(k=>[k,S[k]]));
  const ok=storeJSON(STORE.manual,{version:2,layout:BASE.revision,balance:BALANCE_REVISION,state,level:levelBlueprint,savedAt:Date.now()});refreshContinue();return ok;
 }
@@ -2106,13 +2155,14 @@ function beginOperation(resume=false,slot=STORE.manual){
  const data=resume?stored(slot):null;
  if(resume&&!validSave(data)){refreshContinue();return;}
  Object.assign(S,JSON.parse(pristineState));S.sound=preferences.sound;
- if(resume){Object.assign(S,data.state);levelBlueprint=validateLevel(data.level)||emptyLevel();}
+ if(resume){Object.assign(S,data.state);delete S.beacon;delete S.flags.decoy;S.enemies.forEach(e=>delete e.lure);S.actors.forEach(a=>delete a.cool.beacon);levelBlueprint=validateLevel(data.level)||emptyLevel();}
  else levelBlueprint=validateLevel(stored(STORE.level))||emptyLevel();
  buildWorld();
  if(!resume)initUnits();
  else {S.enemies.forEach(e=>{e.fov=ENEMY_FOV;e.vision=ENEMY_RANGE[e.type];e.attackRange=e.type==="chaser"?2.5:ENEMY_RANGE[e.type];e.checkedBodies??={};});if(levelBlueprint.enemies===null)addReinforcements();S.actors.forEach(a=>{a.speed=PLAYER_SPEEDS[a.id];if(a.charges.trap===undefined){a.charges.trap=a.id===3?Math.max(0,3-S.traps.filter(t=>t.friendly&&!t.removed).length):0;for(const t of S.traps)if(t.friendly){t.owner=3;t.refundable=!t.spent;}}a.path=[];a.climbing??=null;a.wallPush=0;if(a.disguise||a.id===2)a.cloak=false;if(!a.climbing)a.viewY=a.y;});}
  for(const a of S.actors){a.charges.heal??=a.id===3?5:0;if(a.carry)a.crouched=false;}
  migrateCombatBalance();resetFollowerState();initDisposals();syncScenery(true);
+ if(resume&&levelBlueprint.enemies===null)prepareDefaultPatrols();
  // Preserve a saved position on a physical prop; move old overlapping saves to
  // a nearby free floor rather than leaving their character stuck inside it.
  for(const a of S.actors)if(!a.climbing){const saved=resume?data.state.actors.find(u=>u.id===a.id)?.y:a.y,h=bodyFloorY(a.x,a.z,(saved??a.y)+.05),height=a.crouched?1.25:2.1;if(bodyClearAt(a.x,h,a.z,height)){a.y=h;a.viewY=h;}else{let found=false;for(let r=1;r<=5&&!found;r++)for(let dz=-r;dz<=r&&!found;dz++)for(let dx=-r;dx<=r;dx++){const x=a.x+dx,z=a.z+dz,y=landingAt(x,z,a.y,Infinity,height);if(y!==null){Object.assign(a,{x,z,y,viewY:y});found=true;break;}}}}
@@ -2281,8 +2331,8 @@ function drawUnitOutline(e,ally){
 }
 </script><script>/* Crosshair targeting, contextual actions and two-stick character controls. */
 'use strict';
-const CHARACTER_ACTIONS=[['katana','wire'],['shotgun','scope'],['dagger','beacon'],['emp','trap']];
-const ACTION_NAMES={katana:'카타나',wire:'갈고리',scope:'스나이퍼',shotgun:'레이저 샷건',dagger:'단검',disguise:'위장',beacon:'교란 비콘',emp:'EMP 권총',trap:'덫 설치'};
+const CHARACTER_ACTIONS=[['katana','wire'],['shotgun','scope'],['dagger','disguise'],['emp','trap']];
+const ACTION_NAMES={katana:'카타나',wire:'갈고리',scope:'스나이퍼',shotgun:'레이저 샷건',dagger:'단검',disguise:'위장',emp:'EMP 권총',trap:'덫 설치'};
 const NORMAL_FOV=60*Math.PI/180;
 const TPS_CAMERA={pivotHeight:2,shoulder:.55,distance:3.8,pitch:.12,minPitch:-.75,maxPitch:1.05,boomMinPitch:-.4,probe:.22};
 const LOOK_RADIANS_PER_PIXEL=.006;
@@ -2352,7 +2402,7 @@ function optionsFor(t){
  if(t.kind==='gateButton')out.push({key:'toggleGate',label:e.name+(e.open?' 닫기':' 열기')});
  if(t.kind==='disposal'&&S.enemies.find(e=>e.id===a.carry)?.dead)out.push({key:'dispose',label:'시체 넣기'});
  if(t.kind==='enemy'&&!a.carry&&canCarryEnemy(a,e))out.push({key:'carry',label:'운반'});
- if(t.kind==='beacon'||t.kind==='trap'&&e.type==='mine'&&!e.spent&&!e.removed)out.push({key:'recover',label:'회수'});
+ if(t.kind==='trap'&&e.type==='mine'&&!e.spent&&!e.removed)out.push({key:'recover',label:'회수'});
  if(a.id===3){
   if(t.kind==='socket'&&t.id==='bomb'&&!S.flags.bomb)out.push({key:'plantBomb',label:'폭탄 설치'});
   if(t.kind==='lockPanel'&&e.locked||t.kind==='door'&&!e.gate&&!e.panels&&!e.hacked||t.kind==='enemy'&&e.type==='turret'&&!e.dead&&!e.hacked)out.push({key:'hack',label:t.kind==='lockPanel'?'잠금 해제':'해킹'});
@@ -2362,7 +2412,6 @@ function optionsFor(t){
   if(spyCopyable(e))out.push({key:'spyScan',label:'상대 복사'});
   if(a.disguise&&!e.dead&&['guard','heavy'].includes(e.type))out.push({key:'talk',label:a.talkingTo===e.id?'대화 종료':'대화'});
  }
- if(a.id===2&&a.copy&&!a.carry)out.push({key:'disguise',label:a.disguise?'위장 해제':'복사 외형 위장'});
  if(t.kind==='ally'&&e.hp>0)out.push({key:e.following?'wait':'follow',label:e.following?'대기':'같이 가기'});
  return out;
 }

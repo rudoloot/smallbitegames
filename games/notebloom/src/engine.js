@@ -1,6 +1,6 @@
-import { terrainProfile } from './terrain.js?v=40db8754166d';
-import { analyzeMood } from './mood.js?v=40db8754166d';
-export const STARTING_POWER = 100;
+import { analyzeTerrain } from './terrain.js?v=d4fb67fc046d';
+import { analyzeMood } from './mood.js?v=d4fb67fc046d';
+export const STARTING_POWER = 50;
 export const RULES = {
   normal: { miss: 4, mine: 48, heal: 4, mineEvery: 3 },
 };
@@ -89,7 +89,7 @@ export function analyzeSamples(samples, sampleRate) {
     return sum / (end - begin);
   });
   const max = Math.max(...peaks, .001);
-  return { mood: analyzeMood(samples, sampleRate, 60 / (bestLag * hop / sampleRate)), terrain: terrainProfile(energy, hop / sampleRate), bpm: 60 / (bestLag * hop / sampleRate), beat: bestLag * hop / sampleRate, offset: phase * hop / sampleRate, peaks: peaks.map(p => p / max), beatTimes: detectBeatTimes(samples, sampleRate) };
+  return { mood: analyzeMood(samples, sampleRate, 60 / (bestLag * hop / sampleRate)), terrain: analyzeTerrain(samples, sampleRate), bpm: 60 / (bestLag * hop / sampleRate), beat: bestLag * hop / sampleRate, offset: phase * hop / sampleRate, peaks: peaks.map(p => p / max), beatTimes: detectBeatTimes(samples, sampleRate) };
 }
 
-export { makeChart, GameState, LANE_COUNT, laneX } from './combat.js?v=40db8754166d';
+export { makeChart, GameState, LANE_COUNT, laneX } from './combat.js?v=d4fb67fc046d';

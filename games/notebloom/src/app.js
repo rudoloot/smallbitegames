@@ -1,10 +1,10 @@
-import { TRACKS, MusicPlayer } from './music.js?v=40db8754166d';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=40db8754166d';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=40db8754166d';
-import { World } from './scene.js?v=40db8754166d';
-import { weaponForId } from './weapons.js?v=40db8754166d';
-import { exitGame } from './launch.js?v=40db8754166d';
-import { setupFullscreen } from './fullscreen.js?v=40db8754166d';
+import { TRACKS, MusicPlayer } from './music.js?v=d4fb67fc046d';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=d4fb67fc046d';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=d4fb67fc046d';
+import { World } from './scene.js?v=d4fb67fc046d';
+import { weaponForId } from './weapons.js?v=d4fb67fc046d';
+import { exitGame } from './launch.js?v=d4fb67fc046d';
+import { setupFullscreen } from './fullscreen.js?v=d4fb67fc046d';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -169,21 +169,22 @@ function updateHUD() {
   $('savedValue').textContent = state.saved; $('comboValue').textContent = state.combo > 1 ? `${state.combo} COMBO` : '음표를 구해요'; $('powerValue').textContent = state.power;
   const weaponName = weaponForId(state.weaponId).name;
   $('weaponName').style.color = '#' + weaponForId(state.weaponId).color.toString(16).padStart(6, '0');
-  $('weaponName').textContent = `${weaponName} · 탄약 ${state.ammo === Infinity ? '∞' : state.ammo} · 공격 +${Math.round(state.attackBonus * 100)}%`;
+  $('weaponName').textContent = `${weaponName} · 총알 ${state.bulletRows}줄 · 미사일 ${state.missileCount}발/초`;
   $('timeValue').textContent = `${formatTime(state.time)} / ${formatTime(state.chart.duration)}`;
   const bonus = state.boss <= 0, attack = !bonus && state.attackWindow;
   $('phase').classList.toggle('attack', attack); $('phase').classList.toggle('bonus', bonus);
-  $('phase').querySelector('span').textContent = bonus ? '보스 격파! 음표를 구해요' : '전방 자동 사격 · 음표로 회복';
-  $('bossName').textContent = bonus ? 'HARMONY RESTORED · 구출 타임' : 'DISSONANCE · 불협화음';
+  $('phase').querySelector('span').textContent = bonus ? '보스 격파! 음표를 구해요' : `음표 ${state.saved % 50}/50 · 큐브 ${state.pickups.length}개`;
+  $('bossName').textContent = bonus ? 'HARMONY RESTORED · 구출 타임' : `${state.theme.name} · ${state.theme.bossName}`;
 }
 function handleEffects(effects) {
   for (const effect of effects) {
     if (effect.type === 'save') { world.burst(effect.lane, 0xb6f6d9); audio.sound('save'); }
-    if (effect.type === 'power-up') feedback(`공격력 상승! +${Math.round(effect.bonus * 100)}%`, false, 2000);
-    if (effect.type === 'weapon') world.showUpgrade(effect.weapon, effect.ammo);
+    if (effect.type === 'cube-spawn') feedback('강화 큐브 등장! 원하는 색일 때 클릭하세요', false, 2000);
+    if (effect.type === 'upgrade') { world.showUpgrade(effect.color); audio.sound('save'); }
+    if (effect.type === 'missile') world.shootMissiles(effect.projectiles);
     if (effect.type === 'shot') { world.shoot(effect.lane, effect.weapon, effect.pellets, effect.projectiles); audio.sound('shot'); }
     if (effect.type === 'hit') world.impact(effect);
-    if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${effect.damage}`, true); }
+    if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d, effect.point); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${effect.damage}`, true); }
     if (effect.type === 'victory') { world.burst(2, 0xe0bcff); feedback('보스 격파 · RESCUE TIME!', false, 2300); }
     if (effect.type === 'save' && state.saved % 10 === 0 && state.saved % 50 !== 0) feedback(`+${state.rules.heal} HP · ${state.saved} RESCUED`);
   }
@@ -195,6 +196,13 @@ $('pauseButton').addEventListener('click', () => pause()); $('resumeButton').add
 $('pauseExitButton').addEventListener('click', returnToLauncher);
 $('resultExitButton').addEventListener('click', returnToLauncher);
 $('volume').addEventListener('input', e => audio.setVolume(Number(e.target.value) / 100));
+$('scene').addEventListener('cube-select', e => {
+  if (mode !== 'playing' || !state) return;
+  const lane = clamp(Math.round(playerX + 1.5), 0, 3);
+  handleEffects(state.advance(audio.time, lane, world.character.position.x));
+  if (state.status !== 'playing') { finish(); return; }
+  handleEffects(state.choosePickup(e.detail.id)); updateHUD();
+});
 stage.addEventListener('pointerdown', e => {
   if (mode !== 'playing' || e.target.closest('button')) return;
   drag = { id: e.pointerId, x: e.clientX, player: playerX }; stage.setPointerCapture(e.pointerId);
@@ -208,6 +216,7 @@ const release = e => { if (drag?.id === e.pointerId) drag = null; };
 stage.addEventListener('pointerup', release); stage.addEventListener('pointercancel', release); stage.addEventListener('lostpointercapture', release);
 document.addEventListener('keydown', e => {
   if (document.querySelector('dialog[open]') || e.target.matches('input')) return;
+  if (e.target.closest('.cube-select') && (e.key === 'Enter' || e.code === 'Space')) return;
   if (['ArrowLeft', 'ArrowRight', 'a', 'A', 'd', 'D'].includes(e.key) && mode === 'playing') {
     e.preventDefault(); if (!e.repeat) playerX = clamp(Math.round(playerX + 1.5) - 1.5 + (['ArrowLeft', 'a', 'A'].includes(e.key) ? -1 : 1), -1.5, 1.5);
   }
@@ -222,7 +231,7 @@ function frame(now) {
     if (audio.context.state !== 'running') pause('오디오가 중단되어 잠시 멈췄어요. 계속 플레이를 눌러 주세요.');
     else {
       const lane = clamp(Math.round(playerX + 1.5), 0, 3);
-      handleEffects(state.advance(audio.time, lane)); updateHUD();
+      handleEffects(state.advance(audio.time, lane, world.character.position.x)); updateHUD();
       if (state.status !== 'playing') finish();
     }
   }

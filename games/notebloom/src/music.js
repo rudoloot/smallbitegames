@@ -1,3 +1,6 @@
+import { audibleContextTime } from './timing.js?v=d4fb67fc046d';
+export const NOTE_SOUND_GAIN = 1.6;
+
 // Titles, artists and reference durations transcribed from music 정보.md's image.
 export const TRACKS = [
   { id: 'escape', title: 'Escape Your Love', artist: 'FASSounds', genre: 'DANCE POP', duration: '2:18', color: '#c1a5ff', file: 'fassounds-escape-your-love-upbeat-fashion-pop-dance-412230.mp3' },
@@ -39,12 +42,12 @@ export function localTrackFromFile(file, id) {
 }
 
 export class MusicPlayer {
-  constructor() { this.context = null; this.source = null; this.buffer = null; this.offset = 0; this.started = 0; this.playing = false; this.volume = .65; this.cache = new Map(); this.rescueVoices = new Set(); }
+  constructor() { this.context = null; this.source = null; this.buffer = null; this.offset = 0; this.started = 0; this.position = 0; this.playing = false; this.volume = .65; this.cache = new Map(); this.rescueVoices = new Set(); }
   async unlock() {
     if (!this.context) {
-      this.context = new (window.AudioContext || window.webkitAudioContext)();
+      this.context = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
       this.gain = this.context.createGain(); this.gain.connect(this.context.destination); this.gain.gain.value = this.volume;
-      this.rescueGain = this.context.createGain(); this.rescueGain.gain.value = this.volume * .8;
+      this.rescueGain = this.context.createGain(); this.rescueGain.gain.value = this.volume * NOTE_SOUND_GAIN;
       this.rescueGain.connect(this.context.destination);
       const samples = rescueBeatSamples(this.context.sampleRate);
       this.rescueBuffer = this.context.createBuffer(1, samples.length, this.context.sampleRate);
@@ -72,26 +75,35 @@ export class MusicPlayer {
       if (this.cache.size >= 2) this.cache.delete(this.cache.keys().next().value);
       this.cache.set(track.id, this.buffer);
     }
-    this.offset = 0;
+    this.offset = this.position = 0;
     return this.buffer;
   }
   play() {
     if (!this.buffer || this.playing) return;
     this.source = this.context.createBufferSource(); this.source.buffer = this.buffer; this.source.connect(this.gain);
-    this.started = this.context.currentTime; this.source.start(0, this.offset); this.playing = true;
+    // Schedule an explicit start so source playback and our clock share an origin.
+    this.started = this.context.currentTime + .025;
+    this.position = this.offset; this.source.start(this.started, this.offset); this.playing = true;
   }
-  get time() { return Math.min(this.buffer?.duration || 0, this.offset + (this.playing ? this.context.currentTime - this.started : 0)); }
+  timeAt(now = performance.now()) {
+    if (!this.playing) return this.offset;
+    const elapsed = Math.max(0, audibleContextTime(this.context, now) - this.started);
+    // Output timestamp estimates can wobble slightly; judgment must not rewind.
+    this.position = Math.min(this.buffer?.duration || 0, Math.max(this.position, this.offset + elapsed));
+    return this.position;
+  }
+  get time() { return this.timeAt(); }
   pause() {
     for (const voice of this.rescueVoices) { voice.stop(); voice.disconnect(); }
     this.rescueVoices.clear();
     if (!this.playing) return;
     this.offset = this.time; this.playing = false; this.source?.stop(); this.source?.disconnect(); this.source = null;
   }
-  stop() { this.pause(); this.offset = 0; }
+  stop() { this.pause(); this.offset = this.position = 0; }
   setVolume(value) {
     this.volume = value;
     if (this.gain) this.gain.gain.setTargetAtTime(value, this.context.currentTime, .04);
-    if (this.rescueGain) this.rescueGain.gain.setTargetAtTime(value * .8, this.context.currentTime, .04);
+    if (this.rescueGain) this.rescueGain.gain.setTargetAtTime(value * NOTE_SOUND_GAIN, this.context.currentTime, .04);
   }
   sound(kind) {
     if (!this.context || !this.playing) return;
