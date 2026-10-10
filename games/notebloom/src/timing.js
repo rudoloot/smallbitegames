@@ -1,4 +1,4 @@
-import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=7b71865ac2d8';
+import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=e13089ee01a6';
 
 // AudioContext.currentTime is the rendering clock, ahead of what the listener
 // hears. The output timestamp maps the device's audible frame to performance.now.

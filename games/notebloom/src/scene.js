@@ -1,14 +1,14 @@
 import * as THREE from 'three';
-import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=7b71865ac2d8';
-import { weaponForId } from './weapons.js?v=7b71865ac2d8';
-import { buildWeaponModel } from './weapon-model.js?v=7b71865ac2d8';
-import { bossPose, projectilePoint } from './projectiles.js?v=7b71865ac2d8';
-import { UPGRADES } from './pickups.js?v=7b71865ac2d8';
-import { UpgradeCards } from './upgrade-cards.js?v=7b71865ac2d8';
-import { minePoint } from './mines.js?v=7b71865ac2d8';
-import { COLLECTION_Z, visibleNotes } from './timing.js?v=7b71865ac2d8';
-import { themeForChart } from './themes.js?v=7b71865ac2d8';
-import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=7b71865ac2d8';
+import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=e13089ee01a6';
+import { weaponForId } from './weapons.js?v=e13089ee01a6';
+import { buildWeaponModel } from './weapon-model.js?v=e13089ee01a6';
+import { bossPose, projectilePoint } from './projectiles.js?v=e13089ee01a6';
+import { UPGRADES } from './pickups.js?v=e13089ee01a6';
+import { UpgradeCards } from './upgrade-cards.js?v=e13089ee01a6';
+import { minePoint } from './mines.js?v=e13089ee01a6';
+import { COLLECTION_Z, visibleNotes } from './timing.js?v=e13089ee01a6';
+import { themeForChart } from './themes.js?v=e13089ee01a6';
+import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=e13089ee01a6';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -398,6 +398,7 @@ export class World {
   }
   clearGameObjects() {
     this.upgradeCards.clear();
+    this.resize();
     for (const note of this.notes.values()) this.disposeObject(note);
     this.notes.clear();
     for (const effect of this.effects) this.disposeEffect(effect.mesh);
@@ -413,7 +414,9 @@ export class World {
   }
   resize() {
     const w = this.container.clientWidth, h = this.container.clientHeight;
-    this.renderer.setSize(w, h, false); this.camera.aspect = w / h;
+    this.viewWidth = w;
+    this.renderer.domElement.style.width = `${w}px`;
+    this.renderer.setSize(this.viewWidth, h, false); this.camera.aspect = this.viewWidth / h;
     // Preserve a safe horizontal field of view on tall phones: outer lanes,
     // the android and her pistol must fit inside the two HUD meters.
     this.baseFov = Math.max(49, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(49 / 2)) * .68 / this.camera.aspect)));
@@ -421,6 +424,7 @@ export class World {
     this.camera.updateProjectionMatrix();
   }
   render(elapsed, dt, state, playerX, mode) {
+    this.upgradeCards.render(state, mode);
     this.updateEnvironment(state);
     this.setBossTheme(state?.theme || themeForChart(state?.chart));
     const active = !!state && ['playing', 'paused', 'countdown'].includes(mode);
@@ -458,7 +462,6 @@ export class World {
     const pulse = .2 + Math.max(0, Math.sin(time / (state?.chart.beat || .5) * Math.PI * 2)) * .2;
     for (const mat of this.attackFloors) mat.emissiveIntensity = state?.attackWindow && state.boss > 0 ? pulse + .25 : .08;
     const visible = new Set();
-    this.upgradeCards.render(state, mode);
     if (active) {
       for (const { event, z, scale } of visibleNotes(state.chart.events, time, state.chart.terrain)) {
         visible.add(event.id);
@@ -504,7 +507,7 @@ export class World {
       const number = this.damageNumbers[i]; number.age += effectDt;
       if (number.age >= .95) { number.label.remove(); this.damageNumbers.splice(i, 1); continue; }
       const projected = this.course.localToWorld(number.anchor.clone()).project(this.camera);
-      const x = (projected.x * .5 + .5) * this.container.clientWidth + number.offset;
+      const x = (projected.x * .5 + .5) * this.viewWidth + number.offset;
       const y = (-projected.y * .5 + .5) * this.container.clientHeight - number.age * 38;
       number.label.style.left = `${x}px`; number.label.style.top = `${y}px`;
       number.label.style.opacity = Math.min(1, (.95 - number.age) / .25);

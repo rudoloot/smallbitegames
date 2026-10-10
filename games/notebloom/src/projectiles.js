@@ -1,11 +1,12 @@
-import { bossColliders } from './themes.js?v=7b71865ac2d8';
+import { bossColliders } from './themes.js?v=e13089ee01a6';
+import { FLIGHT_SPEED } from './flight.js?v=e13089ee01a6';
 // Shared world-space geometry for simulation and rendering.
 export function bossPose(time, motion = { from: -.61, to: -.61, start: 0, end: 0 }) {
   const t = motion.end > motion.start ? Math.max(0, Math.min(1, (time - motion.start) / (motion.end - motion.start))) : 1;
   const blend = t * t * (3 - 2 * t);
   return { x: motion.from + (motion.to - motion.from) * blend, y: 1.05, z: -52 };
 }
-export const projectileSpeed = weapon => weapon === 'rail' ? 260 : weapon === 'rocket' ? 85 : 115;
+export const projectileSpeed = weapon => weapon === 'missile' ? FLIGHT_SPEED : weapon === 'rail' ? 260 : weapon === 'rocket' ? 85 : 115;
 export const projectileRadius = weapon => weapon === 'missile' || weapon === 'rocket' ? .18 : weapon === 'rail' ? .045 : .07;
 // Three parallel rows cover 1.5 lanes, including the outer bullets' radii.
 export const BULLET_ROW_SPACING = (1.22 * 1.5 - 2 * projectileRadius('pistol')) / 2;
@@ -16,16 +17,19 @@ export function projectilePoint(projectile, time) {
 }
 export function advanceMissile(projectile, time, target) {
   const age = time - projectile.time;
+  const launchPoint = duration => {
+    const distance = Math.max(0, duration) * FLIGHT_SPEED / Math.hypot(.08, .07, 1);
+    return { x: projectile.x + projectile.side * .08 * distance, y: projectile.y + .07 * distance, z: projectile.z - distance };
+  };
   if (age <= .32) {
-    const drift = age / .32;
-    projectile.position = { x: projectile.x + projectile.side * .8 * Math.sin(drift * Math.PI / 2),
-      y: projectile.y + .6 * drift, z: projectile.z - .9 * drift };
+    projectile.position = launchPoint(age);
     return;
   }
+  if (projectile.checkedAt < projectile.time + .32) projectile.position = launchPoint(.32);
   const dt = time - Math.max(projectile.checkedAt, projectile.time + .32);
   const point = projectile.position;
   const dx = target.x - point.x, dy = target.y - point.y, dz = target.z - point.z;
-  const distance = Math.hypot(dx, dy, dz), step = Math.min(distance, dt * 145);
+  const distance = Math.hypot(dx, dy, dz), step = Math.min(distance, dt * FLIGHT_SPEED);
   if (distance > 0) projectile.position = { x: point.x + dx / distance * step, y: point.y + dy / distance * step, z: point.z + dz / distance * step };
 }
 // Swept ellipsoid intersection includes boss motion and avoids tunnelling at low FPS.

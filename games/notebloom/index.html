@@ -7,7 +7,7 @@
   <meta name="description" content="음악이 피어나는 길. 음표를 구하고 보스를 물리치는 3D 리듬 액션 게임 Notebloom." />
   <title>Notebloom — 음악이 피어나는 길</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23171929'/%3E%3Ctext x='12' y='47' font-size='48' fill='%239cf2d3'%3E♪%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./style.css?v=7b71865ac2d8" />
+  <link rel="stylesheet" href="./style.css?v=e13089ee01a6" />
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
@@ -69,6 +69,6 @@
 
   <dialog id="trackDialog" class="modal"><div class="modal-heading"><div><div class="eyebrow">CHOOSE YOUR SOUNDTRACK</div><h2>어떤 음악으로 떠날까요?</h2></div><button class="close-button" data-close="trackDialog" aria-label="음악 선택 닫기">×</button></div><p class="modal-subtitle">내 노래 또는 준비된 12곡으로 떠나요.</p><button id="localMusicButton" class="secondary-button">＋ 내 기기에서 노래 선택</button><input id="localMusicFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac" hidden><p class="local-music-hint">파일 앱에 저장된 음원을 선택해요. 최대 50MB · 10초~10분<br>기기 안에서만 분석·재생하며 업로드하지 않아요.</p><p id="localMusicError" class="local-music-error" role="alert"></p><div id="trackList" class="track-list"></div><p class="modal-footnote">실제 타격음과 강세를 분석해 음표를 배치해요. 스트리밍 앱 전용 다운로드 곡은 사용할 수 없어요. 선택한 내 노래는 이 브라우저의 보관함에 남아요. 브라우저 데이터를 삭제하면 보관함도 지워져요.</p></dialog>
   <dialog id="helpDialog" class="modal help-modal"><div class="modal-heading"><div><div class="eyebrow">A QUICK HELLO</div><h2>아리아와 함께 떠나요</h2></div><button class="close-button" data-close="helpDialog" aria-label="플레이 방법 닫기">×</button></div><div class="lane-guide"><span>♪<small>자동 사격</small></span><span>♪<small>자동 사격</small></span><span>♪<small>자동 사격</small></span><span>♪<small>자동 사격</small></span></div><ol class="help-steps"><li><strong>좌우로 드래그</strong><p>손가락을 움직여 레인을 바꿔요. PC에서는 방향키나 A / D도 사용할 수 있어요.</p></li><li><strong>음표로 체력 회복</strong><p>음표가 발밑의 판정선에 도착할 때 같은 레인에 있으면 구출! 오르막에서는 천천히, 내리막에서는 빠르게 날아오지만 판정선에는 음악 비트에 맞춰 도착해요. 음표마다 체력을 회복해요. 50개를 모을 때마다 우측 상단에 강화 카드 3장이 세로로 나타나요.</p></li><li><strong>위아래 드래그로 카드 선택</strong><p>5초 동안 위아래로 드래그해서 카드를 선택해요. 선택한 카드는 5초가 끝나면 적용되며, 선택하지 않으면 무작위 카드가 적용돼요. 빨강은 모든 총알과 미사일의 피해 +20, 파랑은 총알 +1줄, 보라는 기본 피해 100의 유도 미사일을 초당 1발 추가해요. 각 총알 줄의 기본 피해는 20이며, 3줄은 레인 너비의 약 1.5배를 커버해요. 강화는 이번 판에 누적돼요.</p></li><li><strong>공중 지뢰를 피하며 보스 격파</strong><p>지뢰가 보스 뒤 공중에서 1개·2개씩 번갈아 날아오며 가까워질수록 벌어져요. 내 체력이 0이 되거나, 곡이 끝나도 보스가 남으면 실패해요. 보스를 잡은 뒤에도 음표를 놓치지 마세요.</p></li></ol><p class="help-health">놓침 −4 · 지뢰 −30 · 구출 +4</p><button data-close="helpDialog" class="primary-button">준비됐어요 <span>♪</span></button></dialog>
-  <script type="module" src="./src/app.js?v=7b71865ac2d8"></script>
+  <script type="module" src="./src/app.js?v=e13089ee01a6"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-import { UPGRADES, UPGRADE_COLORS, CARD_DURATION } from './pickups.js?v=7b71865ac2d8';
+import { UPGRADES, UPGRADE_COLORS, CARD_DURATION } from './pickups.js?v=e13089ee01a6';
 
 export function draggedUpgrade(selected, deltaY) {
   const initial = selected ? UPGRADE_COLORS.indexOf(selected) : 1;
@@ -11,22 +11,21 @@ export class UpgradeCards {
     this.container = container; this.offer = null; this.enabled = false; this.drag = null;
     this.panel = document.createElement('section'); this.panel.className = 'upgrade-cards'; this.panel.hidden = true;
     this.panel.setAttribute('aria-label', '강화 카드 선택');
-    const heading = document.createElement('header'), title = document.createElement('strong'); title.textContent = '강화 선택';
+    this.panel.title = '위아래 드래그로 선택 · 5초 후 적용 · 미선택 시 무작위';
+    const heading = document.createElement('header'), title = document.createElement('strong'); title.textContent = '강화';
     this.timer = document.createElement('span'); heading.append(title, this.timer);
-    const hint = document.createElement('p'); hint.textContent = '위아래 드래그로 선택';
     this.list = document.createElement('div'); this.list.className = 'upgrade-card-list'; this.buttons = new Map();
     for (const color of UPGRADE_COLORS) {
       const upgrade = UPGRADES[color], button = document.createElement('button'); button.type = 'button'; button.className = 'upgrade-card';
       button.style.setProperty('--card-color', '#' + upgrade.color.toString(16)); button.dataset.color = color;
-      const symbol = document.createElement('span'); symbol.className = 'upgrade-card-symbol'; symbol.textContent = upgrade.symbol;
-      const label = document.createElement('span'), name = document.createElement('strong'), detail = document.createElement('small');
-      name.textContent = upgrade.title; detail.textContent = upgrade.name; label.append(name, detail);
-      button.append(symbol, label); button.setAttribute('aria-label', `${upgrade.title}: ${upgrade.name}`);
+      const label = document.createElement('strong');
+      label.textContent = { red: '공격 +20', blue: '총알 +1', purple: '미사일 +1' }[color];
+      button.append(label); button.setAttribute('aria-label', `${upgrade.title}: ${upgrade.name}`);
+      button.title = `${upgrade.title}: ${upgrade.name}`;
       button.addEventListener('click', () => this.select(color)); this.buttons.set(color, button); this.list.append(button);
     }
-    this.status = document.createElement('p'); this.status.className = 'upgrade-card-status';
     this.progress = document.createElement('progress'); this.progress.max = CARD_DURATION; this.progress.setAttribute('aria-label', '카드 선택 남은 시간');
-    this.panel.append(heading, hint, this.list, this.status, this.progress); container.append(this.panel);
+    this.panel.append(heading, this.list, this.progress); container.append(this.panel);
     this.panel.addEventListener('pointerdown', event => {
       if (!this.enabled || event.button !== 0) return;
       event.stopPropagation(); this.drag = { pointerId: event.pointerId, offerId: this.offer.id };
@@ -67,7 +66,6 @@ export class UpgradeCards {
       button.disabled = !this.enabled; button.classList.toggle('selected', offer.selected === color);
       button.setAttribute('aria-pressed', String(offer.selected === color));
     }
-    this.status.textContent = offer.selected ? '선택됨 · 시간이 끝나면 적용' : '선택하지 않으면 무작위 적용';
   }
   clear() { this.offer = null; this.drag = null; this.enabled = false; this.panel.hidden = true; }
 }

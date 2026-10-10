@@ -1,11 +1,11 @@
-import { TRACKS, MusicPlayer } from './music.js?v=7b71865ac2d8';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=7b71865ac2d8';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=7b71865ac2d8';
-import { World } from './scene.js?v=7b71865ac2d8';
-import { weaponForId } from './weapons.js?v=7b71865ac2d8';
-import { exitGame } from './launch.js?v=7b71865ac2d8';
-import { setupFullscreen } from './fullscreen.js?v=7b71865ac2d8';
-import { draggedUpgrade } from './upgrade-cards.js?v=7b71865ac2d8';
+import { TRACKS, MusicPlayer } from './music.js?v=e13089ee01a6';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=e13089ee01a6';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=e13089ee01a6';
+import { World } from './scene.js?v=e13089ee01a6';
+import { weaponForId } from './weapons.js?v=e13089ee01a6';
+import { exitGame } from './launch.js?v=e13089ee01a6';
+import { setupFullscreen } from './fullscreen.js?v=e13089ee01a6';
+import { draggedUpgrade } from './upgrade-cards.js?v=e13089ee01a6';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -215,7 +215,7 @@ stage.addEventListener('pointermove', e => {
     return;
   }
   if (drag.axis !== 'horizontal') return;
-  const lanePixels = stage.clientWidth * .135;
+  const lanePixels = world.viewWidth * .135;
   playerX = clamp(drag.player + (e.clientX - drag.x) / lanePixels, -1.5, 1.5);
 });
 const release = e => { if (drag?.id === e.pointerId) drag = null; };
