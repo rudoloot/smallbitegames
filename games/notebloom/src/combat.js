@@ -1,9 +1,9 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=5eac88f2d33d';
-import { weaponForId } from './weapons.js?v=5eac88f2d33d';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile, bulletRowOffsets } from './projectiles.js?v=5eac88f2d33d';
-import { pickupColor } from './pickups.js?v=5eac88f2d33d';
-import { minePoint, mineFanTargets, MINE_TRAVEL } from './mines.js?v=5eac88f2d33d';
-import { themeForChart } from './themes.js?v=5eac88f2d33d';
+import { clamp, seededRandom, RULES } from './engine.js?v=7b71865ac2d8';
+import { weaponForId } from './weapons.js?v=7b71865ac2d8';
+import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile, bulletRowOffsets } from './projectiles.js?v=7b71865ac2d8';
+import { UPGRADE_COLORS, CARD_DURATION } from './pickups.js?v=7b71865ac2d8';
+import { minePoint, mineFanTargets, MINE_TRAVEL } from './mines.js?v=7b71865ac2d8';
+import { themeForChart } from './themes.js?v=7b71865ac2d8';
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
 export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) {
@@ -44,8 +44,8 @@ export class GameState {
     this.time = 0; this.boss = chart.bossMax; this.saved = 0; this.missed = 0; this.hits = 0;
     this.weaponId = 'pistol'; this.ammo = Infinity;
     this.damageBonus = 0; this.bulletRows = 1; this.missileCount = 0; this.nextMissile = Infinity;
-    this.pickups = []; this.pickupSerial = 0; this.mines = []; this.mineSerial = 0;
-    this.pickupRandom = seededRandom((chart.seed ?? 42) ^ 0xc0be);
+    this.cardOffers = []; this.cardSerial = 0; this.mines = []; this.mineSerial = 0;
+    this.cardRandom = seededRandom(Math.imul(chart.seed ?? 42, 0x9e3779b1) ^ 0xc0be);
     this.combo = 0; this.maxCombo = 0; this.index = 0; this.lastShot = 0;
     this.nextShot = this.interval; this.stunnedUntil = 0; this.invincibleUntil = 0;
     this.defeatedAt = null; this.status = 'playing';
@@ -59,23 +59,24 @@ export class GameState {
   get interval() { return this.weapon.interval; }
   get attackWindow() { return false; }
   hurt(amount) { this.health = clamp(this.health - amount, 0, this.maxHealth); this.combo = 0; }
-  choosePickup(id) {
-    if (this.status !== 'playing') return [];
-    const index = this.pickups.findIndex(pickup => pickup.id === id);
-    if (index < 0) return [];
-    const [pickup] = this.pickups.splice(index, 1), effects = [];
-    this.collectPickup(pickup, this.time, effects);
-    return effects;
+  get activeCardOffer() { return this.cardOffers[0] || null; }
+  selectUpgrade(id, color) {
+    const offer = this.activeCardOffer;
+    if (this.status !== 'playing' || !offer || offer.id !== id || !UPGRADE_COLORS.includes(color)
+      || this.time < offer.time || this.time >= offer.expiresAt) return false;
+    offer.selected = color;
+    return true;
   }
-  collectPickup(pickup, tick, effects) {
-    const color = pickupColor(pickup, tick);
+  resolveCardOffer(tick, effects) {
+    const offer = this.cardOffers.shift();
+    const color = offer.selected || UPGRADE_COLORS[Math.floor(this.cardRandom() * UPGRADE_COLORS.length)];
     if (color === 'red') this.damageBonus += 20;
     if (color === 'blue') this.bulletRows++;
     if (color === 'purple') {
       this.missileCount++;
       if (this.nextMissile === Infinity) this.nextMissile = tick + 1;
     }
-    effects.push({ type: 'upgrade', color, id: pickup.id, time: tick });
+    effects.push({ type: 'upgrade', color, id: offer.id, random: !offer.selected, time: tick });
   }
   advance(time, lane, playerWorldX = laneX(lane)) {
     if (this.status !== 'playing') return [];
@@ -85,7 +86,8 @@ export class GameState {
     while (true) {
       const event = this.chart.events[this.index], eventTime = event?.time ?? Infinity;
       const physicsTime = this.physicsStep / 120;
-      const tick = Math.min(eventTime, this.nextShot, this.nextMissile, physicsTime);
+      const cardTime = this.activeCardOffer?.expiresAt ?? Infinity;
+      const tick = Math.min(eventTime, cardTime, this.nextShot, this.nextMissile, physicsTime);
       if (tick > time) break;
       if (eventTime === tick) {
         this.index++;
@@ -93,10 +95,11 @@ export class GameState {
           if (event.lane === lane && tick >= this.stunnedUntil) {
             this.saved++;
             if (this.saved % 50 === 0) {
-              const choices = [0, 1, 2, 3].filter(l => l !== lane);
-              const pickup = { id: this.pickupSerial++, time: tick, x: laneX(choices[Math.floor(this.pickupRandom() * choices.length)]) };
-              this.pickups.push(pickup);
-              effects.push({ type: 'cube-spawn', id: pickup.id, time: tick });
+              // Queue rare overlapping rewards so each set gets its full five seconds.
+              const start = Math.max(tick, this.cardOffers.at(-1)?.expiresAt ?? tick);
+              const offer = { id: this.cardSerial++, time: start, expiresAt: start + CARD_DURATION, selected: null };
+              this.cardOffers.push(offer);
+              effects.push({ type: 'card-offer', id: offer.id, time: tick });
             }
             this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
             this.health = clamp(this.health + this.rules.heal, 0, this.maxHealth);
@@ -106,6 +109,8 @@ export class GameState {
           const originX = bossPose(tick, this.bossMotion).x;
           for (const targetX of event.targets) this.mines.push({ id: this.mineSerial++, time: tick, originX, targetX });
         }
+      } else if (cardTime === tick) {
+        this.resolveCardOffer(tick, effects);
       } else if (this.nextShot === tick) {
         this.lastShot = tick;
         if (tick >= this.stunnedUntil) {

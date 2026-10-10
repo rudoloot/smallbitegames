@@ -1,17 +1,20 @@
 import * as THREE from 'three';
-import { terrainSlope } from './terrain.js?v=5eac88f2d33d';
-import { weaponForId } from './weapons.js?v=5eac88f2d33d';
-import { buildWeaponModel } from './weapon-model.js?v=5eac88f2d33d';
-import { bossPose, projectilePoint } from './projectiles.js?v=5eac88f2d33d';
-import { UPGRADES, pickupColor, pickupPoint } from './pickups.js?v=5eac88f2d33d';
-import { minePoint } from './mines.js?v=5eac88f2d33d';
-import { COLLECTION_Z, visibleNotes } from './timing.js?v=5eac88f2d33d';
-import { themeForChart } from './themes.js?v=5eac88f2d33d';
-import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=5eac88f2d33d';
+import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=7b71865ac2d8';
+import { weaponForId } from './weapons.js?v=7b71865ac2d8';
+import { buildWeaponModel } from './weapon-model.js?v=7b71865ac2d8';
+import { bossPose, projectilePoint } from './projectiles.js?v=7b71865ac2d8';
+import { UPGRADES } from './pickups.js?v=7b71865ac2d8';
+import { UpgradeCards } from './upgrade-cards.js?v=7b71865ac2d8';
+import { minePoint } from './mines.js?v=7b71865ac2d8';
+import { COLLECTION_Z, visibleNotes } from './timing.js?v=7b71865ac2d8';
+import { themeForChart } from './themes.js?v=7b71865ac2d8';
+import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=7b71865ac2d8';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
 const SCROLL_SPEED = 3;
+const RAINBOW_HUES = [0, .075, .145, .36, .59, .68, .78];
+const SKY_STOPS = [0, .16, .32, .5, .66, .83, 1];
 const material = (color, glow = 0) => new THREE.MeshStandardMaterial({ color, roughness: .65, metalness: .12, emissive: color, emissiveIntensity: glow });
 
 export class World {
@@ -53,15 +56,11 @@ export class World {
     this.boxGeo = new THREE.BoxGeometry(1, 1, 1);
     this.sphereGeo = new THREE.SphereGeometry(1, 12, 10);
     this.cylinderGeo = new THREE.CylinderGeometry(1, 1, 1, 10);
-    this.cubeMaterials = Object.fromEntries(Object.entries(UPGRADES).map(([id, upgrade]) =>
-      [id, new THREE.MeshBasicMaterial({ color: upgrade.color, toneMapped: false })]));
     this.notes = new Map(); this.effects = []; this.lastTime = 0;
     this.damageNumbers = []; this.damageSerial = 0; this.hitFlash = 0;
     this.damageLayer = document.createElement('div'); this.damageLayer.className = 'damage-numbers';
     this.damageLayer.setAttribute('aria-hidden', 'true'); container.appendChild(this.damageLayer);
-    this.pickupButtons = new Map();
-    this.pickupLayer = document.createElement('div'); this.pickupLayer.className = 'cube-pickups';
-    container.appendChild(this.pickupLayer);
+    this.upgradeCards = new UpgradeCards(container);
     this.buildSky(); this.course = new THREE.Group(); this.scene.add(this.course); this.buildRoad(); this.buildGarden(); this.prepareEnvironment(); this.buildCharacter(); this.buildBoss();
     this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(container);
     this.resize();
@@ -85,10 +84,15 @@ export class World {
     this.scene.background = texture;
     this.ball(this.scene, material(0xffecdd, .25), [-12, 20, -65], [7, 7, 3]);
     const ring = this.mesh(this.scene, new THREE.TorusGeometry(10, .045, 6, 70), material(0xfff6f4, .7), [-12, 20, -65]); ring.rotation.z = -.35; ring.rotation.x = .55;
+    this.clouds = [];
     for (let i = 0; i < 9; i++) {
-      const cloud = new THREE.Group(); cloud.position.set(Math.sin(i * 4) * 28, 10 + (i % 4) * 3, -25 - i * 7);
+      // Keep the whole cloud outside the road corridor and above its steepest ascent.
+      const z = -28 - i * 6, side = i % 2 ? -1 : 1;
+      const height = Math.max(16, (COLLECTION_Z - z) * Math.tan(MAX_TERRAIN_SLOPE) + 8);
+      const cloud = new THREE.Group(); cloud.position.set(side * (16 + i % 3 * 5), height + i % 3, z);
+      cloud.userData.rainbowHue = RAINBOW_HUES[i % RAINBOW_HUES.length];
       for (let j = 0; j < 3; j++) this.ball(cloud, material(0xe6ddf4), [j * 1.5, j % 2 * .25, 0], [2.1, .48, .7]);
-      this.scene.add(cloud);
+      this.scene.add(cloud); this.clouds.push(cloud);
     }
     this.dust = [];
     const geo = new THREE.OctahedronGeometry(.05);
@@ -102,7 +106,7 @@ export class World {
       const attack = false;
       const mat = material(attack ? 0x9983c9 : i === 2 ? 0x718a96 : 0x667687, .12);
       // Four broad road surfaces; objects travel through their centers, not on lines.
-      this.box(this.course, mat, [x, -.014, -32], [1.18, .04, 100]);
+      this.box(this.course, mat, [x, -.014, -32], [1.18, .04, 100]).userData.rainbowHue = [0, .145, .36, .59][i];
       if (attack) this.attackFloors.push(mat);
     }
     for (let i = 1; i < 4; i++) {
@@ -126,6 +130,7 @@ export class World {
     const trunkMat = material(0x777399), leafA = material(0xd6b6df), leafB = material(0xb8dccc), islandMat = material(0x889abb);
     for (let i = 0; i < 32; i++) {
       const group = new THREE.Group(); const side = i % 2 === 0 ? -1 : 1;
+      group.userData.rainbowHue = RAINBOW_HUES[i % RAINBOW_HUES.length];
       group.position.set(side * (4.6 + (i % 3) * 1.3), -.25, 8 - i * 3.1);
       const scale = .7 + (i % 5) * .15; group.scale.setScalar(scale);
       const island = this.mesh(group, new THREE.ConeGeometry(2, 2.4, 5), islandMat, [0, -1.25, 0]); island.rotation.z = Math.PI;
@@ -142,6 +147,7 @@ export class World {
     this.gates = [];
     for (let i = 0; i < 4; i++) {
       const group = new THREE.Group();
+      group.userData.rainbowHue = RAINBOW_HUES[(i + 4) % RAINBOW_HUES.length];
       for (const side of [-1, 1]) {
         this.box(group, material(0xc8c5e5), [side * 3.8, 2.3, 0], [.24, 4.8, .3]);
         this.box(group, this.materials.mint, [side * 3.8, 3.9, .17], [.1, .9, .035]);
@@ -200,18 +206,21 @@ export class World {
   prepareEnvironment() {
     // Clone only environment materials: notes, mines and the android keep their contrast.
     this.environmentMaterials = [];
-    const clones = new Map();
+    const clones = new Map(); let rainbowIndex = 0;
     this.scene.traverse(object => {
       if (!object.isMesh || !object.material.isMeshStandardMaterial) return;
       const original = object.material;
-      if (!clones.has(original)) {
+      let ancestor = object;
+      while (ancestor && ancestor.userData.rainbowHue === undefined) ancestor = ancestor.parent;
+      const rainbowHue = ancestor?.userData.rainbowHue ?? RAINBOW_HUES[rainbowIndex++ % RAINBOW_HUES.length];
+      const key = `${original.uuid}:${rainbowHue}`;
+      if (!clones.has(key)) {
         const copy = original.clone(), luminous = original.emissiveIntensity >= .2;
-        clones.set(original, copy);
-        this.environmentMaterials.push({ mat: copy, bright: original.color.clone(), dark: new THREE.Color(luminous ? 0x715aa8 : 0x242838), emissive: original.emissive.clone(), darkEmissive: new THREE.Color(luminous ? 0x9475df : 0x242139), glow: original.emissiveIntensity, roughness: original.roughness, metalness: original.metalness, luminous });
+        clones.set(key, copy);
+        this.environmentMaterials.push({ mat: copy, bright: new THREE.Color().setHSL(rainbowHue, .74, luminous ? .67 : .5), dark: new THREE.Color(), emissive: new THREE.Color().setHSL(rainbowHue, .68, .4), darkEmissive: new THREE.Color(), glow: original.emissiveIntensity, roughness: original.roughness, metalness: original.metalness, luminous });
       }
-      object.material = clones.get(original);
+      object.material = clones.get(key);
     });
-    this.attackFloors = this.attackFloors.map(mat => clones.get(mat));
     this.obsidian = [];
     const crystalGeo = new THREE.ConeGeometry(.45, 2.5, 5);
     const crystalMat = new THREE.MeshStandardMaterial({ color: 0x11131f, metalness: .72, roughness: .18, emissive: 0x281c44, emissiveIntensity: .12 });
@@ -237,8 +246,8 @@ export class World {
       this.obsidian.push(group);
     }
     this.themeBlend = -1;
-    this.darkSky = ['#080b16', '#17142b', '#30223e', '#141c2c'].map(c => new THREE.Color(c));
-    this.brightSky = ['#869ccd', '#c9c1e1', '#efd2e2', '#c0d9df'].map(c => new THREE.Color(c));
+    this.darkSky = SKY_STOPS.map(() => new THREE.Color());
+    this.brightSky = RAINBOW_HUES.map(hue => new THREE.Color().setHSL(hue, .55, .78));
     this.darkFog = new THREE.Color(0x191629); this.brightFog = new THREE.Color(0xb7badf);
     this.themeColor = new THREE.Color();
     this.updateEnvironment(null);
@@ -252,13 +261,10 @@ export class World {
       for (const item of this.environmentMaterials) {
         item.dark.setHSL(hue, saturation, item.luminous ? .52 : .24);
         item.darkEmissive.setHSL(hue, saturation, item.luminous ? .47 : .13);
-        item.bright.setHSL(hue, saturation * .65, item.luminous ? .67 : .46);
-        item.emissive.setHSL(hue, saturation * .6, .35);
       }
-      this.darkSky.forEach((color, i) => color.setHSL(hue, saturation, [.07, .14, .24, .16][i]));
-      this.brightSky.forEach((color, i) => color.setHSL(hue, saturation * .45, [.45, .66, .78, .65][i]));
+      this.darkSky.forEach((color, i) => color.setHSL(hue, saturation, [.07, .1, .13, .14, .19, .24, .16][i]));
       this.darkFog.setHSL(hue, saturation, .12);
-      this.brightFog.setHSL(hue, saturation * .4, .64);
+      this.brightFog.set(0xc8d9f2);
       this.moodLight = new THREE.Color().setHSL(hue, saturation * .65, .78);
       for (const mat of this.thornMaterials) {
         mat.color.setHSL(hue, saturation, .15);
@@ -293,7 +299,7 @@ export class World {
       tree.scale.setScalar(Math.max(.001, blend));
     }
     const ctx = this.skyCanvas.getContext('2d'), gradient = ctx.createLinearGradient(0, 0, 0, 256);
-    for (const [i, stop] of [0, .5, .78, 1].entries()) gradient.addColorStop(stop, this.themeColor.lerpColors(this.darkSky[i], this.brightSky[i], blend).getStyle());
+    for (const [i, stop] of SKY_STOPS.entries()) gradient.addColorStop(stop, this.themeColor.lerpColors(this.darkSky[i], this.brightSky[i], blend).getStyle());
     ctx.fillStyle = gradient; ctx.fillRect(0, 0, 8, 256); this.skyTexture.needsUpdate = true;
   }
   buildBoss() {
@@ -310,15 +316,7 @@ export class World {
   }
   createNote(type) {
     const root = new THREE.Group();
-    if (type === 'cube') {
-      root.userData.core = this.box(root, this.cubeMaterials.red, [0, 0, 0], [.48, .48, .48]);
-      // A bright frame keeps the square silhouette clear on the dark road.
-      for (const a of [-1, 1]) for (const b of [-1, 1]) {
-        this.box(root, this.materials.white, [a * .26, b * .26, 0], [.025, .025, .55]);
-        this.box(root, this.materials.white, [a * .26, 0, b * .26], [.025, .55, .025]);
-        this.box(root, this.materials.white, [0, a * .26, b * .26], [.55, .025, .025]);
-      }
-    } else if (type === 'note') {
+    if (type === 'note') {
       this.ball(root, this.materials.mint, [-.06, .18, 0], [.22, .17, .16]);
       this.cylinder(root, this.materials.mint, [.1, .45, 0], [.035, .53, .035]);
       const flag = this.box(root, this.materials.mint, [.23, .67, 0], [.28, .1, .07]); flag.rotation.z = -.32;
@@ -387,13 +385,6 @@ export class World {
     this.damageNumbers.push({ label, age: 0, anchor: point ? new THREE.Vector3(point.x, point.y + 1, point.z) : this.boss.position.clone().add(new THREE.Vector3(0, 1.2, 0)), offset: (this.damageSerial++ % 3 - 1) * 22 });
     this.hitFlash = .14;
   }
-  showUpgrade(color) {
-    this.upgradeNotice?.label.remove();
-    const label = document.createElement('div'); label.className = 'upgrade-notice';
-    const title = document.createElement('strong'); title.textContent = 'UPGRADE';
-    const name = document.createElement('small'); name.textContent = UPGRADES[color].name; name.style.color = '#' + UPGRADES[color].color.toString(16).padStart(6, '0');
-    label.append(title, name); this.damageLayer.appendChild(label); this.upgradeNotice = { label, age: 0 };
-  }
   disposeEffect(mesh) {
     mesh.traverse(child => { if (child.isMesh) { child.geometry.dispose(); child.material.dispose(); } });
     mesh.removeFromParent();
@@ -406,15 +397,14 @@ export class World {
     for (const [key, model] of this.gunModels) model.visible = key === id;
   }
   clearGameObjects() {
-    for (const button of this.pickupButtons.values()) button.remove();
-    this.pickupButtons.clear();
+    this.upgradeCards.clear();
     for (const note of this.notes.values()) this.disposeObject(note);
     this.notes.clear();
     for (const effect of this.effects) this.disposeEffect(effect.mesh);
     this.effects = [];
     for (const number of this.damageNumbers) number.label.remove();
     this.damageNumbers = []; this.hitFlash = 0;
-    this.upgradeNotice?.label.remove(); this.upgradeNotice = null;
+
   }
   disposeObject(object) {
     // Shared geometry/materials remain owned by the scene.
@@ -468,7 +458,7 @@ export class World {
     const pulse = .2 + Math.max(0, Math.sin(time / (state?.chart.beat || .5) * Math.PI * 2)) * .2;
     for (const mat of this.attackFloors) mat.emissiveIntensity = state?.attackWindow && state.boss > 0 ? pulse + .25 : .08;
     const visible = new Set();
-    const visiblePickups = new Set();
+    this.upgradeCards.render(state, mode);
     if (active) {
       for (const { event, z, scale } of visibleNotes(state.chart.events, time, state.chart.terrain)) {
         visible.add(event.id);
@@ -477,31 +467,6 @@ export class World {
         mesh.position.set((event.lane - 1.5) * 1.22, .12, z);
         mesh.scale.setScalar(scale);
         mesh.rotation.y = Math.sin(time * 3 + event.id) * .2;
-      }
-      for (const pickup of state.pickups) {
-        const id = `cube-${pickup.id}`, point = pickupPoint(pickup, time);
-        visible.add(id);
-        let mesh = this.notes.get(id);
-        if (!mesh) { mesh = this.createNote('cube'); this.notes.set(id, mesh); }
-        mesh.position.set(point.x, point.y, point.z);
-        mesh.rotation.set(time * .5, time * .9, .12);
-        const color = pickupColor(pickup, time);
-        mesh.userData.core.material = this.cubeMaterials[color];
-        visiblePickups.add(pickup.id);
-        let button = this.pickupButtons.get(pickup.id);
-        if (!button) {
-          button = document.createElement('button'); button.type = 'button'; button.className = 'cube-select';
-          const hint = document.createElement('span'); hint.textContent = '클릭'; button.appendChild(hint);
-          button.addEventListener('click', () => this.container.dispatchEvent(new CustomEvent('cube-select', { detail: { id: pickup.id } })));
-          this.pickupLayer.appendChild(button); this.pickupButtons.set(pickup.id, button);
-        }
-        button.disabled = mode !== 'playing';
-        button.setAttribute('aria-label', `강화 큐브: ${UPGRADES[color].name} 선택`);
-        button.style.setProperty('--cube-color', '#' + UPGRADES[color].color.toString(16).padStart(6, '0'));
-        const anchor = this.course.localToWorld(new THREE.Vector3(point.x, point.y, point.z)).project(this.camera);
-        button.hidden = anchor.z < -1 || anchor.z > 1 || Math.abs(anchor.x) > 1 || Math.abs(anchor.y) > 1;
-        button.style.left = `${(anchor.x * .5 + .5) * this.container.clientWidth}px`;
-        button.style.top = `${(-anchor.y * .5 + .5) * this.container.clientHeight}px`;
       }
       for (const mine of state.mines) {
         const id = `mine-${mine.id}`, point = minePoint(mine, time);
@@ -512,7 +477,6 @@ export class World {
         mesh.rotation.y = time * 1.6;
       }
     }
-    for (const [id, button] of this.pickupButtons) if (!visiblePickups.has(id)) { button.remove(); this.pickupButtons.delete(id); }
     for (const [id, mesh] of this.notes) if (!visible.has(id)) { this.disposeObject(mesh); this.notes.delete(id); }
     const liveProjectiles = new Set(state?.projectiles.map(p => p.id));
     for (let i = this.effects.length - 1; i >= 0; i--) {
@@ -534,17 +498,6 @@ export class World {
       else { const effectDt = mode === 'paused' ? 0 : dt; e.mesh.position.addScaledVector(e.velocity, effectDt); e.mesh.material.opacity = 1 - e.age / e.life; if (e.impact) e.mesh.scale.setScalar(1 + e.age * 9); else e.mesh.rotation.x += effectDt * 4; }
     }
     const effectDt = mode === 'paused' ? 0 : dt;
-    if (this.upgradeNotice) {
-      const notice = this.upgradeNotice; notice.age += effectDt;
-      if (notice.age >= 2) { notice.label.remove(); this.upgradeNotice = null; }
-      else {
-        this.character.updateWorldMatrix(true, false);
-        const anchor = this.character.localToWorld(new THREE.Vector3(0, 3.05, 0)).project(this.camera);
-        notice.label.style.left = `${(anchor.x * .5 + .5) * this.container.clientWidth}px`;
-        notice.label.style.top = `${(-anchor.y * .5 + .5) * this.container.clientHeight - Math.min(notice.age, .4) * 20}px`;
-        notice.label.style.opacity = Math.min(1, (2 - notice.age) / .4);
-      }
-    }
     this.hitFlash = Math.max(0, this.hitFlash - effectDt);
     this.bossCore.scale.setScalar(this.hitFlash > 0 ? 1.3 : 1);
     for (let i = this.damageNumbers.length - 1; i >= 0; i--) {

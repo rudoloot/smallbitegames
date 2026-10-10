@@ -1,10 +1,11 @@
-import { TRACKS, MusicPlayer } from './music.js?v=5eac88f2d33d';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=5eac88f2d33d';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=5eac88f2d33d';
-import { World } from './scene.js?v=5eac88f2d33d';
-import { weaponForId } from './weapons.js?v=5eac88f2d33d';
-import { exitGame } from './launch.js?v=5eac88f2d33d';
-import { setupFullscreen } from './fullscreen.js?v=5eac88f2d33d';
+import { TRACKS, MusicPlayer } from './music.js?v=7b71865ac2d8';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=7b71865ac2d8';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=7b71865ac2d8';
+import { World } from './scene.js?v=7b71865ac2d8';
+import { weaponForId } from './weapons.js?v=7b71865ac2d8';
+import { exitGame } from './launch.js?v=7b71865ac2d8';
+import { setupFullscreen } from './fullscreen.js?v=7b71865ac2d8';
+import { draggedUpgrade } from './upgrade-cards.js?v=7b71865ac2d8';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -171,22 +172,18 @@ function updateHUD() {
   $('weaponName').style.color = '#' + weaponForId(state.weaponId).color.toString(16).padStart(6, '0');
   $('weaponName').textContent = `${weaponName} · 총알 ${state.bulletRows}줄 · 미사일 ${state.missileCount}발/초`;
   $('timeValue').textContent = `${formatTime(state.time)} / ${formatTime(state.chart.duration)}`;
-  const bonus = state.boss <= 0, attack = !bonus && state.attackWindow;
-  $('phase').classList.toggle('attack', attack); $('phase').classList.toggle('bonus', bonus);
-  $('phase').querySelector('span').textContent = bonus ? '보스 격파! 음표를 구해요' : `음표 ${state.saved % 50}/50 · 큐브 ${state.pickups.length}개`;
+  const bonus = state.boss <= 0;
   $('bossName').textContent = bonus ? 'HARMONY RESTORED · 구출 타임' : `${state.theme.name} · ${state.theme.bossName}`;
 }
 function handleEffects(effects) {
   for (const effect of effects) {
     if (effect.type === 'save') { world.burst(effect.lane, 0xb6f6d9); audio.sound('save'); }
-    if (effect.type === 'cube-spawn') feedback('강화 큐브 등장! 원하는 색일 때 클릭하세요', false, 2000);
-    if (effect.type === 'upgrade') { world.showUpgrade(effect.color); audio.sound('save'); }
+    if (effect.type === 'upgrade') audio.sound('save');
     if (effect.type === 'missile') world.shootMissiles(effect.projectiles);
     if (effect.type === 'shot') { world.shoot(effect.lane, effect.weapon, effect.pellets, effect.projectiles); audio.sound('shot'); }
     if (effect.type === 'hit') world.impact(effect);
     if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d, effect.point); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${effect.damage}`, true); }
     if (effect.type === 'victory') { world.burst(2, 0xe0bcff); feedback('보스 격파 · RESCUE TIME!', false, 2300); }
-    if (effect.type === 'save' && state.saved % 10 === 0 && state.saved % 50 !== 0) feedback(`+${state.rules.heal} HP · ${state.saved} RESCUED`);
   }
 }
 function feedback(text, hurt = false, duration = 750) { $('feedback').textContent = text; $('feedback').classList.toggle('hurt', hurt); feedbackUntil = performance.now() + duration; }
@@ -196,19 +193,28 @@ $('pauseButton').addEventListener('click', () => pause()); $('resumeButton').add
 $('pauseExitButton').addEventListener('click', returnToLauncher);
 $('resultExitButton').addEventListener('click', returnToLauncher);
 $('volume').addEventListener('input', e => audio.setVolume(Number(e.target.value) / 100));
-$('scene').addEventListener('cube-select', e => {
+function selectUpgrade(id, color) {
   if (mode !== 'playing' || !state) return;
   const lane = clamp(Math.round(playerX + 1.5), 0, 3);
   handleEffects(state.advance(audio.time, lane, world.character.position.x));
   if (state.status !== 'playing') { finish(); return; }
-  handleEffects(state.choosePickup(e.detail.id)); updateHUD();
-});
+  state.selectUpgrade(id, color); updateHUD();
+}
+$('scene').addEventListener('upgrade-select', e => selectUpgrade(e.detail.id, e.detail.color));
 stage.addEventListener('pointerdown', e => {
-  if (mode !== 'playing' || e.target.closest('button')) return;
-  drag = { id: e.pointerId, x: e.clientX, player: playerX }; stage.setPointerCapture(e.pointerId);
+  if (mode !== 'playing' || e.target.closest('button, .upgrade-cards')) return;
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, player: playerX, axis: null,
+    offerId: state.activeCardOffer?.id, selected: state.activeCardOffer?.selected }; stage.setPointerCapture(e.pointerId);
 });
 stage.addEventListener('pointermove', e => {
   if (!drag || drag.id !== e.pointerId || mode !== 'playing') return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 12) drag.axis = state.activeCardOffer && Math.abs(dy) > Math.abs(dx) ? 'vertical' : 'horizontal';
+  if (drag.axis === 'vertical') {
+    selectUpgrade(drag.offerId, draggedUpgrade(drag.selected, dy));
+    return;
+  }
+  if (drag.axis !== 'horizontal') return;
   const lanePixels = stage.clientWidth * .135;
   playerX = clamp(drag.player + (e.clientX - drag.x) / lanePixels, -1.5, 1.5);
 });
@@ -216,7 +222,11 @@ const release = e => { if (drag?.id === e.pointerId) drag = null; };
 stage.addEventListener('pointerup', release); stage.addEventListener('pointercancel', release); stage.addEventListener('lostpointercapture', release);
 document.addEventListener('keydown', e => {
   if (document.querySelector('dialog[open]') || e.target.matches('input')) return;
-  if (e.target.closest('.cube-select') && (e.key === 'Enter' || e.code === 'Space')) return;
+  if (e.target.closest('.upgrade-card') && (e.key === 'Enter' || e.code === 'Space')) return;
+  if (['ArrowUp', 'ArrowDown'].includes(e.key) && mode === 'playing' && state.activeCardOffer) {
+    e.preventDefault(); const offer = state.activeCardOffer;
+    selectUpgrade(offer.id, draggedUpgrade(offer.selected, e.key === 'ArrowUp' ? -52 : 52));
+  }
   if (['ArrowLeft', 'ArrowRight', 'a', 'A', 'd', 'D'].includes(e.key) && mode === 'playing') {
     e.preventDefault(); if (!e.repeat) playerX = clamp(Math.round(playerX + 1.5) - 1.5 + (['ArrowLeft', 'a', 'A'].includes(e.key) ? -1 : 1), -1.5, 1.5);
   }
