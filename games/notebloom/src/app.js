@@ -1,10 +1,10 @@
-import { TRACKS, MusicPlayer } from './music.js?v=d4fb67fc046d';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=d4fb67fc046d';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=d4fb67fc046d';
-import { World } from './scene.js?v=d4fb67fc046d';
-import { weaponForId } from './weapons.js?v=d4fb67fc046d';
-import { exitGame } from './launch.js?v=d4fb67fc046d';
-import { setupFullscreen } from './fullscreen.js?v=d4fb67fc046d';
+import { TRACKS, MusicPlayer } from './music.js?v=5eac88f2d33d';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=5eac88f2d33d';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=5eac88f2d33d';
+import { World } from './scene.js?v=5eac88f2d33d';
+import { weaponForId } from './weapons.js?v=5eac88f2d33d';
+import { exitGame } from './launch.js?v=5eac88f2d33d';
+import { setupFullscreen } from './fullscreen.js?v=5eac88f2d33d';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');

@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-import { terrainSlope } from './terrain.js?v=d4fb67fc046d';
-import { weaponForId } from './weapons.js?v=d4fb67fc046d';
-import { buildWeaponModel } from './weapon-model.js?v=d4fb67fc046d';
-import { bossPose, projectilePoint } from './projectiles.js?v=d4fb67fc046d';
-import { UPGRADES, pickupColor, pickupPoint } from './pickups.js?v=d4fb67fc046d';
-import { minePoint } from './mines.js?v=d4fb67fc046d';
-import { COLLECTION_Z, visibleNotes } from './timing.js?v=d4fb67fc046d';
-import { themeForChart } from './themes.js?v=d4fb67fc046d';
-import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=d4fb67fc046d';
+import { terrainSlope } from './terrain.js?v=5eac88f2d33d';
+import { weaponForId } from './weapons.js?v=5eac88f2d33d';
+import { buildWeaponModel } from './weapon-model.js?v=5eac88f2d33d';
+import { bossPose, projectilePoint } from './projectiles.js?v=5eac88f2d33d';
+import { UPGRADES, pickupColor, pickupPoint } from './pickups.js?v=5eac88f2d33d';
+import { minePoint } from './mines.js?v=5eac88f2d33d';
+import { COLLECTION_Z, visibleNotes } from './timing.js?v=5eac88f2d33d';
+import { themeForChart } from './themes.js?v=5eac88f2d33d';
+import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=5eac88f2d33d';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;

@@ -1,9 +1,9 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=d4fb67fc046d';
-import { weaponForId } from './weapons.js?v=d4fb67fc046d';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile, bulletRowOffsets } from './projectiles.js?v=d4fb67fc046d';
-import { pickupColor } from './pickups.js?v=d4fb67fc046d';
-import { minePoint, mineFanTargets, MINE_TRAVEL } from './mines.js?v=d4fb67fc046d';
-import { themeForChart } from './themes.js?v=d4fb67fc046d';
+import { clamp, seededRandom, RULES } from './engine.js?v=5eac88f2d33d';
+import { weaponForId } from './weapons.js?v=5eac88f2d33d';
+import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile, bulletRowOffsets } from './projectiles.js?v=5eac88f2d33d';
+import { pickupColor } from './pickups.js?v=5eac88f2d33d';
+import { minePoint, mineFanTargets, MINE_TRAVEL } from './mines.js?v=5eac88f2d33d';
+import { themeForChart } from './themes.js?v=5eac88f2d33d';
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
 export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) {
@@ -22,7 +22,7 @@ export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) 
   let wave = 0;
   times.forEach((arrival, i) => {
     if (i % RULES[difficulty].mineEvery !== 0) return;
-    const count = wave++ % 2 ? 3 : 2;
+    const count = wave++ % 2 ? 2 : 1;
     const targets = mineFanTargets(count, mineRandom);
     events.push({ type: 'mine-wave', time: arrival - MINE_TRAVEL, targets, count });
   });

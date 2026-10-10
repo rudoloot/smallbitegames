@@ -1,4 +1,4 @@
-import { bossColliders } from './themes.js?v=d4fb67fc046d';
+import { bossColliders } from './themes.js?v=5eac88f2d33d';
 // Shared world-space geometry for simulation and rendering.
 export function bossPose(time, motion = { from: -.61, to: -.61, start: 0, end: 0 }) {
   const t = motion.end > motion.start ? Math.max(0, Math.min(1, (time - motion.start) / (motion.end - motion.start))) : 1;
