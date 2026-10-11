@@ -1,11 +1,11 @@
-import { TRACKS, MusicPlayer } from './music.js?v=6ea9da615282';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=6ea9da615282';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=6ea9da615282';
-import { World } from './scene.js?v=6ea9da615282';
-import { exitGame } from './launch.js?v=6ea9da615282';
-import { setupFullscreen } from './fullscreen.js?v=6ea9da615282';
-import { beginGesture, updateGesture } from './gesture.js?v=6ea9da615282';
-import { updatePlayHUD } from './hud.js?v=6ea9da615282';
+import { TRACKS, MusicPlayer } from './music.js?v=6425d119684c';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=6425d119684c';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=6425d119684c';
+import { World } from './scene.js?v=6425d119684c';
+import { exitGame } from './launch.js?v=6425d119684c';
+import { setupFullscreen } from './fullscreen.js?v=6425d119684c';
+import { beginGesture, updateGesture } from './gesture.js?v=6425d119684c';
+import { updatePlayHUD } from './hud.js?v=6425d119684c';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -157,13 +157,13 @@ function finish() {
   $('resultMessage').textContent = won ? '보스를 물리쳤어요!' : '다시 도전해 보세요.';
   $('resultSaved').textContent = state.saved; $('resultCombo').textContent = state.maxCombo; $('resultPower').textContent = state.maxAttackDamage;
   $('result').querySelector('.result-stats small').textContent = won ? '구출한 음표' : '이번 판 만난 음표';
-  $('resultDetail').textContent = won ? `${formatTime(state.defeatedAt)}에 보스 격파 · 지뢰 피격 ${state.hits}회` : `코스 ${Math.round(state.time / state.chart.duration * 100)}% · 보스 체력 ${Math.ceil(state.boss / state.chart.bossMax * 100)}% 남음`;
+  $('resultDetail').textContent = won ? `${formatTime(state.defeatedAt)}에 보스 격파 · 지뢰 피격 ${state.hits}회` : `코스 ${Math.min(100, Math.round(state.time / state.chart.duration * 100))}% · 보스 체력 ${Math.ceil(state.boss / state.chart.bossMax * 100)}% 남음`;
   $('residents').replaceChildren();
   if (won) for (let i = 0; i < Math.min(state.saved, 24); i++) { const resident = document.createElement('span'); resident.textContent = i % 3 === 0 ? '♫' : '♪'; resident.setAttribute('aria-hidden', 'true'); $('residents').append(resident); }
 }
 function updateHUD() {
   if (!state) return;
-  const course = state.time / state.chart.duration * 100;
+  const course = Math.min(100, state.time / state.chart.duration * 100);
   updatePlayHUD(document, state);
   $('courseFill').style.height = `${course}%`; $('courseValue').textContent = `${Math.floor(course)}%`; $('courseMeter').setAttribute('aria-valuenow', Math.floor(course));
   $('healthFill').style.height = `${state.health / state.maxHealth * 100}%`; $('healthValue').textContent = Number(state.health.toFixed(1)); $('healthMeter').setAttribute('aria-valuenow', state.health); $('healthMeter').setAttribute('aria-valuemax', state.maxHealth); document.querySelector('.health').classList.toggle('low', state.health < state.maxHealth * .3);
@@ -175,6 +175,7 @@ function handleEffects(effects) {
     if (effect.type === 'missile') { world.shootMissiles(effect.projectiles); audio.sound('shot'); }
     if (effect.type === 'shot') { world.shoot(effect.lane, effect.weapon, effect.pellets, effect.projectiles); audio.sound('shot'); }
     if (effect.type === 'hit') world.impact(effect);
+    if (effect.type === 'firework') { world.firework(effect); audio.sound('shot'); }
     if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d, effect.point); audio.sound('mine'); damageUntil = performance.now() + 200; }
     if (effect.type === 'victory') { world.burst(2, 0xe0bcff); feedback('보스 격파 · RESCUE TIME!', false, 2300); }
   }
@@ -189,7 +190,7 @@ $('volume').addEventListener('input', e => audio.setVolume(Number(e.target.value
 function attack() {
   if (mode !== 'playing' || !state) return;
   const lane = clamp(Math.round(playerX + 1.5), 0, 3);
-  handleEffects(state.releaseAttack(audio.time, lane, world.character.position.x));
+  handleEffects(state.releaseAttack(audio.gameplayTime, lane, world.character.position.x));
   if (state.status !== 'playing') { finish(); return; }
   updateHUD();
 }
@@ -226,7 +227,7 @@ function frame(now) {
     if (audio.context.state !== 'running') pause('오디오가 중단되어 잠시 멈췄어요. 계속 플레이를 눌러 주세요.');
     else {
       const lane = clamp(Math.round(playerX + 1.5), 0, 3);
-      handleEffects(state.advance(audio.time, lane, world.character.position.x)); updateHUD();
+      handleEffects(state.advance(audio.gameplayTime, lane, world.character.position.x)); updateHUD();
       if (state.status !== 'playing') finish();
     }
   }

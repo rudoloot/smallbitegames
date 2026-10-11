@@ -1,11 +1,12 @@
 import * as THREE from 'three';
-import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch, terrainScroll } from './terrain.js?v=6ea9da615282';
-import { weaponForId, attackForEnergy, chargeColorForWeapon } from './weapons.js?v=6ea9da615282';
-import { buildWeaponModel } from './weapon-model.js?v=6ea9da615282';
-import { bossPose, projectilePoint } from './projectiles.js?v=6ea9da615282';
-import { COLLECTION_Z, visibleNotes } from './timing.js?v=6ea9da615282';
-import { themeForChart } from './themes.js?v=6ea9da615282';
-import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=6ea9da615282';
+import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch, terrainScroll } from './terrain.js?v=6425d119684c';
+import { weaponForId, attackForEnergy, chargeColorForWeapon } from './weapons.js?v=6425d119684c';
+import { buildWeaponModel } from './weapon-model.js?v=6425d119684c';
+import { bossPose, projectilePoint } from './projectiles.js?v=6425d119684c';
+import { COLLECTION_Z, visibleNotes } from './timing.js?v=6425d119684c';
+import { themeForChart } from './themes.js?v=6425d119684c';
+import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=6425d119684c';
+import { advanceFireworkSpark } from './fireworks.js?v=6425d119684c';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -492,6 +493,47 @@ export class World {
     this.damageNumbers.push({ label, age: 0, anchor: point ? new THREE.Vector3(point.x, point.y + 1, point.z) : this.boss.position.clone().add(new THREE.Vector3(0, 1.2, 0)), offset: (this.damageSerial++ % 3 - 1) * 22 });
     this.hitFlash = .14;
   }
+  fireworkTarget(point) {
+    const target = this.trackPoint(point);
+    // Keep the burst in the sky visible below the top HUD on steep roads too.
+    const projected = target.clone().project(this.camera);
+    projected.x = THREE.MathUtils.clamp(projected.x,-.65,.65);
+    projected.y = THREE.MathUtils.clamp(projected.y,.02,.32);
+    target.copy(projected.unproject(this.camera));
+    target.y = Math.max(target.y,this.height(target.z)+1.5);
+    return target;
+  }
+  celebrationPoint(projectile,time) {
+    const t = THREE.MathUtils.clamp((time-projectile.time)/projectile.flightTime,0,1);
+    const start = this.trackPoint({x:projectile.x,y:projectile.y,z:projectile.z});
+    const point = start.lerp(this.fireworkTarget(projectile.target),t);
+    point.y += Math.sin(t*Math.PI)*.8;
+    return point;
+  }
+  firework(hit) {
+    for (let i = this.effects.length-1;i>=0;i--) {
+      if (this.effects[i].projectile?.id === hit.id) { this.disposeEffect(this.effects[i].mesh); this.effects.splice(i,1); }
+    }
+    const center = this.fireworkTarget(hit.point), big = hit.weapon === 'missile';
+    const colors = [0xff4455,0xffb72a,0xffed5c,0x53ff9c,0x40cfff,0x9773ff,0xff65d4];
+    const count = big ? 112 : hit.weapon === 'machine' ? 14 : 20;
+    for (let i=0;i<count;i++) {
+      const y = 1-2*(i+.5)/count, angle = i*2.399963, radius = Math.sqrt(1-y*y), speed = big ? 7+i%5 : 2.8+i%4*.65;
+      const velocity = new THREE.Vector3(Math.cos(angle)*radius,y,Math.sin(angle)*radius).multiplyScalar(speed);
+      const mat = new THREE.MeshBasicMaterial({color:colors[i%colors.length],toneMapped:false,fog:false,transparent:true,depthWrite:false});
+      const mesh = this.mesh(this.course,new THREE.SphereGeometry(big ? .12 : .075,6,4),mat,center.toArray(),[1,1,big ? 4 : 2.5]);
+      this.effects.push({mesh,position:center.clone(),velocity,gravity:big ? 15 : 12,age:0,life:big ? 3 : 2.2,worldSpace:true,fireworkSpark:true,bounce:i%3!==2});
+    }
+    for (let i=0;i<(big?3:1);i++) {
+      const mat = new THREE.MeshBasicMaterial({color:colors[(hit.id+i)%colors.length],toneMapped:false,fog:false,transparent:true,depthWrite:false});
+      const mesh = this.mesh(this.course,new THREE.TorusGeometry(big ? .6 : .16,big ? .035 : .015,6,48),mat,center.toArray());
+      mesh.rotation.set(i*.7,i*.9,0);
+      this.effects.push({mesh,position:center.clone(),velocity:new THREE.Vector3(),age:0,life:big ? .65 : .35,expand:big ? 10 : 8,baseScale:mesh.scale.clone(),worldSpace:true});
+    }
+    const flashMat = new THREE.MeshBasicMaterial({color:big ? 0xffdf71 : 0xfff7cb,toneMapped:false,fog:false,transparent:true,depthWrite:false});
+    const flash = this.mesh(this.course,new THREE.SphereGeometry(big ? .45 : .12,12,8),flashMat,center.toArray());
+    this.effects.push({mesh:flash,position:center.clone(),velocity:new THREE.Vector3(),age:0,life:.22,expand:big ? 12 : 6,baseScale:flash.scale.clone(),worldSpace:true});
+  }
   showPlayerFeedback(effect) {
     if (!['save', 'miss', 'mine'].includes(effect.type)) return;
     const last = this.playerFeedback.at(-1);
@@ -507,8 +549,8 @@ export class World {
     for (let i = this.playerFeedback.length - 1; i >= 0; i--) {
       const item = this.playerFeedback[i]; item.age += dt;
       if (item.age >= .7) { item.label.remove(); this.playerFeedback.splice(i, 1); continue; }
-      const progress = item.age / .7, z = COLLECTION_Z - progress * 4.5;
-      const anchor = new THREE.Vector3(item.x, this.height(z) + 2.8 * CHARACTER_SCALE + progress * .7, z);
+      const progress = item.age / .7, z = COLLECTION_Z - progress * .8;
+      const anchor = new THREE.Vector3(item.x, this.height(z) + 2.5 * CHARACTER_SCALE + progress * .08, z);
       const projected = this.course.localToWorld(anchor).project(this.camera);
       item.label.style.left = `${(projected.x * .5 + .5) * this.viewWidth}px`;
       item.label.style.top = `${(-projected.y * .5 + .5) * this.container.clientHeight}px`;
@@ -621,13 +663,14 @@ export class World {
       const e = this.effects[i]; if (mode !== 'paused') e.age += dt;
       if (e.projectile) {
         const point = projectilePoint(e.projectile, state?.time ?? e.projectile.time);
+        const rendered = e.projectile.celebration ? this.celebrationPoint(e.projectile,state?.time ?? e.projectile.time) : this.trackPoint(point);
         if (point.z < -70 || (state && !liveProjectiles.has(e.projectile.id))) { this.disposeEffect(e.mesh); this.effects.splice(i, 1); }
         else {
-          if (e.missile) {
-            const direction = this.trackPoint(point).sub(e.mesh.position);
+          if (e.missile || e.projectile.celebration) {
+            const direction = rendered.clone().sub(e.mesh.position);
             if (direction.lengthSq() > .00001) e.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), direction.normalize());
           }
-          e.mesh.position.copy(this.trackPoint(point));
+          e.mesh.position.copy(rendered);
         }
         continue;
       }
@@ -635,12 +678,17 @@ export class World {
       if (e.shot) e.mesh.position.copy(this.trackPoint(e.start.clone().lerp(e.target, e.age / e.life)));
       else {
         const effectDt = mode === 'paused' ? 0 : dt;
-        e.position ??= e.mesh.position.clone(); e.position.addScaledVector(e.velocity, effectDt);
-        e.mesh.position.copy(this.trackPoint(e.position));
+        e.position ??= e.mesh.position.clone();
+        if (e.fireworkSpark) {
+          advanceFireworkSpark(e,effectDt,z=>this.height(z));
+          if (e.velocity.lengthSq()>0) e.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),e.velocity.clone().normalize());
+        }
+        else e.position.addScaledVector(e.velocity, effectDt);
+        e.mesh.position.copy(e.worldSpace ? e.position : this.trackPoint(e.position));
         e.mesh.traverse(child => { if (child.isMesh) child.material.opacity = (e.opacity ?? 1) * (1 - e.age / e.life); });
         if (e.expand) e.mesh.scale.copy(e.baseScale).multiplyScalar(1 + e.age * e.expand);
-        else e.mesh.rotation.x += effectDt * 4;
-        if (e.gravity) e.velocity.y -= e.gravity * effectDt;
+        else if (!e.fireworkSpark) e.mesh.rotation.x += effectDt * 4;
+        if (e.gravity && !e.fireworkSpark) e.velocity.y -= e.gravity * effectDt;
       }
     }
     const effectDt = mode === 'paused' ? 0 : dt;

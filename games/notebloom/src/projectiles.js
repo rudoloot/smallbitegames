@@ -1,5 +1,5 @@
-import { bossColliders } from './themes.js?v=6ea9da615282';
-import { FLIGHT_SPEED } from './flight.js?v=6ea9da615282';
+import { bossColliders } from './themes.js?v=6425d119684c';
+import { FLIGHT_SPEED } from './flight.js?v=6425d119684c';
 // Shared world-space geometry for simulation and rendering.
 export function bossPose() {
   return { x: 0, y: 1.05, z: -52 };
@@ -7,6 +7,10 @@ export function bossPose() {
 export const projectileSpeed = weapon => weapon === 'missile' ? FLIGHT_SPEED : weapon === 'rail' ? 260 : weapon === 'rocket' ? 85 : 115;
 export const projectileRadius = weapon => weapon === 'missile' || weapon === 'rocket' ? .18 : weapon === 'rail' ? .045 : .07;
 export function projectilePoint(projectile, time) {
+  if (projectile.celebration) {
+    const t = Math.max(0,Math.min(1,(time-projectile.time)/projectile.flightTime)), target = projectile.target;
+    return {x:projectile.x+(target.x-projectile.x)*t,y:projectile.y+(target.y-projectile.y)*t+Math.sin(t*Math.PI)*.8,z:projectile.z+(target.z-projectile.z)*t};
+  }
   if (projectile.weapon === 'missile') return { ...projectile.position };
   const distance = projectile.speed * (time - projectile.time), direction = projectile.direction ?? { x: 0, y: 0, z: -1 };
   return { x: projectile.x + direction.x * distance, y: projectile.y + direction.y * distance,

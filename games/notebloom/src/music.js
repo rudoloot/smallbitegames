@@ -1,4 +1,4 @@
-import { audibleContextTime } from './timing.js?v=6ea9da615282';
+import { audibleContextTime } from './timing.js?v=6425d119684c';
 export const NOTE_SOUND_GAIN = 1.6;
 
 // Titles, artists and reference durations transcribed from music 정보.md's image.
@@ -80,24 +80,31 @@ export class MusicPlayer {
   }
   play() {
     if (!this.buffer || this.playing) return;
-    this.source = this.context.createBufferSource(); this.source.buffer = this.buffer; this.source.connect(this.gain);
     // Schedule an explicit start so source playback and our clock share an origin.
     this.started = this.context.currentTime + .025;
-    this.position = this.offset; this.source.start(this.started, this.offset); this.playing = true;
+    this.position = this.offset;
+    // Resuming the final attack should resume its clock without replaying music.
+    if (this.offset < this.buffer.duration) {
+      this.source = this.context.createBufferSource(); this.source.buffer = this.buffer; this.source.connect(this.gain);
+      this.source.start(this.started, this.offset);
+    }
+    this.playing = true;
   }
-  timeAt(now = performance.now()) {
+  gameplayTimeAt(now = performance.now()) {
     if (!this.playing) return this.offset;
     const elapsed = Math.max(0, audibleContextTime(this.context, now) - this.started);
     // Output timestamp estimates can wobble slightly; judgment must not rewind.
-    this.position = Math.min(this.buffer?.duration || 0, Math.max(this.position, this.offset + elapsed));
+    this.position = Math.max(this.position, this.offset + elapsed);
     return this.position;
   }
+  timeAt(now = performance.now()) { return Math.min(this.buffer?.duration || 0, this.gameplayTimeAt(now)); }
   get time() { return this.timeAt(); }
+  get gameplayTime() { return this.gameplayTimeAt(); }
   pause() {
     for (const voice of this.rescueVoices) { voice.stop(); voice.disconnect(); }
     this.rescueVoices.clear();
     if (!this.playing) return;
-    this.offset = this.time; this.playing = false; this.source?.stop(); this.source?.disconnect(); this.source = null;
+    this.offset = this.gameplayTime; this.playing = false; this.source?.stop(); this.source?.disconnect(); this.source = null;
   }
   stop() { this.pause(); this.offset = this.position = 0; }
   setVolume(value) {

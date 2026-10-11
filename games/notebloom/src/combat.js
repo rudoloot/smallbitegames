@@ -1,8 +1,8 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=6ea9da615282';
-import { weaponForId, attackForEnergy } from './weapons.js?v=6ea9da615282';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile } from './projectiles.js?v=6ea9da615282';
-import { themeForChart } from './themes.js?v=6ea9da615282';
-import { estimateBossHealth } from './balance.js?v=6ea9da615282';
+import { clamp, seededRandom, RULES } from './engine.js?v=6425d119684c';
+import { weaponForId, attackForEnergy } from './weapons.js?v=6425d119684c';
+import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile } from './projectiles.js?v=6425d119684c';
+import { themeForChart } from './themes.js?v=6425d119684c';
+import { estimateBossHealth } from './balance.js?v=6425d119684c';
 
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
@@ -75,6 +75,7 @@ export class GameState {
     this.defeatedAt = this.boss === 0 ? 0 : null; this.status = 'playing';
     this.projectiles = []; this.projectileSerial = 0; this.pendingShots = [];
     this.physicsStep = 1; this.physicsHz = physicsHz;
+    this.endEffectsUntil = 0;
   }
   get chargedAttack() { return attackForEnergy(this.energy); }
   get weaponId() { return this.chargedAttack?.weapon ?? null; }
@@ -86,12 +87,15 @@ export class GameState {
     this.combo = 0;
   }
   launchShot(shot) {
-    const target = bossPose(), weapon = shot.weapon;
+    const weapon = shot.weapon, target = shot.celebration
+      ? {x:weapon === 'missile' ? 0 : (shot.number % 5 - 2) * .7, y:weapon === 'missile' ? 7 : 5, z:-16 - shot.number % 3 * 2}
+      : bossPose();
     const x = shot.x + (weapon === 'dual' ? shot.number % 2 ? -.22 : .22 : .22), y = .8, z = 2.65;
     const length = Math.hypot(target.x - x, target.y - y, target.z - z);
     const projectile = { id: this.projectileSerial++, weapon, time: shot.time, damage: shot.damage,
       checkedAt: shot.time, x, y, z, speed: projectileSpeed(weapon),
       direction: { x: (target.x - x) / length, y: (target.y - y) / length, z: (target.z - z) / length } };
+    if (shot.celebration) Object.assign(projectile, {celebration:true,target,flightTime:weapon === 'missile' ? .85 : .6 + shot.number % 3 * .06});
     if (weapon === 'missile') Object.assign(projectile, { side: 1, position: { x, y, z } });
     this.lastShot = shot.time; this.lastWeaponId = weapon; this.projectiles.push(projectile);
     return { type: weapon === 'missile' ? 'missile' : 'shot', weapon, lane: shot.lane,
@@ -105,14 +109,15 @@ export class GameState {
   }
   fireChargedAttack(time, lane, playerWorldX, reason) {
     const attack = this.chargedAttack;
-    if (this.status !== 'playing' || this.health <= 0 || !attack || this.boss <= 0) return [];
+    if (this.status !== 'playing' || this.health <= 0 || !attack) return [];
+    const celebration = this.boss <= 0;
     const effects = [];
     const consumed = this.energy; this.energy = 0; this.attacks++;
-    this.maxAttackDamage = Math.max(this.maxAttackDamage, attack.totalDamage);
+    if (!celebration) this.maxAttackDamage = Math.max(this.maxAttackDamage, attack.totalDamage);
     const x = clamp(playerWorldX, laneX(0), laneX(3));
-    effects.push({ type: 'attack', weapon: attack.weapon, energy: consumed, damage: attack.totalDamage, time, reason });
+    effects.push({ type: 'attack', weapon: attack.weapon, energy: consumed, damage: celebration ? 0 : attack.totalDamage, time, reason, celebration });
     for (let number = 0; number < attack.shots; number++) {
-      const shot = { weapon: attack.weapon, damage: attack.damage, lane: clamp(lane, 0, 3), x,
+      const shot = { weapon: attack.weapon, damage: celebration ? 0 : attack.damage, celebration, lane: clamp(lane, 0, 3), x,
         time: time + number * attack.interval, number };
       if (number === 0) effects.push(this.launchShot(shot));
       else this.pendingShots.push(shot);
@@ -122,7 +127,8 @@ export class GameState {
   }
   advance(time, lane, playerWorldX = laneX(lane)) {
     if (this.status !== 'playing') return [];
-    time = clamp(time, this.time, this.chart.duration); lane = clamp(lane, 0, 3);
+    // The soundtrack may end while the last volley is still in flight.
+    time = Math.max(time, this.time); lane = clamp(lane, 0, 3);
     const effects = [];
     while (true) {
       const event = this.chart.events[this.index], eventTime = event?.time ?? Infinity;
@@ -156,10 +162,19 @@ export class GameState {
         }
       } else if (shotTime === tick) {
         const shot = this.pendingShots.shift();
-        if (this.boss > 0) effects.push(this.launchShot(shot));
+        if (this.boss > 0 || shot.celebration) effects.push(this.launchShot(shot));
       } else {
         this.physicsStep++;
         this.projectiles = this.projectiles.filter(projectile => {
+          if (projectile.celebration) {
+            projectile.checkedAt = tick;
+            if (tick + 1e-9 >= projectile.time + projectile.flightTime) {
+              effects.push({type:'firework',id:projectile.id,weapon:projectile.weapon,point:projectile.target,time:tick});
+              this.endEffectsUntil = Math.max(this.endEffectsUntil, tick + 2.4);
+              return false;
+            }
+            return true;
+          }
           const from = projectilePoint(projectile, projectile.checkedAt);
           if (projectile.weapon === 'missile') advanceMissile(projectile, tick, bossPose());
           const point = this.boss > 0 ? intersectBoss(projectile, projectile.checkedAt, tick, bossPose, from, this.theme.boss) : null;
@@ -167,6 +182,7 @@ export class GameState {
           if (point) {
             const damage = Math.min(this.boss, projectile.damage); this.boss -= damage; this.lastHit = tick;
             effects.push({ type: 'hit', id: projectile.id, weapon: projectile.weapon, damage, point, time: tick });
+            this.endEffectsUntil = Math.max(this.endEffectsUntil, tick + .65);
             if (this.boss === 0) { this.defeatedAt = tick; this.pendingShots = []; effects.push({ type: 'victory', time: tick }); }
             return false;
           }
@@ -176,7 +192,11 @@ export class GameState {
       if (this.health <= 0) { this.status = 'lost-health'; break; }
     }
     this.time = time;
-    if (this.status === 'playing' && time >= this.chart.duration) this.status = this.boss <= 0 ? 'won' : 'lost-boss';
+    const finalChargeGrace = this.energy > 0 && time < this.chart.duration + 1;
+    if (this.status === 'playing' && time >= this.chart.duration && !finalChargeGrace &&
+        !this.pendingShots.length && !this.projectiles.length && time >= this.endEffectsUntil) {
+      this.status = this.boss <= 0 ? 'won' : 'lost-boss';
+    }
     return effects;
   }
 }
