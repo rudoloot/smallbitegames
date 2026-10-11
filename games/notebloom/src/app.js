@@ -1,10 +1,11 @@
-import { TRACKS, MusicPlayer } from './music.js?v=c9a3057ee538';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=c9a3057ee538';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=c9a3057ee538';
-import { World } from './scene.js?v=c9a3057ee538';
-import { weaponForId } from './weapons.js?v=c9a3057ee538';
-import { exitGame } from './launch.js?v=c9a3057ee538';
-import { setupFullscreen } from './fullscreen.js?v=c9a3057ee538';
+import { TRACKS, MusicPlayer } from './music.js?v=c74e9a5f09f9';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=c74e9a5f09f9';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=c74e9a5f09f9';
+import { World } from './scene.js?v=c74e9a5f09f9';
+import { weaponForId } from './weapons.js?v=c74e9a5f09f9';
+import { exitGame } from './launch.js?v=c74e9a5f09f9';
+import { setupFullscreen } from './fullscreen.js?v=c74e9a5f09f9';
+import { beginGesture, updateGesture } from './gesture.js?v=c74e9a5f09f9';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -16,12 +17,12 @@ const audio = new MusicPlayer();
 const difficulty = 'normal';
 let selected = TRACKS[0], state = null, mode = 'home', playerX = 0;
 let preparing = false, countdownTimer = null, countdownRemaining = 3, feedbackUntil = 0, damageUntil = 0;
-let drag = null, attackKeyHeld = false, lastFrame = performance.now(), elapsed = 0;
+let drag = null, lastFrame = performance.now(), elapsed = 0;
 const analyses = new Map();
 const formatTime = seconds => `${Math.floor(Math.max(0, seconds) / 60)}:${String(Math.floor(Math.max(0, seconds) % 60)).padStart(2, '0')}`;
 const panels = ['home', 'hud', 'loading', 'pausePanel', 'result', 'countdown'];
 function show(...ids) { for (const id of panels) $(id).classList.toggle('hidden', !ids.includes(id)); }
-function switchMode(next) { mode = next; stage.classList.toggle('playing', next !== 'home' && next !== 'loading'); drag = null; attackKeyHeld = false; }
+function switchMode(next) { mode = next; stage.classList.toggle('playing', next !== 'home' && next !== 'loading'); drag = null; }
 
 function selectTrack(track) {
   selected = track; $('selectedTitle').textContent = track.title; $('selectedArtist').textContent = `${track.artist} · ${track.duration}`;
@@ -166,7 +167,7 @@ function updateHUD() {
   $('bossFill').style.width = `${boss}%`; $('bossValue').textContent = `${Math.ceil(boss)}%`; $('bossMeter').setAttribute('aria-valuenow', Math.ceil(boss));
   $('courseFill').style.height = `${course}%`; $('courseValue').textContent = `${Math.floor(course)}%`; $('courseMeter').setAttribute('aria-valuenow', Math.floor(course));
   $('healthFill').style.height = `${state.health / state.maxHealth * 100}%`; $('healthValue').textContent = Number(state.health.toFixed(1)); $('healthMeter').setAttribute('aria-valuenow', state.health); $('healthMeter').setAttribute('aria-valuemax', state.maxHealth); document.querySelector('.health').classList.toggle('low', state.health < state.maxHealth * .3);
-  $('savedValue').textContent = state.saved; $('comboValue').textContent = `${state.combo} COMBO`; $('powerValue').textContent = state.power;
+  $('comboValue').textContent = state.combo; $('powerValue').textContent = state.power;
   const attack = state.chargedAttack, weapon = weaponForId(attack?.weapon);
   $('weaponName').style.color = '#' + weapon.color.toString(16).padStart(6, '0');
   $('weaponName').textContent = attack ? `${weapon.name} · ${attack.damage} × ${attack.shots}발` : '음표를 모아 에너지를 충전해요';
@@ -174,7 +175,7 @@ function updateHUD() {
   $('energyFill').style.width = `${Math.min(100, state.energy / 30 * 100)}%`;
   $('energyMeter').setAttribute('aria-valuenow', Math.min(30, state.energy));
   $('energyMeter').setAttribute('aria-valuetext', `${state.energy}개 충전${attack ? ` · ${weapon.name}` : ''}`);
-  $('attackHint').textContent = state.boss <= 0 ? '보스 격파 · 음표를 계속 모아요' : state.energy ? '손을 떼면 공격 · PC는 F키 떼기' : '10 쌍권총 · 20 기관총 · 30 미사일';
+  $('energyMeter').title = state.boss <= 0 ? '보스 격파 · 음표를 계속 모아요' : '위로 드래그하면 공격 · PC는 ↑ / F';
   $('timeValue').textContent = `${formatTime(state.time)} / ${formatTime(state.chart.duration)}`;
   const bonus = state.boss <= 0;
   $('bossName').textContent = bonus ? 'HARMONY RESTORED · 구출 타임' : `${state.theme.name} · ${state.theme.bossName}`;
@@ -182,12 +183,12 @@ function updateHUD() {
 function handleEffects(effects) {
   for (const effect of effects) {
     if (effect.type === 'save') { world.burst(effect.lane, 0xb6f6d9); audio.sound('save'); }
-    if (effect.type === 'miss') feedback('음표 놓침 · 충전 초기화', true);
-    if (effect.type === 'attack') feedback(`${weaponForId(effect.weapon).name} · 피해 ${effect.damage}`, false);
+    if (effect.type === 'miss' && !effects.some(e => e.type === 'mine' && e.time === effect.time)) feedback('음표 놓침', true);
+    if (effect.type === 'attack') feedback(`${effect.reason === 'miss' ? '놓침 자동 발사 · ' : ''}${weaponForId(effect.weapon).name} · 피해 ${effect.damage}`, false);
     if (effect.type === 'missile') { world.shootMissiles(effect.projectiles); audio.sound('shot'); }
     if (effect.type === 'shot') { world.shoot(effect.lane, effect.weapon, effect.pellets, effect.projectiles); audio.sound('shot'); }
     if (effect.type === 'hit') world.impact(effect);
-    if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d, effect.point); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${effect.damage}`, true); }
+    if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d, effect.point); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${effect.damage} · 에너지 전부 소실`, true); }
     if (effect.type === 'victory') { world.burst(2, 0xe0bcff); feedback('보스 격파 · RESCUE TIME!', false, 2300); }
   }
 }
@@ -207,31 +208,27 @@ function attack() {
 }
 stage.addEventListener('pointerdown', e => {
   if (mode !== 'playing' || drag || !e.isPrimary || e.button !== 0 || e.target.closest('button')) return;
-  drag = { id: e.pointerId, x: e.clientX, player: playerX }; stage.setPointerCapture(e.pointerId);
+  drag = { id: e.pointerId, x: e.clientX, player: playerX, gesture: beginGesture(e.clientX, e.clientY) }; stage.setPointerCapture(e.pointerId);
 });
 stage.addEventListener('pointermove', e => {
   if (!drag || drag.id !== e.pointerId || mode !== 'playing') return;
   const lanePixels = world.viewWidth * .135;
   playerX = clamp(drag.player + (e.clientX - drag.x) / lanePixels, -1.5, 1.5);
+  if (updateGesture(drag.gesture, e.clientX, e.clientY, stage.clientHeight)) attack();
 });
 stage.addEventListener('pointerup', e => {
   if (drag?.id !== e.pointerId) return;
-  drag = null; attack();
+  drag = null;
 });
 const cancelDrag = e => { if (drag?.id === e.pointerId) drag = null; };
 stage.addEventListener('pointercancel', cancelDrag); stage.addEventListener('lostpointercapture', cancelDrag);
 document.addEventListener('keydown', e => {
   if (document.querySelector('dialog[open]') || e.target.matches('input')) return;
-  if (e.code === 'KeyF' && mode === 'playing') { e.preventDefault(); attackKeyHeld = true; }
+  if (['KeyF', 'ArrowUp'].includes(e.code) && mode === 'playing') { e.preventDefault(); if (!e.repeat) attack(); }
   if (['ArrowLeft', 'ArrowRight', 'a', 'A', 'd', 'D'].includes(e.key) && mode === 'playing') {
     e.preventDefault(); if (!e.repeat) playerX = clamp(Math.round(playerX + 1.5) - 1.5 + (['ArrowLeft', 'a', 'A'].includes(e.key) ? -1 : 1), -1.5, 1.5);
   }
   if ((e.key === 'Escape' || e.code === 'Space') && ['playing', 'paused', 'countdown'].includes(mode)) { e.preventDefault(); if (mode === 'paused') resume(); else pause(); }
-});
-document.addEventListener('keyup', e => {
-  if (e.code !== 'KeyF') return;
-  const held = attackKeyHeld; attackKeyHeld = false;
-  if (held && mode === 'playing') { e.preventDefault(); attack(); }
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause('화면을 벗어나 자동으로 일시정지했어요.'); });
 window.addEventListener('blur', () => pause('화면을 벗어나 자동으로 일시정지했어요.'));

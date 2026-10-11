@@ -63,3 +63,30 @@ export function terrainSlope(profile, time) {
   const right = Math.min(left + 1, profile.slopes.length - 1), blend = index - Math.floor(index);
   return profile.slopes[left] * (1 - blend) + profile.slopes[right] * blend;
 }
+
+// Sample an actual curved track ahead of the runner. The musical envelope
+// shapes the climbs; a travelling wave adds visible crests and valleys.
+export function roadProfile(profile, time, collectionZ = 3.25) {
+  const minZ = -82, step = 1, heights = new Float64Array(101), travelSpeed = 14;
+  let elevation = 0;
+  for (let i = heights.length - 1; i >= 0; i--) {
+    const z = minZ + i * step, distance = collectionZ - z;
+    const slope = terrainSlope(profile, Math.max(0, time + distance / travelSpeed));
+    if (i < heights.length - 1) elevation += Math.tan(slope) * .7 * step;
+    heights[i] = elevation + 4.2 * Math.sin((time * travelSpeed + distance) / 12);
+  }
+  const anchorIndex = (collectionZ - minZ) / step, left = Math.floor(anchorIndex), blend = anchorIndex - left;
+  const anchor = heights[left] * (1 - blend) + heights[left + 1] * blend;
+  for (let i = 0; i < heights.length; i++) heights[i] = 9 * Math.tanh((heights[i] - anchor) / 9);
+  // Anchor exactly, including interpolation across the nonlinear height limit.
+  const offset = heights[left] * (1 - blend) + heights[left + 1] * blend;
+  for (let i = 0; i < heights.length; i++) heights[i] -= offset;
+  return { minZ, step, heights };
+}
+export function roadHeight(profile, z) {
+  if (!profile) return 0;
+  const index = Math.max(0, Math.min(profile.heights.length - 1, (z - profile.minZ) / profile.step));
+  const left = Math.floor(index), right = Math.min(left + 1, profile.heights.length - 1);
+  return profile.heights[left] * (1 - (index - left)) + profile.heights[right] * (index - left);
+}
+export function roadPitch(profile, z) { return Math.atan2(roadHeight(profile, z - .5) - roadHeight(profile, z + .5), 1); }

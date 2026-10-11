@@ -1,4 +1,4 @@
-import { localTrackFromFile } from './music.js?v=c9a3057ee538';
+import { localTrackFromFile } from './music.js?v=c74e9a5f09f9';
 
 export function libraryTrack(file) {
   // Stable identity prevents duplicate rows when the same file is selected again.

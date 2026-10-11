@@ -1,4 +1,4 @@
-export const BOSS_BALANCE = Object.freeze({ version: 2, notesPerUnit: 20, healthPerUnit: 600 });
+export const BOSS_BALANCE = Object.freeze({ version: 3, notesPerUnit: 20, healthPerUnit: 500 });
 
 export function estimateBossHealth(chart) {
   const noteCount = chart.events.filter(event => event.type === 'note').length;

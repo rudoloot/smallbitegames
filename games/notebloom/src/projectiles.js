@@ -1,5 +1,5 @@
-import { bossColliders } from './themes.js?v=c9a3057ee538';
-import { FLIGHT_SPEED } from './flight.js?v=c9a3057ee538';
+import { bossColliders } from './themes.js?v=c74e9a5f09f9';
+import { FLIGHT_SPEED } from './flight.js?v=c74e9a5f09f9';
 // Shared world-space geometry for simulation and rendering.
 export function bossPose() {
   return { x: 0, y: 1.05, z: -52 };

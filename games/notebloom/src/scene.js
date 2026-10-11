@@ -1,17 +1,18 @@
 import * as THREE from 'three';
-import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=c9a3057ee538';
-import { weaponForId, attackForEnergy } from './weapons.js?v=c9a3057ee538';
-import { buildWeaponModel } from './weapon-model.js?v=c9a3057ee538';
-import { bossPose, projectilePoint } from './projectiles.js?v=c9a3057ee538';
-import { COLLECTION_Z, visibleNotes } from './timing.js?v=c9a3057ee538';
-import { themeForChart } from './themes.js?v=c9a3057ee538';
-import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=c9a3057ee538';
+import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch } from './terrain.js?v=c74e9a5f09f9';
+import { weaponForId, attackForEnergy } from './weapons.js?v=c74e9a5f09f9';
+import { buildWeaponModel } from './weapon-model.js?v=c74e9a5f09f9';
+import { bossPose, projectilePoint } from './projectiles.js?v=c74e9a5f09f9';
+import { COLLECTION_Z, visibleNotes } from './timing.js?v=c74e9a5f09f9';
+import { themeForChart } from './themes.js?v=c74e9a5f09f9';
+import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=c74e9a5f09f9';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
 const SCROLL_SPEED = 3;
 const RAINBOW_HUES = [0, .075, .145, .36, .59, .68, .78];
 const SKY_STOPS = [0, .16, .32, .5, .66, .83, 1];
+const FLAT_TERRAIN = { step: 1, slopes: [0] };
 const material = (color, glow = 0) => new THREE.MeshStandardMaterial({ color, roughness: .65, metalness: .12, emissive: color, emissiveIntensity: glow });
 
 export class World {
@@ -95,22 +96,23 @@ export class World {
     for (let i = 0; i < 45; i++) { const mote = this.mesh(this.scene, geo, this.materials.mint, [Math.sin(i * 5.8) * 12, 1 + i % 8, -i * 1.5]); this.dust.push(mote); }
   }
   buildRoad() {
-    this.box(this.course, this.materials.road, [0, -.23, -32], [4.88, .4, 100]);
+    this.roadMeshes = [];
+    this.roadBox(this.materials.road, [0, -.23, -32], [4.88, .4, 100]);
     this.attackFloors = [];
     for (let i = 0; i < 4; i++) {
       const x = (i - 1.5) * 1.22;
       const attack = false;
       const mat = material(attack ? 0x9983c9 : i === 2 ? 0x718a96 : 0x667687, .12);
       // Four broad road surfaces; objects travel through their centers, not on lines.
-      this.box(this.course, mat, [x, -.014, -32], [1.18, .04, 100]).userData.rainbowHue = [0, .145, .36, .59][i];
+      this.roadBox(mat, [x, -.014, -32], [1.18, .04, 100]).userData.rainbowHue = [0, .145, .36, .59][i];
       if (attack) this.attackFloors.push(mat);
     }
     for (let i = 1; i < 4; i++) {
-      this.box(this.course, material(0xb9e8e0, .25), [(i - 2) * 1.22, .006, -32], [.035, .02, 100]);
+      this.roadBox(material(0xb9e8e0, .25), [(i - 2) * 1.22, .006, -32], [.035, .02, 100]);
     }
     for (const side of [-1, 1]) {
-      this.box(this.course, this.materials.edge, [side * 2.44, .035, -32], [.065, .09, 100]);
-      this.box(this.course, this.materials.white, [side * 2.54, -.12, -32], [.12, .28, 100]);
+      this.roadBox(this.materials.edge, [side * 2.44, .035, -32], [.065, .09, 100]);
+      this.roadBox(this.materials.white, [side * 2.54, -.12, -32], [.12, .28, 100]);
     }
     this.beatLines = [];
     for (let i = 0; i < 26; i++) this.beatLines.push(this.box(this.course, material(0x8a8caa), [0, .007, -i * 3], [4.88, .015, .027]));
@@ -119,6 +121,34 @@ export class World {
     const ctx = canvas.getContext('2d'); ctx.fillStyle = '#e8ddff'; ctx.font = 'bold 35px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('⌁', 64, 42);
     const tex = new THREE.CanvasTexture(canvas), mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
     for (const side of [-1, 1]) { const m = this.mesh(this.course, new THREE.PlaneGeometry(.8, .5), mat, [side * 1.83, .04, 1.8]); m.rotation.x = -Math.PI / 2; }
+  }
+  roadBox(mat, position, size) {
+    const mesh = this.mesh(this.course, new THREE.BoxGeometry(...size, 1, 1, 120), mat, position);
+    this.roadMeshes.push({ mesh, base: mesh.geometry.attributes.position.array.slice() });
+    return mesh;
+  }
+  height(z) { return roadHeight(this.trackProfile, z); }
+  trackPoint(point) {
+    // Lift the hovering boss above the next crest; projectiles and hit effects
+    // share this mapping so every visible impact still touches the same hull.
+    const approach = THREE.MathUtils.smoothstep(-point.z, 30, 45);
+    const height = THREE.MathUtils.lerp(this.height(point.z), this.height(-52) + (this.bossLift ?? 0), approach);
+    return new THREE.Vector3(point.x, point.y + height, point.z);
+  }
+  updateRoad(profile, time) {
+    if ((!profile && !this.trackProfile) || (this.trackProfile && this.lastTerrain === profile && this.lastTerrainTime === time)) return;
+    this.lastTerrain = profile; this.lastTerrainTime = time;
+    this.trackProfile = profile ? roadProfile(profile, time, COLLECTION_Z) : null;
+    let crest = 0;
+    for (let z = COLLECTION_Z; z >= -52; z--) crest = Math.max(crest, this.height(z));
+    this.bossLift = this.trackProfile ? Math.max(0, crest - this.height(-52) + 1.5) : 0;
+    this.camera.position.y = this.trackProfile ? 7.6 + crest * .45 : 6.6;
+    for (const { mesh, base } of this.roadMeshes) {
+      const position = mesh.geometry.attributes.position;
+      for (let i = 0; i < position.count; i++) position.setY(i, base[i * 3 + 1] + this.height(base[i * 3 + 2] + mesh.position.z));
+      position.needsUpdate = true; mesh.geometry.computeVertexNormals(); mesh.geometry.computeBoundingSphere();
+    }
+    for (const gate of this.gates) { gate.position.y = this.height(gate.position.z); gate.rotation.x = roadPitch(this.trackProfile, gate.position.z); }
   }
   buildGarden() {
     this.garden = [];
@@ -405,14 +435,45 @@ export class World {
       const effect = this.effects[i];
       if (effect.projectile?.id === hit.id) { this.disposeEffect(effect.mesh); this.effects.splice(i, 1); }
     }
-    const point = hit.point, color = weaponForId(hit.weapon).color;
-    const ring = this.mesh(this.course, new THREE.TorusGeometry(.26, .055, 6, 20), new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, toneMapped: false }), [point.x, point.y, point.z + .04]);
-    this.effects.push({ mesh: ring, age: 0, life: .22, impact: true, velocity: new THREE.Vector3() });
-    for (let i = 0; i < 8; i++) {
-      const mesh = this.mesh(this.course, new THREE.OctahedronGeometry(.065), new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, toneMapped: false }), [point.x, point.y, point.z]);
-      this.effects.push({ mesh, age: 0, life: .28, velocity: new THREE.Vector3(Math.cos(i * Math.PI / 4) * 2.5, Math.sin(i * Math.PI / 4) * 2.5, 1.2) });
+    const point = hit.point, color = weaponForId(hit.weapon).color, missile = hit.weapon === 'missile';
+    const mat = tint => new THREE.MeshBasicMaterial({ color: tint, transparent: true, depthWrite: false, toneMapped: false, fog: false, blending: THREE.AdditiveBlending });
+    const add = (geometry, tint, offset, life, expand, velocity = new THREE.Vector3(), scale) => {
+      const mesh = this.mesh(this.course, geometry, mat(tint), [point.x + offset[0], point.y + offset[1], point.z + offset[2]], scale);
+      this.effects.push({ mesh, position: mesh.position.clone(), baseScale: mesh.scale.clone(), age: 0, life, expand, velocity }); return mesh;
+    };
+    if (missile) {
+      // White-hot core, orange fireball lobes and two expanding shock waves.
+      add(new THREE.SphereGeometry(.6, 16, 12), 0xfff5cc, [0, 0, .25], .16, 10);
+      for (let i = 0; i < 7; i++) {
+        const a = i * Math.PI * 2 / 7;
+        const flame = add(new THREE.SphereGeometry(.65, 12, 8), i % 2 ? 0xff7620 : 0xffb53a,
+          [Math.cos(a) * .9, Math.sin(a) * .9, .3], .8, 7, new THREE.Vector3(Math.cos(a), Math.sin(a), .5));
+        flame.material.blending = THREE.NormalBlending;
+        this.effects[this.effects.length - 1].opacity = .8;
+      }
+      add(new THREE.TorusGeometry(1, .07, 8, 40), 0xffdba0, [0, 0, .5], .95, 8);
+      add(new THREE.TorusGeometry(1.2, .04, 8, 40), color, [0, 0, .7], .85, 9).rotation.x = .45;
+    } else {
+      const dual = hit.weapon === 'dual', machine = hit.weapon === 'machine';
+      add(new THREE.TorusGeometry(machine ? .18 : .25, .025, 6, 24), color, [0, 0, .15], machine ? .16 : .3, machine ? 8 : 5);
+      const flashes = dual ? 2 : 1;
+      for (let i = 0; i < flashes; i++) {
+        const flare = add(new THREE.OctahedronGeometry(.3), machine ? 0xe3ffad : 0xfff5dd,
+          [dual ? (i ? .22 : -.22) : 0, 0, .25], machine ? .12 : .2, 3, new THREE.Vector3(), [1, 1, .3]);
+        flare.rotation.z = Math.PI / 4;
+      }
+    }
+    const count = missile ? 32 : hit.weapon === 'machine' ? 5 : hit.weapon === 'dual' ? 12 : 7;
+    for (let i = 0; i < count; i++) {
+      const angle = i * Math.PI * 2 / count, speed = missile ? 4 + i % 4 : hit.weapon === 'machine' ? 5 : 3;
+      const mesh = add(new THREE.OctahedronGeometry(missile ? .12 : .06), missile ? i % 2 ? 0xffaa45 : 0xffeab1 : color,
+        [0, 0, .25], missile ? 1.1 : .32, 0,
+        new THREE.Vector3(Math.cos(angle) * speed, Math.sin(angle) * speed + (missile ? 1.5 : 0), 1.5 + i % 3));
+      if (hit.weapon === 'machine') mesh.scale.set(.5, .5, 3);
+      this.effects[this.effects.length - 1].gravity = missile ? 5 : 0;
     }
     this.showDamage(hit.damage, point);
+    if (missile) this.hitFlash = .35;
   }
   showDamage(damage, point) {
     while (this.damageNumbers.length >= 4) this.damageNumbers.shift().label.remove();
@@ -464,13 +525,12 @@ export class World {
     this.setBossTheme(state?.theme || themeForChart(state?.chart));
     const active = !!state && ['playing', 'paused', 'countdown'].includes(mode);
     const time = active ? state.time : elapsed * .28;
-    const slope = state ? terrainSlope(state.chart.terrain, state.time) : 0;
-    // Keep both the boss and the runner visible on the steeper twenty-degree road.
-    const fov = Math.max(this.baseFov, 49 + THREE.MathUtils.radToDeg(Math.abs(slope)) * 1.1);
+    this.updateRoad(active ? state.chart.terrain ?? FLAT_TERRAIN : null, time);
+    const slope = roadPitch(this.trackProfile, COLLECTION_Z);
+    const fov = Math.max(this.baseFov, 53 + THREE.MathUtils.radToDeg(Math.abs(slope)) * .5);
     if (Math.abs(this.camera.fov - fov) > .001) { this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
-    this.course.rotation.x = slope;
-    // Pivot at the collection line so the runner stays stable.
-    this.course.position.set(0, COLLECTION_Z * Math.sin(slope), COLLECTION_Z * (1 - Math.cos(slope)));
+    this.course.rotation.x = 0; this.course.position.set(0, 0, 0);
+    this.camera.lookAt(0, .8 + this.height(-28) * .23, -10);
     this.course.updateMatrixWorld(true);
     const moving = mode === 'playing' || mode === 'home';
     const run = moving ? time * 12 * SCROLL_SPEED : 0;
@@ -479,7 +539,8 @@ export class World {
     this.character.position.z = showHome ? -6 : COLLECTION_Z;
     this.character.scale.setScalar((showHome ? 1.7 : 1) * CHARACTER_SCALE);
     this.character.rotation.y = showHome ? -.35 : -(playerX * 1.22 - this.character.position.x) * .13;
-    this.character.position.y = .07 + Math.abs(Math.sin(run)) * .045;
+    this.character.position.y = this.height(this.character.position.z) + .07 + Math.abs(Math.sin(run)) * .045;
+    this.character.rotation.x = roadPitch(this.trackProfile, this.character.position.z);
     this.legs[0].rotation.x = Math.sin(run) * .38; this.legs[1].rotation.x = -Math.sin(run) * .38;
     this.arms[0].rotation.x = -.15 + Math.sin(run) * .16; this.arms[1].rotation.x = -.2;
     this.head.rotation.z = Math.sin(time * 2) * .03;
@@ -489,11 +550,17 @@ export class World {
     this.setGunLevel(state?.weaponId || 'pistol');
     const rotor = this.gunModels.get(this.gunId)?.userData.rotor; if (rotor && moving) rotor.rotation.z += dt * 24;
     this.boss.visible = !state || state.boss > 0 || showHome;
-    const bossPosition = bossPose(time, state?.bossMotion); this.boss.position.set(bossPosition.x, bossPosition.y, bossPosition.z);
+    const bossPosition = bossPose(time, state?.bossMotion); this.boss.position.copy(this.trackPoint(bossPosition));
     this.boss.rotation.z = 0; this.bossCore.rotation.y = time; this.bossRing.rotation.z = time * .3;
     animateRobotBoss(this.bossModel, time);
-    for (let i = 0; i < this.beatLines.length; i++) this.beatLines[i].position.z = 9 - ((i * 3 + 80 - time * 7 * SCROLL_SPEED % 78) % 78);
-    for (let i = 0; i < this.garden.length; i++) { this.garden[i].position.z = 13 - ((i * 3.1 + 105 - time * 3 * SCROLL_SPEED % 99.2) % 99.2); }
+    for (let i = 0; i < this.beatLines.length; i++) {
+      const line = this.beatLines[i]; line.position.z = 9 - ((i * 3 + 80 - time * 7 * SCROLL_SPEED % 78) % 78);
+      line.position.y = this.height(line.position.z) + .007; line.rotation.x = roadPitch(this.trackProfile, line.position.z);
+    }
+    for (let i = 0; i < this.garden.length; i++) {
+      const garden = this.garden[i]; garden.position.z = 13 - ((i * 3.1 + 105 - time * 3 * SCROLL_SPEED % 99.2) % 99.2);
+      garden.position.y = this.height(garden.position.z) - .25;
+    }
     for (let i = 0; i < this.dust.length; i++) { this.dust[i].position.y += Math.sin(elapsed + i) * dt * .12; this.dust[i].rotation.y += dt; }
     const pulse = .2 + Math.max(0, Math.sin(time / (state?.chart.beat || .5) * Math.PI * 2)) * .2;
     for (const mat of this.attackFloors) mat.emissiveIntensity = state?.attackWindow && state.boss > 0 ? pulse + .25 : .08;
@@ -504,7 +571,8 @@ export class World {
         visible.add(event.id);
         let mesh = this.notes.get(event.id);
         if (!mesh) { mesh = this.createNote(event.type); this.notes.set(event.id, mesh); }
-        mesh.position.set((event.lane - 1.5) * 1.22, .12, z);
+        mesh.position.set((event.lane - 1.5) * 1.22, this.height(z) + .12, z);
+        mesh.rotation.x = roadPitch(this.trackProfile, z);
         mesh.scale.setScalar(scale);
         mesh.rotation.y = Math.sin(time * 3 + event.id) * .2;
       }
@@ -518,16 +586,24 @@ export class World {
         if (point.z < -70 || (state && !liveProjectiles.has(e.projectile.id))) { this.disposeEffect(e.mesh); this.effects.splice(i, 1); }
         else {
           if (e.missile) {
-            const direction = new THREE.Vector3(point.x, point.y, point.z).sub(e.mesh.position);
+            const direction = this.trackPoint(point).sub(e.mesh.position);
             if (direction.lengthSq() > .00001) e.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), direction.normalize());
           }
-          e.mesh.position.set(point.x, point.y, point.z);
+          e.mesh.position.copy(this.trackPoint(point));
         }
         continue;
       }
       if (e.age >= e.life) { this.disposeEffect(e.mesh); this.effects.splice(i, 1); continue; }
-      if (e.shot) e.mesh.position.lerpVectors(e.start, e.target, e.age / e.life);
-      else { const effectDt = mode === 'paused' ? 0 : dt; e.mesh.position.addScaledVector(e.velocity, effectDt); e.mesh.material.opacity = 1 - e.age / e.life; if (e.impact) e.mesh.scale.setScalar(1 + e.age * 9); else e.mesh.rotation.x += effectDt * 4; }
+      if (e.shot) e.mesh.position.copy(this.trackPoint(e.start.clone().lerp(e.target, e.age / e.life)));
+      else {
+        const effectDt = mode === 'paused' ? 0 : dt;
+        e.position ??= e.mesh.position.clone(); e.position.addScaledVector(e.velocity, effectDt);
+        e.mesh.position.copy(this.trackPoint(e.position));
+        e.mesh.traverse(child => { if (child.isMesh) child.material.opacity = (e.opacity ?? 1) * (1 - e.age / e.life); });
+        if (e.expand) e.mesh.scale.copy(e.baseScale).multiplyScalar(1 + e.age * e.expand);
+        else e.mesh.rotation.x += effectDt * 4;
+        if (e.gravity) e.velocity.y -= e.gravity * effectDt;
+      }
     }
     const effectDt = mode === 'paused' ? 0 : dt;
     this.hitFlash = Math.max(0, this.hitFlash - effectDt);
@@ -535,7 +611,7 @@ export class World {
     for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
       const number = this.damageNumbers[i]; number.age += effectDt;
       if (number.age >= .95) { number.label.remove(); this.damageNumbers.splice(i, 1); continue; }
-      const projected = this.course.localToWorld(number.anchor.clone()).project(this.camera);
+      const projected = this.course.localToWorld(this.trackPoint(number.anchor)).project(this.camera);
       const x = (projected.x * .5 + .5) * this.viewWidth + number.offset;
       const y = (-projected.y * .5 + .5) * this.container.clientHeight - number.age * 38;
       number.label.style.left = `${x}px`; number.label.style.top = `${y}px`;

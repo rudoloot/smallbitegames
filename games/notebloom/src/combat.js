@@ -1,11 +1,42 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=c9a3057ee538';
-import { weaponForId, attackForEnergy } from './weapons.js?v=c9a3057ee538';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile } from './projectiles.js?v=c9a3057ee538';
-import { themeForChart } from './themes.js?v=c9a3057ee538';
-import { estimateBossHealth } from './balance.js?v=c9a3057ee538';
+import { clamp, seededRandom, RULES } from './engine.js?v=c74e9a5f09f9';
+import { weaponForId, attackForEnergy } from './weapons.js?v=c74e9a5f09f9';
+import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile } from './projectiles.js?v=c74e9a5f09f9';
+import { themeForChart } from './themes.js?v=c74e9a5f09f9';
+import { estimateBossHealth } from './balance.js?v=c74e9a5f09f9';
 
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
+const MINE_PATTERNS = [
+  { name: 'sweep-right', lanes: [0, 1, 2, 3, 2, 1] },
+  { name: 'sweep-left', lanes: [3, 2, 1, 0, 1, 2] },
+  { name: 'zigzag', lanes: [1, 2, 1, 0, 1, 2, 3, 2] },
+  { name: 'stairs', lanes: [0, 0, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1] },
+];
+function addInterludeMines(events, beat, duration, seed) {
+  const notes = events.filter(event => event.type === 'note');
+  const random = seededRandom(seed ^ 0x6d696e65);
+  notes.forEach((note, index) => {
+    const next = notes[index + 1] ?? { time: duration - 1, lane: note.lane };
+    const gap = next.time - note.time;
+    // Avoid squeezing an extra dodge into tightly packed notes. Longer breaks
+    // get a sequence of gates; every gate leaves one reachable safe lane.
+    if (gap < .48) return;
+    const count = Math.max(1, Math.floor(gap / Math.max(.3, Math.min(.5, beat))) - 1);
+    const pattern = MINE_PATTERNS[Math.floor(random() * MINE_PATTERNS.length)];
+    const phase = Math.floor(random() * pattern.lanes.length);
+    let safeLane = note.lane;
+    for (let row = 1; row <= count; row++) {
+      const time = note.time + gap * row / (count + 1);
+      const returnSteps = Math.floor((next.time - time + 1e-9) / .2);
+      const low = Math.max(0, safeLane - 1, next.lane - returnSteps);
+      const high = Math.min(3, safeLane + 1, next.lane + returnSteps);
+      safeLane = clamp(pattern.lanes[(phase + row - 1) % pattern.lanes.length], low, high);
+      for (let lane = 0; lane < LANE_COUNT; lane++) {
+        if (lane !== safeLane) events.push({ type: 'mine', time, lane, pattern: pattern.name });
+      }
+    }
+  });
+}
 export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) {
   const random = seededRandom(seed), beat = analysis.beat || .5, events = [];
   const start = Math.ceil(3.5 / beat) * beat + (analysis.offset || 0);
@@ -21,6 +52,7 @@ export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) 
       if (other !== lane) events.push({ type: 'mine', time, lane: other });
     }
   });
+  addInterludeMines(events, beat, duration, seed);
   events.sort((a, b) => a.time - b.time || (a.type === 'note' ? 0 : 1) - (b.type === 'note' ? 0 : 1) || a.lane - b.lane);
   events.forEach((event, id) => { event.id = id; });
   const chart = { duration, events, beat, seed, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm,
@@ -51,7 +83,7 @@ export class GameState {
   get attackWindow() { return this.energy >= 30; }
   hurt(amount) {
     this.health = clamp(this.health - amount, 0, this.maxHealth);
-    this.combo = 0; this.energy = 0;
+    this.combo = 0;
   }
   launchShot(shot) {
     const target = bossPose(), weapon = shot.weapon;
@@ -68,15 +100,20 @@ export class GameState {
   releaseAttack(time, lane, playerWorldX = laneX(lane)) {
     if (this.status !== 'playing') return [];
     const effects = this.advance(time, lane, playerWorldX);
+    if (this.time >= this.stunnedUntil) effects.push(...this.fireChargedAttack(this.time, lane, playerWorldX, 'release'));
+    return effects;
+  }
+  fireChargedAttack(time, lane, playerWorldX, reason) {
     const attack = this.chargedAttack;
-    if (this.status !== 'playing' || !attack || this.boss <= 0 || this.time < this.stunnedUntil) return effects;
+    if (this.status !== 'playing' || this.health <= 0 || !attack || this.boss <= 0) return [];
+    const effects = [];
     const consumed = this.energy; this.energy = 0; this.attacks++;
     this.maxAttackDamage = Math.max(this.maxAttackDamage, attack.totalDamage);
     const x = clamp(playerWorldX, laneX(0), laneX(3));
-    effects.push({ type: 'attack', weapon: attack.weapon, energy: consumed, damage: attack.totalDamage, time: this.time });
+    effects.push({ type: 'attack', weapon: attack.weapon, energy: consumed, damage: attack.totalDamage, time, reason });
     for (let number = 0; number < attack.shots; number++) {
       const shot = { weapon: attack.weapon, damage: attack.damage, lane: clamp(lane, 0, 3), x,
-        time: this.time + number * attack.interval, number };
+        time: time + number * attack.interval, number };
       if (number === 0) effects.push(this.launchShot(shot));
       else this.pendingShots.push(shot);
     }
@@ -94,17 +131,27 @@ export class GameState {
       const tick = Math.min(eventTime, shotTime, physicsTime);
       if (tick > time) break;
       if (eventTime === tick) {
-        this.index++;
-        if (event.type === 'note') {
+        const row = [];
+        while (this.chart.events[this.index]?.time === tick) row.push(this.chart.events[this.index++]);
+        // Mine collisions clear charge before a missed note can release it,
+        // regardless of the chart's ordering within this timestamp.
+        for (const mine of row.filter(item => item.type === 'mine')) {
+          if (this.boss > 0 && mine.lane === lane && tick >= this.invincibleUntil) {
+            const energyLoss = this.energy; this.energy = 0;
+            this.invincibleUntil = tick + 1; this.hurt(this.rules.mine); this.hits++; this.stunnedUntil = tick + .5;
+            effects.push({ type: 'mine', lane, point: { x: laneX(lane), y: .4, z: 3.25 }, damage: this.rules.mine, energyLoss, time: tick });
+          }
+        }
+        for (const event of row.filter(item => item.type === 'note')) {
           if (event.lane === lane && tick >= this.stunnedUntil) {
             this.saved++; this.energy++; this.maxEnergy = Math.max(this.maxEnergy, this.energy);
             this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
             this.health = clamp(this.health + this.rules.heal, 0, this.maxHealth);
             effects.push({ type: 'save', lane, time: tick });
-          } else { this.missed++; this.hurt(this.rules.miss); effects.push({ type: 'miss', time: tick }); }
-        } else if (event.type === 'mine' && this.boss > 0 && event.lane === lane && tick >= this.invincibleUntil) {
-          this.invincibleUntil = tick + 1; this.hurt(this.rules.mine); this.hits++; this.stunnedUntil = tick + .5;
-          effects.push({ type: 'mine', lane, point: { x: laneX(lane), y: .4, z: 3.25 }, damage: this.rules.mine, time: tick });
+          } else {
+            this.missed++; this.hurt(this.rules.miss); effects.push({ type: 'miss', time: tick });
+            effects.push(...this.fireChargedAttack(tick, lane, playerWorldX, 'miss'));
+          }
         }
       } else if (shotTime === tick) {
         const shot = this.pendingShots.shift();
