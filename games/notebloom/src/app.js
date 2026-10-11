@@ -1,11 +1,11 @@
-import { TRACKS, MusicPlayer } from './music.js?v=6425d119684c';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=6425d119684c';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=6425d119684c';
-import { World } from './scene.js?v=6425d119684c';
-import { exitGame } from './launch.js?v=6425d119684c';
-import { setupFullscreen } from './fullscreen.js?v=6425d119684c';
-import { beginGesture, updateGesture } from './gesture.js?v=6425d119684c';
-import { updatePlayHUD } from './hud.js?v=6425d119684c';
+import { TRACKS, MusicPlayer } from './music.js?v=bfcd02c91886';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=bfcd02c91886';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=bfcd02c91886';
+import { World } from './scene.js?v=bfcd02c91886';
+import { exitGame } from './launch.js?v=bfcd02c91886';
+import { setupFullscreen } from './fullscreen.js?v=bfcd02c91886';
+import { beginGesture, updateGesture } from './gesture.js?v=bfcd02c91886';
+import { updatePlayHUD } from './hud.js?v=bfcd02c91886';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -161,6 +161,10 @@ function finish() {
   $('residents').replaceChildren();
   if (won) for (let i = 0; i < Math.min(state.saved, 24); i++) { const resident = document.createElement('span'); resident.textContent = i % 3 === 0 ? '♫' : '♪'; resident.setAttribute('aria-hidden', 'true'); $('residents').append(resident); }
 }
+function finishWhenReady() {
+  if (state.status === 'playing' || (state.status !== 'lost-health' && world.hasPendingFinishEffects)) return false;
+  finish(); return true;
+}
 function updateHUD() {
   if (!state) return;
   const course = Math.min(100, state.time / state.chart.duration * 100);
@@ -190,8 +194,8 @@ $('volume').addEventListener('input', e => audio.setVolume(Number(e.target.value
 function attack() {
   if (mode !== 'playing' || !state) return;
   const lane = clamp(Math.round(playerX + 1.5), 0, 3);
-  handleEffects(state.releaseAttack(audio.gameplayTime, lane, world.character.position.x));
-  if (state.status !== 'playing') { finish(); return; }
+  handleEffects(state.releaseAttack(audio.gameplayTime, lane, world.character.position.x, { presentationPending: world.hasPendingFinishEffects }));
+  if (finishWhenReady()) return;
   updateHUD();
 }
 stage.addEventListener('pointerdown', e => {
@@ -227,8 +231,8 @@ function frame(now) {
     if (audio.context.state !== 'running') pause('오디오가 중단되어 잠시 멈췄어요. 계속 플레이를 눌러 주세요.');
     else {
       const lane = clamp(Math.round(playerX + 1.5), 0, 3);
-      handleEffects(state.advance(audio.gameplayTime, lane, world.character.position.x)); updateHUD();
-      if (state.status !== 'playing') finish();
+      handleEffects(state.advance(audio.gameplayTime, lane, world.character.position.x, { presentationPending: world.hasPendingFinishEffects })); updateHUD();
+      finishWhenReady();
     }
   }
   $('feedback').classList.toggle('show', now < feedbackUntil && mode === 'playing');

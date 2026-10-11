@@ -1,8 +1,10 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=6425d119684c';
-import { weaponForId, attackForEnergy } from './weapons.js?v=6425d119684c';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile } from './projectiles.js?v=6425d119684c';
-import { themeForChart } from './themes.js?v=6425d119684c';
-import { estimateBossHealth } from './balance.js?v=6425d119684c';
+import { clamp, seededRandom, RULES } from './engine.js?v=bfcd02c91886';
+import { weaponForId, attackForEnergy } from './weapons.js?v=bfcd02c91886';
+import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile } from './projectiles.js?v=bfcd02c91886';
+import { themeForChart } from './themes.js?v=bfcd02c91886';
+import { estimateBossHealth } from './balance.js?v=bfcd02c91886';
+import { bossWeakPointAt } from './boss-rotation.js?v=bfcd02c91886';
+import { fireworkLifetime } from './fireworks.js?v=bfcd02c91886';
 
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
@@ -88,22 +90,22 @@ export class GameState {
   }
   launchShot(shot) {
     const weapon = shot.weapon, target = shot.celebration
-      ? {x:weapon === 'missile' ? 0 : (shot.number % 5 - 2) * .7, y:weapon === 'missile' ? 7 : 5, z:-16 - shot.number % 3 * 2}
+      ? {x:weapon === 'missile' ? 0 : (shot.number % 5 - 2) * .7, y:weapon === 'missile' ? 8 : 6, z:-52 - shot.number % 3 * 2}
       : bossPose();
     const x = shot.x + (weapon === 'dual' ? shot.number % 2 ? -.22 : .22 : .22), y = .8, z = 2.65;
     const length = Math.hypot(target.x - x, target.y - y, target.z - z);
     const projectile = { id: this.projectileSerial++, weapon, time: shot.time, damage: shot.damage,
       checkedAt: shot.time, x, y, z, speed: projectileSpeed(weapon),
       direction: { x: (target.x - x) / length, y: (target.y - y) / length, z: (target.z - z) / length } };
-    if (shot.celebration) Object.assign(projectile, {celebration:true,target,flightTime:weapon === 'missile' ? .85 : .6 + shot.number % 3 * .06});
+    if (shot.celebration) Object.assign(projectile, {celebration:true,target,flightTime:weapon === 'missile' ? 2 : .7 + shot.number % 3 * .06});
     if (weapon === 'missile') Object.assign(projectile, { side: 1, position: { x, y, z } });
     this.lastShot = shot.time; this.lastWeaponId = weapon; this.projectiles.push(projectile);
     return { type: weapon === 'missile' ? 'missile' : 'shot', weapon, lane: shot.lane,
       time: shot.time, pellets: 1, projectiles: [projectile] };
   }
-  releaseAttack(time, lane, playerWorldX = laneX(lane)) {
+  releaseAttack(time, lane, playerWorldX = laneX(lane), presentation = {}) {
     if (this.status !== 'playing') return [];
-    const effects = this.advance(time, lane, playerWorldX);
+    const effects = this.advance(time, lane, playerWorldX, presentation);
     if (this.time >= this.stunnedUntil) effects.push(...this.fireChargedAttack(this.time, lane, playerWorldX, 'release'));
     return effects;
   }
@@ -125,7 +127,7 @@ export class GameState {
     this.pendingShots.sort((a, b) => a.time - b.time);
     return effects;
   }
-  advance(time, lane, playerWorldX = laneX(lane)) {
+  advance(time, lane, playerWorldX = laneX(lane), { presentationPending = false } = {}) {
     if (this.status !== 'playing') return [];
     // The soundtrack may end while the last volley is still in flight.
     time = Math.max(time, this.time); lane = clamp(lane, 0, 3);
@@ -170,7 +172,7 @@ export class GameState {
             projectile.checkedAt = tick;
             if (tick + 1e-9 >= projectile.time + projectile.flightTime) {
               effects.push({type:'firework',id:projectile.id,weapon:projectile.weapon,point:projectile.target,time:tick});
-              this.endEffectsUntil = Math.max(this.endEffectsUntil, tick + 2.4);
+              this.endEffectsUntil = Math.max(this.endEffectsUntil, tick + fireworkLifetime(projectile.weapon));
               return false;
             }
             return true;
@@ -180,8 +182,11 @@ export class GameState {
           const point = this.boss > 0 ? intersectBoss(projectile, projectile.checkedAt, tick, bossPose, from, this.theme.boss) : null;
           projectile.checkedAt = tick;
           if (point) {
-            const damage = Math.min(this.boss, projectile.damage); this.boss -= damage; this.lastHit = tick;
-            effects.push({ type: 'hit', id: projectile.id, weapon: projectile.weapon, damage, point, time: tick });
+            const weakPoint = bossWeakPointAt(point.time);
+            const baseDamage = Math.min(this.boss, projectile.damage);
+            const bonusDamage = weakPoint ? Math.min(this.boss - baseDamage, projectile.damage) : 0;
+            const damage = baseDamage + bonusDamage; this.boss -= damage; this.lastHit = tick;
+            effects.push({ type: 'hit', id: projectile.id, weapon: projectile.weapon, damage, baseDamage, bonusDamage, weakPoint, point, time: tick });
             this.endEffectsUntil = Math.max(this.endEffectsUntil, tick + .65);
             if (this.boss === 0) { this.defeatedAt = tick; this.pendingShots = []; effects.push({ type: 'victory', time: tick }); }
             return false;
@@ -194,7 +199,7 @@ export class GameState {
     this.time = time;
     const finalChargeGrace = this.energy > 0 && time < this.chart.duration + 1;
     if (this.status === 'playing' && time >= this.chart.duration && !finalChargeGrace &&
-        !this.pendingShots.length && !this.projectiles.length && time >= this.endEffectsUntil) {
+        !this.pendingShots.length && !this.projectiles.length && time >= this.endEffectsUntil && !presentationPending) {
       this.status = this.boss <= 0 ? 'won' : 'lost-boss';
     }
     return effects;

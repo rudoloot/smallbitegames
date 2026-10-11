@@ -1,5 +1,6 @@
-import { bossColliders } from './themes.js?v=6425d119684c';
-import { FLIGHT_SPEED } from './flight.js?v=6425d119684c';
+import { bossColliders } from './themes.js?v=bfcd02c91886';
+import { FLIGHT_SPEED } from './flight.js?v=bfcd02c91886';
+import { bossLocalPoint } from './boss-rotation.js?v=bfcd02c91886';
 // Shared world-space geometry for simulation and rendering.
 export function bossPose() {
   return { x: 0, y: 1.05, z: -52 };
@@ -37,10 +38,11 @@ export function advanceMissile(projectile, time, target) {
 export function intersectBoss(projectile, fromTime, toTime, pose = bossPose, fromPoint, kind = 'bird') {
   const from = fromPoint ?? projectilePoint(projectile, fromTime), to = projectilePoint(projectile, toTime);
   const bossFrom = pose(fromTime), bossTo = pose(toTime), radius = projectileRadius(projectile.weapon);
+  const localFrom = bossLocalPoint(from, bossFrom, fromTime), localTo = bossLocalPoint(to, bossTo, toTime);
   let first = Infinity;
   for (const part of bossColliders(kind)) {
-    const p = ['x', 'y', 'z'].map(axis => (from[axis] - bossFrom[axis] - part[axis]) / (part['r' + axis] + radius));
-    const q = ['x', 'y', 'z'].map(axis => (to[axis] - bossTo[axis] - part[axis]) / (part['r' + axis] + radius));
+    const p = ['x', 'y', 'z'].map(axis => (localFrom[axis] - part[axis]) / (part['r' + axis] + radius));
+    const q = ['x', 'y', 'z'].map(axis => (localTo[axis] - part[axis]) / (part['r' + axis] + radius));
     const delta = q.map((value, i) => value - p[i]);
     const a = delta.reduce((sum, value) => sum + value * value, 0);
     const b = 2 * p.reduce((sum, value, i) => sum + value * delta[i], 0);

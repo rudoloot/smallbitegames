@@ -1,3 +1,5 @@
+export const fireworkLifetime = weapon => weapon === 'missile' ? 4.5 : 3.8;
+
 // Sparks use the actual road height and its normal, including crests and dips.
 export function advanceFireworkSpark(spark, dt, height) {
   let remaining = dt;

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { bossColliders } from './themes.js?v=6425d119684c';
+import { bossColliders } from './themes.js?v=bfcd02c91886';
 
 // Cut triangular armor and polygonal joints keep every silhouette angular.
 // The collision data supplies the armor bounds; reflections are shared by World.
@@ -58,6 +58,9 @@ export function buildRobotBoss(theme, environment = null) {
   }
   const core = add(new THREE.OctahedronGeometry(.32), light, [0, .02, .78]);
   const ring = frame(.43, .07, metal, [0, .02, .76], 6);
+  const rearGlow = alloy(0xff9d3c, .12, .15);
+  const weakCore = add(new THREE.OctahedronGeometry(.27), rearGlow, [0, .12, -.8]);
+  frame(.36, .06, metal, [0, .12, -.78], 8);
   for (const side of [-1, 1]) {
     box(white, [side * .34, .32, .71], [.22, .08, .055]);
     jet(side * .55, -.7, -.05);
@@ -161,7 +164,7 @@ export function buildRobotBoss(theme, environment = null) {
   }
   // Exposed rivets and a front reactor unify the otherwise distinct silhouettes.
   for (const side of [-1, 1]) for (let i = 0; i < 3; i++) facet(metal, [side * .75, -.18 + i * .2, .5], [.05, .05, .05]);
-  root.userData = { kind: theme.boss, colliders, core, ring, jets, animated };
+  root.userData = { kind: theme.boss, colliders, core, ring, weakCore, jets, animated };
   return root;
 }
 
