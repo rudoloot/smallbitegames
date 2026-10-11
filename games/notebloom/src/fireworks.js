@@ -1,4 +1,4 @@
-import { terrainScroll, ROAD_SCROLL_FACTOR } from './terrain.js?v=015e650e9f5e';
+import { terrainScroll, ROAD_SCROLL_FACTOR } from './terrain.js?v=92bc1fbf2287';
 
 export const fireworkLifetime = weapon => weapon === 'missile' ? 4.5 : 3.8;
 export const fireworkForwardDistance = (terrain, from, to) => Math.max(0, terrainScroll(terrain, to) - terrainScroll(terrain, from)) * ROAD_SCROLL_FACTOR;

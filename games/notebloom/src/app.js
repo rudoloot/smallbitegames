@@ -1,11 +1,11 @@
-import { TRACKS, MusicPlayer } from './music.js?v=015e650e9f5e';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=015e650e9f5e';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=015e650e9f5e';
-import { World } from './scene.js?v=015e650e9f5e';
-import { exitGame } from './launch.js?v=015e650e9f5e';
-import { setupFullscreen } from './fullscreen.js?v=015e650e9f5e';
-import { beginGesture, updateGesture } from './gesture.js?v=015e650e9f5e';
-import { updatePlayHUD } from './hud.js?v=015e650e9f5e';
+import { TRACKS, MusicPlayer } from './music.js?v=92bc1fbf2287';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=92bc1fbf2287';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=92bc1fbf2287';
+import { World } from './scene.js?v=92bc1fbf2287';
+import { exitGame } from './launch.js?v=92bc1fbf2287';
+import { setupFullscreen } from './fullscreen.js?v=92bc1fbf2287';
+import { beginGesture, updateGesture } from './gesture.js?v=92bc1fbf2287';
+import { updatePlayHUD } from './hud.js?v=92bc1fbf2287';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -14,11 +14,11 @@ let world;
 try { world = new World($('scene')); }
 catch (error) { $('homeError').textContent = '3D 화면을 시작하지 못했어요. WebGL을 지원하는 브라우저에서 하드웨어 가속을 켜고 다시 열어 주세요.'; $('startButton').disabled = true; console.error(error); }
 const audio = new MusicPlayer();
-let difficulty = 'hard';
+let difficulty = 'easy';
 $('hardToggle').addEventListener('click', () => {
   difficulty = difficulty === 'hard' ? 'easy' : 'hard';
   $('hardToggle').setAttribute('aria-pressed', String(difficulty === 'hard'));
-  $('hardToggle').title = difficulty === 'hard' ? 'Hard · 기본 난이도' : '쉬움 · 속도 75%, 중간 지뢰 패턴 절반';
+  $('hardToggle').title = difficulty === 'hard' ? 'Hard · 보스 체력 (음표 수 ÷ 20) × 1000' : '쉬움 · 속도 75%, 중간 지뢰 패턴 절반';
 });
 let selected = TRACKS[0], state = null, mode = 'home', playerX = 0;
 let preparing = false, countdownTimer = null, countdownRemaining = 3, feedbackUntil = 0, damageUntil = 0;

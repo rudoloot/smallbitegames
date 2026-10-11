@@ -1,10 +1,10 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=015e650e9f5e';
-import { weaponForId, attackForEnergy } from './weapons.js?v=015e650e9f5e';
-import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=015e650e9f5e';
-import { themeForChart } from './themes.js?v=015e650e9f5e';
-import { estimateBossHealth } from './balance.js?v=015e650e9f5e';
-import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=015e650e9f5e';
-import { fireworkLifetime } from './fireworks.js?v=015e650e9f5e';
+import { clamp, seededRandom, RULES } from './engine.js?v=92bc1fbf2287';
+import { weaponForId, attackForEnergy } from './weapons.js?v=92bc1fbf2287';
+import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=92bc1fbf2287';
+import { themeForChart } from './themes.js?v=92bc1fbf2287';
+import { estimateBossHealth } from './balance.js?v=92bc1fbf2287';
+import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=92bc1fbf2287';
+import { fireworkLifetime } from './fireworks.js?v=92bc1fbf2287';
 
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
@@ -39,7 +39,7 @@ function addInterludeMines(events, beat, duration, seed) {
     }
   });
 }
-export function makeChart(duration, analysis, difficulty = 'hard', seed = 42) {
+export function makeChart(duration, analysis, difficulty = 'easy', seed = 42) {
   const random = seededRandom(seed), beat = analysis.beat || .5, events = [];
   const start = Math.ceil(3.5 / beat) * beat + (analysis.offset || 0);
   const times = Array.isArray(analysis.beatTimes) ? analysis.beatTimes.filter(t => t >= 3.5 && t <= duration - 1)
@@ -74,7 +74,7 @@ export function makeChart(duration, analysis, difficulty = 'hard', seed = 42) {
 }
 
 export class GameState {
-  constructor(chart, difficulty = chart.difficulty ?? 'hard', { physicsHz = 120 } = {}) {
+  constructor(chart, difficulty = chart.difficulty ?? 'easy', { physicsHz = 120 } = {}) {
     this.chart = chart; this.rules = RULES[difficulty]; this.theme = themeForChart(chart);
     this.maxHealth = 100; this.health = this.maxHealth;
     this.time = 0; this.boss = chart.bossMax; this.saved = 0; this.score = 0; this.missed = 0; this.hits = 0;

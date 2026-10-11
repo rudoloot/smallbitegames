@@ -1,6 +1,8 @@
-export const BOSS_BALANCE = Object.freeze({ version: 3, notesPerUnit: 20, healthPerUnit: 500 });
+export const BOSS_BALANCE = Object.freeze({ version: 4, notesPerUnit: 20,
+  healthPerUnit: Object.freeze({ hard: 1000, easy: 600 }) });
 
-export function estimateBossHealth(chart) {
+export function estimateBossHealth(chart, difficulty = chart.difficulty ?? 'easy') {
   const noteCount = chart.events.filter(event => event.type === 'note').length;
-  return { ...BOSS_BALANCE, noteCount, bossMax: noteCount / BOSS_BALANCE.notesPerUnit * BOSS_BALANCE.healthPerUnit };
+  const healthPerUnit = BOSS_BALANCE.healthPerUnit[difficulty === 'easy' ? 'easy' : 'hard'];
+  return { ...BOSS_BALANCE, healthPerUnit, noteCount, bossMax: noteCount / BOSS_BALANCE.notesPerUnit * healthPerUnit };
 }
