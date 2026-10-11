@@ -7,7 +7,7 @@
   <meta name="description" content="음악이 피어나는 길. 음표를 구하고 보스를 물리치는 3D 리듬 액션 게임 Notebloom." />
   <title>Notebloom — 음악이 피어나는 길</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23171929'/%3E%3Ctext x='12' y='47' font-size='48' fill='%239cf2d3'%3E♪%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./style.css?v=e13089ee01a6" />
+  <link rel="stylesheet" href="./style.css?v=c9a3057ee538" />
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
@@ -33,11 +33,13 @@
       <div id="hud" class="hud hidden">
         <div class="boss-label"><span id="bossName">DISSONANCE <small>불협화음</small></span><span id="bossValue">100%</span></div>
         <div id="bossMeter" class="boss-meter" role="progressbar" aria-label="보스 체력" aria-valuemin="0" aria-valuemax="100"><div id="bossFill"></div></div>
-        <div class="hud-row"><div><span class="hud-caption">RESCUED</span><strong id="savedValue">0</strong><small id="comboValue">음표를 구해요</small></div><button id="pauseButton" class="icon-button" aria-label="일시정지">Ⅱ</button></div>
+        <div class="hud-row"><div><span class="hud-caption">RESCUED</span><strong id="savedValue">0</strong></div><button id="pauseButton" class="icon-button" aria-label="일시정지">Ⅱ</button></div>
+        <div class="combo-display"><span id="comboValue">0 COMBO</span></div>
         <div class="side-meter course"><span>COURSE</span><div id="courseMeter" class="vertical-track" role="progressbar" aria-label="코스 진행도" aria-valuemin="0" aria-valuemax="100"><i id="courseFill"></i></div><b id="courseValue">0%</b><small>진행</small></div>
         <div class="side-meter health"><span>VITAL</span><div id="healthMeter" class="vertical-track" role="progressbar" aria-label="나의 체력" aria-valuemin="0" aria-valuemax="100"><i id="healthFill"></i></div><b id="healthValue">100</b><small>체력</small></div>
         <div id="feedback" class="feedback" aria-live="polite"></div>
-        <div class="play-bottom"><div class="weapon"><span id="weaponIcon">⌁</span><div><small id="weaponName">기본 권총 · 총알 1줄 · 미사일 0발/초</small><b>ATK <span id="powerValue">20</span></b></div></div><div class="song-mini"><strong id="playingTitle">Escape Your Love</strong><small id="timeValue">0:00 / 2:18</small></div></div>
+        <div class="play-bottom"><div class="weapon"><span id="weaponIcon">⌁</span><div><small id="weaponName">음표를 모아 에너지를 충전해요</small><b>ATK <span id="powerValue">0</span></b></div></div><div class="song-mini"><strong id="playingTitle">Escape Your Love</strong><small id="timeValue">0:00 / 2:18</small></div></div>
+        <div class="charge-panel"><div class="charge-label"><span>ENERGY <b id="energyValue">0</b></span><small id="attackHint">10 쌍권총 · 20 기관총 · 30 미사일</small></div><div id="energyMeter" class="charge-meter" role="progressbar" aria-label="공격 에너지" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0"><i id="energyFill"></i><span style="left:33.333%"></span><span style="left:66.666%"></span></div></div>
       </div>
 
       <div id="home" class="home-panel">
@@ -47,7 +49,7 @@
         <button id="trackButton" class="selected-track" aria-label="음악 선택"><span class="album-art">♫</span><span class="track-text"><small>YOUR SOUNDTRACK</small><strong id="selectedTitle">Escape Your Love</strong><span id="selectedArtist">FASSounds · 2:18</span></span><span class="change-track">변경 ↗</span></button>
         <div class="home-controls"><button id="helpButton" class="text-button">플레이 방법 <span>?</span></button></div>
         <button id="startButton" class="primary-button"><span>여정 시작하기</span><span>↗</span></button>
-        <div class="home-note"><span class="tiny-dot"></span> 좌우 드래그로 플레이 <span>·</span> PC는 ← →</div>
+        <div class="home-note"><span class="tiny-dot"></span> 좌우 드래그로 플레이 <span>·</span> PC는 ← → 이동 · F키 떼기 공격</div>
         <p id="homeError" class="error" role="alert"></p>
       </div>
 
@@ -56,19 +58,19 @@
 
       <div id="pausePanel" class="screen-overlay hidden"><span class="overlay-symbol">Ⅱ</span><div class="eyebrow">TAKE A BREATH</div><h2>잠시 쉬어가요</h2><p id="pauseDescription">음악과 여정이 함께 멈춰 있어요.</p><label class="volume-control">음량 <input id="volume" type="range" min="0" max="100" value="65" aria-label="음량" /></label><button id="resumeButton" class="primary-button">계속 플레이 <span>→</span></button><button id="restartButton" class="secondary-button">처음부터 다시</button><button id="quitButton" class="text-button">곡 선택으로 돌아가기</button><button id="pauseExitButton" class="text-button">게임 종료하기</button></div>
 
-      <div id="result" class="screen-overlay result hidden"><div id="resultSymbol" class="result-symbol">✳</div><div id="resultEyebrow" class="eyebrow">THE WORLD BLOOMS AGAIN</div><h2 id="resultTitle">다시, 피어난 음악.</h2><p id="resultMessage">음표 주민들이 당신을 기억할 거예요.</p><div id="residents" class="residents" aria-label="구출한 음표 주민들"></div><div class="result-stats"><div><small>구출한 음표</small><strong id="resultSaved">0</strong></div><div><small>최대 콤보</small><strong id="resultCombo">0</strong></div><div><small>최종 공격력</small><strong id="resultPower">20</strong></div></div><p id="resultDetail" class="result-detail"></p><button id="againButton" class="primary-button">한 번 더 플레이 <span>↗</span></button><button id="homeButton" class="secondary-button">다른 곡 고르기</button><button id="resultExitButton" class="text-button">게임 종료하기</button></div>
+      <div id="result" class="screen-overlay result hidden"><div id="resultSymbol" class="result-symbol">✳</div><div id="resultEyebrow" class="eyebrow">THE WORLD BLOOMS AGAIN</div><h2 id="resultTitle">다시, 피어난 음악.</h2><p id="resultMessage">음표 주민들이 당신을 기억할 거예요.</p><div id="residents" class="residents" aria-label="구출한 음표 주민들"></div><div class="result-stats"><div><small>구출한 음표</small><strong id="resultSaved">0</strong></div><div><small>최대 콤보</small><strong id="resultCombo">0</strong></div><div><small>최대 공격 피해</small><strong id="resultPower">20</strong></div></div><p id="resultDetail" class="result-detail"></p><button id="againButton" class="primary-button">한 번 더 플레이 <span>↗</span></button><button id="homeButton" class="secondary-button">다른 곡 고르기</button><button id="resultExitButton" class="text-button">게임 종료하기</button></div>
       <div id="damageFlash" class="damage-flash"></div>
     </section>
 
     <aside class="field-guide">
       <div class="guide-top"><span class="tiny-dot"></span> ALL SYSTEMS IN HARMONY</div>
-      <div class="guide-content"><div class="eyebrow">FIELD GUIDE / 001</div><h2>작은 구출이<br>커다란 힘으로.</h2><div class="guide-item"><span class="guide-icon mint">♪</span><div><strong>구하고, 회복해요</strong><p>4개 길의 음표를 만나면<br>체력을 회복해요.</p></div></div><div class="guide-item"><span class="guide-icon lilac">⌁</span><div><strong>어디서나 자동 사격</strong><p>모든 길에서 전방으로<br>계속 사격해요. 카드로 강화해요.</p></div></div><div class="guide-item"><span class="guide-icon rose">✹</span><div><strong>가시 지뢰를 피해요</strong><p>보스 뒤에서 1개·2개씩 날아와요.<br>가까워질수록 벌어지는 지뢰를 피해요.</p></div></div><div class="guide-divider"></div><div class="guide-tip"><span>✧</span><p>보스를 먼저 쓰러뜨렸나요?<br>남은 음악은 온전히 구출을 위한 시간.</p></div></div>
+      <div class="guide-content"><div class="eyebrow">FIELD GUIDE / 001</div><h2>작은 구출이<br>커다란 힘으로.</h2><div class="guide-item"><span class="guide-icon mint">♪</span><div><strong>구하고, 회복해요</strong><p>4개 길의 음표를 만나면<br>체력을 회복해요.</p></div></div><div class="guide-item"><span class="guide-icon lilac">⌁</span><div><strong>모았다가, 손을 떼요</strong><p>음표를 연속으로 모아 충전하고<br>손을 떼면 보스를 공격해요.</p></div></div><div class="guide-item"><span class="guide-icon rose">✹</span><div><strong>가시 지뢰를 피해요</strong><p>음표와 함께 4개 길로 내려와요.<br>음표가 있는 안전한 길을 따라가요.</p></div></div><div class="guide-divider"></div><div class="guide-tip"><span>✧</span><p>보스를 먼저 쓰러뜨렸나요?<br>남은 음악은 온전히 구출을 위한 시간.</p></div></div>
       <div class="edition"><span>NOTEBLOOM</span><span>PLAYABLE EDITION 0.1</span></div>
     </aside>
   </main>
 
   <dialog id="trackDialog" class="modal"><div class="modal-heading"><div><div class="eyebrow">CHOOSE YOUR SOUNDTRACK</div><h2>어떤 음악으로 떠날까요?</h2></div><button class="close-button" data-close="trackDialog" aria-label="음악 선택 닫기">×</button></div><p class="modal-subtitle">내 노래 또는 준비된 12곡으로 떠나요.</p><button id="localMusicButton" class="secondary-button">＋ 내 기기에서 노래 선택</button><input id="localMusicFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac" hidden><p class="local-music-hint">파일 앱에 저장된 음원을 선택해요. 최대 50MB · 10초~10분<br>기기 안에서만 분석·재생하며 업로드하지 않아요.</p><p id="localMusicError" class="local-music-error" role="alert"></p><div id="trackList" class="track-list"></div><p class="modal-footnote">실제 타격음과 강세를 분석해 음표를 배치해요. 스트리밍 앱 전용 다운로드 곡은 사용할 수 없어요. 선택한 내 노래는 이 브라우저의 보관함에 남아요. 브라우저 데이터를 삭제하면 보관함도 지워져요.</p></dialog>
-  <dialog id="helpDialog" class="modal help-modal"><div class="modal-heading"><div><div class="eyebrow">A QUICK HELLO</div><h2>아리아와 함께 떠나요</h2></div><button class="close-button" data-close="helpDialog" aria-label="플레이 방법 닫기">×</button></div><div class="lane-guide"><span>♪<small>자동 사격</small></span><span>♪<small>자동 사격</small></span><span>♪<small>자동 사격</small></span><span>♪<small>자동 사격</small></span></div><ol class="help-steps"><li><strong>좌우로 드래그</strong><p>손가락을 움직여 레인을 바꿔요. PC에서는 방향키나 A / D도 사용할 수 있어요.</p></li><li><strong>음표로 체력 회복</strong><p>음표가 발밑의 판정선에 도착할 때 같은 레인에 있으면 구출! 오르막에서는 천천히, 내리막에서는 빠르게 날아오지만 판정선에는 음악 비트에 맞춰 도착해요. 음표마다 체력을 회복해요. 50개를 모을 때마다 우측 상단에 강화 카드 3장이 세로로 나타나요.</p></li><li><strong>위아래 드래그로 카드 선택</strong><p>5초 동안 위아래로 드래그해서 카드를 선택해요. 선택한 카드는 5초가 끝나면 적용되며, 선택하지 않으면 무작위 카드가 적용돼요. 빨강은 모든 총알과 미사일의 피해 +20, 파랑은 총알 +1줄, 보라는 기본 피해 100의 유도 미사일을 초당 1발 추가해요. 각 총알 줄의 기본 피해는 20이며, 3줄은 레인 너비의 약 1.5배를 커버해요. 강화는 이번 판에 누적돼요.</p></li><li><strong>공중 지뢰를 피하며 보스 격파</strong><p>지뢰가 보스 뒤 공중에서 1개·2개씩 번갈아 날아오며 가까워질수록 벌어져요. 내 체력이 0이 되거나, 곡이 끝나도 보스가 남으면 실패해요. 보스를 잡은 뒤에도 음표를 놓치지 마세요.</p></li></ol><p class="help-health">놓침 −4 · 지뢰 −30 · 구출 +4</p><button data-close="helpDialog" class="primary-button">준비됐어요 <span>♪</span></button></dialog>
-  <script type="module" src="./src/app.js?v=e13089ee01a6"></script>
+  <dialog id="helpDialog" class="modal help-modal"><div class="modal-heading"><div><div class="eyebrow">A QUICK HELLO</div><h2>아리아와 함께 떠나요</h2></div><button class="close-button" data-close="helpDialog" aria-label="플레이 방법 닫기">×</button></div><div class="lane-guide"><span>♪<small>충전 공격</small></span><span>♪<small>충전 공격</small></span><span>♪<small>충전 공격</small></span><span>♪<small>충전 공격</small></span></div><ol class="help-steps"><li><strong>좌우로 드래그</strong><p>손가락을 움직여 4개 라인 사이를 이동해요. PC는 방향키 또는 A / D로 이동해요.</p></li><li><strong>음표를 연속으로 모아 충전</strong><p>음표가 판정선에 도착할 때 같은 라인에 있으면 구출하고 체력을 회복해요. 놓치지 않고 모은 음표 수만큼 공격 에너지가 쌓여요. 음표를 놓치거나 지뢰에 맞으면 충전이 초기화돼요.</p></li><li><strong>손을 떼면 보스 공격</strong><p>모은 에너지를 전부 사용해 중앙의 보스를 자동으로 겨냥해요. PC는 F키를 눌렀다 떼면 공격해요. 1~9개: 권총 1발(20), 10~19개: 쌍권총 5발(45×5), 20~29개: 기관총 10발(55×10), 30개 이상: 미사일 1발(1000).</p></li><li><strong>음표를 따라 지뢰 회피</strong><p>음표 한 개와 지뢰 세 개가 같은 박자에 4개 라인으로 내려와요. 음표가 있는 라인을 따라가면 지뢰를 피할 수 있어요. 보스 체력은 (곡의 음표 수 ÷ 20) × 600이에요. 내 체력이 0이 되거나 곡이 끝나도 보스가 남으면 실패해요. 보스를 잡은 뒤에도 음표를 계속 구출해요.</p></li></ol><p class="help-health">놓침 −4 · 지뢰 −30 · 구출 +4</p><button data-close="helpDialog" class="primary-button">준비됐어요 <span>♪</span></button></dialog>
+  <script type="module" src="./src/app.js?v=c9a3057ee538"></script>
 </body>
 </html>

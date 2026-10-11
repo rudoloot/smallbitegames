@@ -1,14 +1,11 @@
 import * as THREE from 'three';
-import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=e13089ee01a6';
-import { weaponForId } from './weapons.js?v=e13089ee01a6';
-import { buildWeaponModel } from './weapon-model.js?v=e13089ee01a6';
-import { bossPose, projectilePoint } from './projectiles.js?v=e13089ee01a6';
-import { UPGRADES } from './pickups.js?v=e13089ee01a6';
-import { UpgradeCards } from './upgrade-cards.js?v=e13089ee01a6';
-import { minePoint } from './mines.js?v=e13089ee01a6';
-import { COLLECTION_Z, visibleNotes } from './timing.js?v=e13089ee01a6';
-import { themeForChart } from './themes.js?v=e13089ee01a6';
-import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=e13089ee01a6';
+import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=c9a3057ee538';
+import { weaponForId, attackForEnergy } from './weapons.js?v=c9a3057ee538';
+import { buildWeaponModel } from './weapon-model.js?v=c9a3057ee538';
+import { bossPose, projectilePoint } from './projectiles.js?v=c9a3057ee538';
+import { COLLECTION_Z, visibleNotes } from './timing.js?v=c9a3057ee538';
+import { themeForChart } from './themes.js?v=c9a3057ee538';
+import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=c9a3057ee538';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -60,7 +57,6 @@ export class World {
     this.damageNumbers = []; this.damageSerial = 0; this.hitFlash = 0;
     this.damageLayer = document.createElement('div'); this.damageLayer.className = 'damage-numbers';
     this.damageLayer.setAttribute('aria-hidden', 'true'); container.appendChild(this.damageLayer);
-    this.upgradeCards = new UpgradeCards(container);
     this.buildSky(); this.course = new THREE.Group(); this.scene.add(this.course); this.buildRoad(); this.buildGarden(); this.prepareEnvironment(); this.buildCharacter(); this.buildBoss();
     this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(container);
     this.resize();
@@ -200,8 +196,48 @@ export class World {
     this.box(root, m.dark, [-.16, 1.36, .23], [.2, .23, .04]).rotation.z = -.25;
     this.box(root, m.dark, [.16, 1.36, .23], [.2, .23, .04]).rotation.z = .25;
     for (let i = 0; i < 3; i++) this.box(root, m.mint, [0, 1.05 + i * .08, .225], [.04, .03, .025]);
+    // Expand each body part in view space, keeping the outline equally thick
+    // on the head, torso and animated limbs despite their different scales.
+    this.auraOutlineMaterial = new THREE.ShaderMaterial({
+      uniforms: { auraColor: { value: new THREE.Color(COLORS.mint) }, thickness: { value: .025 }, opacity: { value: 1 } },
+      vertexShader: `uniform float thickness;
+        void main() {
+          vec4 point = modelViewMatrix * vec4(position, 1.0);
+          point.xyz += normalize(normalMatrix * normal) * thickness;
+          gl_Position = projectionMatrix * point;
+        }`,
+      fragmentShader: `uniform vec3 auraColor;
+        uniform float opacity;
+        void main() {
+          gl_FragColor = vec4(auraColor, opacity);
+          #include <colorspace_fragment>
+        }`,
+      side: THREE.BackSide, toneMapped: false,
+    });
+    this.auraGlowMaterial = this.auraOutlineMaterial.clone();
+    this.auraGlowMaterial.transparent = true; this.auraGlowMaterial.depthWrite = false;
+    this.auraGlowMaterial.uniforms.thickness.value = .055;
+    this.auraGlowMaterial.uniforms.opacity.value = .18;
+    const body = [];
+    root.traverse(part => { if (part.isMesh) body.push(part); });
+    for (const part of body) {
+      part.add(new THREE.Mesh(part.geometry, this.auraOutlineMaterial));
+      part.add(new THREE.Mesh(part.geometry, this.auraGlowMaterial));
+    }
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(.5, 24), new THREE.MeshBasicMaterial({ color: 0x242a47, transparent: true, opacity: .3, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = -.025; root.add(shadow);
-    this.aura = this.mesh(root, new THREE.TorusGeometry(.53, .012, 5, 35), m.mint, [0, .01, 0]); this.aura.rotation.x = Math.PI / 2;
+    const auraMaterial = new THREE.MeshBasicMaterial({ color: COLORS.mint, toneMapped: false, transparent: true, opacity: .6, depthWrite: false });
+    this.aura = this.mesh(root, new THREE.TorusGeometry(.53, .012, 5, 35), auraMaterial, [0, .01, 0]); this.aura.rotation.x = Math.PI / 2;
+  }
+  updateCharacterAura(energy = 0) {
+    const attack = attackForEnergy(energy), color = attack ? weaponForId(attack.weapon).color : COLORS.mint;
+    const strength = THREE.MathUtils.clamp(energy / 30, 0, 1);
+    this.auraOutlineMaterial.uniforms.auraColor.value.setHex(color);
+    this.auraOutlineMaterial.uniforms.thickness.value = .025 + strength * .012;
+    this.auraGlowMaterial.uniforms.auraColor.value.setHex(color);
+    this.auraGlowMaterial.uniforms.thickness.value = .05 + strength * .035;
+    this.auraGlowMaterial.uniforms.opacity.value = energy > 0 ? .18 + strength * .12 : .06;
+    this.aura.material.color.setHex(color);
+    this.aura.material.opacity = energy > 0 ? .75 : .4;
   }
   prepareEnvironment() {
     // Clone only environment materials: notes, mines and the android keep their contrast.
@@ -347,6 +383,7 @@ export class World {
       const p = projectiles[i];
       const start = p ? new THREE.Vector3(p.x, p.y, p.z) : new THREE.Vector3((lane - 1.5) * 1.22 + .22, .8, 2.65);
       const mesh = this.mesh(this.course, new THREE.SphereGeometry(.11, 8, 6), new THREE.MeshBasicMaterial({ color: weapon.color, toneMapped: false, fog: false }), start.toArray(), weaponId === 'rail' ? [.5,.5,45] : weaponId === 'rocket' ? [2,2,5] : [1,1,6]);
+      if (p?.direction) mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), new THREE.Vector3(p.direction.x, p.direction.y, p.direction.z));
       const target = start.clone(); target.z = -32;
       this.effects.push({ mesh, age: 0, life: .6, start, target, shot: true, projectile: projectiles[i] });
     }
@@ -355,7 +392,7 @@ export class World {
     for (const projectile of projectiles) {
       const root = new THREE.Group(); this.course.add(root);
       const hull = new THREE.MeshBasicMaterial({ color: 0xe8daff, toneMapped: false });
-      const glow = new THREE.MeshBasicMaterial({ color: UPGRADES.purple.color, toneMapped: false, transparent: true });
+      const glow = new THREE.MeshBasicMaterial({ color: weaponForId('missile').color, toneMapped: false, transparent: true });
       this.mesh(root, new THREE.ConeGeometry(.12, .38, 8), hull, [0, 0, -.23]).rotation.x = -Math.PI / 2;
       this.mesh(root, new THREE.CylinderGeometry(.095, .095, .32, 8), hull, [0, 0, .1]).rotation.x = Math.PI / 2;
       this.mesh(root, new THREE.ConeGeometry(.12, .6, 8), glow, [0, 0, .55]).rotation.x = Math.PI / 2;
@@ -368,7 +405,7 @@ export class World {
       const effect = this.effects[i];
       if (effect.projectile?.id === hit.id) { this.disposeEffect(effect.mesh); this.effects.splice(i, 1); }
     }
-    const point = hit.point, color = hit.weapon === 'missile' ? UPGRADES.purple.color : weaponForId(hit.weapon).color;
+    const point = hit.point, color = weaponForId(hit.weapon).color;
     const ring = this.mesh(this.course, new THREE.TorusGeometry(.26, .055, 6, 20), new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, toneMapped: false }), [point.x, point.y, point.z + .04]);
     this.effects.push({ mesh: ring, age: 0, life: .22, impact: true, velocity: new THREE.Vector3() });
     for (let i = 0; i < 8; i++) {
@@ -397,7 +434,6 @@ export class World {
     for (const [key, model] of this.gunModels) model.visible = key === id;
   }
   clearGameObjects() {
-    this.upgradeCards.clear();
     this.resize();
     for (const note of this.notes.values()) this.disposeObject(note);
     this.notes.clear();
@@ -424,7 +460,6 @@ export class World {
     this.camera.updateProjectionMatrix();
   }
   render(elapsed, dt, state, playerX, mode) {
-    this.upgradeCards.render(state, mode);
     this.updateEnvironment(state);
     this.setBossTheme(state?.theme || themeForChart(state?.chart));
     const active = !!state && ['playing', 'paused', 'countdown'].includes(mode);
@@ -448,6 +483,7 @@ export class World {
     this.legs[0].rotation.x = Math.sin(run) * .38; this.legs[1].rotation.x = -Math.sin(run) * .38;
     this.arms[0].rotation.x = -.15 + Math.sin(run) * .16; this.arms[1].rotation.x = -.2;
     this.head.rotation.z = Math.sin(time * 2) * .03;
+    this.updateCharacterAura(showHome ? 0 : state?.energy ?? 0);
     this.aura.scale.setScalar(1 + Math.sin(time * 5) * .04);
     this.gun.scale.setScalar(1.2);
     this.setGunLevel(state?.weaponId || 'pistol');
@@ -463,21 +499,14 @@ export class World {
     for (const mat of this.attackFloors) mat.emissiveIntensity = state?.attackWindow && state.boss > 0 ? pulse + .25 : .08;
     const visible = new Set();
     if (active) {
-      for (const { event, z, scale } of visibleNotes(state.chart.events, time, state.chart.terrain)) {
+      for (const { event, z, scale } of visibleNotes(state.chart.events, time, state.chart.terrain, true)) {
+        if (event.type === 'mine' && state.boss <= 0) continue;
         visible.add(event.id);
         let mesh = this.notes.get(event.id);
-        if (!mesh) { mesh = this.createNote('note'); this.notes.set(event.id, mesh); }
+        if (!mesh) { mesh = this.createNote(event.type); this.notes.set(event.id, mesh); }
         mesh.position.set((event.lane - 1.5) * 1.22, .12, z);
         mesh.scale.setScalar(scale);
         mesh.rotation.y = Math.sin(time * 3 + event.id) * .2;
-      }
-      for (const mine of state.mines) {
-        const id = `mine-${mine.id}`, point = minePoint(mine, time);
-        visible.add(id);
-        let mesh = this.notes.get(id);
-        if (!mesh) { mesh = this.createNote('mine'); this.notes.set(id, mesh); }
-        mesh.position.set(point.x, point.y - .3, point.z);
-        mesh.rotation.y = time * 1.6;
       }
     }
     for (const [id, mesh] of this.notes) if (!visible.has(id)) { this.disposeObject(mesh); this.notes.delete(id); }

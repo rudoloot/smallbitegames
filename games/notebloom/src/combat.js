@@ -1,9 +1,9 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=e13089ee01a6';
-import { weaponForId } from './weapons.js?v=e13089ee01a6';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile, bulletRowOffsets } from './projectiles.js?v=e13089ee01a6';
-import { UPGRADE_COLORS, CARD_DURATION } from './pickups.js?v=e13089ee01a6';
-import { minePoint, mineFanTargets, MINE_TRAVEL } from './mines.js?v=e13089ee01a6';
-import { themeForChart } from './themes.js?v=e13089ee01a6';
+import { clamp, seededRandom, RULES } from './engine.js?v=c9a3057ee538';
+import { weaponForId, attackForEnergy } from './weapons.js?v=c9a3057ee538';
+import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile } from './projectiles.js?v=c9a3057ee538';
+import { themeForChart } from './themes.js?v=c9a3057ee538';
+import { estimateBossHealth } from './balance.js?v=c9a3057ee538';
+
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
 export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) {
@@ -16,155 +16,110 @@ export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) 
     if (i % 16 >= 10) return;
     if (i % 2 === 0) lane = clamp(lane + (random() < .5 ? -1 : 1), 0, 3);
     events.push({ type: 'note', time, lane });
+    // Each row has one note and three mines. Following the notes is always safe.
+    for (let other = 0; other < LANE_COUNT; other++) {
+      if (other !== lane) events.push({ type: 'mine', time, lane: other });
+    }
   });
-  const notes = [...events];
-  const mineRandom = seededRandom(seed ^ 0x6d696e65);
-  let wave = 0;
-  times.forEach((arrival, i) => {
-    if (i % RULES[difficulty].mineEvery !== 0) return;
-    const count = wave++ % 2 ? 2 : 1;
-    const targets = mineFanTargets(count, mineRandom);
-    events.push({ type: 'mine-wave', time: arrival - MINE_TRAVEL, targets, count });
-  });
-  events.sort((a, b) => a.time - b.time || (a.type === 'note' ? -1 : 1));
+  events.sort((a, b) => a.time - b.time || (a.type === 'note' ? 0 : 1) - (b.type === 'note' ? 0 : 1) || a.lane - b.lane);
   events.forEach((event, id) => { event.id = id; });
-  // Baseline damage is diagnostic; boss health depends only on song duration.
-  const pistol = weaponForId('pistol'), travel = (2.65 + 52) / projectileSpeed('pistol');
-  const maximumDamage = Math.max(0, Math.floor((duration - travel) / pistol.interval)) * pistol.damage;
-  return { duration, events, beat, seed, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm,
+  const chart = { duration, events, beat, seed, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm,
     themeId: themeForChart({ mood: analysis.mood }).id,
-    sections: [], noteCount: notes.length, maximumDamage, bossMax: duration * 100 };
+    sections: [], noteCount: events.filter(event => event.type === 'note').length };
+  chart.balance = estimateBossHealth(chart);
+  chart.bossMax = chart.balance.bossMax;
+  return chart;
 }
 
 export class GameState {
-  constructor(chart, difficulty = 'normal') {
-    this.chart = chart; this.rules = RULES[difficulty];
-    this.theme = themeForChart(chart);
+  constructor(chart, difficulty = 'normal', { physicsHz = 120 } = {}) {
+    this.chart = chart; this.rules = RULES[difficulty]; this.theme = themeForChart(chart);
     this.maxHealth = 100; this.health = this.maxHealth;
     this.time = 0; this.boss = chart.bossMax; this.saved = 0; this.missed = 0; this.hits = 0;
-    this.weaponId = 'pistol'; this.ammo = Infinity;
-    this.damageBonus = 0; this.bulletRows = 1; this.missileCount = 0; this.nextMissile = Infinity;
-    this.cardOffers = []; this.cardSerial = 0; this.mines = []; this.mineSerial = 0;
-    this.cardRandom = seededRandom(Math.imul(chart.seed ?? 42, 0x9e3779b1) ^ 0xc0be);
-    this.combo = 0; this.maxCombo = 0; this.index = 0; this.lastShot = 0;
-    this.nextShot = this.interval; this.stunnedUntil = 0; this.invincibleUntil = 0;
-    this.defeatedAt = null; this.status = 'playing';
-    this.bossLane = 1; this.bossMoveAt = Infinity;
-    this.bossRandom = seededRandom(Math.imul(chart.seed ?? 42, 0x9e3779b1) ^ 0x7b05);
-    this.bossMotion = { from: laneX(this.bossLane), to: laneX(this.bossLane), start: 0, end: 0 };
-    this.projectiles = []; this.projectileSerial = 0; this.physicsStep = 1;
+    this.energy = 0; this.maxEnergy = 0; this.attacks = 0; this.maxAttackDamage = 0;
+    this.combo = 0; this.maxCombo = 0; this.index = 0;
+    this.lastShot = -Infinity; this.lastWeaponId = 'pistol';
+    this.stunnedUntil = 0; this.invincibleUntil = 0;
+    this.defeatedAt = this.boss === 0 ? 0 : null; this.status = 'playing';
+    this.projectiles = []; this.projectileSerial = 0; this.pendingShots = [];
+    this.physicsStep = 1; this.physicsHz = physicsHz;
   }
+  get chargedAttack() { return attackForEnergy(this.energy); }
+  get weaponId() { return this.chargedAttack?.weapon ?? this.lastWeaponId; }
   get weapon() { return weaponForId(this.weaponId); }
-  get power() { return this.weapon.damage + this.damageBonus; }
-  get interval() { return this.weapon.interval; }
-  get attackWindow() { return false; }
-  hurt(amount) { this.health = clamp(this.health - amount, 0, this.maxHealth); this.combo = 0; }
-  get activeCardOffer() { return this.cardOffers[0] || null; }
-  selectUpgrade(id, color) {
-    const offer = this.activeCardOffer;
-    if (this.status !== 'playing' || !offer || offer.id !== id || !UPGRADE_COLORS.includes(color)
-      || this.time < offer.time || this.time >= offer.expiresAt) return false;
-    offer.selected = color;
-    return true;
+  get power() { return this.chargedAttack?.totalDamage ?? 0; }
+  get attackWindow() { return this.energy >= 30; }
+  hurt(amount) {
+    this.health = clamp(this.health - amount, 0, this.maxHealth);
+    this.combo = 0; this.energy = 0;
   }
-  resolveCardOffer(tick, effects) {
-    const offer = this.cardOffers.shift();
-    const color = offer.selected || UPGRADE_COLORS[Math.floor(this.cardRandom() * UPGRADE_COLORS.length)];
-    if (color === 'red') this.damageBonus += 20;
-    if (color === 'blue') this.bulletRows++;
-    if (color === 'purple') {
-      this.missileCount++;
-      if (this.nextMissile === Infinity) this.nextMissile = tick + 1;
+  launchShot(shot) {
+    const target = bossPose(), weapon = shot.weapon;
+    const x = shot.x + (weapon === 'dual' ? shot.number % 2 ? -.22 : .22 : .22), y = .8, z = 2.65;
+    const length = Math.hypot(target.x - x, target.y - y, target.z - z);
+    const projectile = { id: this.projectileSerial++, weapon, time: shot.time, damage: shot.damage,
+      checkedAt: shot.time, x, y, z, speed: projectileSpeed(weapon),
+      direction: { x: (target.x - x) / length, y: (target.y - y) / length, z: (target.z - z) / length } };
+    if (weapon === 'missile') Object.assign(projectile, { side: 1, position: { x, y, z } });
+    this.lastShot = shot.time; this.lastWeaponId = weapon; this.projectiles.push(projectile);
+    return { type: weapon === 'missile' ? 'missile' : 'shot', weapon, lane: shot.lane,
+      time: shot.time, pellets: 1, projectiles: [projectile] };
+  }
+  releaseAttack(time, lane, playerWorldX = laneX(lane)) {
+    if (this.status !== 'playing') return [];
+    const effects = this.advance(time, lane, playerWorldX);
+    const attack = this.chargedAttack;
+    if (this.status !== 'playing' || !attack || this.boss <= 0 || this.time < this.stunnedUntil) return effects;
+    const consumed = this.energy; this.energy = 0; this.attacks++;
+    this.maxAttackDamage = Math.max(this.maxAttackDamage, attack.totalDamage);
+    const x = clamp(playerWorldX, laneX(0), laneX(3));
+    effects.push({ type: 'attack', weapon: attack.weapon, energy: consumed, damage: attack.totalDamage, time: this.time });
+    for (let number = 0; number < attack.shots; number++) {
+      const shot = { weapon: attack.weapon, damage: attack.damage, lane: clamp(lane, 0, 3), x,
+        time: this.time + number * attack.interval, number };
+      if (number === 0) effects.push(this.launchShot(shot));
+      else this.pendingShots.push(shot);
     }
-    effects.push({ type: 'upgrade', color, id: offer.id, random: !offer.selected, time: tick });
+    this.pendingShots.sort((a, b) => a.time - b.time);
+    return effects;
   }
   advance(time, lane, playerWorldX = laneX(lane)) {
     if (this.status !== 'playing') return [];
     time = clamp(time, this.time, this.chart.duration); lane = clamp(lane, 0, 3);
-    playerWorldX = clamp(playerWorldX, laneX(0), laneX(3));
     const effects = [];
     while (true) {
       const event = this.chart.events[this.index], eventTime = event?.time ?? Infinity;
-      const physicsTime = this.physicsStep / 120;
-      const cardTime = this.activeCardOffer?.expiresAt ?? Infinity;
-      const tick = Math.min(eventTime, cardTime, this.nextShot, this.nextMissile, physicsTime);
+      const shotTime = this.pendingShots[0]?.time ?? Infinity;
+      const physicsTime = this.physicsStep / this.physicsHz;
+      const tick = Math.min(eventTime, shotTime, physicsTime);
       if (tick > time) break;
       if (eventTime === tick) {
         this.index++;
         if (event.type === 'note') {
           if (event.lane === lane && tick >= this.stunnedUntil) {
-            this.saved++;
-            if (this.saved % 50 === 0) {
-              // Queue rare overlapping rewards so each set gets its full five seconds.
-              const start = Math.max(tick, this.cardOffers.at(-1)?.expiresAt ?? tick);
-              const offer = { id: this.cardSerial++, time: start, expiresAt: start + CARD_DURATION, selected: null };
-              this.cardOffers.push(offer);
-              effects.push({ type: 'card-offer', id: offer.id, time: tick });
-            }
+            this.saved++; this.energy++; this.maxEnergy = Math.max(this.maxEnergy, this.energy);
             this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
             this.health = clamp(this.health + this.rules.heal, 0, this.maxHealth);
             effects.push({ type: 'save', lane, time: tick });
-          } else { this.missed++; this.hurt(this.rules.miss); }
-        } else if (event.type === 'mine-wave' && this.boss > 0) {
-          const originX = bossPose(tick, this.bossMotion).x;
-          for (const targetX of event.targets) this.mines.push({ id: this.mineSerial++, time: tick, originX, targetX });
+          } else { this.missed++; this.hurt(this.rules.miss); effects.push({ type: 'miss', time: tick }); }
+        } else if (event.type === 'mine' && this.boss > 0 && event.lane === lane && tick >= this.invincibleUntil) {
+          this.invincibleUntil = tick + 1; this.hurt(this.rules.mine); this.hits++; this.stunnedUntil = tick + .5;
+          effects.push({ type: 'mine', lane, point: { x: laneX(lane), y: .4, z: 3.25 }, damage: this.rules.mine, time: tick });
         }
-      } else if (cardTime === tick) {
-        this.resolveCardOffer(tick, effects);
-      } else if (this.nextShot === tick) {
-        this.lastShot = tick;
-        if (tick >= this.stunnedUntil) {
-          const projectiles = bulletRowOffsets(this.bulletRows).map(offset => {
-            const x = playerWorldX + .22 + offset;
-            // Every row keeps its own world-space path and hit test.
-            return { id: this.projectileSerial++, lane: Math.round(x / 1.22 + 1.5), weapon: 'pistol',
-              time: tick, damage: this.power, x, y: .8, z: 2.65, speed: projectileSpeed('pistol'), checkedAt: tick };
-          });
-          this.projectiles.push(...projectiles);
-          effects.push({ type: 'shot', weapon: 'pistol', lane, time: tick, pellets: projectiles.length, projectiles });
-        }
-        this.nextShot = tick + this.interval;
-      } else if (this.nextMissile === tick) {
-        if (tick >= this.stunnedUntil && this.boss > 0) {
-          const projectiles = Array.from({ length: this.missileCount }, (_, i) => ({
-            id: this.projectileSerial++, weapon: 'missile', time: tick, damage: 100 + this.damageBonus, checkedAt: tick,
-            x: playerWorldX, y: .85, z: 3.05, side: i % 2 ? -1 : 1,
-            position: { x: playerWorldX, y: .85, z: 3.05 },
-          }));
-          this.projectiles.push(...projectiles);
-          effects.push({ type: 'missile', projectiles, time: tick });
-        }
-        this.nextMissile = tick + 1;
+      } else if (shotTime === tick) {
+        const shot = this.pendingShots.shift();
+        if (this.boss > 0) effects.push(this.launchShot(shot));
       } else {
         this.physicsStep++;
-        this.mines = this.mines.filter(mine => {
-          if (this.boss <= 0) return false;
-          const point = minePoint(mine, tick);
-          if (Math.hypot(point.x - playerWorldX, point.z - 3.25) < .48 && Math.abs(point.y - .8) < .65 && tick >= this.invincibleUntil) {
-            this.invincibleUntil = tick + 1; this.hurt(this.rules.mine); this.hits++; this.stunnedUntil = tick + .5;
-            effects.push({ type: 'mine', lane, point, damage: this.rules.mine, time: tick }); return false;
-          }
-          return point.z < 8;
-        });
-        if (this.boss > 0 && tick >= this.bossMoveAt) {
-          const from = bossPose(tick, this.bossMotion).x;
-          const choices = [0, 1, 2, 3].filter(l => l !== this.bossLane);
-          this.bossLane = choices[Math.floor(this.bossRandom() * choices.length)];
-          const x = laneX(this.bossLane), travel = .55 + Math.abs(x - from) / 1.22 * .15;
-          this.bossMotion = { from, to: x, start: tick, end: tick + travel };
-          this.bossMoveAt = Infinity;
-          effects.push({ type: 'boss-move', lane: this.bossLane, time: tick });
-        }
         this.projectiles = this.projectiles.filter(projectile => {
           const from = projectilePoint(projectile, projectile.checkedAt);
-          if (projectile.weapon === 'missile') advanceMissile(projectile, tick, bossPose(tick, this.bossMotion));
-          let point = this.boss > 0 ? intersectBoss(projectile, projectile.checkedAt, tick, t => bossPose(t, this.bossMotion), from, this.theme.boss) : null;
+          if (projectile.weapon === 'missile') advanceMissile(projectile, tick, bossPose());
+          const point = this.boss > 0 ? intersectBoss(projectile, projectile.checkedAt, tick, bossPose, from, this.theme.boss) : null;
           projectile.checkedAt = tick;
           if (point) {
             const damage = Math.min(this.boss, projectile.damage); this.boss -= damage; this.lastHit = tick;
             effects.push({ type: 'hit', id: projectile.id, weapon: projectile.weapon, damage, point, time: tick });
-            if (this.boss > 0 && this.bossMoveAt === Infinity) this.bossMoveAt = tick + 2;
-            if (this.boss === 0) { this.defeatedAt = tick; this.mines = []; effects.push({ type: 'victory', time: tick }); }
+            if (this.boss === 0) { this.defeatedAt = tick; this.pendingShots = []; effects.push({ type: 'victory', time: tick }); }
             return false;
           }
           return projectilePoint(projectile, tick).z > -70 && tick - projectile.time < 4;

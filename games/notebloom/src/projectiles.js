@@ -1,19 +1,16 @@
-import { bossColliders } from './themes.js?v=e13089ee01a6';
-import { FLIGHT_SPEED } from './flight.js?v=e13089ee01a6';
+import { bossColliders } from './themes.js?v=c9a3057ee538';
+import { FLIGHT_SPEED } from './flight.js?v=c9a3057ee538';
 // Shared world-space geometry for simulation and rendering.
-export function bossPose(time, motion = { from: -.61, to: -.61, start: 0, end: 0 }) {
-  const t = motion.end > motion.start ? Math.max(0, Math.min(1, (time - motion.start) / (motion.end - motion.start))) : 1;
-  const blend = t * t * (3 - 2 * t);
-  return { x: motion.from + (motion.to - motion.from) * blend, y: 1.05, z: -52 };
+export function bossPose() {
+  return { x: 0, y: 1.05, z: -52 };
 }
 export const projectileSpeed = weapon => weapon === 'missile' ? FLIGHT_SPEED : weapon === 'rail' ? 260 : weapon === 'rocket' ? 85 : 115;
 export const projectileRadius = weapon => weapon === 'missile' || weapon === 'rocket' ? .18 : weapon === 'rail' ? .045 : .07;
-// Three parallel rows cover 1.5 lanes, including the outer bullets' radii.
-export const BULLET_ROW_SPACING = (1.22 * 1.5 - 2 * projectileRadius('pistol')) / 2;
-export const bulletRowOffsets = rows => Array.from({ length: rows }, (_, i) => (i - (rows - 1) / 2) * BULLET_ROW_SPACING);
 export function projectilePoint(projectile, time) {
   if (projectile.weapon === 'missile') return { ...projectile.position };
-  return { x: projectile.x, y: projectile.y, z: projectile.z - projectile.speed * (time - projectile.time) };
+  const distance = projectile.speed * (time - projectile.time), direction = projectile.direction ?? { x: 0, y: 0, z: -1 };
+  return { x: projectile.x + direction.x * distance, y: projectile.y + direction.y * distance,
+    z: projectile.z + direction.z * distance };
 }
 export function advanceMissile(projectile, time, target) {
   const age = time - projectile.time;

@@ -1,4 +1,4 @@
-import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=e13089ee01a6';
+import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=c9a3057ee538';
 
 // AudioContext.currentTime is the rendering clock, ahead of what the listener
 // hears. The output timestamp maps the device's audible frame to performance.now.
@@ -22,7 +22,7 @@ export const NOTE_SPEED = 42;
 export const NOTE_PREVIEW = 1;
 export const NOTE_CONTACT_HOLD = .05;
 export const MIN_NOTE_SPEED_FACTOR = .6;
-export const noteSpeed = slope => NOTE_SPEED * (1 - .4 * Math.max(-1, Math.min(1, slope / MAX_TERRAIN_SLOPE)));
+export const noteSpeed = slope => NOTE_SPEED * (1 + .4 * Math.max(-1, Math.min(1, slope / MAX_TERRAIN_SLOPE)));
 
 // Integrate speed from now to the measured beat. This changes travel speed and
 // preview duration without ever moving the audible judgment timestamp.
@@ -42,7 +42,7 @@ export function noteTravelDistance(profile, from, to) {
 
 // Include just-judged notes independently of GameState.index: otherwise the
 // first frame reaching the beat deletes the note before it touches the line.
-export function* visibleNotes(events, time, terrain) {
+export function* visibleNotes(events, time, terrain, includeMines = false) {
   let low = 0, high = events.length;
   const oldest = time - NOTE_CONTACT_HOLD;
   while (low < high) {
@@ -55,7 +55,7 @@ export function* visibleNotes(events, time, terrain) {
     if (until > NOTE_PREVIEW / MIN_NOTE_SPEED_FACTOR + 1e-9) break;
     const distance = noteTravelDistance(terrain, time, event.time);
     if (distance > NOTE_SPEED * NOTE_PREVIEW + 1e-9) break;
-    if (event.type !== 'note') continue;
+    if (event.type !== 'note' && !(includeMines && event.type === 'mine')) continue;
     yield { event, z: COLLECTION_Z - distance,
       scale: until >= 0 ? 1 : Math.max(0, 1 + until / NOTE_CONTACT_HOLD) };
   }

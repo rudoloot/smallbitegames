@@ -1,8 +1,8 @@
-import { analyzeTerrain } from './terrain.js?v=e13089ee01a6';
-import { analyzeMood } from './mood.js?v=e13089ee01a6';
+import { analyzeTerrain } from './terrain.js?v=c9a3057ee538';
+import { analyzeMood } from './mood.js?v=c9a3057ee538';
 export const STARTING_POWER = 20;
 export const RULES = {
-  normal: { miss: 4, mine: 30, heal: 4, mineEvery: 3 },
+  normal: { miss: 4, mine: 30, heal: 4 },
 };
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 export function seededRandom(seed) {
@@ -92,4 +92,4 @@ export function analyzeSamples(samples, sampleRate) {
   return { mood: analyzeMood(samples, sampleRate, 60 / (bestLag * hop / sampleRate)), terrain: analyzeTerrain(samples, sampleRate), bpm: 60 / (bestLag * hop / sampleRate), beat: bestLag * hop / sampleRate, offset: phase * hop / sampleRate, peaks: peaks.map(p => p / max), beatTimes: detectBeatTimes(samples, sampleRate) };
 }
 
-export { makeChart, GameState, LANE_COUNT, laneX } from './combat.js?v=e13089ee01a6';
+export { makeChart, GameState, LANE_COUNT, laneX } from './combat.js?v=c9a3057ee538';

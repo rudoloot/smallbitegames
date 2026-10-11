@@ -23,7 +23,7 @@ export function analyzeTerrain(samples, sampleRate) {
 }
 
 // A six-second musical envelope compared to the whole-song spectral distribution.
-// Treble-rich passages descend; bass-rich passages climb. Silence stays level.
+// Treble-rich passages climb; bass-rich passages descend. Silence stays level.
 export function terrainProfile(balance, step, weights = new Float64Array(balance.length).fill(1)) {
   if (!balance.length) return { step, slopes: [0] };
   const peakWeight = weights.reduce((a, b) => Math.max(a, b), 0), gate = peakWeight * .002;
@@ -47,7 +47,7 @@ export function terrainProfile(balance, step, weights = new Float64Array(balance
   const lowRange = Math.max(.02, average - active[Math.floor((active.length - 1) * .1)]);
   const highRange = Math.max(.02, active[Math.floor((active.length - 1) * .9)] - average);
   const targets = smooth.map((value, i) => weights[i] > gate
-    ? -Math.max(-1, Math.min(1, (value - average) / (value >= average ? highRange : lowRange))) * MAX_TERRAIN_SLOPE : 0);
+    ? Math.max(-1, Math.min(1, (value - average) / (value >= average ? highRange : lowRange))) * MAX_TERRAIN_SLOPE : 0);
   const slopes = []; let current = targets[0] || 0;
   for (const target of targets) {
     const delta = (target - current) * (1 - Math.exp(-step / 2.5));

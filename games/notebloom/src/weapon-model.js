@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { weaponForId } from './weapons.js?v=e13089ee01a6';
+import { weaponForId } from './weapons.js?v=c9a3057ee538';
 const palettes = new WeakMap();
 export function weaponMaterials(kind, materials) {
   if (!palettes.has(materials)) palettes.set(materials, new Map());
@@ -17,6 +17,7 @@ export function weaponMaterials(kind, materials) {
 }
 // Every weapon faces -Z. Distinct receivers, magazines, vents and muzzle hardware.
 export function buildWeaponModel(kind, materials, geometries) {
+  if (kind === 'missile') kind = 'rocket';
   const root = new THREE.Group(), { dark, white, mint, lilac } = weaponMaterials(kind, materials);
   const part = (geo, mat, position, scale, parent = root) => {
     const mesh = new THREE.Mesh(geo, mat); mesh.position.set(...position); mesh.scale.set(...scale); parent.add(mesh); return mesh;
