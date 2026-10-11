@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch, terrainScroll, ROAD_SCROLL_FACTOR } from './terrain.js?v=fe097748895e';
-import { weaponForId, attackForEnergy, chargeColorForWeapon } from './weapons.js?v=fe097748895e';
-import { buildWeaponModel } from './weapon-model.js?v=fe097748895e';
-import { bossPose, projectilePoint } from './projectiles.js?v=fe097748895e';
-import { COLLECTION_Z, visibleNotes } from './timing.js?v=fe097748895e';
-import { themeForChart } from './themes.js?v=fe097748895e';
-import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=fe097748895e';
-import { advanceFirework, fireworkForwardDistance, fireworkLifetime } from './fireworks.js?v=fe097748895e';
-import { bossRotation, bossWeakPointAt, bossShieldAt, BOSS_SHIELD_RADIUS } from './boss-rotation.js?v=fe097748895e';
+import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch, terrainScroll, ROAD_SCROLL_FACTOR } from './terrain.js?v=65c6e7f65907';
+import { weaponForId, attackForEnergy, chargeColorForWeapon } from './weapons.js?v=65c6e7f65907';
+import { buildWeaponModel } from './weapon-model.js?v=65c6e7f65907';
+import { bossPose, projectilePoint } from './projectiles.js?v=65c6e7f65907';
+import { COLLECTION_Z, visibleNotes } from './timing.js?v=65c6e7f65907';
+import { themeForChart } from './themes.js?v=65c6e7f65907';
+import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=65c6e7f65907';
+import { advanceFirework, fireworkForwardDistance, fireworkLifetime } from './fireworks.js?v=65c6e7f65907';
+import { bossRotation, bossWeakPointAt, bossShieldAt, BOSS_SHIELD_RADIUS } from './boss-rotation.js?v=65c6e7f65907';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;

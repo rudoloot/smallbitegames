@@ -1,10 +1,10 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=fe097748895e';
-import { weaponForId, attackForEnergy } from './weapons.js?v=fe097748895e';
-import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=fe097748895e';
-import { themeForChart } from './themes.js?v=fe097748895e';
-import { estimateBossHealth } from './balance.js?v=fe097748895e';
-import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=fe097748895e';
-import { fireworkLifetime } from './fireworks.js?v=fe097748895e';
+import { clamp, seededRandom, RULES } from './engine.js?v=65c6e7f65907';
+import { weaponForId, attackForEnergy } from './weapons.js?v=65c6e7f65907';
+import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=65c6e7f65907';
+import { themeForChart } from './themes.js?v=65c6e7f65907';
+import { estimateBossHealth } from './balance.js?v=65c6e7f65907';
+import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=65c6e7f65907';
+import { fireworkLifetime } from './fireworks.js?v=65c6e7f65907';
 
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
@@ -39,6 +39,24 @@ function addInterludeMines(events, beat, duration, seed) {
     }
   });
 }
+function thinEasyMines(events, seed) {
+  const random = seededRandom(seed ^ 0x65617379), rows = new Map(), removed = new Set();
+  for (const event of events) {
+    if (event.type !== 'mine') continue;
+    if (!rows.has(event.time)) rows.set(event.time, []);
+    rows.get(event.time).push(event);
+  }
+  for (const mines of rows.values()) {
+    const count = random() < .5 ? 1 : 2;
+    for (let i = mines.length - 1; i > 0; i--) {
+      const other = Math.floor(random() * (i + 1));
+      [mines[i], mines[other]] = [mines[other], mines[i]];
+    }
+    // Only remove mines: the note lane and the original safe route stay clear.
+    for (const mine of mines.slice(count)) removed.add(mine);
+  }
+  for (let i = events.length - 1; i >= 0; i--) if (removed.has(events[i])) events.splice(i, 1);
+}
 export function makeChart(duration, analysis, difficulty = 'easy', seed = 42) {
   const random = seededRandom(seed), beat = analysis.beat || .5, events = [];
   const start = Math.ceil(3.5 / beat) * beat + (analysis.offset || 0);
@@ -61,6 +79,7 @@ export function makeChart(duration, analysis, difficulty = 'easy', seed = 42) {
     for (let i = events.length - 1; i >= 0; i--) {
       if (events[i].pattern && removed.has(events[i].time)) events.splice(i, 1);
     }
+    thinEasyMines(events, seed);
   }
   events.sort((a, b) => a.time - b.time || (a.type === 'note' ? 0 : 1) - (b.type === 'note' ? 0 : 1) || a.lane - b.lane);
   events.forEach((event, id) => { event.id = id; });
