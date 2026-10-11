@@ -1,8 +1,8 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=c74e9a5f09f9';
-import { weaponForId, attackForEnergy } from './weapons.js?v=c74e9a5f09f9';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile } from './projectiles.js?v=c74e9a5f09f9';
-import { themeForChart } from './themes.js?v=c74e9a5f09f9';
-import { estimateBossHealth } from './balance.js?v=c74e9a5f09f9';
+import { clamp, seededRandom, RULES } from './engine.js?v=6ea9da615282';
+import { weaponForId, attackForEnergy } from './weapons.js?v=6ea9da615282';
+import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile } from './projectiles.js?v=6ea9da615282';
+import { themeForChart } from './themes.js?v=6ea9da615282';
+import { estimateBossHealth } from './balance.js?v=6ea9da615282';
 
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
@@ -67,7 +67,7 @@ export class GameState {
   constructor(chart, difficulty = 'normal', { physicsHz = 120 } = {}) {
     this.chart = chart; this.rules = RULES[difficulty]; this.theme = themeForChart(chart);
     this.maxHealth = 100; this.health = this.maxHealth;
-    this.time = 0; this.boss = chart.bossMax; this.saved = 0; this.missed = 0; this.hits = 0;
+    this.time = 0; this.boss = chart.bossMax; this.saved = 0; this.score = 0; this.missed = 0; this.hits = 0;
     this.energy = 0; this.maxEnergy = 0; this.attacks = 0; this.maxAttackDamage = 0;
     this.combo = 0; this.maxCombo = 0; this.index = 0;
     this.lastShot = -Infinity; this.lastWeaponId = 'pistol';
@@ -77,7 +77,7 @@ export class GameState {
     this.physicsStep = 1; this.physicsHz = physicsHz;
   }
   get chargedAttack() { return attackForEnergy(this.energy); }
-  get weaponId() { return this.chargedAttack?.weapon ?? this.lastWeaponId; }
+  get weaponId() { return this.chargedAttack?.weapon ?? null; }
   get weapon() { return weaponForId(this.weaponId); }
   get power() { return this.chargedAttack?.totalDamage ?? 0; }
   get attackWindow() { return this.energy >= 30; }
@@ -146,6 +146,7 @@ export class GameState {
           if (event.lane === lane && tick >= this.stunnedUntil) {
             this.saved++; this.energy++; this.maxEnergy = Math.max(this.maxEnergy, this.energy);
             this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo);
+            this.score += 100 + Math.floor(this.combo / 10) * 10;
             this.health = clamp(this.health + this.rules.heal, 0, this.maxHealth);
             effects.push({ type: 'save', lane, time: tick });
           } else {

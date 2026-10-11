@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { weaponForId } from './weapons.js?v=c74e9a5f09f9';
+import { weaponForId } from './weapons.js?v=6ea9da615282';
 const palettes = new WeakMap();
 export function weaponMaterials(kind, materials) {
   if (!palettes.has(materials)) palettes.set(materials, new Map());

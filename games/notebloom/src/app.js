@@ -1,11 +1,11 @@
-import { TRACKS, MusicPlayer } from './music.js?v=c74e9a5f09f9';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=c74e9a5f09f9';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=c74e9a5f09f9';
-import { World } from './scene.js?v=c74e9a5f09f9';
-import { weaponForId } from './weapons.js?v=c74e9a5f09f9';
-import { exitGame } from './launch.js?v=c74e9a5f09f9';
-import { setupFullscreen } from './fullscreen.js?v=c74e9a5f09f9';
-import { beginGesture, updateGesture } from './gesture.js?v=c74e9a5f09f9';
+import { TRACKS, MusicPlayer } from './music.js?v=6ea9da615282';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=6ea9da615282';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=6ea9da615282';
+import { World } from './scene.js?v=6ea9da615282';
+import { exitGame } from './launch.js?v=6ea9da615282';
+import { setupFullscreen } from './fullscreen.js?v=6ea9da615282';
+import { beginGesture, updateGesture } from './gesture.js?v=6ea9da615282';
+import { updatePlayHUD } from './hud.js?v=6ea9da615282';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -163,32 +163,19 @@ function finish() {
 }
 function updateHUD() {
   if (!state) return;
-  const boss = state.chart.bossMax ? state.boss / state.chart.bossMax * 100 : 0, course = state.time / state.chart.duration * 100;
-  $('bossFill').style.width = `${boss}%`; $('bossValue').textContent = `${Math.ceil(boss)}%`; $('bossMeter').setAttribute('aria-valuenow', Math.ceil(boss));
+  const course = state.time / state.chart.duration * 100;
+  updatePlayHUD(document, state);
   $('courseFill').style.height = `${course}%`; $('courseValue').textContent = `${Math.floor(course)}%`; $('courseMeter').setAttribute('aria-valuenow', Math.floor(course));
   $('healthFill').style.height = `${state.health / state.maxHealth * 100}%`; $('healthValue').textContent = Number(state.health.toFixed(1)); $('healthMeter').setAttribute('aria-valuenow', state.health); $('healthMeter').setAttribute('aria-valuemax', state.maxHealth); document.querySelector('.health').classList.toggle('low', state.health < state.maxHealth * .3);
-  $('comboValue').textContent = state.combo; $('powerValue').textContent = state.power;
-  const attack = state.chargedAttack, weapon = weaponForId(attack?.weapon);
-  $('weaponName').style.color = '#' + weapon.color.toString(16).padStart(6, '0');
-  $('weaponName').textContent = attack ? `${weapon.name} · ${attack.damage} × ${attack.shots}발` : '음표를 모아 에너지를 충전해요';
-  $('energyValue').textContent = state.energy;
-  $('energyFill').style.width = `${Math.min(100, state.energy / 30 * 100)}%`;
-  $('energyMeter').setAttribute('aria-valuenow', Math.min(30, state.energy));
-  $('energyMeter').setAttribute('aria-valuetext', `${state.energy}개 충전${attack ? ` · ${weapon.name}` : ''}`);
-  $('energyMeter').title = state.boss <= 0 ? '보스 격파 · 음표를 계속 모아요' : '위로 드래그하면 공격 · PC는 ↑ / F';
-  $('timeValue').textContent = `${formatTime(state.time)} / ${formatTime(state.chart.duration)}`;
-  const bonus = state.boss <= 0;
-  $('bossName').textContent = bonus ? 'HARMONY RESTORED · 구출 타임' : `${state.theme.name} · ${state.theme.bossName}`;
 }
 function handleEffects(effects) {
   for (const effect of effects) {
+    if (effect.type !== 'miss' || !effects.some(item => item.type === 'mine' && item.time === effect.time)) world.showPlayerFeedback(effect);
     if (effect.type === 'save') { world.burst(effect.lane, 0xb6f6d9); audio.sound('save'); }
-    if (effect.type === 'miss' && !effects.some(e => e.type === 'mine' && e.time === effect.time)) feedback('음표 놓침', true);
-    if (effect.type === 'attack') feedback(`${effect.reason === 'miss' ? '놓침 자동 발사 · ' : ''}${weaponForId(effect.weapon).name} · 피해 ${effect.damage}`, false);
     if (effect.type === 'missile') { world.shootMissiles(effect.projectiles); audio.sound('shot'); }
     if (effect.type === 'shot') { world.shoot(effect.lane, effect.weapon, effect.pellets, effect.projectiles); audio.sound('shot'); }
     if (effect.type === 'hit') world.impact(effect);
-    if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d, effect.point); audio.sound('mine'); damageUntil = performance.now() + 200; feedback(`체력 −${effect.damage} · 에너지 전부 소실`, true); }
+    if (effect.type === 'mine') { world.burst(effect.lane, 0xff789d, effect.point); audio.sound('mine'); damageUntil = performance.now() + 200; }
     if (effect.type === 'victory') { world.burst(2, 0xe0bcff); feedback('보스 격파 · RESCUE TIME!', false, 2300); }
   }
 }

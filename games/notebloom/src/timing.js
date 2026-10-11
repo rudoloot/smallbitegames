@@ -1,4 +1,4 @@
-import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=c74e9a5f09f9';
+import { terrainSlope, MAX_TERRAIN_SLOPE } from './terrain.js?v=6ea9da615282';
 
 // AudioContext.currentTime is the rendering clock, ahead of what the listener
 // hears. The output timestamp maps the device's audible frame to performance.now.
@@ -22,7 +22,7 @@ export const NOTE_SPEED = 42;
 export const NOTE_PREVIEW = 1;
 export const NOTE_CONTACT_HOLD = .05;
 export const MIN_NOTE_SPEED_FACTOR = .6;
-export const noteSpeed = slope => NOTE_SPEED * (1 + .4 * Math.max(-1, Math.min(1, slope / MAX_TERRAIN_SLOPE)));
+export const noteSpeed = slope => NOTE_SPEED * (1 - .4 * Math.max(-1, Math.min(1, slope / MAX_TERRAIN_SLOPE)));
 
 // Integrate speed from now to the measured beat. This changes travel speed and
 // preview duration without ever moving the audible judgment timestamp.

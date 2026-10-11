@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { bossColliders } from './themes.js?v=c74e9a5f09f9';
+import { bossColliders } from './themes.js?v=6ea9da615282';
 
 // Cut triangular armor and polygonal joints keep every silhouette angular.
 // The collision data supplies the armor bounds; reflections are shared by World.

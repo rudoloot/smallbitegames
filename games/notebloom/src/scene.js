@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch } from './terrain.js?v=c74e9a5f09f9';
-import { weaponForId, attackForEnergy } from './weapons.js?v=c74e9a5f09f9';
-import { buildWeaponModel } from './weapon-model.js?v=c74e9a5f09f9';
-import { bossPose, projectilePoint } from './projectiles.js?v=c74e9a5f09f9';
-import { COLLECTION_Z, visibleNotes } from './timing.js?v=c74e9a5f09f9';
-import { themeForChart } from './themes.js?v=c74e9a5f09f9';
-import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=c74e9a5f09f9';
+import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch, terrainScroll } from './terrain.js?v=6ea9da615282';
+import { weaponForId, attackForEnergy, chargeColorForWeapon } from './weapons.js?v=6ea9da615282';
+import { buildWeaponModel } from './weapon-model.js?v=6ea9da615282';
+import { bossPose, projectilePoint } from './projectiles.js?v=6ea9da615282';
+import { COLLECTION_Z, visibleNotes } from './timing.js?v=6ea9da615282';
+import { themeForChart } from './themes.js?v=6ea9da615282';
+import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=6ea9da615282';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -56,6 +56,7 @@ export class World {
     this.cylinderGeo = new THREE.CylinderGeometry(1, 1, 1, 10);
     this.notes = new Map(); this.effects = []; this.lastTime = 0;
     this.damageNumbers = []; this.damageSerial = 0; this.hitFlash = 0;
+    this.playerFeedback = [];
     this.damageLayer = document.createElement('div'); this.damageLayer.className = 'damage-numbers';
     this.damageLayer.setAttribute('aria-hidden', 'true'); container.appendChild(this.damageLayer);
     this.buildSky(); this.course = new THREE.Group(); this.scene.add(this.course); this.buildRoad(); this.buildGarden(); this.prepareEnvironment(); this.buildCharacter(); this.buildBoss();
@@ -124,6 +125,7 @@ export class World {
   }
   roadBox(mat, position, size) {
     const mesh = this.mesh(this.course, new THREE.BoxGeometry(...size, 1, 1, 120), mat, position);
+    mesh.userData.roadSurface = size[0] > .5;
     this.roadMeshes.push({ mesh, base: mesh.geometry.attributes.position.array.slice() });
     return mesh;
   }
@@ -248,18 +250,23 @@ export class World {
     this.auraGlowMaterial.transparent = true; this.auraGlowMaterial.depthWrite = false;
     this.auraGlowMaterial.uniforms.thickness.value = .055;
     this.auraGlowMaterial.uniforms.opacity.value = .18;
-    const body = [];
+    const body = []; this.auraMeshes = [];
     root.traverse(part => { if (part.isMesh) body.push(part); });
     for (const part of body) {
-      part.add(new THREE.Mesh(part.geometry, this.auraOutlineMaterial));
-      part.add(new THREE.Mesh(part.geometry, this.auraGlowMaterial));
+      for (const mat of [this.auraOutlineMaterial, this.auraGlowMaterial]) {
+        const outline = new THREE.Mesh(part.geometry, mat); outline.visible = false;
+        part.add(outline); this.auraMeshes.push(outline);
+      }
     }
     const shadow = new THREE.Mesh(new THREE.CircleGeometry(.5, 24), new THREE.MeshBasicMaterial({ color: 0x242a47, transparent: true, opacity: .3, depthWrite: false })); shadow.rotation.x = -Math.PI / 2; shadow.position.y = -.025; root.add(shadow);
     const auraMaterial = new THREE.MeshBasicMaterial({ color: COLORS.mint, toneMapped: false, transparent: true, opacity: .6, depthWrite: false });
     this.aura = this.mesh(root, new THREE.TorusGeometry(.53, .012, 5, 35), auraMaterial, [0, .01, 0]); this.aura.rotation.x = Math.PI / 2;
+    this.aura.visible = false;
   }
   updateCharacterAura(energy = 0) {
-    const attack = attackForEnergy(energy), color = attack ? weaponForId(attack.weapon).color : COLORS.mint;
+    const attack = attackForEnergy(energy), color = attack ? chargeColorForWeapon(attack.weapon) : COLORS.mint;
+    for (const mesh of this.auraMeshes) mesh.visible = energy > 0;
+    this.aura.visible = energy > 0;
     const strength = THREE.MathUtils.clamp(energy / 30, 0, 1);
     this.auraOutlineMaterial.uniforms.auraColor.value.setHex(color);
     this.auraOutlineMaterial.uniforms.thickness.value = .025 + strength * .012;
@@ -279,11 +286,13 @@ export class World {
       let ancestor = object;
       while (ancestor && ancestor.userData.rainbowHue === undefined) ancestor = ancestor.parent;
       const rainbowHue = ancestor?.userData.rainbowHue ?? RAINBOW_HUES[rainbowIndex++ % RAINBOW_HUES.length];
-      const key = `${original.uuid}:${rainbowHue}`;
+      const road = object.userData.roadSurface === true;
+      const key = `${original.uuid}:${rainbowHue}:${road}`;
       if (!clones.has(key)) {
         const copy = original.clone(), luminous = original.emissiveIntensity >= .2;
+        if (road) copy.fog = false;
         clones.set(key, copy);
-        this.environmentMaterials.push({ mat: copy, bright: new THREE.Color().setHSL(rainbowHue, .74, luminous ? .67 : .5), dark: new THREE.Color(), emissive: new THREE.Color().setHSL(rainbowHue, .68, .4), darkEmissive: new THREE.Color(), glow: original.emissiveIntensity, roughness: original.roughness, metalness: original.metalness, luminous });
+        this.environmentMaterials.push({ mat: copy, road, bright: new THREE.Color().setHSL(rainbowHue, road ? .95 : .74, road ? .16 : luminous ? .67 : .5), dark: new THREE.Color(), emissive: road ? new THREE.Color(0) : new THREE.Color().setHSL(rainbowHue, .68, .4), darkEmissive: new THREE.Color(), glow: road ? 0 : original.emissiveIntensity, roughness: road ? .9 : original.roughness, metalness: road ? .04 : original.metalness, luminous });
       }
       object.material = clones.get(key);
     });
@@ -483,14 +492,40 @@ export class World {
     this.damageNumbers.push({ label, age: 0, anchor: point ? new THREE.Vector3(point.x, point.y + 1, point.z) : this.boss.position.clone().add(new THREE.Vector3(0, 1.2, 0)), offset: (this.damageSerial++ % 3 - 1) * 22 });
     this.hitFlash = .14;
   }
+  showPlayerFeedback(effect) {
+    if (!['save', 'miss', 'mine'].includes(effect.type)) return;
+    const last = this.playerFeedback.at(-1);
+    if (last?.type === effect.type && last.age < .08) this.playerFeedback.pop().label.remove();
+    while (this.playerFeedback.length >= 3) this.playerFeedback.shift().label.remove();
+    const label = document.createElement('span');
+    label.className = `player-feedback ${effect.type}`;
+    label.textContent = effect.type === 'save' ? 'Good' : effect.type === 'miss' ? 'Bad' : `−${Number(effect.damage.toFixed(1))}`;
+    this.damageLayer.appendChild(label);
+    this.playerFeedback.push({label,age:0,x:this.character.position.x,type:effect.type});
+  }
+  updatePlayerFeedback(dt) {
+    for (let i = this.playerFeedback.length - 1; i >= 0; i--) {
+      const item = this.playerFeedback[i]; item.age += dt;
+      if (item.age >= .7) { item.label.remove(); this.playerFeedback.splice(i, 1); continue; }
+      const progress = item.age / .7, z = COLLECTION_Z - progress * 4.5;
+      const anchor = new THREE.Vector3(item.x, this.height(z) + 2.8 * CHARACTER_SCALE + progress * .7, z);
+      const projected = this.course.localToWorld(anchor).project(this.camera);
+      item.label.style.left = `${(projected.x * .5 + .5) * this.viewWidth}px`;
+      item.label.style.top = `${(-projected.y * .5 + .5) * this.container.clientHeight}px`;
+      item.label.style.opacity = Math.min(1, (1 - progress) / .35);
+      item.label.style.transform = `translate(-50%,-100%) scale(${1 - progress * .4})`;
+    }
+  }
   disposeEffect(mesh) {
     mesh.traverse(child => { if (child.isMesh) { child.geometry.dispose(); child.material.dispose(); } });
     mesh.removeFromParent();
   }
   weaponModel(id) { return buildWeaponModel(id, this.materials, { box: this.boxGeo, sphere: this.sphereGeo, cylinder: this.cylinderGeo }); }
   setGunLevel(id) {
+    this.gun.visible = Boolean(id);
     if (this.gunId === id) return;
     this.gunId = id;
+    if (!id) return;
     if (!this.gunModels.has(id)) { const model = this.weaponModel(id); this.gunModels.set(id, model); this.gun.add(model); }
     for (const [key, model] of this.gunModels) model.visible = key === id;
   }
@@ -502,6 +537,8 @@ export class World {
     this.effects = [];
     for (const number of this.damageNumbers) number.label.remove();
     this.damageNumbers = []; this.hitFlash = 0;
+    for (const item of this.playerFeedback) item.label.remove();
+    this.playerFeedback = [];
 
   }
   disposeObject(object) {
@@ -533,7 +570,8 @@ export class World {
     this.camera.lookAt(0, .8 + this.height(-28) * .23, -10);
     this.course.updateMatrixWorld(true);
     const moving = mode === 'playing' || mode === 'home';
-    const run = moving ? time * 12 * SCROLL_SPEED : 0;
+    const travel = active ? terrainScroll(state.chart.terrain, time) : time * 14;
+    const run = moving ? travel * 12 * SCROLL_SPEED / 14 : 0;
     const showHome = mode === 'home' || mode === 'loading';
     this.character.position.x += ((showHome ? .7 : playerX * 1.22) - this.character.position.x) * Math.min(1, dt * 22);
     this.character.position.z = showHome ? -6 : COLLECTION_Z;
@@ -547,18 +585,18 @@ export class World {
     this.updateCharacterAura(showHome ? 0 : state?.energy ?? 0);
     this.aura.scale.setScalar(1 + Math.sin(time * 5) * .04);
     this.gun.scale.setScalar(1.2);
-    this.setGunLevel(state?.weaponId || 'pistol');
+    this.setGunLevel(showHome ? 'pistol' : state?.weaponId ?? null);
     const rotor = this.gunModels.get(this.gunId)?.userData.rotor; if (rotor && moving) rotor.rotation.z += dt * 24;
     this.boss.visible = !state || state.boss > 0 || showHome;
     const bossPosition = bossPose(time, state?.bossMotion); this.boss.position.copy(this.trackPoint(bossPosition));
     this.boss.rotation.z = 0; this.bossCore.rotation.y = time; this.bossRing.rotation.z = time * .3;
     animateRobotBoss(this.bossModel, time);
     for (let i = 0; i < this.beatLines.length; i++) {
-      const line = this.beatLines[i]; line.position.z = 9 - ((i * 3 + 80 - time * 7 * SCROLL_SPEED % 78) % 78);
+      const line = this.beatLines[i]; line.position.z = 9 - ((i * 3 + 80 - travel * 7 * SCROLL_SPEED / 14 % 78) % 78);
       line.position.y = this.height(line.position.z) + .007; line.rotation.x = roadPitch(this.trackProfile, line.position.z);
     }
     for (let i = 0; i < this.garden.length; i++) {
-      const garden = this.garden[i]; garden.position.z = 13 - ((i * 3.1 + 105 - time * 3 * SCROLL_SPEED % 99.2) % 99.2);
+      const garden = this.garden[i]; garden.position.z = 13 - ((i * 3.1 + 105 - travel * 3 * SCROLL_SPEED / 14 % 99.2) % 99.2);
       garden.position.y = this.height(garden.position.z) - .25;
     }
     for (let i = 0; i < this.dust.length; i++) { this.dust[i].position.y += Math.sin(elapsed + i) * dt * .12; this.dust[i].rotation.y += dt; }
@@ -606,6 +644,7 @@ export class World {
       }
     }
     const effectDt = mode === 'paused' ? 0 : dt;
+    this.updatePlayerFeedback(effectDt);
     this.hitFlash = Math.max(0, this.hitFlash - effectDt);
     this.bossCore.scale.setScalar(this.hitFlash > 0 ? 1.3 : 1);
     for (let i = this.damageNumbers.length - 1; i >= 0; i--) {
