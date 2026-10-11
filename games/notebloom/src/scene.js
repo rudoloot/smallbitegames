@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch, terrainScroll } from './terrain.js?v=bfcd02c91886';
-import { weaponForId, attackForEnergy, chargeColorForWeapon } from './weapons.js?v=bfcd02c91886';
-import { buildWeaponModel } from './weapon-model.js?v=bfcd02c91886';
-import { bossPose, projectilePoint } from './projectiles.js?v=bfcd02c91886';
-import { COLLECTION_Z, visibleNotes } from './timing.js?v=bfcd02c91886';
-import { themeForChart } from './themes.js?v=bfcd02c91886';
-import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=bfcd02c91886';
-import { advanceFireworkSpark, fireworkLifetime } from './fireworks.js?v=bfcd02c91886';
-import { bossRotation, bossWeakPointAt } from './boss-rotation.js?v=bfcd02c91886';
+import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch, terrainScroll, ROAD_SCROLL_FACTOR } from './terrain.js?v=015e650e9f5e';
+import { weaponForId, attackForEnergy, chargeColorForWeapon } from './weapons.js?v=015e650e9f5e';
+import { buildWeaponModel } from './weapon-model.js?v=015e650e9f5e';
+import { bossPose, projectilePoint } from './projectiles.js?v=015e650e9f5e';
+import { COLLECTION_Z, visibleNotes } from './timing.js?v=015e650e9f5e';
+import { themeForChart } from './themes.js?v=015e650e9f5e';
+import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=015e650e9f5e';
+import { advanceFirework, fireworkForwardDistance, fireworkLifetime } from './fireworks.js?v=015e650e9f5e';
+import { bossRotation, bossWeakPointAt, bossShieldAt, BOSS_SHIELD_RADIUS } from './boss-rotation.js?v=015e650e9f5e';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -65,6 +65,8 @@ export class World {
     this.weakPointMarker = document.createElement('div'); this.weakPointMarker.className = 'weak-point hidden';
     const weakCircle = document.createElement('i'), weakLabel = document.createElement('strong');
     weakLabel.textContent = 'Week Point'; this.weakPointMarker.append(weakCircle, weakLabel); this.damageLayer.append(this.weakPointMarker);
+    this.shieldLabel = document.createElement('strong'); this.shieldLabel.className = 'shield-label hidden';
+    this.shieldLabel.textContent = 'Shield'; this.damageLayer.append(this.shieldLabel);
     this.buildSky(); this.course = new THREE.Group(); this.scene.add(this.course); this.buildRoad(); this.buildGarden(); this.prepareEnvironment(); this.buildCharacter(); this.buildBoss();
     this.resizeObserver = new ResizeObserver(() => this.resize()); this.resizeObserver.observe(container);
     this.resize();
@@ -385,6 +387,11 @@ export class World {
   }
   buildBoss() {
     const boss = new THREE.Group(); this.boss = boss; boss.position.set(0, 1.05, -52); this.course.add(boss);
+    this.bossShield = new THREE.Group(); this.bossShield.visible = false; this.course.add(this.bossShield);
+    const shieldMaterial = new THREE.MeshBasicMaterial({ color: 0x6cddff, transparent: true, opacity: .09, depthWrite: false, fog: false, toneMapped: false });
+    this.mesh(this.bossShield, new THREE.SphereGeometry(BOSS_SHIELD_RADIUS, 32, 20), shieldMaterial);
+    const rimMaterial = new THREE.MeshBasicMaterial({ color: 0x96edff, transparent: true, opacity: .85, depthWrite: false, fog: false, toneMapped: false });
+    this.mesh(this.bossShield, new THREE.TorusGeometry(BOSS_SHIELD_RADIUS, .04, 8, 64), rimMaterial);
     this.bossModels = new Map(); this.setBossTheme(themeForChart());
   }
   setBossTheme(theme) {
@@ -454,7 +461,10 @@ export class World {
       const effect = this.effects[i];
       if (effect.projectile?.id === hit.id) { this.disposeEffect(effect.mesh); this.effects.splice(i, 1); }
     }
+    if (hit.shielded) { this.shieldImpact(hit); return; }
     const point = hit.point, color = weaponForId(hit.weapon).color, missile = hit.weapon === 'missile';
+    const impactScale = .35;
+    const firstEffect = this.effects.length;
     const mat = tint => new THREE.MeshBasicMaterial({ color: tint, transparent: true, depthWrite: false, toneMapped: false, fog: false, blending: THREE.AdditiveBlending });
     const add = (geometry, tint, offset, life, expand, velocity = new THREE.Vector3(), scale) => {
       const mesh = this.mesh(this.course, geometry, mat(tint), [point.x + offset[0], point.y + offset[1], point.z + offset[2]], scale);
@@ -491,9 +501,30 @@ export class World {
       if (hit.weapon === 'machine') mesh.scale.set(.5, .5, 3);
       this.effects[this.effects.length - 1].gravity = missile ? 5 : 0;
     }
+    // Shrink the entire impact: flash, wave, spacing and flying debris together.
+    for (const effect of this.effects.slice(firstEffect)) {
+      effect.position.set(point.x, point.y, point.z).addScaledVector(effect.mesh.position.clone().sub(new THREE.Vector3(point.x, point.y, point.z)), impactScale);
+      effect.mesh.position.copy(effect.position); effect.mesh.scale.multiplyScalar(impactScale);
+      effect.baseScale.copy(effect.mesh.scale); effect.velocity.multiplyScalar(impactScale);
+      if (effect.gravity) effect.gravity *= impactScale;
+    }
     const displayDamage = hit.weakPoint ? hit.baseDamage : hit.damage;
-    if (displayDamage > 0) this.showDamage(displayDamage, point);
+    if (displayDamage > 0) this.showDamage(displayDamage, point, hit.shielded);
     if (missile) this.hitFlash = .35;
+  }
+  shieldImpact(hit) {
+    const point = new THREE.Vector3(hit.point.x, hit.point.y, hit.point.z);
+    const normal = hit.point.normal ? new THREE.Vector3(hit.point.normal.x, hit.point.normal.y, hit.point.normal.z) : new THREE.Vector3(0, 0, 1);
+    const add = (geometry, color, life, expand, offset) => {
+      const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .85, depthWrite: false, toneMapped: false, fog: false, blending: THREE.AdditiveBlending });
+      const mesh = this.mesh(this.course, geometry, material, point.clone().addScaledVector(normal, offset).toArray());
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+      this.effects.push({ mesh, position: mesh.position.clone(), baseScale: mesh.scale.clone(), velocity: new THREE.Vector3(), age: 0, life, expand, opacity: .85, shieldWave: true });
+    };
+    add(new THREE.SphereGeometry(.065, 8, 6), 0xb9f3ff, .14, 1, .035);
+    add(new THREE.TorusGeometry(.13, .012, 6, 32), 0x49baff, .42, 7, .025);
+    add(new THREE.TorusGeometry(.09, .009, 6, 32), 0x80dfff, .32, 6, .03);
+    if (hit.damage > 0) this.showDamage(hit.damage, hit.point, true);
   }
   updateImpacts(dt) {
     for (let i = (this.pendingImpacts?.length ?? 0) - 1; i >= 0; i--) {
@@ -504,24 +535,24 @@ export class World {
   get hasPendingFinishEffects() {
     return Boolean(this.pendingImpacts?.length || this.effects.some(effect => effect.firework));
   }
-  showDamage(damage, point) {
+  showDamage(damage, point, shielded = false) {
     while (this.damageNumbers.length >= 4) this.damageNumbers.shift().label.remove();
-    const label = document.createElement('span'); label.className = 'boss-damage';
+    const label = document.createElement('span'); label.className = shielded ? 'boss-damage shielded' : 'boss-damage';
     label.textContent = `−${Number(damage.toFixed(1)).toLocaleString()}`;
     this.damageLayer.appendChild(label);
     this.damageNumbers.push({ label, age: 0, anchor: point ? new THREE.Vector3(point.x, point.y + 1, point.z) : this.boss.position.clone().add(new THREE.Vector3(0, 1.2, 0)), offset: (this.damageSerial++ % 3 - 1) * 22 });
-    this.hitFlash = .14;
+    if (!shielded) this.hitFlash = .14;
   }
   fireworkTarget(point) {
     const target = this.trackPoint(point);
     // Keep the burst in the sky visible below the top HUD on steep roads too.
     const projected = target.clone().project(this.camera);
     projected.x = THREE.MathUtils.clamp(projected.x,-.65,.65);
-    projected.y = THREE.MathUtils.clamp(projected.y,.02,.32);
+    projected.y = THREE.MathUtils.clamp(projected.y,.08,.38);
     const ray = projected.unproject(this.camera).sub(this.camera.position);
     // Keep the burst at the boss's depth when adjusting its screen position.
     target.copy(this.camera.position).addScaledVector(ray, (point.z - this.camera.position.z) / ray.z);
-    target.y = Math.max(target.y,this.height(target.z)+2);
+    target.y = Math.max(target.y,this.height(target.z)+4);
     return target;
   }
   celebrationPoint(projectile,time) {
@@ -535,27 +566,31 @@ export class World {
     for (let i = this.effects.length-1;i>=0;i--) {
       if (this.effects[i].projectile?.id === hit.id) { this.disposeEffect(this.effects[i].mesh); this.effects.splice(i,1); }
     }
-    const center = this.fireworkTarget(hit.point), big = hit.weapon === 'missile';
+    const center = this.fireworkTarget(hit.point), big = hit.weapon === 'missile', burstScale = 2;
     const colors = [0xff4455,0xffb72a,0xffed5c,0x53ff9c,0x40cfff,0x9773ff,0xff65d4];
-    const count = big ? 112 : hit.weapon === 'machine' ? 14 : 20;
+    const count = big ? 224 : hit.weapon === 'machine' ? 28 : 40;
     for (let i=0;i<count;i++) {
       const y = 1-2*(i+.5)/count, angle = i*2.399963, radius = Math.sqrt(1-y*y), speed = big ? 10+i%5 : 4+i%4*.8;
       const velocity = new THREE.Vector3(Math.cos(angle)*radius,y,Math.sin(angle)*radius).multiplyScalar(speed);
       // Some sparks fall onto the narrow road even from the distant sky.
       if (i % 6 === 0) velocity.set((i % 3 - 1) * .15, -speed * .5, 3);
+      velocity.multiplyScalar(burstScale);
       const mat = new THREE.MeshBasicMaterial({color:colors[i%colors.length],toneMapped:false,fog:false,transparent:true,depthWrite:false});
-      const mesh = this.mesh(this.course,new THREE.SphereGeometry(big ? .16 : .1,6,4),mat,center.toArray(),[1,1,big ? 4 : 2.5]);
-      this.effects.push({mesh,position:center.clone(),velocity,gravity:big ? 15 : 12,age:0,life:fireworkLifetime(hit.weapon),worldSpace:true,firework:true,fireworkSpark:true,bounce:i%3!==2});
+      const mesh = this.mesh(this.course,new THREE.SphereGeometry(big ? .16 : .1,6,4),mat,center.toArray(),[.65,.65,big ? 4 : 2.5]);
+      mesh.scale.multiplyScalar(burstScale);
+      this.effects.push({mesh,position:center.clone(),velocity,gravity:(big ? 15 : 12)*burstScale,age:0,life:fireworkLifetime(hit.weapon),worldSpace:true,firework:true,fireworkSpark:true,scrollTime:hit.time,bounce:i%3!==2});
     }
     for (let i=0;i<(big?3:1);i++) {
       const mat = new THREE.MeshBasicMaterial({color:colors[(hit.id+i)%colors.length],toneMapped:false,fog:false,transparent:true,depthWrite:false});
-      const mesh = this.mesh(this.course,new THREE.TorusGeometry(big ? .6 : .16,big ? .035 : .015,6,48),mat,center.toArray());
+      const mesh = this.mesh(this.course,new THREE.TorusGeometry(big ? .6 : .16,big ? .023 : .01,6,48),mat,center.toArray());
+      mesh.scale.setScalar(burstScale);
       mesh.rotation.set(i*.7,i*.9,0);
-      this.effects.push({mesh,position:center.clone(),velocity:new THREE.Vector3(),age:0,life:big ? .65 : .35,expand:big ? 10 : 8,baseScale:mesh.scale.clone(),worldSpace:true,firework:true});
+      this.effects.push({mesh,position:center.clone(),velocity:new THREE.Vector3(),age:0,life:big ? .65 : .35,expand:big ? 10 : 8,baseScale:mesh.scale.clone(),worldSpace:true,firework:true,scrollTime:hit.time});
     }
     const flashMat = new THREE.MeshBasicMaterial({color:big ? 0xffdf71 : 0xfff7cb,toneMapped:false,fog:false,transparent:true,depthWrite:false});
     const flash = this.mesh(this.course,new THREE.SphereGeometry(big ? .45 : .12,12,8),flashMat,center.toArray());
-    this.effects.push({mesh:flash,position:center.clone(),velocity:new THREE.Vector3(),age:0,life:.22,expand:big ? 12 : 6,baseScale:flash.scale.clone(),worldSpace:true,firework:true});
+    flash.scale.setScalar(burstScale);
+    this.effects.push({mesh:flash,position:center.clone(),velocity:new THREE.Vector3(),age:0,life:.22,expand:big ? 12 : 6,baseScale:flash.scale.clone(),worldSpace:true,firework:true,scrollTime:hit.time});
   }
   showPlayerFeedback(effect) {
     if (!['save', 'miss', 'mine'].includes(effect.type)) return;
@@ -602,6 +637,8 @@ export class World {
     this.effects = [];
     this.pendingImpacts = [];
     this.weakPointMarker?.classList.add('hidden');
+    this.shieldLabel?.classList.add('hidden');
+    if (this.bossShield) this.bossShield.visible = false;
     for (const number of this.damageNumbers) number.label.remove();
     this.damageNumbers = []; this.hitFlash = 0;
     for (const item of this.playerFeedback) item.label.remove();
@@ -659,6 +696,16 @@ export class World {
     this.boss.rotation.y = bossRotation(time);
     this.boss.rotation.z = 0; this.bossCore.rotation.y = time; this.bossRing.rotation.z = time * .3;
     const weakPoint = active && state.boss > 0 && bossWeakPointAt(time);
+    const shielded = active && state.boss > 0 && bossShieldAt(time);
+    this.bossShield.visible = shielded;
+    this.shieldLabel.classList.toggle('hidden', !shielded);
+    if (shielded) {
+      this.bossShield.position.copy(this.boss.position); this.bossShield.lookAt(this.camera.position);
+      this.bossShield.children[0].material.opacity = .09 + Math.sin(time * 2) * .012;
+      const labelPoint = this.boss.position.clone().add(new THREE.Vector3(0, -3.5, .1)).project(this.camera);
+      this.shieldLabel.style.left = `${(labelPoint.x * .5 + .5) * this.viewWidth}px`;
+      this.shieldLabel.style.top = `${(-labelPoint.y * .5 + .5) * this.container.clientHeight}px`;
+    }
     this.weakPointMarker.classList.toggle('hidden', !weakPoint);
     this.bossModel.userData.weakCore.material.emissiveIntensity = weakPoint ? 2 : .15;
     if (weakPoint) {
@@ -669,7 +716,7 @@ export class World {
     }
     animateRobotBoss(this.bossModel, time);
     for (let i = 0; i < this.beatLines.length; i++) {
-      const line = this.beatLines[i]; line.position.z = 9 - ((i * 3 + 80 - travel * 7 * SCROLL_SPEED / 14 % 78) % 78);
+      const line = this.beatLines[i]; line.position.z = 9 - ((i * 3 + 80 - travel * ROAD_SCROLL_FACTOR % 78) % 78);
       line.position.y = this.height(line.position.z) + .007; line.rotation.x = roadPitch(this.trackProfile, line.position.z);
     }
     for (let i = 0; i < this.garden.length; i++) {
@@ -681,7 +728,7 @@ export class World {
     for (const mat of this.attackFloors) mat.emissiveIntensity = state?.attackWindow && state.boss > 0 ? pulse + .25 : .08;
     const visible = new Set();
     if (active) {
-      for (const { event, z, scale } of visibleNotes(state.chart.events, time, state.chart.terrain, true)) {
+      for (const { event, z, scale } of visibleNotes(state.chart.events, time, state.chart.terrain, true, state.chart.scrollSpeed ?? 1)) {
         if (event.type === 'mine' && state.boss <= 0) continue;
         visible.add(event.id);
         let mesh = this.notes.get(event.id);
@@ -715,9 +762,11 @@ export class World {
       else {
         const effectDt = mode === 'paused' ? 0 : dt;
         e.position ??= e.mesh.position.clone();
-        if (e.fireworkSpark) {
-          advanceFireworkSpark(e,effectDt,z=>this.height(z));
-          if (e.velocity.lengthSq()>0) e.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),e.velocity.clone().normalize());
+        if (e.firework) {
+          const forwardDistance = mode === 'playing' && effectDt > 0 ? fireworkForwardDistance(state?.chart.terrain, e.scrollTime ?? time, time) : 0;
+          advanceFirework(e,effectDt,z=>this.height(z),forwardDistance);
+          e.scrollTime = time;
+          if (e.fireworkSpark && e.velocity.lengthSq()>0) e.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),e.velocity.clone().normalize());
         }
         else e.position.addScaledVector(e.velocity, effectDt);
         e.mesh.position.copy(e.worldSpace ? e.position : this.trackPoint(e.position));

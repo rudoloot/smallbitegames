@@ -66,6 +66,7 @@ export function terrainSlope(profile, time) {
 
 const scrollCache = new WeakMap();
 export const terrainScrollSpeed = slope => 14 * (1 - .5 * Math.max(-1, Math.min(1, slope / MAX_TERRAIN_SLOPE)));
+export const ROAD_SCROLL_FACTOR = 1.5;
 // Integrate the scroll rather than multiplying song time by the current speed:
 // this keeps the track continuous when the music changes from climb to drop.
 export function terrainScroll(profile, time) {

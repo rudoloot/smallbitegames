@@ -1,10 +1,10 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=bfcd02c91886';
-import { weaponForId, attackForEnergy } from './weapons.js?v=bfcd02c91886';
-import { projectileSpeed, projectilePoint, intersectBoss, bossPose, advanceMissile } from './projectiles.js?v=bfcd02c91886';
-import { themeForChart } from './themes.js?v=bfcd02c91886';
-import { estimateBossHealth } from './balance.js?v=bfcd02c91886';
-import { bossWeakPointAt } from './boss-rotation.js?v=bfcd02c91886';
-import { fireworkLifetime } from './fireworks.js?v=bfcd02c91886';
+import { clamp, seededRandom, RULES } from './engine.js?v=015e650e9f5e';
+import { weaponForId, attackForEnergy } from './weapons.js?v=015e650e9f5e';
+import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=015e650e9f5e';
+import { themeForChart } from './themes.js?v=015e650e9f5e';
+import { estimateBossHealth } from './balance.js?v=015e650e9f5e';
+import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=015e650e9f5e';
+import { fireworkLifetime } from './fireworks.js?v=015e650e9f5e';
 
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
@@ -39,7 +39,7 @@ function addInterludeMines(events, beat, duration, seed) {
     }
   });
 }
-export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) {
+export function makeChart(duration, analysis, difficulty = 'hard', seed = 42) {
   const random = seededRandom(seed), beat = analysis.beat || .5, events = [];
   const start = Math.ceil(3.5 / beat) * beat + (analysis.offset || 0);
   const times = Array.isArray(analysis.beatTimes) ? analysis.beatTimes.filter(t => t >= 3.5 && t <= duration - 1)
@@ -55,9 +55,17 @@ export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) 
     }
   });
   addInterludeMines(events, beat, duration, seed);
+  if (difficulty === 'easy') {
+    // Remove whole alternate gates, preserving each retained gate's safe lane.
+    const rows = [...new Set(events.filter(event => event.pattern).map(event => event.time))].sort((a, b) => a - b);
+    const removed = new Set(rows.filter((_, index) => index % 2 === 0));
+    for (let i = events.length - 1; i >= 0; i--) {
+      if (events[i].pattern && removed.has(events[i].time)) events.splice(i, 1);
+    }
+  }
   events.sort((a, b) => a.time - b.time || (a.type === 'note' ? 0 : 1) - (b.type === 'note' ? 0 : 1) || a.lane - b.lane);
   events.forEach((event, id) => { event.id = id; });
-  const chart = { duration, events, beat, seed, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm,
+  const chart = { duration, events, beat, seed, difficulty, scrollSpeed: difficulty === 'easy' ? .75 : 1, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm,
     themeId: themeForChart({ mood: analysis.mood }).id,
     sections: [], noteCount: events.filter(event => event.type === 'note').length };
   chart.balance = estimateBossHealth(chart);
@@ -66,7 +74,7 @@ export function makeChart(duration, analysis, difficulty = 'normal', seed = 42) 
 }
 
 export class GameState {
-  constructor(chart, difficulty = 'normal', { physicsHz = 120 } = {}) {
+  constructor(chart, difficulty = chart.difficulty ?? 'hard', { physicsHz = 120 } = {}) {
     this.chart = chart; this.rules = RULES[difficulty]; this.theme = themeForChart(chart);
     this.maxHealth = 100; this.health = this.maxHealth;
     this.time = 0; this.boss = chart.bossMax; this.saved = 0; this.score = 0; this.missed = 0; this.hits = 0;
@@ -90,7 +98,7 @@ export class GameState {
   }
   launchShot(shot) {
     const weapon = shot.weapon, target = shot.celebration
-      ? {x:weapon === 'missile' ? 0 : (shot.number % 5 - 2) * .7, y:weapon === 'missile' ? 8 : 6, z:-52 - shot.number % 3 * 2}
+      ? {x:weapon === 'missile' ? 0 : (shot.number % 5 - 2) * .7, y:weapon === 'missile' ? 10 : 8, z:-52 - shot.number % 3 * 2}
       : bossPose();
     const x = shot.x + (weapon === 'dual' ? shot.number % 2 ? -.22 : .22 : .22), y = .8, z = 2.65;
     const length = Math.hypot(target.x - x, target.y - y, target.z - z);
@@ -179,14 +187,16 @@ export class GameState {
           }
           const from = projectilePoint(projectile, projectile.checkedAt);
           if (projectile.weapon === 'missile') advanceMissile(projectile, tick, bossPose());
-          const point = this.boss > 0 ? intersectBoss(projectile, projectile.checkedAt, tick, bossPose, from, this.theme.boss) : null;
+          const shieldPoint = this.boss > 0 ? intersectShield(projectile, projectile.checkedAt, tick, bossPose, from) : null;
+          const shielded = Boolean(shieldPoint && bossShieldAt(shieldPoint.time));
+          const point = shielded ? shieldPoint : this.boss > 0 ? intersectBoss(projectile, projectile.checkedAt, tick, bossPose, from, this.theme.boss) : null;
           projectile.checkedAt = tick;
           if (point) {
             const weakPoint = bossWeakPointAt(point.time);
-            const baseDamage = Math.min(this.boss, projectile.damage);
+            const baseDamage = Math.min(this.boss, shielded ? Math.floor(projectile.damage / 3) : projectile.damage);
             const bonusDamage = weakPoint ? Math.min(this.boss - baseDamage, projectile.damage) : 0;
             const damage = baseDamage + bonusDamage; this.boss -= damage; this.lastHit = tick;
-            effects.push({ type: 'hit', id: projectile.id, weapon: projectile.weapon, damage, baseDamage, bonusDamage, weakPoint, point, time: tick });
+            effects.push({ type: 'hit', id: projectile.id, weapon: projectile.weapon, damage, baseDamage, bonusDamage, weakPoint, shielded, point, time: tick });
             this.endEffectsUntil = Math.max(this.endEffectsUntil, tick + .65);
             if (this.boss === 0) { this.defeatedAt = tick; this.pendingShots = []; effects.push({ type: 'victory', time: tick }); }
             return false;

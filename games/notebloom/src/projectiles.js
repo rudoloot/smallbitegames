@@ -1,6 +1,6 @@
-import { bossColliders } from './themes.js?v=bfcd02c91886';
-import { FLIGHT_SPEED } from './flight.js?v=bfcd02c91886';
-import { bossLocalPoint } from './boss-rotation.js?v=bfcd02c91886';
+import { bossColliders } from './themes.js?v=015e650e9f5e';
+import { FLIGHT_SPEED } from './flight.js?v=015e650e9f5e';
+import { bossLocalPoint, BOSS_SHIELD_RADIUS } from './boss-rotation.js?v=015e650e9f5e';
 // Shared world-space geometry for simulation and rendering.
 export function bossPose() {
   return { x: 0, y: 1.05, z: -52 };
@@ -34,6 +34,27 @@ export function advanceMissile(projectile, time, target) {
   const distance = Math.hypot(dx, dy, dz), step = Math.min(distance, dt * FLIGHT_SPEED);
   if (distance > 0) projectile.position = { x: point.x + dx / distance * step, y: point.y + dy / distance * step, z: point.z + dz / distance * step };
 }
+// Stop at the shield's outer surface, with a normal for the spreading ripple.
+export function intersectShield(projectile, fromTime, toTime, pose = bossPose, fromPoint) {
+  const from = fromPoint ?? projectilePoint(projectile, fromTime), to = projectilePoint(projectile, toTime);
+  const center = pose(fromTime), endCenter = pose(toTime);
+  const axes = ['x', 'y', 'z'];
+  const p = axes.map(axis => from[axis] - center[axis]);
+  const delta = axes.map((axis, i) => to[axis] - endCenter[axis] - p[i]);
+  const radius = BOSS_SHIELD_RADIUS + projectileRadius(projectile.weapon);
+  const a = delta.reduce((sum, value) => sum + value * value, 0);
+  const b = 2 * p.reduce((sum, value, i) => sum + value * delta[i], 0);
+  const c = p.reduce((sum, value) => sum + value * value, 0) - radius * radius;
+  const discriminant = b * b - 4 * a * c;
+  let fraction = c <= 0 ? 0 : a > 0 && discriminant >= 0 ? (-b - Math.sqrt(discriminant)) / (2 * a) : Infinity;
+  if (fraction < 0 || fraction > 1) return null;
+  const time = fromTime + (toTime - fromTime) * fraction, contactCenter = pose(time);
+  const relative = p.map((value, i) => value + delta[i] * fraction);
+  const length = Math.hypot(...relative) || 1;
+  const normal = Object.fromEntries(axes.map((axis, i) => [axis, relative[i] / length]));
+  return { ...Object.fromEntries(axes.map(axis => [axis, contactCenter[axis] + normal[axis] * BOSS_SHIELD_RADIUS])), time, normal };
+}
+
 // Swept ellipsoid intersection includes boss motion and avoids tunnelling at low FPS.
 export function intersectBoss(projectile, fromTime, toTime, pose = bossPose, fromPoint, kind = 'bird') {
   const from = fromPoint ?? projectilePoint(projectile, fromTime), to = projectilePoint(projectile, toTime);

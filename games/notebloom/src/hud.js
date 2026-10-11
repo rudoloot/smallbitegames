@@ -1,4 +1,4 @@
-import { weaponForId, chargeColorForWeapon } from './weapons.js?v=bfcd02c91886';
+import { weaponForId, chargeColorForWeapon } from './weapons.js?v=015e650e9f5e';
 
 const pistol = '<path d="M4 8h21v7H15l-2 10H7l2-10H4z"/><path d="M16 15v5h-3"/>';
 const icons = {
