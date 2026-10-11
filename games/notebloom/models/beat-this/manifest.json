@@ -1,0 +1,18 @@
+{
+  "model": "Beat This! small0",
+  "upstream": "https://github.com/CPJKU/beat_this",
+  "checkpoint": "https://cloud.cp.jku.at/public.php/dav/files/7ik4RrBKTS273gp/small0.ckpt",
+  "license": "MIT",
+  "exporter": "beat-this 1.1.0 / torch 2.8.0 / ONNX opset 17",
+  "bytes": 10555596,
+  "sha256": "bf40db19b4e4491627b349caf1c3424a43884d2537bcdb015dd4d3f2d5925026",
+  "sampleRate": 22050,
+  "fft": 1024,
+  "hop": 441,
+  "mels": 128,
+  "onnxMaxAbsoluteLogitError": {
+    "205": 3.337860107421875e-06,
+    "512": 3.814697265625e-06,
+    "1500": 3.814697265625e-06
+  }
+}

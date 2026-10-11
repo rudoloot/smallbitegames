@@ -1,11 +1,12 @@
-import { TRACKS, MusicPlayer } from './music.js?v=65c6e7f65907';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=65c6e7f65907';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=65c6e7f65907';
-import { World } from './scene.js?v=65c6e7f65907';
-import { exitGame } from './launch.js?v=65c6e7f65907';
-import { setupFullscreen } from './fullscreen.js?v=65c6e7f65907';
-import { beginGesture, updateGesture } from './gesture.js?v=65c6e7f65907';
-import { updatePlayHUD } from './hud.js?v=65c6e7f65907';
+import { TRACKS, MusicPlayer } from './music.js?v=7fcc13f571c6';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=7fcc13f571c6';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=7fcc13f571c6';
+import { World } from './scene.js?v=7fcc13f571c6';
+import { exitGame } from './launch.js?v=7fcc13f571c6';
+import { setupFullscreen } from './fullscreen.js?v=7fcc13f571c6';
+import { beginGesture, updateGesture } from './gesture.js?v=7fcc13f571c6';
+import { updatePlayHUD } from './hud.js?v=7fcc13f571c6';
+import { loadRhythm } from './rhythm-loader.js?v=7fcc13f571c6';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -102,7 +103,20 @@ async function start() {
     // Allow the loading text to paint before the bounded analysis work.
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     let analysis = analyses.get(selected.id);
-    if (!analysis) { analysis = analyzeSamples(buffer.getChannelData(0), buffer.sampleRate); analyses.set(selected.id, analysis); }
+    if (!analysis) {
+      const rhythm = await loadRhythm(selected, buffer.duration, text => { $('loadingText').textContent = text; }, buffer);
+      // Stereo mix for terrain/theme too: do not discard right-channel attacks.
+      const samples = buffer.getChannelData(0).slice();
+      if (buffer.numberOfChannels > 1) {
+        for (let channel = 1; channel < buffer.numberOfChannels; channel++) {
+          const values = buffer.getChannelData(channel);
+          for (let i = 0; i < samples.length; i++) samples[i] += values[i];
+        }
+        for (let i = 0; i < samples.length; i++) samples[i] /= buffer.numberOfChannels;
+      }
+      analysis = { ...analyzeSamples(samples, buffer.sampleRate), rhythm };
+      analyses.set(selected.id, analysis);
+    }
     const seed = ([...selected.id].reduce((n, c) => n * 31 + c.charCodeAt(0) >>> 0, 7) ^ Math.floor(Math.random() * 0x100000000)) >>> 0;
     state = new GameState(makeChart(buffer.duration, analysis, difficulty, seed), difficulty);
     playerX = -.5; feedbackUntil = 0; damageUntil = 0; world.clearGameObjects();

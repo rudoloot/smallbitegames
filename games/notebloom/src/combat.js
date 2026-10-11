@@ -1,10 +1,11 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=65c6e7f65907';
-import { weaponForId, attackForEnergy } from './weapons.js?v=65c6e7f65907';
-import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=65c6e7f65907';
-import { themeForChart } from './themes.js?v=65c6e7f65907';
-import { estimateBossHealth } from './balance.js?v=65c6e7f65907';
-import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=65c6e7f65907';
-import { fireworkLifetime } from './fireworks.js?v=65c6e7f65907';
+import { clamp, seededRandom, RULES } from './engine.js?v=7fcc13f571c6';
+import { weaponForId, attackForEnergy } from './weapons.js?v=7fcc13f571c6';
+import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=7fcc13f571c6';
+import { themeForChart } from './themes.js?v=7fcc13f571c6';
+import { estimateBossHealth } from './balance.js?v=7fcc13f571c6';
+import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=7fcc13f571c6';
+import { fireworkLifetime } from './fireworks.js?v=7fcc13f571c6';
+import { selectRhythmNotes } from './rhythm.js?v=7fcc13f571c6';
 
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
@@ -14,16 +15,19 @@ const MINE_PATTERNS = [
   { name: 'zigzag', lanes: [1, 2, 1, 0, 1, 2, 3, 2] },
   { name: 'stairs', lanes: [0, 0, 1, 1, 2, 2, 3, 3, 2, 2, 1, 1] },
 ];
-function addInterludeMines(events, beat, duration, seed) {
+function addInterludeMines(events, beat, duration, seed, rhythm) {
   const notes = events.filter(event => event.type === 'note');
   const random = seededRandom(seed ^ 0x6d696e65);
   notes.forEach((note, index) => {
     const next = notes[index + 1] ?? { time: duration - 1, lane: note.lane };
     const gap = next.time - note.time;
+    const section = rhythm?.sections.find(section => note.time >= section.start && note.time < section.end);
+    // Preserve melody rests. Long gaps no longer become a wall of obstacles.
+    if (rhythm && (gap > 2 || (section?.mode === 'melody' && gap > 1.1))) return;
     // Avoid squeezing an extra dodge into tightly packed notes. Longer breaks
     // get a sequence of gates; every gate leaves one reachable safe lane.
     if (gap < .48) return;
-    const count = Math.max(1, Math.floor(gap / Math.max(.3, Math.min(.5, beat))) - 1);
+    const count = rhythm ? 1 : Math.max(1, Math.floor(gap / Math.max(.3, Math.min(.5, beat))) - 1);
     const pattern = MINE_PATTERNS[Math.floor(random() * MINE_PATTERNS.length)];
     const phase = Math.floor(random() * pattern.lanes.length);
     let safeLane = note.lane;
@@ -60,7 +64,8 @@ function thinEasyMines(events, seed) {
 export function makeChart(duration, analysis, difficulty = 'easy', seed = 42) {
   const random = seededRandom(seed), beat = analysis.beat || .5, events = [];
   const start = Math.ceil(3.5 / beat) * beat + (analysis.offset || 0);
-  const times = Array.isArray(analysis.beatTimes) ? analysis.beatTimes.filter(t => t >= 3.5 && t <= duration - 1)
+  const measured = analysis.rhythm ? selectRhythmNotes(analysis.rhythm, difficulty) : analysis.beatTimes;
+  const times = Array.isArray(measured) ? measured.filter(t => t >= 3.5 && t <= duration - 1)
     : Array.from({ length: Math.max(0, Math.floor((duration - 1 - start) / beat) + 1) }, (_, i) => start + i * beat);
   let lane = 1;
   times.forEach((time, i) => {
@@ -71,7 +76,7 @@ export function makeChart(duration, analysis, difficulty = 'easy', seed = 42) {
       if (other !== lane) events.push({ type: 'mine', time, lane: other });
     }
   });
-  addInterludeMines(events, beat, duration, seed);
+  addInterludeMines(events, beat, duration, seed, analysis.rhythm);
   if (difficulty === 'easy') {
     // Remove whole alternate gates, preserving each retained gate's safe lane.
     const rows = [...new Set(events.filter(event => event.pattern).map(event => event.time))].sort((a, b) => a - b);
@@ -167,8 +172,8 @@ export class GameState {
       if (eventTime === tick) {
         const row = [];
         while (this.chart.events[this.index]?.time === tick) row.push(this.chart.events[this.index++]);
-        // Mine collisions clear charge before a missed note can release it,
-        // regardless of the chart's ordering within this timestamp.
+        // Mine collisions clear charge regardless of the chart's ordering
+        // within this timestamp; missed notes only break the combo.
         for (const mine of row.filter(item => item.type === 'mine')) {
           if (this.boss > 0 && mine.lane === lane && tick >= this.invincibleUntil) {
             const energyLoss = this.energy; this.energy = 0;
@@ -185,7 +190,6 @@ export class GameState {
             effects.push({ type: 'save', lane, time: tick });
           } else {
             this.missed++; this.hurt(this.rules.miss); effects.push({ type: 'miss', time: tick });
-            effects.push(...this.fireChargedAttack(tick, lane, playerWorldX, 'miss'));
           }
         }
       } else if (shotTime === tick) {

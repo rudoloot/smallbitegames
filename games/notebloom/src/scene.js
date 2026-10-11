@@ -1,13 +1,14 @@
 import * as THREE from 'three';
-import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch, terrainScroll, ROAD_SCROLL_FACTOR } from './terrain.js?v=65c6e7f65907';
-import { weaponForId, attackForEnergy, chargeColorForWeapon } from './weapons.js?v=65c6e7f65907';
-import { buildWeaponModel } from './weapon-model.js?v=65c6e7f65907';
-import { bossPose, projectilePoint } from './projectiles.js?v=65c6e7f65907';
-import { COLLECTION_Z, visibleNotes } from './timing.js?v=65c6e7f65907';
-import { themeForChart } from './themes.js?v=65c6e7f65907';
-import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=65c6e7f65907';
-import { advanceFirework, fireworkForwardDistance, fireworkLifetime } from './fireworks.js?v=65c6e7f65907';
-import { bossRotation, bossWeakPointAt, bossShieldAt, BOSS_SHIELD_RADIUS } from './boss-rotation.js?v=65c6e7f65907';
+import { anchorPlayerCamera } from './camera.js?v=7fcc13f571c6';
+import { MAX_TERRAIN_SLOPE, roadProfile, roadHeight, roadPitch, terrainScroll, ROAD_SCROLL_FACTOR } from './terrain.js?v=7fcc13f571c6';
+import { weaponForId, attackForEnergy, chargeColorForWeapon } from './weapons.js?v=7fcc13f571c6';
+import { buildWeaponModel } from './weapon-model.js?v=7fcc13f571c6';
+import { bossPose, projectilePoint } from './projectiles.js?v=7fcc13f571c6';
+import { COLLECTION_Z, visibleNotes } from './timing.js?v=7fcc13f571c6';
+import { themeForChart } from './themes.js?v=7fcc13f571c6';
+import { buildRobotBoss, animateRobotBoss } from './boss-model.js?v=7fcc13f571c6';
+import { advanceFirework, fireworkForwardDistance, fireworkLifetime } from './fireworks.js?v=7fcc13f571c6';
+import { bossRotation, bossWeakPointAt, bossShieldAt, BOSS_SHIELD_RADIUS } from './boss-rotation.js?v=7fcc13f571c6';
 
 const COLORS = { mint: 0xb4ffe0, lilac: 0xcfbcff, pink: 0xffbbdc, navy: 0x343756, metal: 0xe1e4f5 };
 const CHARACTER_SCALE = .7;
@@ -671,7 +672,8 @@ export class World {
     const fov = Math.max(this.baseFov, 53 + THREE.MathUtils.radToDeg(Math.abs(slope)) * .5);
     if (Math.abs(this.camera.fov - fov) > .001) { this.camera.fov = fov; this.camera.updateProjectionMatrix(); }
     this.course.rotation.x = 0; this.course.position.set(0, 0, 0);
-    this.camera.lookAt(0, .8 + this.height(-28) * .23, -10);
+    if (active) anchorPlayerCamera(this.camera, { x: 0, y: this.height(COLLECTION_Z) + .07, z: COLLECTION_Z });
+    else { this.camera.lookAt(0, .8 + this.height(-28) * .23, -10); this.camera.updateMatrixWorld(true); }
     this.course.updateMatrixWorld(true);
     const moving = mode === 'playing' || mode === 'home';
     const travel = active ? terrainScroll(state.chart.terrain, time) : time * 14;

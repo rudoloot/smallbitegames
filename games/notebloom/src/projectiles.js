@@ -1,6 +1,6 @@
-import { bossColliders } from './themes.js?v=65c6e7f65907';
-import { FLIGHT_SPEED } from './flight.js?v=65c6e7f65907';
-import { bossLocalPoint, BOSS_SHIELD_RADIUS } from './boss-rotation.js?v=65c6e7f65907';
+import { bossColliders } from './themes.js?v=7fcc13f571c6';
+import { FLIGHT_SPEED } from './flight.js?v=7fcc13f571c6';
+import { bossLocalPoint, BOSS_SHIELD_RADIUS } from './boss-rotation.js?v=7fcc13f571c6';
 // Shared world-space geometry for simulation and rendering.
 export function bossPose() {
   return { x: 0, y: 1.05, z: -52 };
