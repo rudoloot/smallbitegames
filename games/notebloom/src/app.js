@@ -1,11 +1,11 @@
-import { TRACKS, MusicPlayer } from './music.js?v=92bc1fbf2287';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=92bc1fbf2287';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=92bc1fbf2287';
-import { World } from './scene.js?v=92bc1fbf2287';
-import { exitGame } from './launch.js?v=92bc1fbf2287';
-import { setupFullscreen } from './fullscreen.js?v=92bc1fbf2287';
-import { beginGesture, updateGesture } from './gesture.js?v=92bc1fbf2287';
-import { updatePlayHUD } from './hud.js?v=92bc1fbf2287';
+import { TRACKS, MusicPlayer } from './music.js?v=cf73e6a50b22';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=cf73e6a50b22';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=cf73e6a50b22';
+import { World } from './scene.js?v=cf73e6a50b22';
+import { exitGame } from './launch.js?v=cf73e6a50b22';
+import { setupFullscreen } from './fullscreen.js?v=cf73e6a50b22';
+import { beginGesture, updateGesture } from './gesture.js?v=cf73e6a50b22';
+import { updatePlayHUD } from './hud.js?v=cf73e6a50b22';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -18,7 +18,7 @@ let difficulty = 'easy';
 $('hardToggle').addEventListener('click', () => {
   difficulty = difficulty === 'hard' ? 'easy' : 'hard';
   $('hardToggle').setAttribute('aria-pressed', String(difficulty === 'hard'));
-  $('hardToggle').title = difficulty === 'hard' ? 'Hard · 보스 체력 (음표 수 ÷ 20) × 1000' : '쉬움 · 속도 75%, 중간 지뢰 패턴 절반';
+  $('hardToggle').title = difficulty === 'hard' ? 'Hard · 보스 체력 (음표 수 ÷ 20) × 800' : '쉬움 · 속도 75%, 중간 지뢰 패턴 절반';
 });
 let selected = TRACKS[0], state = null, mode = 'home', playerX = 0;
 let preparing = false, countdownTimer = null, countdownRemaining = 3, feedbackUntil = 0, damageUntil = 0;
