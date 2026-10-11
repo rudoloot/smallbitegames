@@ -1,11 +1,11 @@
-import { TRACKS, MusicPlayer } from './music.js?v=cf73e6a50b22';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=cf73e6a50b22';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=cf73e6a50b22';
-import { World } from './scene.js?v=cf73e6a50b22';
-import { exitGame } from './launch.js?v=cf73e6a50b22';
-import { setupFullscreen } from './fullscreen.js?v=cf73e6a50b22';
-import { beginGesture, updateGesture } from './gesture.js?v=cf73e6a50b22';
-import { updatePlayHUD } from './hud.js?v=cf73e6a50b22';
+import { TRACKS, MusicPlayer } from './music.js?v=fe097748895e';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=fe097748895e';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=fe097748895e';
+import { World } from './scene.js?v=fe097748895e';
+import { exitGame } from './launch.js?v=fe097748895e';
+import { setupFullscreen } from './fullscreen.js?v=fe097748895e';
+import { beginGesture, updateGesture } from './gesture.js?v=fe097748895e';
+import { updatePlayHUD } from './hud.js?v=fe097748895e';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');

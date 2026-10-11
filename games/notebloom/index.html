@@ -7,7 +7,7 @@
   <meta name="description" content="음악이 피어나는 길. 음표를 구하고 보스를 물리치는 3D 리듬 액션 게임 Notebloom." />
   <title>Notebloom — 음악이 피어나는 길</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23171929'/%3E%3Ctext x='12' y='47' font-size='48' fill='%239cf2d3'%3E♪%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="./style.css?v=cf73e6a50b22" />
+  <link rel="stylesheet" href="./style.css?v=fe097748895e" />
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
 </head>
 <body>
@@ -73,6 +73,6 @@
 
   <dialog id="trackDialog" class="modal"><div class="modal-heading"><div><div class="eyebrow">CHOOSE YOUR SOUNDTRACK</div><h2>어떤 음악으로 떠날까요?</h2></div><button class="close-button" data-close="trackDialog" aria-label="음악 선택 닫기">×</button></div><p class="modal-subtitle">내 노래 또는 준비된 12곡으로 떠나요.</p><button id="localMusicButton" class="secondary-button">＋ 내 기기에서 노래 선택</button><input id="localMusicFile" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac" hidden><p class="local-music-hint">파일 앱에 저장된 음원을 선택해요. 최대 50MB · 10초~10분<br>기기 안에서만 분석·재생하며 업로드하지 않아요.</p><p id="localMusicError" class="local-music-error" role="alert"></p><div id="trackList" class="track-list"></div><p class="modal-footnote">실제 타격음과 강세를 분석해 음표를 배치해요. 스트리밍 앱 전용 다운로드 곡은 사용할 수 없어요. 선택한 내 노래는 이 브라우저의 보관함에 남아요. 브라우저 데이터를 삭제하면 보관함도 지워져요.</p></dialog>
   <dialog id="helpDialog" class="modal help-modal"><div class="modal-heading"><div><div class="eyebrow">A QUICK HELLO</div><h2>아리아와 함께 떠나요</h2></div><button class="close-button" data-close="helpDialog" aria-label="플레이 방법 닫기">×</button></div><div class="lane-guide"><span>♪<small>충전 공격</small></span><span>♪<small>충전 공격</small></span><span>♪<small>충전 공격</small></span><span>♪<small>충전 공격</small></span></div><ol class="help-steps"><li><strong>좌우로 드래그</strong><p>손가락을 움직여 4개 라인 사이를 이동해요. PC는 방향키 또는 A / D로 이동해요.</p></li><li><strong>음표를 연속으로 모아 충전</strong><p>음표가 판정선에 도착할 때 같은 라인에 있으면 구출하고 체력을 회복해요. 놓치지 않고 모은 음표 수만큼 공격 에너지가 쌓여요. 음표를 놓치면 모아 둔 에너지 단계 그대로 자동 발사돼요. 지뢰에 맞으면 에너지가 전부 사라져요. 동시에 발생하면 지뢰 피격이 먼저 적용돼요. 에너지가 없으면 발사하지 않으며, 놓침과 피격은 콤보를 끊어요.</p></li><li><strong>위로 드래그하면 보스 공격</strong><p>모은 에너지를 전부 사용해 중앙의 보스를 자동으로 겨냥해요. PC는 ↑ 또는 F키를 누르면 공격해요. 1~9개: 권총 1발(20), 10~19개: 쌍권총 5발(45×5), 20~29개: 기관총 10발(55×10), 30개 이상: 미사일 1발(1000).</p></li><li><strong>음표를 따라 지뢰 회피</strong><p>음표 한 개와 지뢰 세 개가 같은 박자에 4개 라인으로 내려와요. 음표가 있는 라인을 따라가면 수집하며 지뢰를 피할 수 있어요. 음표 사이의 빈 구간에도 스윕·지그재그·계단 지뢰 패턴이 내려오니 안전한 라인으로 이동해요. 보스 체력은 (곡의 음표 수 ÷ 20) × 하드 800 / 이지 600이에요. 기본은 이지이며, 시작 버튼 왼쪽 Hard를 켜면 하드로 플레이해요. 내 체력이 0이 되거나 곡이 끝나도 보스가 남으면 실패해요. 보스를 잡은 뒤에도 음표를 계속 구출해요.</p></li></ol><p class="help-health">체력: 놓침 −4 · 지뢰 −30 · 구출 +4<br>에너지: 놓침 자동 발사 · 지뢰 전부 소실</p><button data-close="helpDialog" class="primary-button">준비됐어요 <span>♪</span></button></dialog>
-  <script type="module" src="./src/app.js?v=cf73e6a50b22"></script>
+  <script type="module" src="./src/app.js?v=fe097748895e"></script>
 </body>
 </html>

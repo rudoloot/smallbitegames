@@ -1,10 +1,10 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=cf73e6a50b22';
-import { weaponForId, attackForEnergy } from './weapons.js?v=cf73e6a50b22';
-import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=cf73e6a50b22';
-import { themeForChart } from './themes.js?v=cf73e6a50b22';
-import { estimateBossHealth } from './balance.js?v=cf73e6a50b22';
-import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=cf73e6a50b22';
-import { fireworkLifetime } from './fireworks.js?v=cf73e6a50b22';
+import { clamp, seededRandom, RULES } from './engine.js?v=fe097748895e';
+import { weaponForId, attackForEnergy } from './weapons.js?v=fe097748895e';
+import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=fe097748895e';
+import { themeForChart } from './themes.js?v=fe097748895e';
+import { estimateBossHealth } from './balance.js?v=fe097748895e';
+import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=fe097748895e';
+import { fireworkLifetime } from './fireworks.js?v=fe097748895e';
 
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
@@ -46,7 +46,6 @@ export function makeChart(duration, analysis, difficulty = 'easy', seed = 42) {
     : Array.from({ length: Math.max(0, Math.floor((duration - 1 - start) / beat) + 1) }, (_, i) => start + i * beat);
   let lane = 1;
   times.forEach((time, i) => {
-    if (i % 16 >= 10) return;
     if (i % 2 === 0) lane = clamp(lane + (random() < .5 ? -1 : 1), 0, 3);
     events.push({ type: 'note', time, lane });
     // Each row has one note and three mines. Following the notes is always safe.
