@@ -1193,7 +1193,16 @@
     trafficLeader(ant){
       const t=ant.traffic,cell=this.at(ant);if(!t||!isAdultAnt(ant)||cell?.room||cell?.cave)return null;
       const right={x:-t.dir.y,y:t.dir.x};
-      return this.ants.filter(a=>isAdultAnt(a)&&a!==ant&&!a.dead&&!a.carriedBy).map(a=>({ant:a,ahead:(a.x-ant.x)*t.dir.x+(a.y-ant.y)*t.dir.y,side:Math.abs((a.x-ant.x)*right.x+(a.y-ant.y)*right.y),heading:this.travelDirection(a)})).filter(a=>a.ahead>0&&a.side<RADIUS[ant.type]+RADIUS[a.ant.type]+.2&&(!a.heading||a.heading.x*t.dir.x+a.heading.y*t.dir.y>.95)).sort((a,b)=>a.ahead-b.ahead)[0]??null;
+      return this.ants.filter(a=>isAdultAnt(a)&&a!==ant&&!a.dead&&!a.carriedBy&&!a.treeHost).map(a=>({ant:a,ahead:(a.x-ant.x)*t.dir.x+(a.y-ant.y)*t.dir.y,side:Math.abs((a.x-ant.x)*right.x+(a.y-ant.y)*right.y),heading:this.travelDirection(a)})).filter(a=>{
+        if(a.ahead<=0||a.ahead>C.CELL*2||a.side>=RADIUS[ant.type]+RADIUS[a.ant.type]+.2||a.heading&&a.heading.x*t.dir.x+a.heading.y*t.dir.y<=.95)return false;
+        // A projected alignment across the map is not a shared lane. Only
+        // nearby ants visible along continuous floor can affect this traffic.
+        const steps=Math.ceil(distance(ant,a.ant)/3);for(let i=1;i<=steps;i++)if(!this.groundContains(ant.x+(a.ant.x-ant.x)*i/steps,ant.y+(a.ant.y-ant.y)*i/steps))return false;
+        return true;
+      }).sort((a,b)=>a.ahead-b.ahead)[0]??null;
+    }
+    trafficBlocker(ant){
+      const lead=this.trafficLeader(ant);return lead&&lead.ahead<=RADIUS[ant.type]+RADIUS[lead.ant.type]+4?lead:null;
     }
     trafficAllows(ant,p){
       if(!this.roomMovementAllows(ant,p)||!this.junctionMovementAllows(ant,p))return false;
@@ -1333,7 +1342,7 @@
     }
     entranceIntent(ant){
       if(!isAdultAnt(ant)||ant.dead||ant.carriedBy||ant.treeHost||ant.task?.stage!=='move')return null;
-      const entry=this.roomEntryIntent(ant);if(entry)return entry;
+      const entry=this.roomEntryIntent(ant);if(entry)return this.localEntrance(ant,entry)?entry:null;
       const wide=t=>t&&(t.room||t.cave||t.y<=C.SURFACE),same=(a,b)=>a&&b&&(a.y<=C.SURFACE&&b.y<=C.SURFACE||(a.room??a.cave)&&(a.room??a.cave)===(b.room??b.cave));
       const current=this.at(ant);if(!wide(current))return null;
       let previous=this.tiles[ant.task.pathFrom]??current;
@@ -1341,9 +1350,17 @@
         const next=this.tiles[index];if(!next)return null;
         if(wide(previous)&&!wide(next)&&next.open&&same(current,previous)&&Math.abs(next.x-previous.x)+Math.abs(next.y-previous.y)===1){
           const a=this.point(previous),b=this.point(next),dir={x:(b.x-a.x)/C.CELL,y:(b.y-a.y)/C.CELL};
-          return {key:previous.index+':'+next.index,from:previous.index,to:next.index,dir,portal:{x:(a.x+b.x)/2,y:(a.y+b.y)/2}};
+          const intent={key:previous.index+':'+next.index,from:previous.index,to:next.index,dir,portal:{x:(a.x+b.x)/2,y:(a.y+b.y)/2}};
+          return this.localEntrance(ant,intent)?intent:null;
         }previous=next;
       }return null;
+    }
+    localEntrance(ant,intent){
+      if(distance(ant,intent.portal)<=C.CELL*2)return true;
+      if(ant.entranceQueue?.key===intent.key&&ant.entranceQueue.local)return true;
+      // Extend a long queue from its actual waiting ants, not from tickets
+      // prematurely assigned to distant foragers in an older save.
+      return this.ants.some(other=>{const q=other.entranceQueue;return !other.dead&&!other.carriedBy&&q?.key===intent.key&&(q.joined||q.entering)&&q.slot&&distance(other,q.slot)<C.CELL&&distance(ant,other)<=C.CELL*1.25;});
     }
     roomEntryIntent(ant){
       if(!isFriendlyAnt(ant))return null;
@@ -1418,10 +1435,10 @@
       if(!intent){ant.entranceQueue=null;return false;}
       const members=this.ants.map(a=>({ant:a,intent:this.entranceIntent(a)})).filter(a=>a.intent?.key===intent.key);
       const joining=members.filter(a=>a.ant.entranceQueue?.key!==intent.key).sort((a,b)=>distance(a.ant,a.intent.portal)-distance(b.ant,b.intent.portal)||Number(a.ant.id.slice(1))-Number(b.ant.id.slice(1)));
-      for(const member of joining)member.ant.entranceQueue={key:intent.key,from:member.intent.from,to:member.intent.to,roomId:member.intent.roomId,ticket:this.id++};
+      for(const member of joining)member.ant.entranceQueue={key:intent.key,from:member.intent.from,to:member.intent.to,roomId:member.intent.roomId,ticket:this.id++,local:true};
       members.sort((a,b)=>a.ant.entranceQueue.ticket-b.ant.entranceQueue.ticket);
       const rank=members.findIndex(a=>a.ant===ant),radius=Math.max(...members.map(a=>RADIUS[a.ant.type])),laneRadius=Math.max(...members.map(a=>LANE_RADIUS[a.ant.type])),spacing=radius*2+2,track=this.queueTrack(intent,radius,rank*spacing+4,laneRadius),slot=track[Math.min(track.length-1,Math.round(rank*spacing/2))];
-      const q=ant.entranceQueue;q.rank=rank;q.slot=slot;q.from=intent.from;q.to=intent.to;
+      const q=ant.entranceQueue;q.local=true;q.rank=rank;q.slot=slot;q.from=intent.from;q.to=intent.to;
       ant.passing=null;ant.traffic=null;ant.yieldGoal=null;ant.detour=null;
       if(distance(ant,slot)<1.5||q.entering)q.joined=true;
       // Form the line in ticket order so simultaneous arrivals cannot wedge
@@ -1464,7 +1481,7 @@
       ant.task.lastProgress=this.time;return true;
     }
     parkIdleLeader(ant,dt){
-      const lead=this.trafficLeader(ant)?.ant,cell=lead&&this.at(lead);if(!lead||lead.task||!cell||!cell.room&&cell.y!==C.SURFACE||lead.parkedAt===this.time)return;
+      const lead=this.trafficBlocker(ant)?.ant,cell=lead&&this.at(lead);if(!lead||lead.task||!cell||!cell.room&&cell.y!==C.SURFACE||lead.parkedAt===this.time)return;
       const right={x:-ant.traffic.dir.y,y:ant.traffic.dir.x};
       const target=lead.parking??{x:lead.x+right.x*(RADIUS[ant.type]+RADIUS[lead.type]+8),y:lead.y+right.y*(RADIUS[ant.type]+RADIUS[lead.type]+8)};
       if(!this.terrainFits(lead,target.x,target.y))return;
@@ -1477,7 +1494,7 @@
       let x=ant.x+dx*step,y=ant.y+dy*step;
       const allowed=(x,y)=>this.canStand(ant,x,y)&&this.trafficAllows(ant,{x,y});
       if(!allowed(x,y)){
-        if(ant.traffic&&(!this.trafficAllows(ant,{x,y})||this.terrainFits(ant,x,y)&&!this.canStand(ant,x,y)&&this.trafficLeader(ant))){this.parkIdleLeader(ant,dt);ant.stuck+=dt;ant.moving=false;return false;}
+        if(ant.traffic&&(!this.trafficAllows(ant,{x,y})||this.terrainFits(ant,x,y)&&!this.canStand(ant,x,y)&&this.trafficBlocker(ant))){this.parkIdleLeader(ant,dt);ant.stuck+=dt;ant.moving=false;return false;}
         const cell=this.at(ant),room=ant.treeHost||cell?.room||cell?.y===C.SURFACE||(cell&&this.adjacent(cell).some(t=>t.room&&t.open));
         let found=false;
         // Slide along a wall at a corner; never step through another collider.
@@ -1490,7 +1507,7 @@
       return d<=step+.5;
     }
     detourPath(ant,target,range,targetCell=null){
-      if(ant.traffic&&this.trafficLeader(ant))return null;
+      if(ant.traffic&&this.trafficBlocker(ant))return null;
       // Local paths fit the terrain and respect the reserved right-hand lane.
       const scale=ant.entranceQueue?12:6,quantum=C.CELL/scale,encode=(x,y)=>`${x},${y}`,decode=k=>{const [x,y]=k.split(',').map(Number);return {x,y};},bounds=this.worldBounds;
       const start={x:Math.round(ant.x/quantum),y:Math.round(ant.y/quantum)},minx=Math.max(bounds.minX*scale,Math.floor(Math.min(ant.x,target.x)/quantum)-12),maxx=Math.min((bounds.maxX+1)*scale-1,Math.ceil(Math.max(ant.x,target.x)/quantum)+12),miny=Math.max(0,Math.floor(Math.min(ant.y,target.y)/quantum)-12),maxy=Math.min((bounds.maxY+1)*scale-1,Math.ceil(Math.max(ant.y,target.y)/quantum)+12);
@@ -1601,7 +1618,7 @@
           const navKey=`${p.x.toFixed(1)},${p.y.toFixed(1)}`,remaining=distance(ant,p);
           if(task.navKey!==navKey){task.navKey=navKey;task.bestDistance=remaining;task.lastProgress=this.time;}
           else if(remaining<task.bestDistance-.5){task.bestDistance=remaining;task.lastProgress=this.time;}
-          const waiting=ant.traffic&&this.trafficLeader(ant);
+          const waiting=ant.traffic&&this.trafficBlocker(ant);
           if(!waiting&&(ant.stuck>1.2||this.time-task.lastProgress>1.8)){
             if(!task.detourAfter||this.time>=task.detourAfter){
               task.detourAfter=this.time+2;const detour=this.detourPath(ant,p,arrival,navCell);
