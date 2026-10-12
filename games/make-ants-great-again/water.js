@@ -65,49 +65,99 @@
       if(col<0||col>=this.width||row<topRow||row>bottomRow||!this.mask[seed])return null;
       this._basins??=new Map();const key=seed+':'+topRow+':'+bottomRow;
       if(this._basins.has(key))return this._basins.get(key);
-      const cells=[seed],seen=new Set(cells),rows=new Map();let floorKey=seed;
+      const cells=[seed],seen=new Set(cells);
       for(let i=0;i<cells.length;i++){
         const k=cells[i],r=Math.floor(k/this.width),c=k%this.width;
-        if(r>Math.floor(floorKey/this.width)||r===Math.floor(floorKey/this.width)&&k<floorKey)floorKey=k;
-        if(!rows.has(r))rows.set(r,[]);rows.get(r).push(c);
         for(const [cc,rr] of [[c-1,r],[c+1,r],[c,r-1],[c,r+1]]){
           const n=rr*this.width+cc;if(cc<0||cc>=this.width||rr<topRow||rr>bottomRow||seen.has(n)||!this.mask[n])continue;
           seen.add(n);cells.push(n);
         }
       }
-      const runs=[];for(const [r,columns] of rows){columns.sort((a,b)=>a-b);let first=columns[0],last=first;for(const c of columns.slice(1)){if(c>last+1){runs.push({row:r,first,last});first=c;}last=c;}runs.push({row:r,first,last});}
-      runs.sort((a,b)=>a.row-b.row||a.first-b.first);
-      const basin={cells,rows,runs,floorKey,topRow,bottomRow};
+      const basin=this.basinShape(cells,topRow,bottomRow);
       // Every resting particle in this basin shares the same geometry cache.
       for(const k of cells)this._basins.set(k+':'+topRow+':'+bottomRow,basin);
       return basin;
+    }
+    basinShape(cells,topRow,bottomRow){
+      const rows=new Map();let floorKey=cells[0];
+      for(const k of cells){const r=Math.floor(k/this.width),c=k%this.width;if(r>Math.floor(floorKey/this.width)||r===Math.floor(floorKey/this.width)&&k<floorKey)floorKey=k;if(!rows.has(r))rows.set(r,[]);rows.get(r).push(c);}
+      const runs=[];for(const [row,columns] of rows){columns.sort((a,b)=>a-b);let first=columns[0],last=first;for(const c of columns.slice(1)){if(c>last+1){runs.push({row,first,last});first=c;}last=c;}runs.push({row,first,last});}
+      runs.sort((a,b)=>a.row-b.row||a.first-b.first);return {cells,rows,runs,floorKey,topRow,bottomRow};
+    }
+    poolSeed(x,y,topRow,bottomRow){
+      // A saved particle can sit above a receding surface. Project it down
+      // inside its own cavity rather than retaining a now-dry connecting arch.
+      const col=Math.floor((x-this.originX)/this.size),row=Math.floor((y-this.originY)/this.size);
+      if(row>=topRow&&row<=bottomRow&&this.mask[row*this.width+col])return {x,y};
+      for(let r=row;r<=bottomRow;r++){if(!this.mask[r*this.width+col])break;if(r>=topRow)return {x,y:this.originY+(r+.5)*this.size};}
+      const source=this.basin(x,y,Math.min(row,topRow),bottomRow);let nearest=null,best=Infinity;
+      const deepest=source?Math.floor(source.floorKey/this.width):topRow,limit=Math.min(topRow,deepest);
+      for(const k of source?.cells??[]){const r=Math.floor(k/this.width);if(r<limit)continue;const p={x:this.originX+(k%this.width+.5)*this.size,y:this.originY+(r+.5)*this.size},d=(p.x-x)**2+(p.y-y)**2;if(d<best){best=d;nearest=p;}}
+      return nearest;
+    }
+    poolLevel(basin,area){
+      const rowNumbers=[...basin.rows.keys()].sort((a,b)=>b-a),bottom=this.originY+(rowNumbers[0]+1)*this.size;let remaining=area;
+      for(const row of rowNumbers){const width=basin.rows.get(row).length*this.size,y=this.originY+row*this.size;if(remaining<=width*this.size+1e-8)return {bottom,level:y+this.size-remaining/width};remaining-=width*this.size;}
+      return {bottom,level:null};
+    }
+    expandPool(group){
+      const area=group.particles.reduce((n,p)=>n+p.volume*this.C.CELL**2,0);let basin=group.basin;
+      while(area>basin.cells.length*this.size**2+1e-8&&basin.topRow>0){
+        const expanded=this.basin(group.x,group.y,basin.topRow-1,group.bottomRow);if(!expanded)break;
+        // A dry sill must not teleport water into a lower neighboring room.
+        // Overflowing particles establish that room's pool on arrival.
+        const previous=new Set(basin.cells),added=expanded.cells.filter(k=>!previous.has(k)),spillRow=expanded.topRow;
+        const connectsLower=added.some(k=>Math.floor(k/this.width)>spillRow);
+        basin=connectsLower&&area<expanded.cells.length*this.size**2-1e-8
+          ?this.basinShape(expanded.cells.filter(k=>previous.has(k)||Math.floor(k/this.width)===spillRow),spillRow,group.bottomRow):expanded;
+      }
+      return {...group,basin,area,...this.poolLevel(basin,area)};
     }
     poolGeometry(){
       if(this._pools)return this._pools;
       const drops=this.sim.waterDrops.filter(p=>p.pooled??(p.settled&&(p.poolRest??.2)>=.2&&Math.hypot(p.vx,p.vy)<12)),groups=new Map();
       for(const p of drops){
         const x=p.poolX??p.x,y=p.poolY??p.y,r=this.radiusOf(p),old=p.poolBounds;
-        let topRow=Math.max(0,Math.floor(((old?.ceiling??(y-r-this.size))-this.originY)/this.size));
+        let topRow=Math.max(0,Math.floor(((old?.level??(y-r-this.size))-this.originY)/this.size));
         const bottomRow=Math.min(this.height-1,old?Math.round((old.bottom-this.originY)/this.size)-1:this.height-1);
-        let basin=this.basin(x,y,topRow,bottomRow);if(!basin)continue;
+        const seed=this.poolSeed(x,y,topRow,bottomRow);if(!seed)continue;
+        topRow=Math.min(topRow,Math.floor((seed.y-this.originY)/this.size));
+        const basin=this.basin(seed.x,seed.y,topRow,bottomRow);if(!basin)continue;
         const key=basin.floorKey;
-        if(!groups.has(key))groups.set(key,{particles:[],basin,x,y,bottomRow});
+        if(!groups.has(key))groups.set(key,{particles:[],basin,x:seed.x,y:seed.y,bottomRow});
         const group=groups.get(key);group.particles.push(p);
-        if(topRow<group.basin.topRow){group.basin=basin;group.x=x;group.y=y;group.bottomRow=bottomRow;}
+        if(topRow<group.basin.topRow){group.basin=basin;group.x=seed.x;group.y=seed.y;group.bottomRow=bottomRow;}
+      }
+      // Re-evaluate connectivity at the surface, including older saved pools
+      // whose ceiling still includes a bridge that has since become dry.
+      const wetGroups=new Map();
+      for(const group of groups.values()){
+        const {level}=this.poolLevel(group.basin,group.particles.reduce((n,p)=>n+p.volume*this.C.CELL**2,0));
+        const topRow=level===null?group.basin.topRow:Math.floor((level-this.originY)/this.size);
+        for(const p of group.particles){let seed=this.poolSeed(p.poolX??p.x,p.poolY??p.y,topRow,group.bottomRow),localTop=seed?Math.min(topRow,Math.floor((seed.y-this.originY)/this.size)):topRow,basin=seed&&this.basin(seed.x,seed.y,localTop,group.bottomRow);if(!basin)continue;
+          // When a formerly connected body separates, retain water where its
+          // particles actually ended up, not at their original resting shore.
+          const current=this.poolSeed(p.x,p.y,topRow,group.bottomRow),currentTop=current?Math.min(topRow,Math.floor((current.y-this.originY)/this.size)):topRow,local=current&&this.basin(current.x,current.y,currentTop,group.bottomRow);
+          if(local&&local.floorKey!==basin.floorKey){seed=current;basin=local;p.poolX=p.x;p.poolY=p.y;}
+          if(!wetGroups.has(basin.floorKey))wetGroups.set(basin.floorKey,{particles:[],basin,x:seed.x,y:seed.y,bottomRow:group.bottomRow});
+          const wet=wetGroups.get(basin.floorKey);wet.particles.push(p);if(basin.topRow<wet.basin.topRow){wet.basin=basin;wet.x=seed.x;wet.y=seed.y;wet.bottomRow=group.bottomRow;}
+        }
+      }
+      let filled=[...wetGroups.values()].map(group=>this.expandPool(group));
+      // Independently settled particles can approach the same flooded basin.
+      // Coalesce touching water once, so its volume is never drawn twice.
+      for(let merged=true;merged;){merged=false;
+        outer:for(let i=0;i<filled.length;i++)for(let j=i+1;j<filled.length;j++){
+          const a=filled[i],b=filled[j];if(a.level===null||b.level===null)continue;
+          const cells=new Set(a.basin.cells),level=Math.max(a.level,b.level);
+          if(!b.basin.cells.some(k=>cells.has(k)&&this.originY+(Math.floor(k/this.width)+1)*this.size>level+1e-8))continue;
+          const basin=this.basinShape([...new Set([...a.basin.cells,...b.basin.cells])],Math.min(a.basin.topRow,b.basin.topRow),Math.max(a.bottomRow,b.bottomRow));
+          filled[i]=this.expandPool({...a,particles:[...a.particles,...b.particles],basin,bottomRow:basin.bottomRow});filled.splice(j,1);merged=true;break outer;
+        }
       }
       const pools=[];
-      for(const group of groups.values()){
-        const particles=group.particles,area=particles.reduce((n,p)=>n+p.volume*this.C.CELL**2,0);let basin=group.basin;
-        while(area>basin.cells.length*this.size**2+1e-8&&basin.topRow>0){
-          const expanded=this.basin(group.x,group.y,basin.topRow-1,group.bottomRow);if(!expanded)break;basin=expanded;
-        }
-        const rowNumbers=[...basin.rows.keys()].sort((a,b)=>b-a),bottom=this.originY+(rowNumbers[0]+1)*this.size;
-        let remaining=area,level=bottom;
-        for(const row of rowNumbers){
-          const width=basin.rows.get(row).length*this.size,y=this.originY+row*this.size;
-          if(remaining<=width*this.size+1e-8){level=y+this.size-remaining/width;remaining=0;break;}remaining-=width*this.size;
-        }
-        if(remaining>1e-8)continue;
+      for(const group of filled){
+        const {particles,area,basin,bottom,level}=group;if(level===null)continue;
         const spans=[],surfaces=[],tiles=new Set();
         for(const run of basin.runs){
           const y=this.originY+run.row*this.size,top=Math.max(level,y),height=y+this.size-top;if(height<=1e-8)continue;

@@ -22,8 +22,12 @@
   function setMode(mode){app.mode=mode;app.selection.clear();closeDrawer();canvas.classList.toggle('building',!!mode);document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));updateSelection();updateUI();}
   document.querySelectorAll('[data-mode]').forEach(button=>button.onclick=()=>setMode(app.mode===button.dataset.mode?null:button.dataset.mode));
   $('clear-selection').onclick=()=>{app.selection.clear();updateSelection();};
-  function updateSelection(){const n=app.selection.size,cancel=app.mode==='cancel',jobs=app.sim.jobs.filter(j=>j.status!=='done'&&app.selection.has(j.cell)).length;$('selection-actions').hidden=!n;$('selection-actions').classList.toggle('cancel',cancel);$('selection-count').textContent=cancel?`${jobs}칸의 건설 작업`:`${n}칸 · ${n}초 작업`;$('request-build').textContent=cancel?'계획 취소 요청':app.mode==='fill'?'메꾸기 요청':'건설 요청';$('request-build').disabled=cancel&&!jobs;}
-  $('request-build').onclick=()=>{if(!app.mode)return;if(app.mode==='cancel')app.sim.cancelConstruction([...app.selection]);else app.sim.request(app.mode,[...app.selection]);setMode(null);app.drag=null;updateUI();save();};
+  function updateSelection(){
+    const n=app.selection.size,preview=app.sim.constructionPreview(app.mode,[...app.selection]);$('selection-actions').hidden=!n;
+    $('selection-count').textContent=app.mode==='fill'?n+'칸 메우기':n+'칸 · '+preview.after+' / '+preview.limit+(preview.overLimit?' · 한도 초과':'');
+    $('request-build').textContent='확인';$('request-build').disabled=preview.invalid||preview.overLimit||!preview.cells.length;
+  }
+  $('request-build').onclick=()=>{if(!app.mode)return;app.sim.request(app.mode,[...app.selection]);setMode(null);app.drag=null;updateUI();save();};
   function worldPoint(event){const r=canvas.getBoundingClientRect();return {x:(event.clientX-r.left)/app.camera.zoom+app.camera.x,y:(event.clientY-r.top)/app.camera.zoom+app.camera.y};}
   function eventCell(event){const p=worldPoint(event),bounds=app.sim.viewBounds();return {x:clamp(Math.floor(p.x/C.CELL),bounds.minX,bounds.maxX),y:clamp(Math.floor(p.y/C.CELL),0,bounds.maxY)};}
   function selectionTo(event){
@@ -101,11 +105,11 @@
     if(!app.selected)return;const sim=app.sim;$('drawer').hidden=false;const content=$('drawer-content');
     if(app.selected.type==='fruit-plant'){
       const plant=sim.fruitPlants.find(p=>p.id===app.selected.id);if(!plant){closeDrawer();return;}
-      content.innerHTML=`<span class="eyebrow">지표면의 먹이 자원</span><h2>열매 나무</h2><span class="tag">남은 열매 ${plant.fruit} / 10개</span><p>일꾼이 열매 하나를 수확하면 먹이 덩어리 3개로 흩어집니다. 덩어리 하나가 먹이 1개이므로 총 먹이 3개입니다.</p>`;
+      content.innerHTML=`<span class="eyebrow">지표면의 먹이 자원</span><h2>열매 나무</h2><span class="tag">남은 열매 ${plant.fruit} / 10개</span><p>일꾼이 나무를 올라 열매 위치에서 2초 동안 수확한 뒤 내려옵니다. 열매 하나는 먹이 덩어리 3개로 흩어집니다. 덩어리 하나가 먹이 1개이므로 총 먹이 3개입니다.</p>`;
     }else if(app.selected.type==='ant'){
       const ant=sim.ants.find(a=>a.id===app.selected.id&&!a.dead);if(!ant){closeDrawer();return;}
       const task=ant.task?.type==='forage'?(ant.task.deliveryDone?'먹이 운반':ant.task.chunkId?'먹이 덩어리 줍기':'먹이 채집'):ant.task?TASK_NAMES[ant.task.type]:'대기';
-      content.innerHTML=`<div class="inspect-header"><canvas id="inspect-ant" width="140" height="180"></canvas><div><span class="eyebrow">군체의 구성원</span><h2>${antNames[ant.type]}</h2><span class="tag">${ant.carriedBy?'운반 중':sim.at(ant)?.water>=.025?'물 위에 떠 있음':escape(task)}${ant.sick?' · 질병':''}</span>${ant.type==='egg'?`<p>부화까지 ${Math.ceil(Math.max(0,120-ant.age))}초<br>알 보관실과 빈 공간이 필요합니다.</p>`:ant.type==='larva'?'<p>애벌레실에 내려놓으면 상단에서 병정 또는 일꾼으로 성장시킬 수 있습니다.</p>':''}</div></div><div class="stats-grid">${stat('체력',ant.hp,ant.maxHp??MAX_HP[ant.type])}${stat('위생',ant.hygiene,100)}${!['egg','aphid'].includes(ant.type)?stat('포만감',ant.hunger,100):''}${['queen','worker','soldier','enemy'].includes(ant.type)?stat('에너지',ant.energy,100):''}</div>`;
+      content.innerHTML=`<div class="inspect-header"><canvas id="inspect-ant" width="140" height="180"></canvas><div><span class="eyebrow">군체의 구성원</span><h2>${antNames[ant.type]}</h2><span class="tag">${ant.carriedBy?'운반 중':ant.swimming?.path?.length?'물에서 빠져나오는 중':sim.inWater(ant)?'물 위에 떠 있음':escape(task)}${ant.sick?' · 질병':''}</span>${ant.type==='egg'?`<p>부화까지 ${Math.ceil(Math.max(0,120-ant.age))}초<br>알 보관실과 빈 공간이 필요합니다.</p>`:ant.type==='larva'?'<p>애벌레실에 내려놓으면 상단에서 병정 또는 일꾼으로 성장시킬 수 있습니다.</p>':''}</div></div><div class="stats-grid">${stat('체력',ant.hp,ant.maxHp??MAX_HP[ant.type])}${stat('위생',ant.hygiene,100)}${!['egg','aphid'].includes(ant.type)?stat('포만감',ant.hunger,100):''}${['queen','worker','soldier','enemy'].includes(ant.type)?stat('에너지',ant.energy,100):''}</div>`;
       const c=$('inspect-ant').getContext('2d');drawAnt(c,ant.type,70,75,['egg','larva','aphid'].includes(ant.type)?1.4:.48,0,ant.phase,ant.moving,sim.entityColor(ant));
     }else if(app.selected.type==='bug'){
       const bug=sim.foodBugs.find(b=>b.id===app.selected.id);if(!bug){closeDrawer();return;}
@@ -117,7 +121,7 @@
       drawGrub($('inspect-grub').getContext('2d'),bug,70,90,3.5);
     }else if(app.selected.type==='food-chunk'){
       const chunk=sim.foodChunks.find(c=>c.id===app.selected.id);if(!chunk){closeDrawer();return;}
-      content.innerHTML=`<span class="eyebrow">흩어진 채집 자원</span><h2>먹이 덩어리</h2><span class="tag">${sim.reservations['food:'+chunk.id]?'개미가 가지러 오는 중':sim.foodStorage().room?'운반 대기':'채집한 자리에 남은 먹이'}</span><p>덩어리 하나가 먹이 1개이며, 먹으면 포만감이 30 회복됩니다. 음식 보관소가 있으면 일꾼이 하나씩 옮겨 저장합니다. 보관소가 없으면 이곳에 남아 개미가 찾아와 먹습니다. 일꾼은 여왕과 애벌레에게 먹이를 가져다줍니다.</p>`;
+      content.innerHTML=`<span class="eyebrow">흩어진 채집 자원</span><h2>먹이 덩어리</h2><span class="tag">${sim.reservations['food:'+chunk.id]?'개미가 가지러 오는 중':sim.foodStorage().room?'운반 대기':'채집한 자리에 남은 먹이'}</span><p>덩어리 하나가 먹이 1개이며, 먹으면 포만감이 30 회복됩니다. 음식 보관소가 있으면 일꾼이 하나씩 옮겨 저장합니다. 배고픈 개미는 보관 재고가 있어도 가장 가까운 먹이를 찾아 먹습니다. 일꾼은 여왕과 애벌레에게 먹이를 가져다줍니다.</p>`;
     }else if(app.selected.type==='room'){
       const room=sim.rooms.find(r=>r.id===app.selected.id);if(!room){closeDrawer();return;}
       const flooded=room.cells.filter(i=>sim.tiles[i].water>=.025).length;
@@ -130,9 +134,7 @@
       }
       content.querySelectorAll('[data-room-type]').forEach(button=>button.onclick=()=>{sim.designate(room.id,button.dataset.roomType);showDrawer();save();});
     }else{
-      const active=sim.jobs.filter(j=>j.status==='active').length;
-      content.innerHTML=`<span class="eyebrow">군체의 작업 기록</span><h2>일꾼이 일하고 있어요</h2><p>예약 ${sim.jobs.length}칸 · 작업 중 ${active}칸<br>연결되지 않은 굴착은 연결될 때까지, 안전하지 않은 땅채우기는 안전해질 때까지 기다립니다.</p>${sim.jobs.slice(0,8).map(j=>`<div class="job-row"><span>${j.type==='dig'?'굴착':'땅채우기'} · (${sim.tiles[j.cell].x}, ${sim.tiles[j.cell].y-4})</span><b>${j.status==='active'?`${Math.min(100,Math.floor(j.progress*100))}%`:'대기'}</b></div>`).join('')}${sim.jobs.length?'<button id="cancel-jobs" class="danger-button">남은 건설 요청 취소</button>':''}<div style="margin-top:16px">${sim.log.slice(0,7).map(item=>`<div class="log-item">${timeString(item.time)}　${escape(item.text)}</div>`).join('')}</div>`;
-      if($('cancel-jobs'))$('cancel-jobs').onclick=()=>{sim.cancelConstruction();showDrawer();save();};
+      content.innerHTML='<span class="eyebrow">군체의 작업 기록</span><h2>작업 내역</h2><p>안전한 메우기 대기 '+sim.jobs.filter(j=>j.type==='fill').length+'칸 · 굴착 한도 대기 '+sim.jobs.filter(j=>j.type==='dig').length+'칸</p>'+sim.jobs.slice(0,8).map(j=>'<div class="job-row"><span>'+ (j.type==='dig'?'이전 굴착 요청':'메우기')+' · ('+sim.tiles[j.cell].x+', '+(sim.tiles[j.cell].y-4)+')</span><b>대기</b></div>').join('')+'<div style="margin-top:16px">'+sim.log.slice(0,7).map(item=>'<div class="log-item">'+timeString(item.time)+'　'+escape(item.text)+'</div>').join('')+'</div>';
     }
   }
   function save(){try{localStorage.setItem(SAVE_KEY,app.sim.serialize());}catch{if(!app.saveWarning){app.saveWarning=true;app.sim.record('이 브라우저에서는 저장할 수 없습니다. 창을 닫기 전까지 플레이할 수 있습니다.',true);}}}
@@ -154,10 +156,11 @@
   document.addEventListener('visibilitychange',()=>{if(document.hidden){save();lastTime=0;}});window.addEventListener('pagehide',save);
   function showGameOver(){setPaused(true);$('gameover-stats').textContent=`생존 ${timeString(app.sim.time)} · 최고 개미 수 ${app.sim.peak}마리 · 군체가 남긴 ${app.sim.rooms.reduce((n,r)=>n+r.cells.length,0)}칸의 방`;$('gameover').showModal();}
   function updateUI(){
-    if(app.mode==='cancel'&&app.selection.size)updateSelection();
+    if(app.mode&&app.selection.size)updateSelection();
     const sim=app.sim,counts=sim.counts();for(const key of ['total','soldier','worker','larva','egg'])$('count-'+key).textContent=counts[key];
     const ready=sim.growthCandidates().length;for(const id of ['grow-worker','grow-soldier']){$(id).disabled=!ready;$(id).title=ready?`애벌레실의 애벌레 ${ready}마리가 성장할 수 있습니다.`:'애벌레실에 내려놓은 애벌레가 있어야 성장할 수 있습니다.';}const food=Math.floor(sim.food+1e-8);$('food').textContent=food;const storage=sim.foodStorage(),loose=!sim.food&&sim.foodChunks.some(c=>sim.at(c)?.open);$('food-stock').setAttribute('aria-label',`저장된 먹이 ${food}개 · ${loose?'흩어진 먹이 덩어리':storage.room?'음식 보관소':'열매 식물'} 위치 보기`);
     $('job-count').textContent=sim.jobs.length;$('job-count').hidden=!sim.jobs.length;
+    const excavation=sim.excavationStats();$('excavation-count').textContent=excavation.current+' / '+excavation.limit;$('excavation-budget').classList.toggle('over-limit',excavation.current>excavation.limit);
     const notice=$('notice');notice.textContent=sim.notice;notice.classList.toggle('visible',sim.time<sim.noticeUntil);notice.classList.toggle('warning',sim.noticeWarning);
     if(app.selected)showDrawer();if(sim.over&&!$('gameover').open&&!$('welcome').open)showGameOver();
   }
@@ -185,13 +188,12 @@
       }
     }
     const bounds=sim.viewBounds();ctx.save();ctx.beginPath();ctx.rect(bounds.minX*C.CELL,(C.SURFACE+1)*C.CELL,(bounds.maxX-bounds.minX+1)*C.CELL,(bounds.maxY-C.SURFACE)*C.CELL);ctx.clip();ctx.clip(clip);
-    const drops=sim.waterDrops.filter(p=>p.x>=left*C.CELL-12&&p.x<=(right+1)*C.CELL+12&&p.y>=top*C.CELL-12&&p.y<=(bottom+1)*C.CELL+12),body=new Path2D(),surface=new Path2D();
+    const drops=sim.waterDrops.filter(p=>p.x>=left*C.CELL-12&&p.x<=(right+1)*C.CELL+12&&p.y>=top*C.CELL-12&&p.y<=(bottom+1)*C.CELL+12),body=new Path2D();
     const pools=fluid.poolGeometry(),pooledIds=new Set(pools.flatMap(p=>p.dropIds));
     for(const pool of pools){
       // Extend sampled edges to the actual wall; the cavity clip keeps the
       // rounded floor and adjoining rooms exact without particle-sized gaps.
       for(const span of pool.spans){const edge=fluid.size*.55,y=Math.max(pool.level,span.y-edge);body.rect(span.x-edge,y,span.width+edge*2,span.y+span.height+edge-y);}
-      for(const line of pool.surfaces){surface.moveTo(line.left-fluid.size*.55,pool.level);surface.lineTo(line.right+fluid.size*.55,pool.level);}
     }
     // Falling and rolling particles keep their individual outlines until they
     // stop; settled particles share a flat surface clipped to the cave floor.
@@ -200,8 +202,6 @@
       body.moveTo(p.x+r*stretch,p.y);body.ellipse(p.x,p.y,r*stretch,r/stretch,0,0,Math.PI*2);
     }
     ctx.fillStyle=ART.water;ctx.fill(body);
-    ctx.strokeStyle=ART.ink;ctx.lineWidth=.5;ctx.lineCap='round';ctx.stroke(surface);
-    for(const r of sim.waterRipples){const y=fluid.surface(r.x,r.y)??r.y,reach=2+r.age*15;ctx.strokeStyle=`rgba(216,244,245,${(1-r.age/.65)*.75})`;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(r.x-reach,y);ctx.lineTo(r.x+reach,y);ctx.stroke();}
     ctx.restore();
   }
   function sameMaterial(sim,t,kind,dx,dy){const n=sim.tile(t.x+dx,t.y+dy);return n?.kind===kind&&(kind==='root'||!n.open);}
@@ -301,7 +301,6 @@
       if(ant.foodCargo)drawFoodChunk(ctx,ant.foodCargo,ant.x+Math.sin(ant.angle)*7,ant.y-Math.cos(ant.angle)*7,.8);
       if(ant.type==='enemy'){ctx.fillStyle=sim.entityColor(ant);ctx.font='8px system-ui';ctx.fillText('!',ant.x-2,ant.y-14);}
       if(ant.task?.type==='sleep'){ctx.fillStyle='#e8dab2';ctx.font='8px system-ui';ctx.fillText('z',ant.x+7,ant.y-8);}
-      if(ant.task?.stage==='act'&&['dig','fill'].includes(ant.task.type)){ctx.fillStyle='#dec7a0';for(let i=0;i<3;i++)circle(ant.x+Math.sin(i+sim.time*7)*7,ant.y+Math.cos(i+sim.time*7)*6,1,'#dec7a0');}
     }
     for(const job of sim.jobs){const t=sim.tiles[job.cell];if(t.x<left||t.x>right||t.y<top||t.y>bottom)continue;ctx.strokeStyle=job.type==='fill'?'#edc18b':'#f5e3b4';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.strokeRect(t.x*cell+3,t.y*cell+3,cell-6,cell-6);ctx.setLineDash([]);if(job.status==='active'){ctx.fillStyle='#f5e3b455';ctx.fillRect(t.x*cell+3,(t.y+1)*cell-3-job.progress*(cell-6),cell-6,job.progress*(cell-6));}}
     if(app.mode){
@@ -314,8 +313,8 @@
         ctx.strokeStyle='#fff3d14d';ctx.beginPath();for(let y=Math.max(top,C.SURFACE+1);y<=bottom;y++)for(let x=left;x<=right;x++){ctx.moveTo((x+.75)*cell,(y+.5)*cell);ctx.arc((x+.5)*cell,(y+.5)*cell,cell*.25,0,Math.PI*2);}ctx.stroke();
       }
       ctx.restore();const selectedRooms=new Path2D();
-      for(const index of app.selection){const t=sim.tiles[index];if(app.mode==='cancel'&&!sim.jobs.some(j=>j.status!=='done'&&j.cell===index))continue;if(t.open&&t.room){selectedRooms.roundRect(t.x*cell,t.y*cell,cell,cell,sim.roomCorners(t));continue;}const invalid=t.y<=C.SURFACE||t.kind==='rock'||(app.mode==='fill'&&!t.open);ctx.fillStyle=app.mode==='cancel'?'#e9b29880':invalid?'#b3554f70':'#c3dfac88';ctx.fillRect(t.x*cell+1,t.y*cell+1,cell-2,cell-2);ctx.strokeStyle=app.mode==='cancel'?'#d28668':invalid?'#eaba97':'#e7f2d8';ctx.lineWidth=1;ctx.strokeRect(t.x*cell+1,t.y*cell+1,cell-2,cell-2);}
-      ctx.fillStyle=app.mode==='cancel'?'#e9b29880':'#c3dfac88';ctx.fill(selectedRooms);
+      for(const index of app.selection){const t=sim.tiles[index];if(t.open&&t.room){selectedRooms.roundRect(t.x*cell,t.y*cell,cell,cell,sim.roomCorners(t));continue;}const invalid=t.y<=C.SURFACE||t.kind==='rock'||(app.mode==='fill'&&!t.open);ctx.fillStyle=invalid?'#b3554f70':'#c3dfac88';ctx.fillRect(t.x*cell+1,t.y*cell+1,cell-2,cell-2);ctx.strokeStyle=invalid?'#eaba97':'#e7f2d8';ctx.lineWidth=1;ctx.strokeRect(t.x*cell+1,t.y*cell+1,cell-2,cell-2);}
+      ctx.fillStyle='#c3dfac88';ctx.fill(selectedRooms);
     }
   }
   function frame(now){
