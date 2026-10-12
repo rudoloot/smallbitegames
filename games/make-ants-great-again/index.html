@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#f3eedf">
+  <meta name="theme-color" content="#F7F5ED">
   <meta name="description" content="길과 방을 파고, 작은 개미 군체를 키워보세요. 개미집 건설 · 성장 · 생존 게임.">
   <title>개미집 · Make Ants Great Again</title>
-  <link rel="icon" href="icon.svg?v=6aa0b775d1ca" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=6913f9479d14">
-  <script src="art.js?v=c614935cb3e2" defer></script>
-  <script src="water.js?v=9f18a01cdce2" defer></script>
-  <script src="sim.js?v=ab7844bc9f0f" defer></script>
-  <script src="game.js?v=e2a47bb255df" defer></script>
+  <link rel="icon" href="icon.svg?v=d836ad12f634" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=3275e3a94539">
+  <script src="art.js?v=c3c1821e0a7a" defer></script>
+  <script src="water.js?v=6f93f67e4595" defer></script>
+  <script src="sim.js?v=af75f26df308" defer></script>
+  <script src="game.js?v=311ab2379b6a" defer></script>
 </head>
 <body>
   <main id="app">
@@ -23,15 +23,15 @@
       <button class="toolbar-button" id="jobs-button" aria-label="작업 내역" aria-controls="drawer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 3H15V6H9ZM9 11H15M9 16H15"/></svg><span>작업 내역</span><b id="job-count" class="job-badge" hidden>0</b></button>
     </header>
     <nav class="population" aria-label="개체 수와 애벌레 성장">
-      <div class="population-item total"><span>개체 수</span><strong id="count-total">4</strong></div>
-      <button class="population-item" id="grow-soldier" aria-label="애벌레 한 마리를 병정개미로 성장"><span>병정</span><strong id="count-soldier">0</strong><small>＋ 성장</small></button>
-      <button class="population-item" id="grow-worker" aria-label="애벌레 한 마리를 일꾼으로 성장"><span>일꾼</span><strong id="count-worker">3</strong><small>＋ 성장</small></button>
-      <div class="population-item"><span>애벌레</span><strong id="count-larva">0</strong></div>
-      <div class="population-item"><span>알</span><strong id="count-egg">0</strong></div>
+      <div class="population-item total"><span>개체 수</span><strong id="count-total">7</strong></div>
+      <button class="population-item" id="grow-soldier" aria-label="애벌레 한 마리를 병정개미로 성장"><span>병정</span><strong id="count-soldier">1</strong><small>＋ 성장</small></button>
+      <button class="population-item" id="grow-worker" aria-label="애벌레 한 마리를 일꾼으로 성장"><span>일꾼</span><strong id="count-worker">5</strong><small>＋ 성장</small></button>
+      <div class="population-item brood-larva"><span>애벌레</span><strong id="count-larva">0</strong></div>
+      <div class="population-item brood-egg"><span>알</span><strong id="count-egg">0</strong></div>
       <button class="population-item" id="food-stock" title="음식 보관소에 저장된 먹이 · 위치 보기"><span>먹이</span><strong id="food">0</strong></button>
     </nav>
     <section class="world" aria-label="개미집 건설 지도">
-      <canvas id="world" tabindex="0" aria-label="땅의 세로 단면. 건설 버튼으로 길과 방을 선택하고, 이동 모드에서 드래그하여 지도를 이동하세요. PC에서는 마우스 휠로 확대·축소하세요."></canvas>
+      <canvas id="world" tabindex="0" aria-label="땅의 세로 단면. 건설 버튼으로 길과 방을 선택하고, 이동 모드에서 드래그하여 지도를 이동하세요. PC에서는 마우스 휠로, 모바일에서는 두 손가락을 벌리거나 오므려 확대·축소하세요."></canvas>
       <div id="notice" class="notice" role="status"></div>
       <div class="selection-actions" id="selection-actions" hidden><span id="selection-count"></span><button id="request-build">건설 요청</button><button id="clear-selection" aria-label="선택 취소">✕</button></div>
     </section>
@@ -44,11 +44,13 @@
     <aside id="drawer" class="drawer" hidden aria-label="선택한 개체 또는 방 정보"><button id="close-drawer" class="close-button" aria-label="정보 닫기">✕</button><div id="drawer-content"></div></aside>
   </main>
   <dialog id="welcome">
-    <div class="dialog-art"><canvas id="welcome-ant" width="280" height="180" aria-label="귀여운 여왕개미와 일꾼 세 마리"></canvas></div>
+    <div class="dialog-art"><canvas id="welcome-ant" width="280" height="180" aria-label="귀여운 여왕개미와 일꾼 다섯 마리, 병정개미 한 마리"></canvas></div>
     <span class="eyebrow">작은 군체의 첫날</span><h2>한 마리에서,<br>하나의 세상으로.</h2>
-    <p>여왕 하나, 일꾼 셋.<br>길을 파고 방을 만들어 개미집을 키워보세요.</p>
+    <p>여왕 하나, 일꾼 다섯, 병정 하나.<br>길을 파고 방을 만들어 개미집을 키워보세요.</p>
     <ol class="onboarding"><li><b>길</b>을 누르고 지표면 아래부터 드래그</li><li><b>방</b>을 파고 빈방을 눌러 용도 지정</li><li>알이 부화하면 상단 <b>병정 · 일꾼</b>을 눌러 성장</li></ol>
-    <button class="primary-button" id="start">굴을 파기 시작하기</button><button type="button" id="exit-welcome" class="primary-button exit-button">게임 나가기</button><p class="fine-print">진행 자동 저장 · 여왕이 죽으면 군체의 여정 종료</p>
+    <div class="welcome-actions"><button class="primary-button" id="start">굴을 파기 시작하기</button><button class="secondary-button" id="start-new">새로 시작하기</button></div>
+    <p class="fine-print" id="new-game-note" hidden>새로 시작하면 저장된 진행을 초기화합니다.</p>
+    <button type="button" id="exit-welcome" class="primary-button exit-button">게임 나가기</button><p class="fine-print">진행 자동 저장 · 여왕이 죽으면 군체의 여정 종료</p>
   </dialog>
   <dialog id="help-dialog">
     <button class="close-button" id="close-help" aria-label="메뉴 닫기">✕</button><span class="eyebrow">개미집 · 군체 안내서</span><h2>개미집 메뉴</h2><button type="button" id="exit-menu" class="primary-button exit-button">게임 나가기</button>

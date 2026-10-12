@@ -11,8 +11,8 @@
       const s=this.sim,C=this.C,signature=s.tiles.map(t=>t.open?`${t.index}:${t.room??t.cave??''}`:'').join('|');
       if(this.totals.length!==s.tiles.length){const totals=new Float64Array(s.tiles.length);totals.set(this.totals);this.totals=totals;}
       if(signature!==this.geometry){
-        this._pools=null;
-        if(this.geometry!==null)for(const p of s.waterDrops){delete p.poolGroup;delete p.poolBounds;}
+        this._pools=null;this._basins=new Map();
+        if(this.geometry!==null)for(const p of s.waterDrops)delete p.poolGroup;
         let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
         for(const t of s.tiles)if(t.open&&t.y>C.SURFACE){minX=Math.min(minX,t.x);maxX=Math.max(maxX,t.x);minY=Math.min(minY,t.y);maxY=Math.max(maxY,t.y);}
         if(!Number.isFinite(minX)){minX=maxX=0;minY=maxY=C.SURFACE+1;}
@@ -60,48 +60,75 @@
       this.totals.fill(0);for(const p of this.sim.waterDrops){const t=this.sim.at(p);if(t)this.totals[t.index]+=p.volume;}
       for(const t of this.sim.tiles)t.water=this.totals[t.index];
     }
+    basin(x,y,topRow,bottomRow=this.height-1){
+      const col=Math.floor((x-this.originX)/this.size),row=Math.floor((y-this.originY)/this.size),seed=row*this.width+col;
+      if(col<0||col>=this.width||row<topRow||row>bottomRow||!this.mask[seed])return null;
+      this._basins??=new Map();const key=seed+':'+topRow+':'+bottomRow;
+      if(this._basins.has(key))return this._basins.get(key);
+      const cells=[seed],seen=new Set(cells),rows=new Map();let floorKey=seed;
+      for(let i=0;i<cells.length;i++){
+        const k=cells[i],r=Math.floor(k/this.width),c=k%this.width;
+        if(r>Math.floor(floorKey/this.width)||r===Math.floor(floorKey/this.width)&&k<floorKey)floorKey=k;
+        if(!rows.has(r))rows.set(r,[]);rows.get(r).push(c);
+        for(const [cc,rr] of [[c-1,r],[c+1,r],[c,r-1],[c,r+1]]){
+          const n=rr*this.width+cc;if(cc<0||cc>=this.width||rr<topRow||rr>bottomRow||seen.has(n)||!this.mask[n])continue;
+          seen.add(n);cells.push(n);
+        }
+      }
+      const runs=[];for(const [r,columns] of rows){columns.sort((a,b)=>a-b);let first=columns[0],last=first;for(const c of columns.slice(1)){if(c>last+1){runs.push({row:r,first,last});first=c;}last=c;}runs.push({row:r,first,last});}
+      runs.sort((a,b)=>a.row-b.row||a.first-b.first);
+      const basin={cells,rows,runs,floorKey,topRow,bottomRow};
+      // Every resting particle in this basin shares the same geometry cache.
+      for(const k of cells)this._basins.set(k+':'+topRow+':'+bottomRow,basin);
+      return basin;
+    }
     poolGeometry(){
       if(this._pools)return this._pools;
-      // Display pooling is latched separately from momentary collision speeds.
-      // Fixed anchors keep a resting pool's outline and waterline stable.
-      const drops=this.sim.waterDrops.filter(p=>p.pooled??(p.settled&&(p.poolRest??.2)>=.2&&Math.hypot(p.vx,p.vy)<12)),bins=new Map(),binSize=this.radius*4,parent=drops.map((_,i)=>i),previousGroups=new Map();
-      const root=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};
-      // A connected pool does not split when its particles shuffle or evaporate.
-      for(let i=0;i<drops.length;i++){const group=drops[i].poolGroup;if(!group)continue;if(previousGroups.has(group))parent[root(i)]=root(previousGroups.get(group));else previousGroups.set(group,i);}
-      // Only touching, resting particles in the same cavity form a pool.
-      for(let i=0;i<drops.length;i++){
-        const p=drops[i],bx=Math.floor(p.x/binSize),by=Math.floor(p.y/binSize);
-        for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)for(const j of bins.get(`${bx+dx},${by+dy}`)??[]){
-          const q=drops[j],d=Math.hypot(p.x-q.x,p.y-q.y);if(d>this.radiusOf(p)+this.radiusOf(q)+this.size*1.5)continue;
-          const steps=Math.max(1,Math.ceil(d/this.size));let connected=true;
-          for(let k=1;k<steps;k++)if(!this.sim.groundContains(p.x+(q.x-p.x)*k/steps,p.y+(q.y-p.y)*k/steps)){connected=false;break;}
-          if(connected)parent[root(i)]=root(j);
-        }
-        const key=`${bx},${by}`;if(!bins.has(key))bins.set(key,[]);bins.get(key).push(i);
+      const drops=this.sim.waterDrops.filter(p=>p.pooled??(p.settled&&(p.poolRest??.2)>=.2&&Math.hypot(p.vx,p.vy)<12)),groups=new Map();
+      for(const p of drops){
+        const x=p.poolX??p.x,y=p.poolY??p.y,r=this.radiusOf(p),old=p.poolBounds;
+        let topRow=Math.max(0,Math.floor(((old?.ceiling??(y-r-this.size))-this.originY)/this.size));
+        const bottomRow=Math.min(this.height-1,old?Math.round((old.bottom-this.originY)/this.size)-1:this.height-1);
+        let basin=this.basin(x,y,topRow,bottomRow);if(!basin)continue;
+        const key=basin.floorKey;
+        if(!groups.has(key))groups.set(key,{particles:[],basin,x,y,bottomRow});
+        const group=groups.get(key);group.particles.push(p);
+        if(topRow<group.basin.topRow){group.basin=basin;group.x=x;group.y=y;group.bottomRow=bottomRow;}
       }
-      const groups=new Map();for(let i=0;i<drops.length;i++){const key=root(i);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(drops[i]);}
       const pools=[];
-      for(const particles of groups.values()){
-        const left=Math.min(...particles.map(p=>(p.poolX??p.x)-this.radiusOf(p))),right=Math.max(...particles.map(p=>(p.poolX??p.x)+this.radiusOf(p))),bottom=Math.max(...particles.map(p=>(p.poolY??p.y)+this.radiusOf(p)))+this.size*2;
-        const minColumn=Math.max(0,Math.floor((left-this.originX)/this.size)),maxColumn=Math.min(this.width-1,Math.floor((right-this.originX)/this.size));
-        const bottomRow=Math.min(this.height-1,Math.floor((bottom-this.originY)/this.size)),area=particles.reduce((n,p)=>n+p.volume*this.C.CELL**2,0);
+      for(const group of groups.values()){
+        const particles=group.particles,area=particles.reduce((n,p)=>n+p.volume*this.C.CELL**2,0);let basin=group.basin;
+        while(area>basin.cells.length*this.size**2+1e-8&&basin.topRow>0){
+          const expanded=this.basin(group.x,group.y,basin.topRow-1,group.bottomRow);if(!expanded)break;basin=expanded;
+        }
+        const rowNumbers=[...basin.rows.keys()].sort((a,b)=>b-a),bottom=this.originY+(rowNumbers[0]+1)*this.size;
         let remaining=area,level=bottom;
-        // Fill the actual cavity below one horizontal plane, conserving the
-        // resting particles' area instead of drawing their circular outlines.
-        for(let row=bottomRow;row>=0&&remaining>1e-8;row--){
-          const y=this.originY+row*this.size,height=Math.min(this.size,bottom-y);let width=0;
-          for(let col=minColumn;col<=maxColumn;col++)if(this.mask[row*this.width+col]){const x=this.originX+col*this.size;width+=Math.max(0,Math.min(right,x+this.size)-Math.max(left,x));}
-          if(width&&remaining<=width*height){level=y+height-remaining/width;remaining=0;break;}remaining-=width*height;
+        for(const row of rowNumbers){
+          const width=basin.rows.get(row).length*this.size,y=this.originY+row*this.size;
+          if(remaining<=width*this.size+1e-8){level=y+this.size-remaining/width;remaining=0;break;}remaining-=width*this.size;
         }
-        if(remaining<=1e-8){
-          const pool={left,right,bottom,level,area,dropIds:particles.map(p=>p.id)};pools.push(pool);
-          const group=particles.map(p=>p.id).sort()[0];for(const p of particles){p.poolGroup=group;p.poolBounds={left,right,bottom,level};}
+        if(remaining>1e-8)continue;
+        const spans=[],surfaces=[],tiles=new Set();
+        for(const run of basin.runs){
+          const y=this.originY+run.row*this.size,top=Math.max(level,y),height=y+this.size-top;if(height<=1e-8)continue;
+          const x=this.originX+run.first*this.size,width=(run.last-run.first+1)*this.size;
+          spans.push({x,y:top,width,height});
+          if(level>=y-1e-8&&level<y+this.size)surfaces.push({left:x,right:x+width});
+          for(let col=run.first;col<=run.last;col++){const tile=this.sim.at({x:this.originX+(col+.5)*this.size,y:top+height/2});if(tile)tiles.add(tile.index);}
         }
+        const left=Math.min(...spans.map(s=>s.x)),right=Math.max(...spans.map(s=>s.x+s.width));
+        const pool={left,right,bottom,level,area,spans,surfaces,tiles:[...tiles].sort((a,b)=>a-b),dropIds:particles.map(p=>p.id)};
+        pools.push(pool);const id=particles.map(p=>p.id).sort()[0];
+        for(const p of particles){p.poolGroup=id;p.poolBounds={left,right,bottom,level,ceiling:this.originY+basin.topRow*this.size};}
       }
       this._pools=pools;return pools;
     }
+    contains(x,y){
+      return this.poolGeometry().some(p=>p.spans.some(s=>x>=s.x-this.size*.5&&x<=s.x+s.width+this.size*.5&&y>=Math.max(p.level,s.y-this.size*.5)&&y<=s.y+s.height+this.size*.5)&&this.sim.groundContains(x,y));
+    }
+    floodedTile(tile){return !!tile&&this.poolGeometry().some(p=>p.tiles.includes(tile.index));}
     surface(x,y){
-      const candidates=this.poolGeometry().filter(p=>x>=p.left&&x<=p.right&&y>=p.level-this.C.CELL&&y<=p.bottom+this.C.CELL&&this.sim.groundContains(x,p.level+.5)).sort((a,b)=>Math.abs(a.level-y)-Math.abs(b.level-y));
+      const candidates=this.poolGeometry().filter(p=>p.surfaces.some(s=>x>=s.left-this.size*.5&&x<=s.right+this.size*.5)&&y>=p.level-this.C.CELL&&y<=p.bottom+this.C.CELL&&this.sim.groundContains(x,p.level+Math.min(.5,(p.bottom-p.level)*.5))).sort((a,b)=>Math.abs(a.level-y)-Math.abs(b.level-y));
       return candidates[0]?.level??null;
     }
     wall(p){
@@ -145,7 +172,7 @@
       const r=this.radiusOf(p),speed=Math.hypot(p.vx,p.vy);
       if(p.pooled){
         const bounds=p.poolBounds??{left:p.poolX-r,right:p.poolX+r,bottom:p.poolY+r+this.size*2,level:p.poolY-r};
-        const outward=(p.x<bounds.left-r*.5&&p.vx<-2)||(p.x>bounds.right+r*.5&&p.vx>2)||(p.y>bounds.bottom+r*.5&&p.vy>2)||(p.y<bounds.level-r*3&&p.vy<-2);
+        const outward=(p.x<bounds.left-r*2&&p.vx<-2)||(p.x>bounds.right+r*2&&p.vx>2)||(p.y>bounds.bottom+r*.5&&p.vy>2);
         const invalid=!this.sim.groundContains(p.poolX,p.poolY);
         // Jostling anywhere inside the pool does not turn it into droplets.
         p.poolFlow=outward&&speed>2?(p.poolFlow??0)+dt:0;
@@ -156,7 +183,7 @@
     }
     step(dt){
       this._pools=null;
-      const s=this.sim,ps=s.waterDrops,origins=[],binSize=this.radius*2,bins=new Map();
+      const s=this.sim,ps=s.waterDrops,objects=[...s.ants,...s.foodChunks,...s.trash,...s.grubs],origins=[],binSize=this.radius*2,bins=new Map();
       if(ps.some(p=>p.pooled))this.poolGeometry();
       this.binSize=binSize;
       for(const p of ps){
@@ -187,13 +214,15 @@
         p.settled=!!(p.grounded||p.supported)&&Math.hypot(p.vx,p.vy)<28;
         p.poolRest=p.settled&&Math.hypot(p.vx,p.vy)<12?(p.poolRest??0)+dt:0;
         this.updatePoolState(p,dt);
+        s.sweepWater?.(p,o,dt,objects);
         if(!o.settled&&p.settled&&o.vy>45){p.squash=.18;s.waterRipples.push({x:p.x,y:p.y-this.radiusOf(p),age:0});}
         p.squash=Math.max(0,(p.squash??0)-dt);
       }
     }
     evaporate(dt){
+      this._pools=null;
       const s=this.sim;if(!s.waterDrops.length){s.waterEvaporation=0;return;}
-      s.waterEvaporation=(s.waterEvaporation??0)+dt/60;
+      s.waterEvaporation=(s.waterEvaporation??0)+dt/240;
       while(s.waterDrops.length){
         const i=s.waterDrops.findIndex(p=>p.volume<=s.waterEvaporation+1e-9);if(i<0)break;
         s.waterEvaporation=Math.max(0,s.waterEvaporation-s.waterDrops[i].volume);s.waterDrops.splice(i,1);
@@ -202,6 +231,8 @@
     update(dt){
       this.prepare();let left=dt;
       while(left>1e-8){const h=Math.min(1/90,left);this.rain(h);this.step(h);this.evaporate(h);for(const r of this.sim.waterRipples)r.age+=h;this.sim.waterRipples=this.sim.waterRipples.filter(r=>r.age<.65).slice(-60);left-=h;}
+      const ids=new Set(this.sim.waterDrops.map(p=>p.id));
+      for(const object of [...this.sim.ants,...this.sim.foodChunks,...this.sim.trash,...this.sim.grubs])if(object.waterFlow&&!ids.has(object.waterFlow)){delete object.waterFlow;delete object.waterRoute;delete object.waterGoal;object.waterUntil=this.sim.time+.2;}
       this.syncTiles();
     }
     saved(){return this.sim.waterDrops.map(p=>({...p}));}

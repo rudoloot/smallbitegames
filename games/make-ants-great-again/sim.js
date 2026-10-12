@@ -5,7 +5,7 @@
     empty:{name:'빈방',color:'#ead6b1',description:'방을 지정하면 개미들이 목적에 맞게 이용합니다.'},
     queen:{name:'여왕개미실',color:'#d7ae7d',description:'여왕이 머무르고 알을 낳으며 휴식을 취하는 방입니다.'},
     food:{name:'음식 보관소',color:'#c4ae75',description:'모든 개미의 먹이를 보관합니다. 일꾼이 채집한 음식을 가져옵니다.'},
-    egg:{name:'알 보관실',color:'#e8dcbd',description:'알이 이 방에서 2분을 보내면 애벌레가 됩니다.'},
+    egg:{name:'알 보관실',color:'#e8dcbd',description:'알이 이 방에서 2분을 보내면 애벌레가 됩니다. 한 블록에 2×2로 4개까지 배치합니다.'},
     larva:{name:'애벌레실',color:'#e7ccae',description:'일꾼이 애벌레를 운반하고 먹이를 주며 돌봅니다. 이 방에 내려놓은 애벌레만 병정 또는 일꾼으로 성장시킬 수 있습니다.'},
     rest:{name:'휴식실',color:'#b5b88a',description:'에너지가 30 이하인 개미들이 쉬는 방입니다.'},
     aphid:{name:'진딧물사육실',color:'#a7bd82',description:'열매나무 주변의 진딧물을 데려와 기릅니다. 위생 30 이하이면 일꾼이 청소하며, 뿌리에서 5칸 이내인 방에서 건강한 진딧물의 단물을 얻습니다.'},
@@ -15,13 +15,22 @@
     guard:{name:'경비실',color:'#bd9d7f',description:'전투 중이 아닌 병정이 머무는 방입니다.'}
   };
   const MAX_HP={queen:100,soldier:150,worker:100,egg:30,larva:60,aphid:30,enemy:70};
-  const ROOM_PALETTE={queen:['#FFF0BE','#D9AD32'],food:['#FFE0B5','#F29B38'],egg:['#FFF9E5','#E8DCAF'],larva:['#FFE0ED','#EC91B9'],rest:['#E8E8ED','#9999AA'],aphid:['#F4D7F3','#C66BC6'],mushroom:['#EADDF8','#A276CE'],trash:['#D9D9DE','#74747F'],toilet:['#F5F5F5','#D0D0D8'],empty:['#F1EBD9','#C7BFA8'],guard:['#FAF4BD','#D9CF43']};
-  for(const [type,[color,objectColor]] of Object.entries(ROOM_PALETTE))Object.assign(ROOMS[type],{color,objectColor});
+  const ART_COLORS={ink:'#293837',paper:'#F7F5ED',soil:'#DCCBB0',tunnel:'#FAF8F0',water:'#8DBFD3',root:'#AD987C',leaf:'#A8BC92',rock:'#BABEB4',egg:'#FFF4D8',larva:'#F3D84C',food:'#F28B43'};
+  const ROOM_PALETTE={
+    queen:['#EACB75','#967525','#806621'],food:['#F0B98A',ART_COLORS.food,'#A8562C'],
+    egg:['#AED1D4',ART_COLORS.egg,'#45676E'],larva:['#C9BCDF',ART_COLORS.larva,'#6B5B86'],
+    rest:['#AFC1DA','#526D92'],aphid:['#95C8AD','#327654'],
+    mushroom:['#D99FB6','#914760'],trash:['#BEC2C5','#626A6D'],
+    toilet:['#90C9C6','#337875'],empty:['#EEE8DB','#827B6D','#716A5D'],
+    guard:['#D3D184','#72722D']
+  };
+  for(const [type,[color,objectColor,accent=objectColor]] of Object.entries(ROOM_PALETTE))Object.assign(ROOMS[type],{color,objectColor,accent});
   const ATTACK={queen:10,soldier:50,worker:20,enemy:12};
   // Body collision sizes leave room for two lanes inside an 8mm tunnel;
   // antennae and moving legs are visual details outside the body collider.
   const RADIUS={queen:8,worker:6,soldier:6.64,enemy:6.64,egg:4,larva:5.2,aphid:4};
   const isAdultAnt=entity=>['queen','worker','soldier','enemy'].includes(entity.type);
+  const isFriendlyAnt=entity=>['queen','worker','soldier'].includes(entity.type);
   const TASK_NAMES={eat:'음식 섭취',sleep:'휴식',clean:'청소',feed:'먹이 주기',carry:'운반',dig:'굴착',fill:'땅채우기',plant:'버섯 재배',tend:'진딧물 관리',harvest:'버섯 수확',honey:'단물 채취',forage:'외부 채집',toilet:'화장실',trash:'쓰레기 처리',fight:'전투',move:'이동',wander:'이동'};
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
   const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -42,7 +51,7 @@
   const WaterPhysics=G.AntWaterPhysics??(typeof require==='function'?require('./water.js'):null);
   class Simulation {
     constructor(seed=217){
-      this.seed=seed;this.randomState=seed;this.time=0;this.id=0;this.food=C.INITIAL_FOOD;this.peak=4;this.deadCount=0;this.over=false;
+      this.seed=seed;this.randomState=seed;this.time=0;this.id=0;this.food=C.INITIAL_FOOD;this.peak=0;this.deadCount=0;this.over=false;
       this.tiles=[];this.tileLookup=new Map();this.worldBounds={minX:0,maxX:C.W-1,maxY:C.H-1};this._viewBounds=null;this.mapClock=0;this.ants=[];this.rooms=[];this.jobs=[];this.trash=[];this.log=[];this.reservations={};this.waterClock=0;this.scheduleClock=0;this.supplyClock=0;
       this.rainLeft=0;this.nextRain=180;this.nextInvasion=250;this.rainWarned=false;this.invasionWarned=false;this.lastSave=0;this.notice='';this.noticeUntil=0;this.noticeWarning=false;
       this.initializeWorld();
@@ -50,14 +59,14 @@
       this.foodChunks=[];this.foodRemainder=0;
       this.waterDrops=[];this.waterRipples=[];this.waterEvaporation=0;this.rainDripClock=0;this.wetClock=0;this._waterPhysics=null;
       this.addAnt('queen',17.5*C.CELL,C.SURFACE*C.CELL+10.2);
-      this.addAnt('worker',16.5*C.CELL,4.5*C.CELL);
-      this.addAnt('worker',18.5*C.CELL,4.5*C.CELL);
-      this.addAnt('worker',19.5*C.CELL,4.5*C.CELL);
+      for(const x of [16.5,18.5,19.5,15.5,20.5])this.addAnt('worker',x*C.CELL,4.5*C.CELL);
+      this.addAnt('soldier',21.5*C.CELL,4.5*C.CELL);
+      this.peak=this.counts().total;
       this.initializeFruitPlants();
       this.initializeCaverns();
       this.nextAphid=45+this.terrainNoise(67,9)*45;
       this.updateMapBounds();
-      this.record('지표면에 여왕과 일꾼 세 마리가 도착했습니다.',false,false);
+      this.record('지표면에 여왕과 일꾼 다섯 마리, 병정 한 마리가 도착했습니다.',false,false);
     }
     initializeFruitPlants(){this.fruitPlants=[14.5,20.5].map((x,i)=>({id:this.uid('p'),x:x*C.CELL,y:4.5*C.CELL,fruit:10,color:i?'#bb7894':'#dd8056'}));}
     spawnAphid(){
@@ -234,7 +243,7 @@
       }return false;
     }
     walkable(tile,avoidFill=false){
-      if(!tile||!tile.open||tile.water>=.025||avoidFill&&this.jobs.some(j=>j.type==='fill'&&j.status!=='done'&&j.cell===tile.index))return false;
+      if(!tile||!tile.open||this.floodedTile(tile)||avoidFill&&this.jobs.some(j=>j.type==='fill'&&j.status!=='done'&&j.cell===tile.index))return false;
       if(tile.y>=C.SURFACE+1-C.GRASS_CELLS)return true;
       const p=this.point(tile);return [[0,0],[8,0],[-8,0],[0,8],[0,-8]].every(([dx,dy])=>this.outdoorContains(p.x+dx,p.y+dy));
     }
@@ -325,7 +334,7 @@
       for(const t of this.tiles)if(t.y>C.SURFACE)t.rootDistance=roots.length?Math.min(...roots.map(r=>Math.hypot(t.x-r.x,t.y-r.y))):99;
     }
     addAnt(type,x,y){
-      const ant={id:this.uid('a'),type,x,y,hp:MAX_HP[type],hunger:100,energy:100,hygiene:100,lastDamage:-10,cooldown:0,age:0,angle:0,phase:0,moving:false,task:null,resume:null,sick:false,dead:false,carriedBy:null,carry:null,toiletNeed:0,stuck:0,replan:0};
+      const ant={id:this.uid('a'),type,x,y,hp:MAX_HP[type],hunger:100,energy:100,hygiene:100,lastDamage:-10,cooldown:0,age:0,angle:0,phase:0,moving:false,task:null,resume:null,lastWork:null,sick:false,dead:false,carriedBy:null,carry:null,toiletNeed:0,stuck:0,replan:0};
       this.ants.push(ant);return ant;
     }
     queen(){return this.ants.find(a=>a.type==='queen'&&!a.dead);}
@@ -346,6 +355,7 @@
         const current=this.tiles[queue[head]];
         for(const next of this.neighbors(current)){
           if(seen.has(next.index)||!this.walkable(next,avoidFill))continue;
+          if(next.room&&next.room!==current.room&&next.x!==current.x&&next.y!==current.y&&this.adjacent(current).some(t=>this.walkable(t,avoidFill)&&Math.abs(t.x-next.x)+Math.abs(t.y-next.y)===1&&this.connects(t,next)))continue;
           seen.add(next.index);parent.set(next.index,current.index);
           if(next.index===end.index){const path=[];let k=next.index;while(k!==start.index){path.unshift(k);k=parent.get(k);}return [...descent,...path];}
           queue.push(next.index);
@@ -354,10 +364,31 @@
       return null;
     }
     roomTiles(room){return room.cells.map(i=>this.tiles[i]).filter(t=>this.walkable(t,true));}
-    roomFor(kind,from){
+    roomCapacity(room){
+      // A tile touching several walls still contributes just one place. Narrow
+      // tunnels leave wall shoulders at their opening; adjoining rooms do not.
+      return [...new Set(room.cells)].map(i=>this.tiles[i]).filter(t=>t?.open&&t.room===room.id&&[[0,-1],[1,0],[0,1],[-1,0]].some(([dx,dy])=>{const n=this.tile(t.x+dx,t.y+dy);return !n?.open||n.y>C.SURFACE&&!n.room&&!n.cave;})).length;
+    }
+    roomOccupants(room){
+      return this.ants.filter(a=>{if(a.dead||!isFriendlyAnt(a))return false;const carrier=a.carriedBy&&this.ants.find(b=>b.id===a.carriedBy&&!b.dead),tile=this.at(carrier||a);return tile?.open&&tile.room===room.id;});
+    }
+    roomParty(ant){return (isFriendlyAnt(ant)?[ant.id]:[]).concat(this.ants.filter(a=>!a.dead&&isFriendlyAnt(a)&&a.carriedBy===ant.id).map(a=>a.id));}
+    roomCanEnter(ant,room){
+      if(!room||!isFriendlyAnt(ant))return true;
+      const party=new Set(this.roomParty(ant)),occupants=this.roomOccupants(room);
+      if(occupants.some(a=>a.id===ant.id))return true;
+      return occupants.filter(a=>!party.has(a.id)).length+party.size<=this.roomCapacity(room);
+    }
+    roomMovementAllows(ant,p){
+      const room=this.rooms.find(r=>r.id===this.at(p)?.room);if(!this.roomCanEnter(ant,room))return false;
+      if(!room||!isFriendlyAnt(ant)||this.at(ant)?.room===room.id)return true;
+      const first=this.ants.filter(a=>!a.dead&&(a.task?.stage==='move'||a.entranceQueue?.deposit)&&a.entranceQueue?.roomId===room.id&&this.at(a)?.room!==room.id).sort((a,b)=>a.entranceQueue.ticket-b.entranceQueue.ticket)[0];
+      return !first||first.id===ant.id;
+    }
+    roomFor(kind,from,entity=from){
       const options=this.rooms.filter(r=>r.type===kind&&this.roomTiles(r).length);
       options.sort((a,b)=>distance(this.point(this.tiles[a.cells[0]]),from)-distance(this.point(this.tiles[b.cells[0]]),from));
-      for(const room of options){const p=this.roomPoint(room,from);if(p&&this.findPath(from,p)!==null)return {room,point:p};}return null;
+      for(const room of options){const p=entity.type==='egg'?this.roomPlacement(room,entity):this.roomPoint(room,from);if(p&&this.findPath(from,p)!==null)return {room,point:p};}return null;
     }
     roomCenter(room){const cells=this.roomTiles(room);return cells.length?cells.reduce((p,t)=>({x:p.x+(t.x+.5)*C.CELL/cells.length,y:p.y+(t.y+.5)*C.CELL/cells.length}),{x:0,y:0}):null;}
     roomSpots(room){
@@ -367,11 +398,25 @@
     }
     roomPoint(room,from={x:0,y:0}){
       const probe=from.type?from:{id:'room-probe',type:'worker'};
+      if(probe.type==='egg')return this.roomPlacement(room,probe);
       return this.roomPlacement(room,probe)??this.roomSpots(room)[0]??null;
     }
+    eggPlacementAllows(entity,p){
+      const tile=this.at(p);if(!tile?.room||!this.walkable(tile,true)||!this.canStand(entity,p.x,p.y))return false;
+      const quarter=C.CELL/4,px=p.x-tile.x*C.CELL,py=p.y-tile.y*C.CELL;
+      if(![quarter,quarter*3].some(x=>Math.abs(x-px)<.01)||![quarter,quarter*3].some(y=>Math.abs(y-py)<.01))return false;
+      const eggs=this.ants.filter(a=>a.type==='egg'&&!a.dead&&!a.carriedBy&&a.id!==entity.id&&this.at(a)?.index===tile.index);
+      return eggs.length<4&&!eggs.some(a=>distance(a,p)<RADIUS.egg*2+.2);
+    }
+    eggSpots(room,entity){
+      const quarter=C.CELL/4,center=Number.isFinite(entity.x)&&Number.isFinite(entity.y)?entity:this.roomCenter(room);
+      return [...new Set(room.cells)].map(i=>this.tiles[i]).filter(t=>t?.room===room.id&&this.walkable(t,true)).flatMap(t=>[[1,1],[3,1],[1,3],[3,3]].map(([x,y])=>({x:t.x*C.CELL+x*quarter,y:t.y*C.CELL+y*quarter}))).filter(p=>this.eggPlacementAllows(entity,p)).sort((a,b)=>distance(a,center)-distance(b,center)||a.y-b.y||a.x-b.x);
+    }
     roomPlacement(room,entity){
+      if(!this.roomCanEnter(entity,room))return null;
+      if(entity.type==='egg')return this.eggSpots(room,entity)[0]??null;
       const spots=this.roomSpots(room).filter(p=>this.canStand(entity,p.x,p.y));
-      // Brood spacing is a visual preference, never a movement or capacity limit.
+      // Larvae and aphids do not consume adult places; their spacing is visual.
       if(!isAdultAnt(entity)){
         const spaced=spots.find(p=>!this.ants.some(a=>a.id!==entity.id&&!a.dead&&!a.carriedBy&&!isAdultAnt(a)&&distance(p,a)<RADIUS[entity.type]+RADIUS[a.type]+.2));
         if(spaced)return spaced;
@@ -404,7 +449,7 @@
       const cells=this.roomTiles(room),key=`${room.id}:${count}:${cells.map(t=>t.index).join(',')}`;
       if(this.foodDisplay?.key===key)return this.foodDisplay.chunks;
       let slots=[],size=4;
-      for(let divisions=3;slots.length<count;divisions++){
+      for(let divisions=4;slots.length<count;divisions++){
         slots=[];const spacing=C.CELL/divisions;size=Math.min(4,spacing*.3);
         for(const t of cells)for(let row=0;row<divisions;row++)for(let col=0;col<divisions;col++){
           const p={x:(t.x+(col+.5)/divisions)*C.CELL,y:(t.y+(row+.5)/divisions)*C.CELL},radius=size*1.4;
@@ -428,20 +473,25 @@
       const nutrition=this.food+this.foodRemainder;this.food=0;this.foodRemainder=0;
       this.scatterFood(point??this.queen()??this.point(this.tile(17,C.SURFACE)),nutrition,'#d6b36f','stored',Math.ceil(nutrition));
     }
-    assignLooseMeal(ant,target=ant){
+    *looseMealOptions(ant,target=ant){
       if(target!==ant&&this.reservations['service:'+target.id])return false;
       for(const chunk of this.foodChunks.filter(c=>!c.falling&&c.age>=.45&&this.at(c)?.open&&this.at(c).water<.025).sort((a,b)=>distance(ant,a)-distance(ant,b))){
-        if(this.assign(ant,{type:'forage',chunkId:chunk.id,mealTarget:target.id,goal:{x:chunk.x,y:chunk.y},range:12,duration:.35,key:'food:'+chunk.id}))return true;
+        if((yield {type:'forage',chunkId:chunk.id,mealTarget:target.id,goal:{x:chunk.x,y:chunk.y},range:12,duration:.35,key:'food:'+chunk.id}))return true;
       }return false;
     }
-    assignForage(ant,outsideOnly=false){
+    *forageOptions(ant,outsideOnly=false){
       if(this.foodChunks.some(c=>c.age<.45))return false;
       const bugs=this.foodBugs.slice().sort((a,b)=>distance(ant,a)-distance(ant,b));
-      for(const bug of bugs){const goal=this.foodBugGoal(bug,ant);if(goal&&this.assign(ant,{type:'forage',target:bug.id,goal,range:RADIUS[ant.type]+C.FOOD_BUG_RADIUS+3,duration:2,key:'prey:'+bug.id}))return true;}
-      if(!outsideOnly)for(const grub of this.grubs.slice().sort((a,b)=>distance(ant,a)-distance(ant,b)))if(this.assign(ant,{type:'forage',grubId:grub.id,goal:{x:grub.x,y:grub.y},range:RADIUS[ant.type]+9,duration:2,key:'prey:'+grub.id}))return true;
+      for(const bug of bugs){const goal=this.foodBugGoal(bug,ant);if(goal&&(yield {type:'forage',target:bug.id,goal,range:RADIUS[ant.type]+C.FOOD_BUG_RADIUS+3,duration:2,key:'prey:'+bug.id}))return true;}
+      if(!outsideOnly)for(const grub of this.grubs.slice().sort((a,b)=>distance(ant,a)-distance(ant,b)))if((yield {type:'forage',grubId:grub.id,goal:{x:grub.x,y:grub.y},range:RADIUS[ant.type]+9,duration:2,key:'prey:'+grub.id}))return true;
       const plants=this.fruitPlants.filter(p=>p.fruit>0).sort((a,b)=>distance(ant,a)-distance(ant,b));
-      for(const plant of plants)if(this.assign(ant,{type:'forage',plantId:plant.id,goal:{x:plant.x,y:plant.y},range:12,duration:2,key:'fruit:'+plant.id}))return true;
+      for(const plant of plants)if((yield {type:'forage',plantId:plant.id,goal:{x:plant.x,y:plant.y},range:12,duration:2,key:'fruit:'+plant.id}))return true;
       return false;
+    }
+    assignLooseMeal(ant,target=ant){return this.acceptTaskOptions(ant,this.looseMealOptions(ant,target));}
+    assignForage(ant,outsideOnly=false){return this.acceptTaskOptions(ant,this.forageOptions(ant,outsideOnly));}
+    acceptTaskOptions(ant,options){
+      let next=options.next();while(!next.done){if(this.assign(ant,next.value))return true;next=options.next(false);}return false;
     }
     hasWaterNear(room){return room.cells.some(i=>this.tiles[i].wetDistance<=10);}
     hasRootNear(room){return room.cells.some(i=>this.tiles[i].rootDistance<=5);}
@@ -541,7 +591,7 @@
       if(!baby){this.record('애벌레실에 내려놓은 애벌레가 있어야 성장시킬 수 있습니다. 침수된 방에서는 성장할 수 없습니다.');return false;}
       // Reserve a collision-free spot before transforming the smaller larva.
       const spots=[{x:baby.x,y:baby.y},...this.adjacent(this.at(baby)).filter(t=>this.walkable(t,true)).map(t=>this.point(t))];
-      const spot=spots.find(p=>this.canStand({...baby,type},p.x,p.y));
+      const spot=spots.find(p=>this.roomMovementAllows({...baby,type},p)&&this.canStand({...baby,type},p.x,p.y));
       if(!spot){this.record('성장할 공간이 부족합니다. 방을 넓혀주세요.',true);return false;}
       this.clearTask(baby);baby.type=type;baby.hp=MAX_HP[type];baby.energy=100;baby.x=spot.x;baby.y=spot.y;baby.age=0;
       this.record(type==='soldier'?'새로운 병정개미가 태어났습니다.':'새로운 일꾼이 태어났습니다.');this.peak=Math.max(this.peak,this.counts().total);return true;
@@ -566,7 +616,7 @@
     clearTask(ant){
       const task=ant.task;for(const key of this.reservationKeys(ant,task))if(this.reservations[key]===ant.id)delete this.reservations[key];
       if(task?.jobId){const job=this.jobs.find(j=>j.id===task.jobId);if(job&&job.status!=='done'){job.status='pending';job.worker=null;job.progress=0;}}
-      ant.task=null;ant.stuck=0;ant.yieldGoal=null;ant.detour=null;ant.traffic=null;ant.passing=null;
+      ant.task=null;ant.stuck=0;ant.yieldGoal=null;ant.detour=null;ant.traffic=null;ant.passing=null;ant.entranceQueue=null;ant.junctionQueue=null;
     }
     assign(ant,task){
       if(!task.goal)return false;
@@ -574,118 +624,193 @@
       const path=ant.treeHost&&distance(ant,task.goal)<.1?[]:this.findPath(ant,task.goal,!['move','fill'].includes(task.type));if(path===null)return false;
       task.path=path;task.pathFrom=this.at(ant)?.index;task.progress=0;task.stage='move';task.created=this.time;task.range=task.range??14;
       for(const key of keys)this.reservations[key]=ant.id;
-      ant.task=task;ant.stuck=0;return true;
+      const work=this.workType(ant,task);if(work)ant.lastWork=work;
+      ant.task=task;ant.stuck=0;ant.parking=null;return true;
     }
     sleepTask(ant){
       const kind=ant.type==='queen'?'queen':'rest',current=this.rooms.find(r=>r.id===this.at(ant)?.room),stay=kind==='queen'&&current?.type==='queen'&&this.walkable(this.at(ant),true);
       const room=stay?{room:current,point:{x:ant.x,y:ant.y}}:this.roomFor(kind,ant);
       return {type:'sleep',goal:room?.point??{x:ant.x,y:ant.y},roomId:room?.room.id,duration:100,range:6};
     }
+    idleTask(task){return task?.type==='wander'||(task?.type==='forage'&&task.searching);}
+    workType(ant,task){
+      if(!task||this.idleTask(task))return null;
+      if(task.type==='forage'&&task.mealTarget)return task.mealTarget===ant.id?null:'feed';
+      if(task.type==='clean'&&task.target===ant.id)return null;
+      return ['feed','clean','carry','plant','tend','harvest','honey','forage','dig','fill','trash'].includes(task.type)?task.type:null;
+    }
+    taskPriority(ant,task){
+      if(task.type==='sleep'||task.type==='eat'||task.mealTarget===ant.id||ant.foodCargo||ant.carry||task.type==='move')return -1;
+      const target=this.ants.find(a=>a.id===(task.mealTarget??task.target));
+      if(task.type==='clean')return target?.type==='queen'?0:target?.type==='larva'?4:target?.type==='egg'?5:6;
+      if(task.type==='feed'||task.mealTarget)return target?.type==='queen'?1:3;
+      if(task.type==='carry')return 7;
+      if(task.type==='plant')return 8;if(task.type==='tend')return 9;
+      if(task.type==='harvest')return 10;if(task.type==='honey')return 11;
+      if(task.type==='forage')return task.searching?18:task.chunkId?12:this.food<=this.counts().total*5?13:18;
+      return {toilet:14,dig:15,fill:16,trash:17,wander:19}[task.type]??-1;
+    }
+    taskLocation(task){
+      if(task.jobId){const job=this.jobs.find(j=>j.id===task.jobId);if(job)return this.point(this.tiles[job.cell]);}
+      const room=this.rooms.find(r=>r.id===task.roomId);
+      return this.ants.find(a=>a.id===(task.mealTarget??task.target))??this.foodBugs.find(b=>b.id===task.target)??
+        this.foodChunks.find(c=>c.id===task.chunkId)??this.grubs.find(g=>g.id===task.grubId)??
+        this.fruitPlants.find(p=>p.id===task.plantId)??this.trash.find(t=>t.id===task.target)??(room?this.roomCenter(room):task.goal);
+    }
+    dispatchTasks(){
+      // Offers use positions from the same scheduling instant. Advance past
+      // a demand only when it has been claimed or cannot be reached.
+      const entries=this.ants.filter(a=>a.type==='worker'&&!a.dead&&!a.carriedBy&&(!a.task||this.idleTask(a.task))&&!this.inWater(a))
+        .map(ant=>({ant,options:this.taskOptions(ant),offer:null}));
+      const advance=entry=>{
+        let next=entry.options.next(false);entry.offer=null;
+        while(!next.done){
+          const task=next.value;
+          if(entry.ant.task&&this.idleTask(task))return;
+          if(task.goal&&!this.reservationKeys(entry.ant,task).some(key=>this.reservations[key])&&
+            (entry.ant.treeHost&&distance(entry.ant,task.goal)<.1||this.findPath(entry.ant,task.goal,!['move','fill'].includes(task.type))!==null)){
+            entry.offer=task;return;
+          }
+          next=entry.options.next(false);
+        }
+      };
+      for(const entry of entries)advance(entry);
+      while(entries.some(e=>e.offer)){
+        const offers=entries.filter(e=>e.offer);
+        const specialist=entry=>{const type=this.workType(entry.ant,entry.offer);return Number(!!type&&entry.ant.lastWork===type);};
+        offers.sort((a,b)=>this.taskPriority(a.ant,a.offer)-this.taskPriority(b.ant,b.offer)||
+          specialist(b)-specialist(a)||
+          distance(a.ant,this.taskLocation(a.offer))-distance(b.ant,this.taskLocation(b.offer))||a.ant.id.localeCompare(b.ant.id,undefined,{numeric:true}));
+        const chosen=offers[0],task=chosen.offer;
+        if(chosen.ant.task)this.clearTask(chosen.ant);
+        if(this.assign(chosen.ant,task)){
+          if(task.jobId){const job=this.jobs.find(j=>j.id===task.jobId);job.status='active';job.worker=chosen.ant.id;}
+          chosen.offer=null;
+        }else advance(chosen);
+        for(const entry of entries)if(entry.offer&&this.reservationKeys(entry.ant,entry.offer).some(key=>this.reservations[key]))advance(entry);
+      }
+    }
     chooseTask(ant){
-      if(ant.task||ant.dead||ant.carriedBy||['egg','larva','aphid'].includes(ant.type)||this.at(ant)?.water>=.025)return;
+      if(ant.type==='worker'){if(!ant.task||this.idleTask(ant.task))this.dispatchTasks();return;}
+      this.acceptTaskOptions(ant,this.taskOptions(ant));
+    }
+    *taskOptions(ant){
+      if((ant.task&&!this.idleTask(ant.task))||ant.dead||ant.carriedBy||['egg','larva','aphid'].includes(ant.type)||this.inWater(ant))return;
       const allEnemies=this.ants.filter(a=>a.type==='enemy'&&!a.dead&&!a.carriedBy);
       if(ant.type==='enemy'){
         const target=this.ants.filter(a=>['queen','worker','soldier'].includes(a.type)&&!a.dead&&!a.carriedBy).sort((a,b)=>distance(ant,a)-distance(ant,b))[0];
-        if(target)this.assign(ant,{type:'fight',target:target.id,goal:{x:target.x,y:target.y},range:RADIUS[ant.type]+RADIUS[target.type]+7,duration:1});return;
+        if(target)(yield {type:'fight',target:target.id,goal:{x:target.x,y:target.y},range:RADIUS[ant.type]+RADIUS[target.type]+7,duration:1});return;
       }
       const filling=this.jobs.some(j=>j.type==='fill'&&j.status!=='done'&&(j.cell===this.at(ant)?.index||this.fillTouches(ant,j.cell)));
-      if(filling){const p=this.relocatePoint(ant);if(p&&this.assign(ant,{type:'move',goal:p,duration:0,range:2}))return;}
-      if(ant.energy<=0){this.assign(ant,this.sleepTask(ant));return;}
+      if(filling){const p=this.relocatePoint(ant);if(p&&(yield {type:'move',goal:p,duration:0,range:2}))return;}
+      if(ant.energy<=0){(yield this.sleepTask(ant));return;}
       if(ant.type==='soldier'&&allEnemies.length){
         allEnemies.sort((a,b)=>distance(ant,a)-distance(ant,b));
-        for(const target of allEnemies)if(this.assign(ant,{type:'fight',target:target.id,goal:{x:target.x,y:target.y},range:RADIUS.soldier+RADIUS.enemy+7,duration:1}))return;
+        for(const target of allEnemies)if((yield {type:'fight',target:target.id,goal:{x:target.x,y:target.y},range:RADIUS.soldier+RADIUS.enemy+7,duration:1}))return;
       }
       if(ant.type==='queen'){
-        if(ant.energy<=30){this.assign(ant,this.sleepTask(ant));return;}
-        const room=this.roomFor('queen',ant);if(room&&distance(room.point,ant)>8)this.assign(ant,{type:'move',goal:room.point,duration:0,range:6});return;
+        if(ant.energy<=30){(yield this.sleepTask(ant));return;}
+        const room=this.roomFor('queen',ant);if(room&&distance(room.point,ant)>8)(yield {type:'move',goal:room.point,duration:0,range:6});return;
       }
       if(ant.hunger<=50){
-        if(ant.foodCargo&&this.assign(ant,{type:'eat',goal:{x:ant.x,y:ant.y},duration:2,range:1}))return;
-        if(this.food>0&&this.assign(ant,{type:'eat',goal:this.foodPoint(ant),duration:2,range:18}))return;
-        if(this.assignLooseMeal(ant))return;
+        if(ant.foodCargo&&(yield {type:'eat',goal:{x:ant.x,y:ant.y},duration:2,range:1}))return;
+        if(this.food>0&&(yield {type:'eat',goal:this.foodPoint(ant),duration:2,range:18}))return;
+        if((yield* this.looseMealOptions(ant)))return;
       }
-      if(ant.energy<=30&&this.assign(ant,this.sleepTask(ant)))return;
+      if(ant.energy<=30&&(yield this.sleepTask(ant)))return;
       if(ant.foodCargo){
         const target=this.ants.find(a=>a.id===ant.foodCargo.mealTarget&&!a.dead&&a.hunger<100);
-        if(target&&this.assign(ant,{type:'feed',target:target.id,goal:{x:target.x,y:target.y},duration:2,key:'service:'+target.id,range:RADIUS[ant.type]+RADIUS[target.type]+12}))return;
-        const goal=this.foodPoint(ant);if(goal&&this.assign(ant,{type:'forage',goal,duration:1,key:'forage:'+ant.id,deliveryDone:true}))return;
+        if(target&&(yield {type:'feed',target:target.id,goal:{x:target.x,y:target.y},duration:2,key:'service:'+target.id,range:RADIUS[ant.type]+RADIUS[target.type]+12}))return;
+        const goal=this.foodPoint(ant);if(goal&&(yield {type:'forage',goal,duration:1,key:'forage:'+ant.id,deliveryDone:true}))return;
         this.dropFoodCargo(ant);
       }
       const targets=(type,test)=>this.ants.filter(a=>a.type===type&&!a.dead&&!a.carriedBy&&test(a)).sort((a,b)=>distance(ant,a)-distance(ant,b));
-      const service=(type,target,duration)=>this.assign(ant,{type,target:target.id,goal:{x:target.x,y:target.y},duration,key:'service:'+target.id,range:RADIUS[ant.type]+RADIUS[target.type]+12});
+      const service=(type,target,duration)=>({type,target:target.id,goal:{x:target.x,y:target.y},duration,key:'service:'+target.id,range:RADIUS[ant.type]+RADIUS[target.type]+12});
       if(ant.type==='soldier'){
-        if(ant.hygiene<=30&&this.assign(ant,{type:'clean',target:ant.id,goal:{x:ant.x,y:ant.y},duration:5}))return;
-        const guard=this.roomFor('guard',ant);if(guard&&distance(guard.point,ant)>8)this.assign(ant,{type:'move',goal:guard.point,duration:0,range:6});return;
+        if(ant.hygiene<=30&&(yield {type:'clean',target:ant.id,goal:{x:ant.x,y:ant.y},duration:5}))return;
+        const guard=this.roomFor('guard',ant);if(guard&&distance(guard.point,ant)>8)(yield {type:'move',goal:guard.point,duration:0,range:6});return;
       }
-      // This order is the design's worker priority list. Existing tasks are never
-      // interrupted by a newly appearing higher priority demand.
-      for(const queen of targets('queen',a=>a.hygiene<=30))if(service('clean',queen,5))return;
-      if(this.food>0)for(const queen of targets('queen',a=>a.hunger<=50||a.needsFullMeal))if(service('feed',queen,2))return;
-      if(!this.food)for(const queen of targets('queen',a=>a.hunger<=50||a.needsFullMeal))if(this.assignLooseMeal(ant,queen))return;
-      if(this.food>0)for(const larva of targets('larva',a=>a.hunger<=50))if(service('feed',larva,2))return;
-      if(!this.food)for(const larva of targets('larva',a=>a.hunger<=50))if(this.assignLooseMeal(ant,larva))return;
-      for(const larva of targets('larva',a=>a.hygiene<=30))if(service('clean',larva,5))return;
-      for(const egg of targets('egg',a=>a.hygiene<=30))if(service('clean',egg,5))return;
-      if(ant.hygiene<=30&&this.assign(ant,{type:'clean',target:ant.id,goal:{x:ant.x,y:ant.y},duration:5}))return;
+      // Keep demand priorities; the dispatcher compares workers before reserving work.
+      for(const queen of targets('queen',a=>a.hygiene<=30))if((yield service('clean',queen,5)))return;
+      if(this.food>0)for(const queen of targets('queen',a=>a.hunger<=50||a.needsFullMeal))if((yield service('feed',queen,2)))return;
+      if(!this.food)for(const queen of targets('queen',a=>a.hunger<=50||a.needsFullMeal))if((yield* this.looseMealOptions(ant,queen)))return;
+      if(this.food>0)for(const larva of targets('larva',a=>a.hunger<=50))if((yield service('feed',larva,2)))return;
+      if(!this.food)for(const larva of targets('larva',a=>a.hunger<=50))if((yield* this.looseMealOptions(ant,larva)))return;
+      for(const larva of targets('larva',a=>a.hygiene<=30))if((yield service('clean',larva,5)))return;
+      for(const egg of targets('egg',a=>a.hygiene<=30))if((yield service('clean',egg,5)))return;
+      if(ant.hygiene<=30&&(yield {type:'clean',target:ant.id,goal:{x:ant.x,y:ant.y},duration:5}))return;
       if(ant.carry){
         const target=this.ants.find(a=>a.id===ant.carry&&!a.dead);
         if(!target)ant.carry=null;
-        else{const destination=this.roomFor(target.type==='aphid'?'aphid':target.type,ant);if(destination)this.assign(ant,{type:'carry',target:target.id,goal:destination.point,destinationRoom:destination.room.id,delivery:true,duration:1,key:'carry:'+target.id,range:12});return;}
+        else{const destination=this.roomFor(target.type==='aphid'?'aphid':target.type,ant,target);if(destination)(yield {type:'carry',target:target.id,goal:destination.point,destinationRoom:destination.room.id,delivery:true,duration:1,key:'carry:'+target.id,range:12});return;}
       }
       for(const target of this.ants.filter(a=>['egg','larva','aphid'].includes(a.type)&&!a.dead&&!a.carriedBy)){
         const kind=target.type==='aphid'?'aphid':target.type;
-        const destination=this.roomFor(kind,ant);if(!destination)continue;
+        const destination=this.roomFor(kind,ant,target);if(!destination)continue;
         const central=this.roomPoint(destination.room,target);
-        const current=this.at(target),needsCarry=current?.water>=.025||!destination.room.cells.includes(current?.index)||(central&&distance(target,central)>C.CELL*.7)||this.jobs.some(j=>j.type==='fill'&&j.status!=='done'&&j.cell===current?.index);
+        const current=this.at(target),needsCarry=current?.water>=.025||!destination.room.cells.includes(current?.index)||(target.type==='egg'&&!this.eggPlacementAllows(target,target))||(central&&distance(target,central)>C.CELL*.7)||this.jobs.some(j=>j.type==='fill'&&j.status!=='done'&&j.cell===current?.index);
         if(!needsCarry)continue;
         let pickup={x:target.x,y:target.y};
         if(current?.water>=.025){const shore=this.adjacent(current).filter(t=>this.walkable(t,true)).sort((a,b)=>distance(this.point(a),ant)-distance(this.point(b),ant))[0];if(!shore)continue;pickup=this.point(shore);}
-        if(this.assign(ant,{type:'carry',target:target.id,goal:pickup,destination:destination.point,destinationRoom:destination.room.id,duration:1,key:'carry:'+target.id,range:current?.water>=.025?C.CELL+2:22}))return;
+        if((yield {type:'carry',target:target.id,goal:pickup,destination:destination.point,destinationRoom:destination.room.id,duration:1,key:'carry:'+target.id,range:current?.water>=.025?C.CELL+2:22}))return;
       }
-      for(const room of this.rooms)if(room.type==='mushroom'&&this.hasWaterNear(room)&&!room.planted){const p=this.roomPoint(room,ant);if(p&&this.assign(ant,{type:'plant',roomId:room.id,goal:p,duration:3,key:'crop:'+room.id}))return;}
-      for(const aphid of targets('aphid',a=>a.hygiene<=30))if(service('tend',aphid,5))return;
-      for(const type of ['harvest','honey'])for(const room of this.rooms)if(room.type===(type==='harvest'?'mushroom':'aphid')&&room.crop>=30){const p=this.roomPoint(room,ant);if(p&&this.assign(ant,{type,roomId:room.id,goal:p,duration:3,key:'crop:'+room.id}))return;}
+      for(const room of this.rooms)if(room.type==='mushroom'&&this.hasWaterNear(room)&&!room.planted){const p=this.roomPoint(room,ant);if(p&&(yield {type:'plant',roomId:room.id,goal:p,duration:3,key:'crop:'+room.id}))return;}
+      for(const aphid of targets('aphid',a=>a.hygiene<=30))if((yield service('tend',aphid,5)))return;
+      for(const type of ['harvest','honey'])for(const room of this.rooms)if(room.type===(type==='harvest'?'mushroom':'aphid')&&room.crop>=30){const p=this.roomPoint(room,ant);if(p&&(yield {type,roomId:room.id,goal:p,duration:3,key:'crop:'+room.id}))return;}
       const candidate=this.foodPoint(ant),storageGoal=candidate&&this.findPath(ant,candidate)!==null?candidate:null;
       for(const chunk of this.foodChunks.filter(c=>storageGoal&&!c.falling&&c.age>=.45&&this.at(c)?.open).sort((a,b)=>distance(ant,a)-distance(ant,b))){
         const wet=this.at(chunk).water>=.025,shore=wet?this.adjacent(this.at(chunk)).filter(t=>this.walkable(t,true)).sort((a,b)=>distance(ant,this.point(a))-distance(ant,this.point(b)))[0]:null;
         if(wet&&!shore)continue;
-        if(this.assign(ant,{type:'forage',chunkId:chunk.id,goal:shore?this.point(shore):{x:chunk.x,y:chunk.y},range:wet?C.CELL+2:12,duration:.35,key:'food:'+chunk.id}))return;
+        if((yield {type:'forage',chunkId:chunk.id,goal:shore?this.point(shore):{x:chunk.x,y:chunk.y},range:wet?C.CELL+2:12,duration:.35,key:'food:'+chunk.id}))return;
       }
       // At or below five foods per living adult, forage before construction.
       // Only food already deposited in storage counts toward the target.
       if(!this.foodChunks.some(c=>c.age<.45)&&this.food<=this.counts().total*5){
-        if(this.assignForage(ant))return;
+        if((yield* this.forageOptions(ant)))return;
       }
-      if(ant.toiletNeed>=3){const toilet=this.roomFor('toilet',ant);if(toilet&&this.assign(ant,{type:'toilet',goal:toilet.point,duration:2}))return;}
+      if(ant.toiletNeed>=3){const toilet=this.roomFor('toilet',ant);if(toilet&&(yield {type:'toilet',goal:toilet.point,duration:2}))return;}
       for(const type of ['dig','fill']){
-        const jobs=this.jobs.filter(j=>j.type===type&&j.status==='pending');if(type==='fill')jobs.sort((a,b)=>this.tiles[b.cell].y-this.tiles[a.cell].y||b.created-a.created);
+        const jobs=this.jobs.filter(j=>j.type===type&&j.status==='pending').sort((a,b)=>distance(ant,this.point(this.tiles[a.cell]))-distance(ant,this.point(this.tiles[b.cell])));if(type==='fill')jobs.sort((a,b)=>this.tiles[b.cell].y-this.tiles[a.cell].y||b.created-a.created);
         for(const job of jobs){
           if(type==='fill'&&!this.safeToFill(job.cell))continue;
           const t=this.tiles[job.cell];const neighbors=this.neighbors(t).filter(n=>this.walkable(n,type!=='fill')).sort((a,b)=>distance(this.point(a),ant)-distance(this.point(b),ant));
-          for(const n of neighbors)if(this.assign(ant,{type,goal:this.point(n),duration:1,jobId:job.id,key:'job:'+job.id,range:22})){job.status='active';job.worker=ant.id;return;}
+          for(const n of neighbors)if((yield {type,goal:this.point(n),duration:1,jobId:job.id,key:'job:'+job.id,range:22})){job.status='active';job.worker=ant.id;return;}
         }
       }
       const disposal=this.roomFor('trash',ant);
-      if(disposal)for(const trash of this.trash){if(this.at(trash)?.water>=.025)continue;if(this.assign(ant,{type:'trash',goal:{x:trash.x,y:trash.y},target:trash.id,destination:disposal.point,duration:2,key:'trash:'+trash.id,range:18}))return;}
+      if(disposal)for(const trash of this.trash){if(this.at(trash)?.water>=.025)continue;if((yield {type:'trash',goal:{x:trash.x,y:trash.y},target:trash.id,destination:disposal.point,duration:2,key:'trash:'+trash.id,range:18}))return;}
       // Idle workers forage even when the colony already has enough food.
       // With no unclaimed resource, search the surface without creating food.
-      if(storageGoal&&this.foodChunks.some(c=>c.falling)&&this.assign(ant,{type:'forage',searching:true,goal:{x:ant.x,y:ant.y},duration:.5,key:'forage:'+ant.id}))return;
-      if(this.assignForage(ant,true))return;
+      if(storageGoal&&this.foodChunks.some(c=>c.falling)&&(yield {type:'forage',searching:true,goal:{x:ant.x,y:ant.y},duration:.5,key:'forage:'+ant.id}))return;
+      if((yield* this.forageOptions(ant,true)))return;
       const bounds=this.viewBounds(),column=clamp(Math.floor(ant.x/C.CELL)+(this.random()<.5?-1:1)*(3+Math.floor(this.random()*5)),bounds.minX+1,bounds.maxX-1);
-      if(this.assign(ant,{type:'forage',searching:true,goal:{x:(column+.5)*C.CELL,y:(C.SURFACE+.5)*C.CELL},duration:2,key:'forage:'+ant.id}))return;
+      if((yield {type:'forage',searching:true,goal:{x:(column+.5)*C.CELL,y:(C.SURFACE+.5)*C.CELL},duration:2,key:'forage:'+ant.id}))return;
       // Finite idle moves distribute ants over rooms rather than pinning a doorway.
       const room=this.rooms.filter(r=>this.roomTiles(r).length).sort(()=>this.random()-.5)[0];
-      if(room){const p=this.roomPoint(room,ant);if(p&&distance(p,ant)>12)this.assign(ant,{type:'wander',goal:p,duration:0,range:6});}
+      if(room){const p=this.roomPoint(room,ant);if(p&&distance(p,ant)>12)(yield {type:'wander',goal:p,duration:0,range:6});}
       if(!ant.task&&this.ants.some(other=>other!==ant&&other.task&&['dig','fill'].includes(other.task.type)&&distance(ant,other.task.goal)<40)){
-        const p=this.relocatePoint(ant);if(p)this.assign(ant,{type:'move',goal:p,duration:0,range:10});
+        const p=this.relocatePoint(ant);if(p)(yield {type:'move',goal:p,duration:0,range:10});
       }
-      if(!ant.task&&ant.treeHost){const host=this.treeHabitat(ant.treeHost);if(host)this.assign(ant,{type:'move',goal:host.base,duration:0,range:2});}
+      if(!ant.task&&ant.treeHost){const host=this.treeHabitat(ant.treeHost);if(host)(yield {type:'move',goal:host.base,duration:0,range:2});}
     }
-    terrainFits(ant,x,y){
-      const r=RADIUS[ant.type],host=ant.treeHost&&this.treeHabitat(ant.treeHost);
+    floodedTile(tile){
+      if(!tile)return false;const fluid=this.waterPhysics();
+      return tile.water>=.025&&Math.abs(tile.water-(fluid.totals[tile.index]??0))>1e-8||fluid.floodedTile(tile);
+    }
+    wetPoint(x,y){
+      const tile=this.at({x,y}),fluid=this.waterPhysics();
+      return !!tile&&tile.water>=.025&&Math.abs(tile.water-(fluid.totals[tile.index]??0))>1e-8||fluid.contains(x,y);
+    }
+    inWater(object){
+      if(object.waterFlow||this.time<(object.waterUntil??0))return true;
+      const r=RADIUS[object.type]??object.size??6;
+      return [[0,0],[r,0],[-r,0],[0,r],[0,-r]].some(([dx,dy])=>this.wetPoint(object.x+dx,object.y+dy));
+    }
+    terrainFits(ant,x,y,ignoreWater=false){
+      const r=RADIUS[ant.type]??ant.size??6,host=ant.treeHost&&this.treeHabitat(ant.treeHost);
       for(const [dx,dy] of [[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.707,r*.707],[-r*.707,r*.707],[r*.707,-r*.707],[-r*.707,-r*.707]]){
         const px=x+dx,py=y+dy,t=this.tile(Math.floor(px/C.CELL),Math.floor(py/C.CELL));
-        if((!this.groundContains(px,py)&&!(host&&this.treeContains(host,{x:px,y:py})))||(t?.water??0)>=.025)return false;
+        if((!this.groundContains(px,py)&&!(host&&this.treeContains(host,{x:px,y:py})))||!ignoreWater&&this.wetPoint(px,py))return false;
       }
       return true;
     }
@@ -696,7 +821,7 @@
     }
     recoverTunnelAnt(ant,target=null){
       const cell=this.at(ant),r=RADIUS[ant.type];
-      if(!isAdultAnt(ant)||ant.dead||ant.carriedBy||!cell||cell.y<=C.SURFACE||cell.water>=.025||(!cell.open&&['rock','root'].includes(cell.kind))||this.time<(ant.unstickAfter??0))return false;
+      if(!isAdultAnt(ant)||ant.dead||ant.carriedBy||!cell||cell.y<=C.SURFACE||this.inWater(ant)||(!cell.open&&['rock','root'].includes(cell.kind))||this.time<(ant.unstickAfter??0))return false;
       const clipped=!this.terrainFits(ant,ant.x,ant.y);
       if(!clipped){
         if(!target||distance(ant,target)<2)return false;
@@ -705,7 +830,7 @@
       }
       // Room excavation can replace a diagonal strip just like a road turn.
       // Recover into the nearest connected dry space, including room edges.
-      const space=t=>t?.open&&t.y>C.SURFACE&&t.water<.025;
+      const space=t=>t?.open&&t.y>C.SURFACE&&!this.floodedTile(t);
       const nearby=[];for(let y=cell.y-1;y<=cell.y+1;y++)for(let x=cell.x-1;x<=cell.x+1;x++){const t=this.tile(x,y);if(space(t)&&distance(ant,this.point(t))<=C.CELL)nearby.push(t);}
       nearby.sort((a,b)=>distance(ant,this.point(a))-distance(ant,this.point(b)));
       const anchor=space(cell)?cell:(target&&nearby.find(t=>this.findPath(this.point(t),target)!==null))||nearby[0];
@@ -716,8 +841,8 @@
         let entered=!clipped;const steps=Math.ceil(distance(ant,p)/2);
         for(let i=1;i<=steps;i++){
           const q={x:ant.x+(p.x-ant.x)*i/steps,y:ant.y+(p.y-ant.y)*i/steps};
-          if((!clipped&&!this.trafficAllows(ant,q))||this.ants.some(a=>isAdultAnt(a)&&a!==ant&&a.id!==ant.id&&!a.dead&&!a.carriedBy&&distance(q,a)<r+RADIUS[a.type]+.2))return false;
-          for(const [dx,dy] of [[0,0],[r,0],[-r,0],[0,r],[0,-r]]){const t=this.at({x:q.x+dx,y:q.y+dy});if(!t||t.water>=.025||(!t.open&&['rock','root'].includes(t.kind)))return false;}
+          if(!this.roomMovementAllows(ant,q)||!this.junctionMovementAllows(ant,q)||(!clipped&&!this.trafficAllows(ant,q))||this.ants.some(a=>isAdultAnt(a)&&a!==ant&&a.id!==ant.id&&!a.dead&&!a.carriedBy&&distance(q,a)<r+RADIUS[a.type]+.2))return false;
+          for(const [dx,dy] of [[0,0],[r,0],[-r,0],[0,r],[0,-r]]){const t=this.at({x:q.x+dx,y:q.y+dy});if(!t||this.floodedTile(t)||(!t.open&&['rock','root'].includes(t.kind)))return false;}
           const fits=this.terrainFits(ant,q.x,q.y);if(entered&&!fits)return false;if(fits)entered=true;
         }return entered;
       };
@@ -905,17 +1030,18 @@
     }
     grubFits(bug,x,y){
       const r=6;
-      return [[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.707,r*.707],[-r*.707,r*.707],[r*.707,-r*.707],[-r*.707,-r*.707]].every(([dx,dy])=>{const t=this.tile(Math.floor((x+dx)/C.CELL),Math.floor((y+dy)/C.CELL));return t?.open&&t.cave===bug.cave&&this.groundContains(x+dx,y+dy);});
+      return [[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.707,r*.707],[-r*.707,r*.707],[r*.707,-r*.707],[-r*.707,-r*.707]].every(([dx,dy])=>{const t=this.tile(Math.floor((x+dx)/C.CELL),Math.floor((y+dy)/C.CELL));return t?.open&&(bug.washed||t.cave===bug.cave)&&this.groundContains(x+dx,y+dy);});
     }
     updateGrubs(dt){
       for(const bug of this.grubs){
         bug.phase+=dt*3;bug.moving=false;
+        if(bug.waterFlow)continue;
         if(this.ants.some(a=>!a.dead&&a.task?.grubId===bug.id&&a.task.stage==='act'&&distance(a,bug)<=a.task.range+2))continue;
         if(!this.grubFits(bug,bug.x,bug.y)){
           const cave=this.caverns.find(c=>c.id===bug.cave),spot=cave?.cells.map(i=>this.point(this.tiles[i])).find(p=>this.grubFits(bug,p.x,p.y));
           if(!spot){bug.buried=true;continue;}Object.assign(bug,spot);
         }
-        if(this.at(bug)?.water>=.025){const surface=this.waterPhysics().surface(bug.x,bug.y);if(surface!==null)bug.y+=(surface-3-bug.y)*Math.min(1,dt*3);continue;}
+        if(this.inWater(bug)){const surface=this.waterPhysics().surface(bug.x,bug.y);if(surface!==null)this.moveInWater(bug,0,(surface-3-bug.y)*Math.min(1,dt*3));continue;}
         bug.turn-=dt;if(bug.turn<=0){bug.angle+=(this.random()-.5)*2;bug.turn=1+this.random()*3;}
         const x=bug.x+Math.sin(bug.angle)*bug.speed*dt,y=bug.y-Math.cos(bug.angle)*bug.speed*dt;
         if(this.grubFits(bug,x,y)){bug.x=x;bug.y=y;bug.moving=true;}else{bug.angle+=Math.PI*.65;bug.turn=.5;}
@@ -941,6 +1067,7 @@
     depositFood(){this.food++;}
     updateFoodChunks(dt){
       for(const chunk of this.foodChunks){
+        if(chunk.waterFlow)continue;
         if(!chunk.surfaceDrop&&chunk.y<(C.SURFACE+1)*C.CELL)this.startSurfaceFoodDrop(chunk);
         chunk.age+=dt;
         const duration=chunk.scatterSeconds??.45;
@@ -949,7 +1076,7 @@
         const tile=this.at(chunk);if(!tile?.open){
           const neighbor=tile&&this.neighbors(tile).find(t=>t.open&&t.water<.025);if(neighbor){const p=this.point(neighbor);Object.assign(chunk,p,{startX:p.x,startY:p.y,targetX:p.x,targetY:p.y,age:1});}continue;
         }
-        if(chunk.age>=.45&&tile.water>=.025){const surface=this.waterPhysics().surface(chunk.x,chunk.y);if(surface!==null)chunk.y+=(surface-2-chunk.y)*Math.min(1,dt*3);}
+        if(chunk.age>=.45&&this.inWater(chunk)){const surface=this.waterPhysics().surface(chunk.x,chunk.y);if(surface!==null)this.moveInWater(chunk,0,(surface-2-chunk.y)*Math.min(1,dt*3));}
       }
     }
     travelDirection(ant){
@@ -959,48 +1086,261 @@
       const p=next?this.point(next):ant.task.goal,q=next&&previous?this.point(previous):ant;
       const d=distance(p,q);return d>.1?{x:(p.x-q.x)/d,y:(p.y-q.y)/d}:null;
     }
-    opposingTraffic(ant,traffic){
-      const {dir,origin}=traffic,right={x:-dir.y,y:dir.x};
-      return this.ants.filter(other=>{
-        if(!isAdultAnt(ant)||!isAdultAnt(other)||other===ant||other.dead||other.carriedBy)return false;
-        const heading=this.travelDirection(other);if(heading&&heading.x*dir.x+heading.y*dir.y>-.5)return false;
-        const ahead=(other.x-ant.x)*dir.x+(other.y-ant.y)*dir.y,side=(other.x-origin.x)*right.x+(other.y-origin.y)*right.y;
-        return ahead>-26&&ahead<130&&side<4&&side>-C.CELL*.8;
-      });
+    trafficLeader(ant){
+      const t=ant.traffic,cell=this.at(ant);if(!t||!isAdultAnt(ant)||cell?.room||cell?.cave)return null;
+      const right={x:-t.dir.y,y:t.dir.x};
+      return this.ants.filter(a=>isAdultAnt(a)&&a!==ant&&!a.dead&&!a.carriedBy).map(a=>({ant:a,ahead:(a.x-ant.x)*t.dir.x+(a.y-ant.y)*t.dir.y,side:Math.abs((a.x-ant.x)*right.x+(a.y-ant.y)*right.y),heading:this.travelDirection(a)})).filter(a=>a.ahead>0&&a.side<RADIUS[ant.type]+RADIUS[a.ant.type]+.2&&(!a.heading||a.heading.x*t.dir.x+a.heading.y*t.dir.y>.95)).sort((a,b)=>a.ahead-b.ahead)[0]??null;
     }
     trafficAllows(ant,p){
-      const t=ant.traffic;if(!isAdultAnt(ant)||!t||this.at(ant)?.room||this.at(p)?.room||ant.y<(C.SURFACE+1)*C.CELL)return true;
-      const right={x:-t.dir.y,y:t.dir.x},side=(p.x-t.origin.x)*right.x+(p.y-t.origin.y)*right.y;
-      const current=(ant.x-t.origin.x)*right.x+(ant.y-t.origin.y)*right.y;
-      // A car already overtaking may retreat toward its own lane, but it may
-      // not keep advancing into the lane of an approaching owner of that lane.
-      if(side<1&&this.opposingTraffic(ant,t).length){
-        const advance=(p.x-ant.x)*t.dir.x+(p.y-ant.y)*t.dir.y;
-        return side>current+.01||advance<-.01;
-      }return true;
+      if(!this.roomMovementAllows(ant,p)||!this.junctionMovementAllows(ant,p))return false;
+      const queue=ant.entranceQueue;if(queue&&!queue.entering){const from=this.tiles[queue.from??Number(queue.key.split(':')[0])],tile=this.at(p);if(!from||!tile||(from.y===C.SURFACE?tile.y>C.SURFACE:(tile.room??tile.cave)!==(from.room??from.cave)))return false;}
+      const t=ant.traffic;if(!isAdultAnt(ant)||!t||ant.treeHost)return true;
+      const right={x:-t.dir.y,y:t.dir.x},side=(p.x-t.origin.x)*right.x+(p.y-t.origin.y)*right.y,current=(ant.x-t.origin.x)*right.x+(ant.y-t.origin.y)*right.y;
+      // A saved ant on the wrong side must merge before advancing. Neither
+      // terrain recovery nor local pathfinding may borrow the opposing lane.
+      const cell=this.at(ant),destination=this.at(p),wide=!(queue?.entering&&destination&&!destination.room&&!destination.cave&&destination.y>C.SURFACE)&&cell&&(cell.room||cell.cave||cell.y<=C.SURFACE||this.adjacent(cell).some(a=>a.open&&(a.room||a.cave)));
+      if(!wide&&side<Math.min(1,current)-.01)return false;
+      if(!wide&&current<1&&side<1&&side<=current+.01&&(p.x-ant.x)*t.dir.x+(p.y-ant.y)*t.dir.y>.01)return false;
+      const lead=this.trafficLeader(ant),advance=(p.x-ant.x)*t.dir.x+(p.y-ant.y)*t.dir.y;
+      return !lead||advance<=0||lead.ahead-advance>=RADIUS[ant.type]+RADIUS[lead.ant.type]+.6;
     }
     laneTarget(ant,next,previous){
-      const p=this.point(next);if(!previous){ant.traffic=null;ant.passing=null;return p;}
-      const origin=this.point(previous),d=distance(p,origin),dir={x:(p.x-origin.x)/d,y:(p.y-origin.y)/d},right={x:-dir.y,y:dir.x},lane=Math.min(10.2,C.CELL*C.PATH_WIDTH_RATIO/2-RADIUS[ant.type]-.4);
-      if(!isAdultAnt(ant)||next.room||previous.room||next.y<=C.SURFACE||previous.y<=C.SURFACE){ant.traffic=null;ant.passing=null;return p;}
-      const traffic={dir,origin,lane};ant.traffic=traffic;
-      const oncoming=this.opposingTraffic(ant,traffic);
-      const blocker=ant.passing&&this.ants.find(a=>isAdultAnt(a)&&a.id===ant.passing.id&&!a.dead);
-      if(ant.passing&&(!blocker||(blocker.x-ant.x)*dir.x+(blocker.y-ant.y)*dir.y<-RADIUS[ant.type]-RADIUS[blocker.type]-8||ant.passing.dir.x*dir.x+ant.passing.dir.y*dir.y<.9))ant.passing=null;
-      if(oncoming.length){
-        ant.passing=null;
-        const side=(ant.x-origin.x)*right.x+(ant.y-origin.y)*right.y;
-        if(side<lane-2){const ahead=(ant.x-origin.x)*dir.x+(ant.y-origin.y)*dir.y;return {x:origin.x+dir.x*(ahead-4)+right.x*lane,y:origin.y+dir.y*(ahead-4)+right.y*lane};}
-      }else if(!ant.passing){
-        const ahead=this.ants.filter(a=>isAdultAnt(a)&&a!==ant&&!a.dead&&!a.carriedBy).map(a=>({ant:a,forward:(a.x-ant.x)*dir.x+(a.y-ant.y)*dir.y,side:(a.x-origin.x)*right.x+(a.y-origin.y)*right.y,heading:this.travelDirection(a)})).filter(a=>a.forward>5&&a.forward<65&&a.side>2&&Math.abs(a.side-lane)<12&&(!a.heading||a.heading.x*dir.x+a.heading.y*dir.y>.7)).sort((a,b)=>a.forward-b.forward)[0];
-        if(ahead){
-          const longitudinal=(ant.x-origin.x)*dir.x+(ant.y-origin.y)*dir.y;
-          const opposite={x:origin.x+dir.x*longitudinal-right.x*lane,y:origin.y+dir.y*longitudinal-right.y*lane};
-          const otherPass=this.ants.some(a=>isAdultAnt(a)&&a!==ant&&!a.dead&&a.passing&&distance(a,ant)<85);
-          if(!otherPass&&this.canStand(ant,opposite.x,opposite.y))ant.passing={id:ahead.ant.id,dir};
+      const p=this.point(next);ant.passing=null;
+      if(!previous||!isAdultAnt(ant)||ant.treeHost||next.y<C.SURFACE||previous.y<C.SURFACE||(next.room||next.cave)&&(previous.room||previous.cave)){ant.traffic=null;return p;}
+      const origin=this.point(previous),d=distance(p,origin);if(d<.1){ant.traffic=null;return p;}
+      const dir={x:(p.x-origin.x)/d,y:(p.y-origin.y)/d},right={x:-dir.y,y:dir.x},lane=Math.min(10.2,C.CELL*C.PATH_WIDTH_RATIO/2-RADIUS[ant.type]-.4);
+      ant.traffic={dir,origin,lane};
+      const side=(ant.x-origin.x)*right.x+(ant.y-origin.y)*right.y;
+      if(side<lane-.5){const ahead=(ant.x-origin.x)*dir.x+(ant.y-origin.y)*dir.y,merge={x:origin.x+dir.x*ahead+right.x*lane,y:origin.y+dir.y*ahead+right.y*lane};if(this.terrainFits(ant,merge.x,merge.y)&&(side<1||this.canStand(ant,merge.x,merge.y)))return merge;}
+      return {x:p.x+right.x*lane,y:p.y+right.y*lane};
+    }
+    junctionZone(tile){
+      const junction=t=>t?.open&&t.y>C.SURFACE&&!t.room&&!t.cave&&this.neighbors(t).filter(n=>n.open&&n.y>=C.SURFACE).length>=3;
+      if(!junction(tile))return null;
+      const cells=[tile.index],seen=new Set(cells);
+      for(let i=0;i<cells.length;i++)for(const n of this.neighbors(this.tiles[cells[i]]))if(!seen.has(n.index)&&junction(n)){seen.add(n.index);cells.push(n.index);}
+      return {key:Math.min(...cells),cells};
+    }
+    junctionIntent(ant){
+      if(!isAdultAnt(ant)||ant.dead||ant.carriedBy||ant.treeHost||ant.task?.stage!=='move')return null;
+      const task=ant.task,current=this.at(ant),path=task.path??[];let from=this.tiles[task.pathFrom]??current;
+      for(let i=0;i<path.length;i++){
+        const cell=this.tiles[path[i]],zone=this.junctionZone(cell);if(!cell||!from)return null;
+        if(zone){
+          const own=new Set(zone.cells),inside=[];let j=i;
+          // On a diagonal lane the body center can lie in a closed side tile.
+          // Use the actual connector rather than inventing a cardinal approach.
+          if(!from.open){
+            const center=this.point(cell),lane=C.CELL*C.PATH_WIDTH_RATIO/2-RADIUS[ant.type]-.4;
+            from=this.neighbors(cell).filter(t=>t.open&&!own.has(t.index)).map(t=>{
+              const p=this.point(t),length=distance(p,center),dx=(p.x-center.x)/length,dy=(p.y-center.y)/length,along=clamp((ant.x-center.x)*dx+(ant.y-center.y)*dy,0,length);
+              return {tile:t,d:distance(ant,{x:center.x+dx*along+dy*lane,y:center.y+dy*along-dx*lane})};
+            }).sort((a,b)=>a.d-b.d)[0]?.tile??from;
+          }
+          while(j<path.length&&own.has(path[j]))inside.push(this.tiles[path[j++]]);
+          const exit=this.tiles[path[j]];
+          // A destination inside the junction still reserves its approach.
+          const nodes=[from,...inside,...(exit?[exit]:[])],points=[],lane=C.CELL*C.PATH_WIDTH_RATIO/2-RADIUS[ant.type]-.4;
+          const direction=(a,b)=>{const d=distance(a,b);return {x:(b.x-a.x)/d,y:(b.y-a.y)/d};};
+          const start=this.point(from),entry=this.point(cell),dir=direction(start,entry),right={x:-dir.y,y:dir.x};
+          const stop={x:(start.x+entry.x)/2-dir.x*(RADIUS[ant.type]+.6)+right.x*lane,y:(start.y+entry.y)/2-dir.y*(RADIUS[ant.type]+.6)+right.y*lane};
+          if(!own.has(current?.index)&&distance(ant,stop)>C.CELL*.8)return null;
+          points.push(stop);
+          for(let k=1;k<nodes.length;k++){
+            const center=this.point(nodes[k]),incoming=direction(this.point(nodes[k-1]),center);
+            points.push({x:center.x-incoming.y*lane,y:center.y+incoming.x*lane});
+            if(k<nodes.length-1){const outgoing=direction(center,this.point(nodes[k+1]));points.push({x:center.x-outgoing.y*lane,y:center.y+outgoing.x*lane});}
+          }
+          const branch=(Math.atan2(start.x-entry.x,-(start.y-entry.y))+Math.PI*2)%(Math.PI*2);
+          return {key:zone.key,cells:zone.cells,from:from.index,exit:exit?.index,end:exit?.index??inside.at(-1).index,dir,lane,stop,points,branch};
         }
+        if(distance(ant,this.point(cell))>C.CELL*2)return null;from=cell;
+      }return null;
+    }
+    junctionRoutesConflict(a,b){
+      if(a.key!==b.key)return false;
+      const pointSegment=(p,u,v)=>{const dx=v.x-u.x,dy=v.y-u.y,length=dx*dx+dy*dy,f=length?clamp(((p.x-u.x)*dx+(p.y-u.y)*dy)/length,0,1):0;return Math.hypot(p.x-u.x-dx*f,p.y-u.y-dy*f);};
+      const cross=(u,v,p)=>(v.x-u.x)*(p.y-u.y)-(v.y-u.y)*(p.x-u.x),margin=a.radius+b.radius+.6;
+      for(let i=1;i<a.points.length;i++)for(let j=1;j<b.points.length;j++){
+        const u=a.points[i-1],v=a.points[i],p=b.points[j-1],q=b.points[j];
+        if(cross(u,v,p)*cross(u,v,q)<0&&cross(p,q,u)*cross(p,q,v)<0)return true;
+        if(Math.min(pointSegment(u,p,q),pointSegment(v,p,q),pointSegment(p,u,v),pointSegment(q,u,v))<margin)return true;
+      }return false;
+    }
+    syncJunctionQueues(){
+      if(this._junctionSyncAt===this.time)return;this._junctionSyncAt=this.time;
+      for(const ant of this.ants){
+        const q=ant.junctionQueue;
+        if(ant.dead||ant.carriedBy||ant.treeHost||ant.task?.stage!=='move'){ant.junctionQueue=null;continue;}
+        if(q?.active){if(!q.cells.every(i=>this.tiles[i]?.open&&!this.tiles[i].room&&!this.tiles[i].cave))ant.junctionQueue=null;else{const zone=this.junctionZone(this.tiles[q.cells[0]]);if(zone){q.key=zone.key;q.cells=zone.cells;}continue;}}
+        const intent=this.junctionIntent(ant);
+        if(!intent){ant.junctionQueue=null;continue;}
+        const same=ant.junctionQueue&&(ant.junctionQueue.key===intent.key||ant.junctionQueue.cells.some(i=>intent.cells.includes(i)))&&ant.junctionQueue.from===intent.from&&ant.junctionQueue.exit===intent.exit;
+        ant.junctionQueue={...intent,radius:RADIUS[ant.type],arrived:same?ant.junctionQueue.arrived:null,active:false,next:0};
+        const along=(ant.x-intent.stop.x)*intent.dir.x+(ant.y-intent.stop.y)*intent.dir.y,side=-(ant.x-intent.stop.x)*intent.dir.y+(ant.y-intent.stop.y)*intent.dir.x;
+        if(ant.junctionQueue.arrived===null&&along>=-2&&Math.abs(side)<=2)ant.junctionQueue.arrived=this.time;
       }
-      const sign=ant.passing?-1:1;return {x:p.x+right.x*lane*sign,y:p.y+right.y*lane*sign};
+      const waiting=this.ants.filter(a=>a.junctionQueue&&!a.junctionQueue.active&&a.junctionQueue.arrived!==null).sort((a,b)=>a.junctionQueue.arrived-b.junctionQueue.arrived||a.junctionQueue.branch-b.junctionQueue.branch||distance(a,a.junctionQueue.points[1])-distance(b,b.junctionQueue.points[1])||Number(a.id.slice(1))-Number(b.id.slice(1)));
+      const active=this.ants.filter(a=>a.junctionQueue?.active),blocked=[];
+      for(const ant of waiting){
+        const q=ant.junctionQueue,conflicts=other=>other.junctionQueue.key===q.key&&(other.junctionQueue.arrived===q.arrived||this.junctionRoutesConflict(q,other.junctionQueue));
+        const end=q.points.at(-1);
+        if(active.some(conflicts)||blocked.some(conflicts)||!this.canStand(ant,end.x,end.y)||!this.roomMovementAllows(ant,end)){blocked.push(ant);continue;}
+        q.active=true;q.next=(ant.x-q.stop.x)*q.dir.x+(ant.y-q.stop.y)*q.dir.y>1?1:0;ant.detour=null;ant.yieldGoal=null;active.push(ant);
+      }
+    }
+    junctionMovementAllows(ant,p){
+      if(!isAdultAnt(ant)||ant.treeHost)return true;
+      const zone=this.junctionZone(this.at(p));if(!zone)return true;
+      return this.junctionZone(this.at(ant))?.key===zone.key||ant.junctionQueue?.active&&ant.junctionQueue.key===zone.key;
+    }
+    updateJunctionQueue(ant,dt){
+      this.syncJunctionQueues();const q=ant.junctionQueue;if(!q)return false;
+      const task=ant.task;task.lastProgress=this.time;ant.passing=null;ant.detour=null;ant.yieldGoal=null;
+      if(!q.active){
+        if(this.entranceIntent(ant)&&this.updateEntranceQueue(ant,dt))return true;
+        ant.traffic={dir:q.dir,origin:this.point(this.tiles[q.from]),lane:q.lane};
+        const along=(ant.x-q.stop.x)*q.dir.x+(ant.y-q.stop.y)*q.dir.y,side=-(ant.x-q.stop.x)*q.dir.y+(ant.y-q.stop.y)*q.dir.x;
+        if(along< -1||Math.abs(side)>1)this.move(ant,q.stop,dt);else{ant.stuck=0;ant.moving=false;}
+        return true;
+      }
+      if(ant.entranceQueue&&!ant.entranceQueue.roomId)ant.entranceQueue=null;
+      ant.traffic=null;
+      while(q.next<q.points.length&&distance(ant,q.points[q.next])<1)q.next++;
+      if(q.next<q.points.length){this.move(ant,q.points[q.next],dt);return true;}
+      const end=q.end??q.exit??this.at(q.points.at(-1))?.index,index=task.path?.indexOf(end);
+      if(index>=0){task.path.splice(0,index+1);task.pathFrom=end;}
+      task.navKey=null;ant.junctionQueue=null;return true;
+    }
+    entranceIntent(ant){
+      if(!isAdultAnt(ant)||ant.dead||ant.carriedBy||ant.treeHost||ant.task?.stage!=='move')return null;
+      const entry=this.roomEntryIntent(ant);if(entry)return entry;
+      const wide=t=>t&&(t.room||t.cave||t.y<=C.SURFACE),same=(a,b)=>a&&b&&(a.y<=C.SURFACE&&b.y<=C.SURFACE||(a.room??a.cave)&&(a.room??a.cave)===(b.room??b.cave));
+      const current=this.at(ant);if(!wide(current))return null;
+      let previous=this.tiles[ant.task.pathFrom]??current;
+      for(const index of ant.task.path??[]){
+        const next=this.tiles[index];if(!next)return null;
+        if(wide(previous)&&!wide(next)&&next.open&&same(current,previous)&&Math.abs(next.x-previous.x)+Math.abs(next.y-previous.y)===1){
+          const a=this.point(previous),b=this.point(next),dir={x:(b.x-a.x)/C.CELL,y:(b.y-a.y)/C.CELL};
+          return {key:previous.index+':'+next.index,from:previous.index,to:next.index,dir,portal:{x:(a.x+b.x)/2,y:(a.y+b.y)/2}};
+        }previous=next;
+      }return null;
+    }
+    roomEntryIntent(ant){
+      if(!isFriendlyAnt(ant))return null;
+      const current=this.at(ant);let previous=this.tiles[ant.task.pathFrom]??current;
+      for(const index of ant.task.path??[]){
+        const next=this.tiles[index];if(!next||!previous)return null;
+        if(next.room&&next.room!==previous.room&&next.room!==current?.room){
+          const room=this.rooms.find(r=>r.id===next.room),waiting=this.ants.some(a=>!a.dead&&(a.task?.stage==='move'||a.entranceQueue?.deposit)&&a.entranceQueue?.roomId===next.room&&this.at(a)?.room!==next.room);
+          // Vacant rooms keep ordinary lane navigation. An existing queue
+          // keeps its order when a place becomes available.
+          if(this.roomCanEnter(ant,room)&&!waiting)return null;
+          if(next.x!==previous.x&&next.y!==previous.y){const via=this.adjacent(previous).find(t=>this.walkable(t,true)&&Math.abs(t.x-next.x)+Math.abs(t.y-next.y)===1&&this.connects(t,next));if(via){ant.task.path=this.findPath(ant,ant.task.goal,!['move','fill'].includes(ant.task.type))??[];ant.task.pathFrom=current?.index;return this.roomEntryIntent(ant);}}
+          const a=this.point(previous),b=this.point(next),d=distance(a,b),portal={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+          const queued=ant.entranceQueue?.roomId===next.room&&(previous.room?current?.room===previous.room:!current?.room);
+          const approaching=distance(ant,portal)<=C.CELL*2&&(previous.room?current?.room===previous.room:!current?.room);
+          if(current?.index===previous.index||queued||approaching)return {key:'room:'+next.room,roomId:next.room,from:previous.index,to:next.index,dir:{x:(b.x-a.x)/d,y:(b.y-a.y)/d},portal};
+          return null;
+        }previous=next;
+      }return null;
+    }
+    queueTrack(intent,r,length){
+      const geometry=this.waterPhysics().geometry;if(this._queueTracksGeometry!==geometry){this._queueTracks=new Map();this._queueTracksGeometry=geometry;}
+      const cell=this.tiles[intent.from],room=this.rooms.find(a=>a.id===cell.room),signature=room?this.roomTiles(room).map(t=>t.index).join(','):cell.cave??'surface';
+      const key=intent.key+':'+intent.from+':'+intent.to+':'+r+':'+signature;this._queueTracks??=new Map();const cached=this._queueTracks.get(key);if(cached&&cached.length>=length)return cached.track;
+      length=Math.max(length,C.CELL*4);
+      const right={x:-intent.dir.y,y:intent.dir.x},lane=C.CELL*C.PATH_WIDTH_RATIO/2-r-.4;
+      const front={x:intent.portal.x+right.x*lane-intent.dir.x*(r+.6),y:intent.portal.y+right.y*lane-intent.dir.y*(r+.6)},track=[front],probe={type:'queue',size:r};
+      const from=this.tiles[intent.from],inside=p=>{const t=this.at(p);return t&&(from.y===C.SURFACE?t.y===C.SURFACE:(t.room??t.cave)===(from.room??from.cave));};
+      let angle=intent.roomId&&!from.room&&!from.cave&&from.y>C.SURFACE?Math.atan2(-intent.dir.y,-intent.dir.x):Math.atan2(right.y,right.x),travelled=0;
+      while(travelled<length&&track.length<500){
+        const previous=track[track.length-1];let best=null;
+        // Follow the adjoining wall around outside corners instead of putting
+        // the tail of a queue into solid ground or across the exit lane.
+        for(const turn of [0,.15,-.15,.3,-.3,.5,-.5,.8,-.8,1.1,-1.1,1.5,-1.5]){
+          const heading=angle+turn,p={x:previous.x+Math.cos(heading)*2,y:previous.y+Math.sin(heading)*2};
+          if(!inside(p)||!this.terrainFits(probe,p.x,p.y)||track.slice(0,-8).some(q=>distance(q,p)<3))continue;
+          const left={x:Math.sin(heading),y:-Math.cos(heading)};let wall=12;
+          for(let gap=r+.7;gap<r+12;gap+=1)if(!this.groundContains(p.x+left.x*gap,p.y+left.y*gap)){wall=gap-r;break;}
+          const score=(from.y===C.SURFACE||travelled<C.CELL/2?0:wall)+Math.abs(turn)*10;if(!best||score<best.score)best={p,heading,score};
+        }
+        if(!best)break;track.push(best.p);angle=best.heading;travelled+=2;
+      }this._queueTracks.set(key,{length,track});return track;
+    }
+    clearIdleQueueBlocker(ant,target,dt){
+      const blocker=this.ants.find(a=>isAdultAnt(a)&&a!==ant&&!a.dead&&!a.carriedBy&&!a.task&&distance(a,target)<RADIUS[a.type]+RADIUS[ant.type]+2);if(!blocker)return;
+      const cell=this.at(blocker),room=this.rooms.find(r=>r.id===cell?.room);if(!room&&cell?.y>C.SURFACE)return;
+      const candidates=room?this.roomSpots(room):Array.from({length:24},(_,i)=>({x:blocker.x+Math.cos(i*Math.PI/12)*24,y:blocker.y+Math.sin(i*Math.PI/12)*24}));
+      const spot=candidates.filter(p=>this.canStand(blocker,p.x,p.y)&&distance(p,target)>RADIUS[blocker.type]+RADIUS[ant.type]+4&&!this.ants.some(a=>a.entranceQueue?.slot&&distance(p,a.entranceQueue.slot)<RADIUS[blocker.type]+RADIUS[a.type]+1)).sort((a,b)=>distance(a,blocker)-distance(b,blocker))[0];
+      if(spot){blocker.parking=spot;blocker.traffic=null;if(blocker.parkedAt!==this.time){blocker.parkedAt=this.time;this.move(blocker,spot,dt);}}
+    }
+    roomThresholdAction(ant,room,intent,dt){
+      const task=ant.task,target=this.ants.find(a=>a.id===task.target&&!a.dead),carried=this.ants.find(a=>a.id===ant.carry&&!a.dead);
+      const service=['feed','clean','tend','carry'].includes(task.type)&&!task.delivery&&target&&this.at(target)?.room===room.id;
+      const delivery=task.type==='carry'&&task.delivery&&task.destinationRoom===room.id&&carried&&this.roomCanEnter(carried,room);
+      const food=task.type==='forage'&&task.deliveryDone&&ant.foodCargo&&this.at(task.goal)?.room===room.id;
+      if(!service&&!delivery&&!food)return false;
+      if(service&&task.type==='carry')task.range=Math.max(task.range,RADIUS[ant.type]+RADIUS[target.type]+12);
+      const clear=p=>{const steps=Math.ceil(distance(ant,p)/2);for(let i=1;i<=steps;i++)if(!this.groundContains(ant.x+(p.x-ant.x)*i/steps,ant.y+(p.y-ant.y)*i/steps))return false;return true;};
+      const point=service?target:delivery?(carried.type==='egg'?this.eggSpots(room,carried):this.roomSpots(room)).filter(p=>distance(ant,p)<=C.CELL&&this.canStand(carried,p.x,p.y)&&clear(p)).sort((a,b)=>distance(a,ant)-distance(b,ant))[0]:this.point(this.tiles[intent.to]);
+      if(point&&distance(ant,point)<=(service?task.range:C.CELL)&&clear(point)){
+        if(delivery){task.dropPoint={...point};task.goal={...point};task.range=C.CELL;}
+        if(food){task.goal={...point};task.range=C.CELL;}
+        task.stage='act';if(delivery)ant.entranceQueue.deposit=true;else ant.entranceQueue=null;ant.traffic=null;return 'ready';
+      }
+      const lane=C.CELL*C.PATH_WIDTH_RATIO/2-RADIUS[ant.type]-.4,right={x:-intent.dir.y,y:intent.dir.x};
+      const stop={x:intent.portal.x+right.x*lane-intent.dir.x*.4,y:intent.portal.y+right.y*lane-intent.dir.y*.4};
+      ant.entranceQueue.entering=true;ant.traffic={dir:intent.dir,origin:this.point(this.tiles[intent.from]),lane};this.move(ant,stop,dt);task.lastProgress=this.time;return true;
+    }
+    updateEntranceQueue(ant,dt){
+      const intent=this.entranceIntent(ant);
+      if(!intent){ant.entranceQueue=null;return false;}
+      const members=this.ants.map(a=>({ant:a,intent:this.entranceIntent(a)})).filter(a=>a.intent?.key===intent.key);
+      const joining=members.filter(a=>a.ant.entranceQueue?.key!==intent.key).sort((a,b)=>distance(a.ant,a.intent.portal)-distance(b.ant,b.intent.portal)||Number(a.ant.id.slice(1))-Number(b.ant.id.slice(1)));
+      for(const member of joining)member.ant.entranceQueue={key:intent.key,from:member.intent.from,to:member.intent.to,roomId:member.intent.roomId,ticket:this.id++};
+      members.sort((a,b)=>a.ant.entranceQueue.ticket-b.ant.entranceQueue.ticket);
+      const rank=members.findIndex(a=>a.ant===ant),radius=Math.max(...members.map(a=>RADIUS[a.ant.type])),spacing=radius*2+2,track=this.queueTrack(intent,radius,rank*spacing+4),slot=track[Math.min(track.length-1,Math.round(rank*spacing/2))];
+      const q=ant.entranceQueue;q.rank=rank;q.slot=slot;q.from=intent.from;q.to=intent.to;
+      ant.passing=null;ant.traffic=null;ant.yieldGoal=null;ant.detour=null;
+      if(distance(ant,slot)<1.5||q.entering)q.joined=true;
+      // Form the line in ticket order so simultaneous arrivals cannot wedge
+      // one another against the entrance wall while joining their places.
+      const predecessor=members[rank-1]?.ant.entranceQueue;if(rank>0&&!q.joined&&!predecessor?.joined&&!predecessor?.entering){ant.moving=false;ant.task.lastProgress=this.time;return true;}
+      const room=intent.roomId&&this.rooms.find(r=>r.id===intent.roomId),available=!room||this.roomCanEnter(ant,room);
+      if(room&&this.at(ant)?.index!==intent.from&&distance(ant,slot)>C.CELL*.5){q.entering=true;ant.task.lastProgress=this.time;return false;}
+      if(!available)q.entering=false;
+      if(rank===0&&!available){const action=this.roomThresholdAction(ant,room,intent,dt);if(action)return action!=='ready';}
+      if(rank===0&&available&&room){
+        if(this.at(ant)?.index===intent.from){const i=ant.task.path.indexOf(intent.from);if(i>=0)ant.task.path.splice(0,i+1);ant.task.pathFrom=intent.from;}
+        q.entering=true;ant.task.lastProgress=this.time;return false;
+      }
+      if(rank===0&&available&&(q.entering||distance(ant,slot)<1.5)){
+        if(!q.entering){const index=ant.task.path.indexOf(intent.to);ant.task.path.splice(0,index);ant.task.pathFrom=intent.from;}
+        q.entering=true;const next=this.tiles[intent.to],previous=this.tiles[intent.from],target=this.laneTarget(ant,next,previous);
+        this.move(ant,target,dt);
+        if(distance(ant,target)<5&&this.at(ant)?.index===next.index){
+          const index=ant.task.path.indexOf(next.index);ant.task.path.splice(0,index+1);ant.task.pathFrom=next.index;ant.task.navKey=null;ant.entranceQueue=null;
+        }
+      }else{
+        // Join behind the preceding ticket and follow the wall toward the
+        // reserved entrance. Body collision keeps the following gap intact.
+        if(distance(ant,slot)<.7){q.route=[];q.best=distance(ant,slot);q.progressAt=this.time;ant.moving=false;ant.task.lastProgress=this.time;return true;}
+        const remaining=distance(ant,slot);if(q.best===undefined||remaining<q.best-.3||distance(q.destination??slot,slot)>3){q.best=remaining;q.progressAt=this.time;}else if(this.time-(q.progressAt??this.time)>1){q.route=null;q.best=remaining;q.progressAt=this.time;}
+        if(q.route?.length&&!this.canStand(ant,q.route[0].x,q.route[0].y))q.route=null;
+        if(!q.route||distance(q.destination??slot,slot)>3){q.route=this.detourPath(ant,slot,3)??[];q.destination={...slot};}
+        while(q.route.length&&distance(ant,q.route[0])<.7)q.route.shift();
+        const target=q.route[0]??slot;this.clearIdleQueueBlocker(ant,target,dt);this.move(ant,target,dt);
+        if(ant.stuck>1){q.route=null;ant.stuck=0;}
+      }
+      ant.task.lastProgress=this.time;return true;
+    }
+    parkIdleLeader(ant,dt){
+      const lead=this.trafficLeader(ant)?.ant,cell=lead&&this.at(lead);if(!lead||lead.task||!cell||!cell.room&&cell.y!==C.SURFACE||lead.parkedAt===this.time)return;
+      const right={x:-ant.traffic.dir.y,y:ant.traffic.dir.x};
+      const target=lead.parking??{x:lead.x+right.x*(RADIUS[ant.type]+RADIUS[lead.type]+8),y:lead.y+right.y*(RADIUS[ant.type]+RADIUS[lead.type]+8)};
+      if(!this.terrainFits(lead,target.x,target.y))return;
+      lead.parking=target;lead.parkedAt=this.time;lead.traffic=null;this.move(lead,target,dt);
     }
     move(ant,target,dt){
       const d=distance(ant,target);if(d<.2)return true;
@@ -1009,6 +1349,7 @@
       let x=ant.x+dx*step,y=ant.y+dy*step;
       const allowed=(x,y)=>this.canStand(ant,x,y)&&this.trafficAllows(ant,{x,y});
       if(!allowed(x,y)){
+        if(ant.traffic&&(!this.trafficAllows(ant,{x,y})||this.terrainFits(ant,x,y)&&!this.canStand(ant,x,y)&&this.trafficLeader(ant))){this.parkIdleLeader(ant,dt);ant.stuck+=dt;ant.moving=false;return false;}
         const cell=this.at(ant),room=ant.treeHost||cell?.room||cell?.y===C.SURFACE||(cell&&this.adjacent(cell).some(t=>t.room&&t.open));
         let found=false;
         // Slide along a wall at a corner; never step through another collider.
@@ -1021,10 +1362,10 @@
       return d<=step+.5;
     }
     detourPath(ant,target,range,targetCell=null){
-      // A small spatial A* resolves room entrances and turns around stationary
-      // bodies. The same collider is used for every node and every actual step.
-      const quantum=C.CELL/6,encode=(x,y)=>`${x},${y}`,decode=k=>{const [x,y]=k.split(',').map(Number);return {x,y};},bounds=this.worldBounds;
-      const start={x:Math.round(ant.x/quantum),y:Math.round(ant.y/quantum)},minx=Math.max(bounds.minX*6,Math.floor(Math.min(ant.x,target.x)/quantum)-12),maxx=Math.min((bounds.maxX+1)*6-1,Math.ceil(Math.max(ant.x,target.x)/quantum)+12),miny=Math.max(0,Math.floor(Math.min(ant.y,target.y)/quantum)-12),maxy=Math.min((bounds.maxY+1)*6-1,Math.ceil(Math.max(ant.y,target.y)/quantum)+12);
+      if(ant.traffic&&this.trafficLeader(ant))return null;
+      // Local paths fit the terrain and respect the reserved right-hand lane.
+      const scale=ant.entranceQueue?12:6,quantum=C.CELL/scale,encode=(x,y)=>`${x},${y}`,decode=k=>{const [x,y]=k.split(',').map(Number);return {x,y};},bounds=this.worldBounds;
+      const start={x:Math.round(ant.x/quantum),y:Math.round(ant.y/quantum)},minx=Math.max(bounds.minX*scale,Math.floor(Math.min(ant.x,target.x)/quantum)-12),maxx=Math.min((bounds.maxX+1)*scale-1,Math.ceil(Math.max(ant.x,target.x)/quantum)+12),miny=Math.max(0,Math.floor(Math.min(ant.y,target.y)/quantum)-12),maxy=Math.min((bounds.maxY+1)*scale-1,Math.ceil(Math.max(ant.y,target.y)/quantum)+12);
       const heap=[],cost=new Map(),parent=new Map(),stand=new Map();
       const push=node=>{heap.push(node);let i=heap.length-1;while(i){const p=(i-1)>>1;if(heap[p].f<=node.f)break;heap[i]=heap[p];i=p;}heap[i]=node;};
       const pop=()=>{const first=heap[0],last=heap.pop();if(heap.length){let i=0;while(i*2+1<heap.length){let n=i*2+1;if(n+1<heap.length&&heap[n+1].f<heap[n].f)n++;if(heap[n].f>=last.f)break;heap[i]=heap[n];i=n;}heap[i]=last;}return first;};
@@ -1038,7 +1379,8 @@
         }
         for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){
           const x=p.x+dx,y=p.y+dy;if(x<minx||x>maxx||y<miny||y>maxy||!valid(x,y))continue;
-          if(dx&&dy&&!this.canStand(ant,(p.x+dx*.5)*quantum,(p.y+dy*.5)*quantum))continue;
+          const edgeStart=node.key===startKey?ant:world,edgeEnd={x:x*quantum,y:y*quantum},steps=Math.ceil(distance(edgeStart,edgeEnd)/2);let clear=true;
+          for(let i=1;i<=steps;i++){const point={x:edgeStart.x+(edgeEnd.x-edgeStart.x)*i/steps,y:edgeStart.y+(edgeEnd.y-edgeStart.y)*i/steps};if(!this.canStand(ant,point.x,point.y)||!this.trafficAllows(ant,point)){clear=false;break;}}if(!clear)continue;
           const key=encode(x,y),g=node.g+(dx&&dy?Math.SQRT2:1);if(g>=(cost.get(key)??Infinity))continue;
           cost.set(key,g);parent.set(key,node.key);push({key,g,f:g+Math.max(0,distance({x:x*quantum,y:y*quantum},target)-range)/quantum});
         }
@@ -1046,6 +1388,7 @@
     }
     updateTask(ant,dt){
       const task=ant.task;if(!task)return;
+      for(const idle of this.ants)if(idle.parking&&!idle.task&&idle.parkedAt!==this.time){idle.parkedAt=this.time;idle.traffic=null;this.move(idle,idle.parking,dt);if(distance(idle,idle.parking)<.5)idle.parking=null;}
       if(ant.treeHost&&this.updateTreeTask(ant,dt))return;
       if(task.type==='forage'&&task.deliveryDone&&ant.foodCargo){
         const store=this.foodStorage(),destination=this.at(task.goal);
@@ -1053,6 +1396,7 @@
         const changed=destination?.room!==store.room.id||destination.water>=.025;
         if(changed){const goal=this.foodPoint(ant);this.clearTask(ant);if(goal)this.assign(ant,{type:'forage',goal,duration:1,deliveryDone:true,key:'forage:'+ant.id});return;}
       }
+      if(task.stage==='move'&&this.updateJunctionQueue(ant,dt))return;
       if(ant.detour?.length){
         const p=ant.detour[0];if(distance(ant,p)<2.5){ant.detour.shift();if(!ant.detour.length){ant.detour=null;task.navKey=null;}return;}
         this.move(ant,p,dt);if(ant.stuck>1.5){ant.detour=null;task.navKey=null;}return;
@@ -1097,6 +1441,7 @@
         if(ant.replan<=0&&task.stage==='move'){task.path=this.findPath(ant,task.goal)??[];task.pathFrom=this.at(ant)?.index;ant.replan=.8;}
       }
       if(task.stage==='move'){
+        if(this.updateEntranceQueue(ant,dt))return;
         if(distance(ant,task.goal)<=task.range){task.stage='act';}
         else{
           let p=task.goal,navCell=null,arrival=task.range;
@@ -1113,14 +1458,15 @@
           const navKey=`${p.x.toFixed(1)},${p.y.toFixed(1)}`,remaining=distance(ant,p);
           if(task.navKey!==navKey){task.navKey=navKey;task.bestDistance=remaining;task.lastProgress=this.time;}
           else if(remaining<task.bestDistance-.5){task.bestDistance=remaining;task.lastProgress=this.time;}
-          if(ant.stuck>1.2||this.time-task.lastProgress>1.8){
+          const waiting=ant.traffic&&this.trafficLeader(ant);
+          if(!waiting&&(ant.stuck>1.2||this.time-task.lastProgress>1.8)){
             if(!task.detourAfter||this.time>=task.detourAfter){
               task.detourAfter=this.time+2;const detour=this.detourPath(ant,p,arrival,navCell);
               if(detour?.length){ant.detour=detour;ant.stuck=0;task.lastProgress=this.time;return;}
             }
             const blockers=isAdultAnt(ant)?this.ants.filter(a=>isAdultAnt(a)&&a!==ant&&!a.dead&&!a.carriedBy&&distance(a,ant)<RADIUS[a.type]+RADIUS[ant.type]+4):[];
             const ownOrder=Number(ant.id.slice(1));
-            if(blockers.length&&!blockers.some(a=>a.yieldGoal)&&blockers.every(a=>!a.task||a.task.type==='sleep'||Number(a.id.slice(1))<ownOrder)){
+            if(!ant.traffic&&blockers.length&&!blockers.some(a=>a.yieldGoal)&&blockers.every(a=>!a.task||a.task.type==='sleep'||Number(a.id.slice(1))<ownOrder)){
               const cell=this.at(ant),candidates=this.adjacent(cell).filter(t=>this.walkable(t,false)).flatMap(t=>{const q=this.point(t);return [q,{x:q.x+9,y:q.y+9},{x:q.x-9,y:q.y-9}];});
               const retreat=candidates.filter(q=>this.canStand(ant,q.x,q.y)&&distance(q,ant)>20&&((q.x-ant.x)*(p.x-ant.x)+(q.y-ant.y)*(p.y-ant.y))<0).sort((a,b)=>distance(b,p)-distance(a,p))[0];
               if(retreat)ant.yieldGoal=retreat;
@@ -1128,9 +1474,9 @@
           }
           // Waiting preserves a task; a failed idle stroll has a finite end.
           if(task.type==='wander'&&this.time-task.created>6)this.clearTask(ant);
-          if(ant.stuck>6&&task.type!=='fight'){
+          if(!waiting&&ant.stuck>6&&task.type!=='fight'){
             task.path=this.findPath(ant,task.goal,!['move','fill'].includes(task.type));task.pathFrom=this.at(ant)?.index;ant.stuck=0;
-            if(this.time-task.created>40)this.clearTask(ant);
+            if(this.time-task.created>40&&!ant.entranceQueue?.roomId)this.clearTask(ant);
           }
           return;
         }
@@ -1170,6 +1516,12 @@
       }else if(task.type==='carry'){
         const target=this.ants.find(a=>a.id===task.target&&!a.dead);
         if(target&&!task.delivery){
+          const room=this.rooms.find(r=>r.id===this.at(ant)?.room);
+          if(room&&!this.roomCanEnter(target,room)){
+            // Picking up brood across a doorway must not add another member
+            // to an already full room. Collect it after stepping outside.
+            task.goal={x:target.x,y:target.y};task.range=1;task.progress=0;task.stage='move';task.path=this.findPath(ant,task.goal)??[];task.pathFrom=this.at(ant)?.index;task.navKey=null;return;
+          }
           target.carriedBy=ant.id;ant.carry=target.id;
           const next={...task,goal:task.destination,stage:'move',duration:1,range:12,delivery:true};
           this.clearTask(ant);this.assign(ant,next);if(!ant.task){target.carriedBy=null;ant.carry=null;}return;
@@ -1199,8 +1551,13 @@
       }else if(task.type==='toilet'){ant.toiletNeed=0;this.trash.push({id:this.uid('t'),x:ant.x+10,y:ant.y,type:'waste',created:this.time});}
       else if(['plant','harvest','honey'].includes(task.type)){const room=this.rooms.find(r=>r.id===task.roomId);if(room){if(task.type==='plant')room.planted=true;else{this.scatterFood(ant,task.type==='harvest'?4:3,ROOMS[room.type].objectColor,task.type==='harvest'?'mushroom':'honey');room.crop=0;}}}
       if(task.type==='carry'&&task.delivery){const target=this.ants.find(a=>a.id===ant.carry);if(target){
-        const room=this.rooms.find(r=>r.id===task.destinationRoom),p=room?this.roomPlacement(room,target):null;
-        if(!p){task.progress=0;return;}target.carriedBy=null;target.x=p.x;target.y=p.y;ant.carry=null;
+        const room=this.rooms.find(r=>r.id===task.destinationRoom),drop=task.dropPoint;
+        const p=room&&drop&&this.at(drop)?.room===room.id&&this.roomCanEnter(target,room)&&this.canStand(target,drop.x,drop.y)&&(target.type!=='egg'||this.eggPlacementAllows(target,drop))?drop:room?this.roomPlacement(room,target):null;
+        if(!p){task.progress=0;return;}
+        if(target.type==='egg'&&distance(ant,p)>(task.range??12)+2){
+          task.dropPoint=null;task.goal={...p};task.range=12;task.progress=0;task.stage='move';task.path=this.findPath(ant,p)??[];task.pathFrom=this.at(ant)?.index;task.navKey=null;return;
+        }
+        target.carriedBy=null;target.x=p.x;target.y=p.y;ant.carry=null;
       }}
       this.clearTask(ant);
     }
@@ -1210,13 +1567,102 @@
       const water=this.tiles.filter(t=>t.water>=.025);
       for(const t of this.tiles)t.wetDistance=water.length?Math.min(...water.map(w=>Math.hypot(t.x-w.x,t.y-w.y))):99;
     }
+    moveInWater(object,dx,dy){
+      // Follow the stream continuously, with terrain collision only. Water
+      // carries objects together instead of making them dodge one another.
+      const steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)/2));let moved=0;
+      for(let i=0;i<steps;i++){
+        const before={x:object.x,y:object.y};
+        for(const [x,y] of [[object.x+dx/steps,object.y+dy/steps],[object.x,object.y+dy/steps],[object.x+dx/steps,object.y]]){
+          if(this.terrainFits(object,x,y,true)){object.x=x;object.y=y;break;}
+        }
+        moved+=distance(before,object);
+      }
+      if(moved>.001){object.moving=true;object.phase=(object.phase??0)+moved*.22;object.angle=Math.atan2(dy,dx)+Math.PI/2;}
+      if(object.carry){const carried=this.ants.find(a=>a.id===object.carry);if(carried){carried.x=object.x;carried.y=object.y;}}
+    }
+    followWater(object,drop,dt){
+      let goal={x:drop.x,y:drop.y};const r=RADIUS[object.type]??object.size??6;
+      if(!this.terrainFits(object,goal.x,goal.y,true)){
+        let spot=null;
+        for(let radius=1;radius<=r*2&&!spot;radius++)for(let i=0;i<16;i++){
+          const p={x:drop.x+Math.cos(i*Math.PI/8)*radius,y:drop.y+Math.sin(i*Math.PI/8)*radius};
+          if(this.terrainFits(object,p.x,p.y,true)){spot=p;break;}
+        }
+        if(!spot)return false;goal=spot;
+      }
+      // Contact with a falling drop does not pull an object back upstream.
+      if(drop.vy>=0&&drop.y<object.y&&distance(object,drop)<r+this.waterPhysics().radiusOf(drop)+4)goal.y=object.y;
+      else{
+        // Diagonal passages also cross the corners of unopened cells. Route
+        // through their connected open centers, keeping the actual flow goal.
+        const routeCell=point=>{
+          const tile=this.at(point);if(tile?.open)return tile;
+          const candidates=[];for(let y=(tile?.y??0)-1;y<=(tile?.y??0)+1;y++)for(let x=(tile?.x??0)-1;x<=(tile?.x??0)+1;x++){
+            const t=this.tile(x,y),p=t&&this.point(t);if(t?.open&&this.terrainFits(object,p.x,p.y,true))candidates.push(t);
+          }
+          return candidates.sort((a,b)=>distance(point,this.point(a))-distance(point,this.point(b)))[0];
+        };
+        const from=routeCell(object),to=routeCell(goal);
+        if(from&&to&&from!==to){
+          if(object.waterGoal!==to.index||!object.waterRoute?.length){
+            const queue=[from],parents=new Map([[from.index,null]]);
+            for(let i=0;i<queue.length&&!parents.has(to.index);i++)for(const n of this.neighbors(queue[i])){
+              const p=this.point(n);if(!n.open||parents.has(n.index)||!this.terrainFits(object,p.x,p.y,true))continue;
+              parents.set(n.index,queue[i].index);queue.push(n);
+            }
+            if(!parents.has(to.index))return false;
+            const route=[];for(let cell=to.index;cell!==null;cell=parents.get(cell))route.unshift(cell);
+            if(route.length>1){
+              const next=this.point(this.tiles[route[1]]),samples=Math.max(1,Math.ceil(distance(object,next)/2));let clear=true;
+              for(let i=1;i<=samples;i++)if(!this.terrainFits(object,object.x+(next.x-object.x)*i/samples,object.y+(next.y-object.y)*i/samples,true)){clear=false;break;}
+              if(clear)route.shift();
+            }
+            object.waterRoute=route;object.waterGoal=to.index;
+          }
+          while(object.waterRoute.length&&distance(object,this.point(this.tiles[object.waterRoute[0]]))<2)object.waterRoute.shift();
+          if(object.waterRoute.length)goal=this.point(this.tiles[object.waterRoute[0]]);
+        }else{delete object.waterRoute;delete object.waterGoal;}
+      }
+      const d=distance(object,goal),step=Math.min(d,220*dt);if(d>.001)this.moveInWater(object,(goal.x-object.x)*step/d,(goal.y-object.y)*step/d);
+      return true;
+    }
+    sweepWater(drop,previous,dt,objects){
+      const dx=drop.x-previous.x,dy=drop.y-previous.y,travel=dx*dx+dy*dy;
+      const moving=!drop.pooled&&Math.hypot(drop.vx,drop.vy)>2;
+      objects??=[...this.ants,...this.foodChunks,...this.trash,...this.grubs];
+      if(!moving&&!objects.some(o=>o.waterFlow===drop.id))return;
+      for(const object of objects){
+        if(object.dead||object.carriedBy)continue;
+        if(object.waterFlow===drop.id){
+          if(drop.pooled&&distance(object,drop)<this.waterPhysics().radiusOf(drop)+(RADIUS[object.type]??object.size??6)+4){delete object.waterFlow;delete object.waterRoute;delete object.waterGoal;object.waterUntil=this.time+.2;continue;}
+        }else{
+          if(object.waterFlow||!moving||travel<1e-8)continue;
+          const r=this.waterPhysics().radiusOf(drop)+(RADIUS[object.type]??object.size??6);
+          const f=travel?clamp(((object.x-previous.x)*dx+(object.y-previous.y)*dy)/travel,0,1):0;
+          const contact={x:previous.x+f*dx,y:previous.y+f*dy};
+          if(distance(object,contact)>r||!this.groundContains(object.x,object.y))continue;
+          // A nearby object across a wall is outside the stream.
+          const length=distance(object,contact),samples=Math.max(1,Math.ceil(length/2));let clear=true;
+          for(let i=1;i<samples;i++)if(!this.groundContains(object.x+(contact.x-object.x)*i/samples,object.y+(contact.y-object.y)*i/samples)){clear=false;break;}
+          if(!clear)continue;
+          object.waterFlow=drop.id;delete object.waterRoute;delete object.waterGoal;
+          if(this.ants.includes(object)){this.clearTask(object);object.resume=null;}
+          if(this.grubs.includes(object))object.washed=true;
+          if(this.foodChunks.includes(object)){object.age=Math.max(.45,object.age);object.falling=false;object.surfaceDrop=false;object.scatterSeconds=0;}
+        }
+        object.waterUntil=this.time+.2;
+        if(!this.followWater(object,drop,dt)){delete object.waterFlow;delete object.waterRoute;delete object.waterGoal;}
+      }
+    }
     float(ant,dt){
       const cell=this.at(ant);if(!cell)return;
+      if(ant.waterFlow)return;
       const neighbors=this.adjacent(cell).filter(t=>t.open&&t.water>=.025).sort((a,b)=>b.y-a.y||b.water-a.water);
       const fluid=this.waterPhysics();if(fluid.geometry===null)fluid.prepare();const surface=fluid.surface(ant.x,ant.y);
       const target=neighbors[0],p=surface!==null?{x:ant.x,y:surface+1}:target&&target.y>=cell.y?this.point(target):null;
       if(p){const d=distance(p,ant);if(d>.1){const step=Math.min(d,dt*20),next={x:ant.x+(p.x-ant.x)/d*step,y:ant.y+(p.y-ant.y)/d*step};
-        if(!isAdultAnt(ant)||!this.ants.some(other=>isAdultAnt(other)&&other!==ant&&!other.dead&&!other.carriedBy&&distance(next,other)<RADIUS[ant.type]+RADIUS[other.type]+.2)){ant.x=next.x;ant.y=next.y;}
+        if(!isAdultAnt(ant)||!this.ants.some(other=>isAdultAnt(other)&&other!==ant&&!other.dead&&!other.carriedBy&&distance(next,other)<RADIUS[ant.type]+RADIUS[other.type]+.2))this.moveInWater(ant,next.x-ant.x,next.y-ant.y);
       }}
     }
     tryLayEgg(){
@@ -1224,9 +1670,7 @@
       if(queen.hunger<100){queen.laidWhileFull=false;return false;}
       const cell=this.at(queen),room=this.rooms.find(r=>r.id===cell?.room&&r.type==='queen'&&r.cells.includes(cell.index));
       if(queen.hunger!==100||queen.laidWhileFull||!room||!cell.open||cell.water>=.025||queen.hygiene<=30||queen.energy<=30||queen.carriedBy)return false;
-      const counts=this.counts(),capacity=Math.max(3,this.rooms.reduce((n,r)=>n+r.cells.length*2,0));if(counts.egg+counts.larva>=capacity)return false;
-      const points=[{x:queen.x+18,y:queen.y},{x:queen.x-18,y:queen.y},{x:queen.x,y:queen.y+18}],prototype={id:'new',type:'egg'};
-      const spot=points.find(p=>this.at(p)?.room===room.id&&this.canStand(prototype,p.x,p.y));if(!spot)return false;
+      const spot=this.roomPlacement(room,{id:'new',type:'egg',x:queen.x,y:queen.y});if(!spot)return false;
       this.addAnt('egg',spot.x,spot.y);queen.laidWhileFull=true;return true;
     }
     tick(dt){
@@ -1258,6 +1702,7 @@
       for(const room of this.rooms){if(room.type==='mushroom'&&room.planted&&this.hasWaterNear(room)&&this.roomTiles(room).length)room.crop=Math.min(30,room.crop+dt);if(room.type==='aphid'&&this.hasRootNear(room)&&this.ants.some(a=>a.type==='aphid'&&!a.dead&&!a.carriedBy&&!a.sick&&a.hygiene>30&&room.cells.includes(this.at(a)?.index)&&this.at(a).water<.025))room.crop=Math.min(30,room.crop+dt);}
       const schedule=this.scheduleClock>=.3;if(schedule)this.scheduleClock=0;
       this.tryLayEgg();
+      if(schedule)this.dispatchTasks();
       for(const ant of this.ants){
         ant.moving=false;ant.replan-=dt;ant.cooldown=Math.max(0,ant.cooldown-dt);if(ant.dead)continue;
         const isAdult=['queen','worker','soldier','enemy'].includes(ant.type);
@@ -1270,7 +1715,7 @@
           if(isAdult&&!(ant.task?.type==='sleep'&&ant.task.stage==='act'))ant.energy=Math.max(0,ant.energy-dt*.5);
         }
         if(ant.dead||ant.carriedBy)continue;
-        if(this.at(ant)?.water>=.025){if(ant.task)this.clearTask(ant);this.float(ant,dt);continue;}
+        if(this.inWater(ant)){if(ant.task)this.clearTask(ant);this.float(ant,dt);continue;}
         if(ant.type==='egg'){
           const room=this.rooms.find(r=>r.id===this.at(ant)?.room);if(room?.type==='egg')ant.age+=dt;
           if(ant.age>=C.EGG_SECONDS&&room?.type==='egg'){
@@ -1284,7 +1729,7 @@
           const resume=ant.task&&ant.task.type!=='sleep'?{...ant.task}:null;this.clearTask(ant);ant.resume=resume;
           this.assign(ant,{type:'sleep',goal:{x:ant.x,y:ant.y},duration:100,range:15});
         }
-        if(schedule&&!ant.task)this.chooseTask(ant);
+        if(schedule&&!ant.task&&ant.type!=='worker')this.chooseTask(ant);
         this.updateTask(ant,dt);
         const hostile=ant.type==='enemy';
         const target=this.ants.filter(a=>!a.dead&&!a.carriedBy&&['queen','worker','soldier','enemy'].includes(a.type)&&(hostile?a.type!=='enemy':a.type==='enemy')).sort((a,b)=>distance(ant,a)-distance(ant,b))[0];
@@ -1334,6 +1779,8 @@
           ant.unstickAfter=0;sim.recoverTunnelAnt(ant,ant.task?.goal);
         }
         for(const ant of sim.ants){
+          for(const key of ['passing','detour','yieldGoal','traffic'])if(ant[key])ant[key]=null;
+          if(!ant.lastWork)ant.lastWork=sim.workType(ant,ant.task)??sim.workType(ant,ant.resume);
           if(ant.task?.type==='tend'&&!ant.task.target)sim.clearTask(ant);
           if(ant.resume?.type==='tend'&&!ant.resume.target)ant.resume=null;
           if(ant.type==='queen'&&ant.task?.type==='sleep'&&sim.rooms.some(r=>r.type==='rest'&&(r.id===ant.task.roomId||r.id===sim.at(ant.task.goal)?.room))){sim.clearTask(ant);sim.assign(ant,sim.sleepTask(ant));}
@@ -1346,6 +1793,6 @@
       }catch{return null;}
     }
   }
-  G.AntGame={...(G.AntGame??{}),C,ROOMS,MAX_HP,ATTACK,RADIUS,TASK_NAMES,Simulation,distance,clamp,pathStrokeCells,FRUIT_CROWN,FRUIT_OFFSETS,TREE_TOP};
+  G.AntGame={...(G.AntGame??{}),C,ROOMS,ART_COLORS,MAX_HP,ATTACK,RADIUS,TASK_NAMES,Simulation,distance,clamp,pathStrokeCells,FRUIT_CROWN,FRUIT_OFFSETS,TREE_TOP};
   if(typeof module!=='undefined')module.exports=G.AntGame;
 })(globalThis);
