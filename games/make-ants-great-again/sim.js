@@ -423,7 +423,7 @@
       }
       return spots[0]??null;
     }
-    foodStorage(){const room=this.rooms.find(r=>r.type==='food'&&this.roomTiles(r).length);return {room,point:room?this.roomCenter(room):null};}
+    foodStorage(){const valid=r=>r.type==='food'&&this.roomTiles(r).length,room=this.rooms.find(r=>r.id===this.foodStorageRoomId&&valid(r))??this.rooms.find(valid);return {room,point:room?this.roomCenter(room):null};}
     foodPoint(from){const store=this.foodStorage();return store.room?this.roomPoint(store.room,from):null;}
     foodSupply(){return this.food+this.foodChunks.length+this.ants.filter(a=>!a.dead&&a.foodCargo).length;}
     taskRoomType(ant){
@@ -468,8 +468,8 @@
       for(const chunk of this.foodChunks)chunk.nutrition=1;
       for(const ant of this.ants)if(ant.foodCargo)ant.foodCargo.nutrition=1;
     }
-    releaseUnstoredFood(point){
-      if(this.foodStorage().room||!(this.food+this.foodRemainder>0))return;
+    releaseUnstoredFood(point,force=false){
+      if((!force&&this.foodStorage().room)||!(this.food+this.foodRemainder>0))return;
       const nutrition=this.food+this.foodRemainder;this.food=0;this.foodRemainder=0;
       if(point&&!this.groundContains(point.x,point.y))point=null;
       this.scatterFood(point??this.queen()??this.point(this.tile(17,C.SURFACE)),nutrition,'#d6b36f','stored',Math.ceil(nutrition));
@@ -515,9 +515,11 @@
       if(type==='aphid'&&!this.hasRootNear(room)){this.record('진딧물사육실은 뿌리에서 5칸 이내에 있어야 합니다.',true);return false;}
       if(type==='mushroom'&&!this.hasWaterNear(room))this.record('버섯재배실을 지정했습니다. 물에서 10칸 이내일 때 자랍니다.');
       else this.record(ROOMS[type].name+'로 지정했습니다.');
-      const oldFoodPoint=room.type==='food'?this.roomCenter(room):null;
+      // Keep existing stock in its actual room when another room becomes food storage.
+      const oldStorage=this.foodStorage();this.foodStorageRoomId=oldStorage.room?.id??null;
+      const oldFoodPoint=oldStorage.room===room&&type!=='food'?this.roomCenter(room):null;
       room.type=type;room.crop=0;room.planted=false;room.tended=0;
-      if(oldFoodPoint)this.releaseUnstoredFood(oldFoodPoint);
+      if(oldFoodPoint)this.releaseUnstoredFood(oldFoodPoint,true);
       // A nursery houses existing wild aphids; designating it creates none.
       return true;
     }
@@ -1938,7 +1940,7 @@
       this.jobs=this.jobs.filter(j=>j.status!=='done');this.rooms=this.rooms.filter(r=>r.cells.length||this.jobs.some(j=>j.room===r.id));
       this.ants=this.ants.filter(a=>!a.dead);
     }
-    serialize(){this.updateMapBounds();const fluid=this.waterPhysics();fluid.prepare();return JSON.stringify({version:C.SAVE_VERSION,state:{constructionModel:'player-v1',worldModel:'expanding-v1',seed:this.seed,randomState:this.randomState,treeLayout:this.treeLayout,caveLayout:this.caveLayout,time:this.time,id:this.id,food:this.food,peak:this.peak,deadCount:this.deadCount,over:this.over,tiles:this.tiles,ants:this.ants,rooms:this.rooms,jobs:this.jobs,trash:this.trash,log:this.log,rainLeft:this.rainLeft,nextRain:this.nextRain,nextInvasion:this.nextInvasion,rainWarned:this.rainWarned,invasionWarned:this.invasionWarned,foodBugs:this.foodBugs,nextFoodBug:this.nextFoodBug,nextAphid:this.nextAphid,fruitPlants:this.fruitPlants,foodChunks:this.foodChunks,foodRemainder:this.foodRemainder,caverns:this.caverns,grubs:this.grubs,waterModel:'particles-v1',waterDrops:this.waterDrops,waterEvaporation:this.waterEvaporation,rainDripClock:this.rainDripClock}});}
+    serialize(){this.updateMapBounds();const fluid=this.waterPhysics();fluid.prepare();return JSON.stringify({version:C.SAVE_VERSION,state:{constructionModel:'player-v1',worldModel:'expanding-v1',seed:this.seed,randomState:this.randomState,treeLayout:this.treeLayout,caveLayout:this.caveLayout,time:this.time,id:this.id,food:this.food,foodStorageRoomId:this.foodStorage().room?.id??null,peak:this.peak,deadCount:this.deadCount,over:this.over,tiles:this.tiles,ants:this.ants,rooms:this.rooms,jobs:this.jobs,trash:this.trash,log:this.log,rainLeft:this.rainLeft,nextRain:this.nextRain,nextInvasion:this.nextInvasion,rainWarned:this.rainWarned,invasionWarned:this.invasionWarned,foodBugs:this.foodBugs,nextFoodBug:this.nextFoodBug,nextAphid:this.nextAphid,fruitPlants:this.fruitPlants,foodChunks:this.foodChunks,foodRemainder:this.foodRemainder,caverns:this.caverns,grubs:this.grubs,waterModel:'particles-v1',waterDrops:this.waterDrops,waterEvaporation:this.waterEvaporation,rainDripClock:this.rainDripClock}});}
     static restore(text){
       try{const data=JSON.parse(text);if(data.version!==C.SAVE_VERSION||!Array.isArray(data.state?.tiles)||data.state.tiles.length<C.W*C.H||!Array.isArray(data.state.ants)||!data.state.tiles.every((t,i)=>t?.index===i&&Number.isInteger(t.x)&&Number.isInteger(t.y)&&t.y>=0))return null;
         const sim=new Simulation(data.state.seed);Object.assign(sim,data.state);sim.rebuildTileLookup();if(sim.tileLookup.size!==sim.tiles.length)return null;sim.reservations={};
