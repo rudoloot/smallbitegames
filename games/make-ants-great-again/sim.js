@@ -26,9 +26,12 @@
   };
   for(const [type,[color,objectColor,accent=objectColor]] of Object.entries(ROOM_PALETTE))Object.assign(ROOMS[type],{color,objectColor,accent});
   const ATTACK={queen:10,soldier:50,worker:20,enemy:12};
-  // Body collision sizes leave room for two lanes inside an 8mm tunnel;
-  // antennae and moving legs are visual details outside the body collider.
-  const RADIUS={queen:8,worker:6,soldier:6.64,enemy:6.64,egg:4,larva:5.2,aphid:4};
+  // Adult body colliders are 20% smaller to leave clearance at narrow turns.
+  // Drawing sizes and the brood colliders are unchanged.
+  const RADIUS={queen:6.4,worker:4.8,soldier:5.312,enemy:5.312,egg:4,larva:5.2,aphid:4};
+  // Keep lane centers away from walls; smaller bodies need more clearance,
+  // not a route pushed farther out toward a tunnel corner.
+  const LANE_RADIUS={queen:8,worker:6,soldier:6.64,enemy:6.64};
   const isAdultAnt=entity=>['queen','worker','soldier','enemy'].includes(entity.type);
   const isFriendlyAnt=entity=>['queen','worker','soldier'].includes(entity.type);
   const TASK_NAMES={eat:'음식 섭취',sleep:'휴식',clean:'청소',feed:'먹이 주기',carry:'운반',dig:'굴착',fill:'땅채우기',plant:'버섯 재배',tend:'진딧물 관리',harvest:'버섯 수확',honey:'단물 채취',forage:'외부 채집',toilet:'화장실',trash:'쓰레기 처리',fight:'전투',move:'이동',wander:'이동'};
@@ -1209,7 +1212,7 @@
       const p=this.point(next);ant.passing=null;
       if(!previous||!isAdultAnt(ant)||ant.treeHost||next.y<C.SURFACE||previous.y<C.SURFACE||(next.room||next.cave)&&(previous.room||previous.cave)){ant.traffic=null;return p;}
       const origin=this.point(previous),d=distance(p,origin);if(d<.1){ant.traffic=null;return p;}
-      const dir={x:(p.x-origin.x)/d,y:(p.y-origin.y)/d},right={x:-dir.y,y:dir.x},lane=Math.min(10.2,C.CELL*C.PATH_WIDTH_RATIO/2-RADIUS[ant.type]-.4);
+      const dir={x:(p.x-origin.x)/d,y:(p.y-origin.y)/d},right={x:-dir.y,y:dir.x},lane=Math.min(10.2,C.CELL*C.PATH_WIDTH_RATIO/2-LANE_RADIUS[ant.type]-.4);
       ant.traffic={dir,origin,lane};
       const side=(ant.x-origin.x)*right.x+(ant.y-origin.y)*right.y;
       if(side<lane-.5){const ahead=(ant.x-origin.x)*dir.x+(ant.y-origin.y)*dir.y,merge={x:origin.x+dir.x*ahead+right.x*lane,y:origin.y+dir.y*ahead+right.y*lane};if(this.terrainFits(ant,merge.x,merge.y)&&(side<1||this.canStand(ant,merge.x,merge.y)))return merge;}
@@ -1232,7 +1235,7 @@
           // On a diagonal lane the body center can lie in a closed side tile.
           // Use the actual connector rather than inventing a cardinal approach.
           if(!from.open){
-            const center=this.point(cell),lane=C.CELL*C.PATH_WIDTH_RATIO/2-RADIUS[ant.type]-.4;
+            const center=this.point(cell),lane=C.CELL*C.PATH_WIDTH_RATIO/2-LANE_RADIUS[ant.type]-.4;
             from=this.neighbors(cell).filter(t=>t.open&&!own.has(t.index)).map(t=>{
               const p=this.point(t),length=distance(p,center),dx=(p.x-center.x)/length,dy=(p.y-center.y)/length,along=clamp((ant.x-center.x)*dx+(ant.y-center.y)*dy,0,length);
               return {tile:t,d:distance(ant,{x:center.x+dx*along+dy*lane,y:center.y+dy*along-dx*lane})};
@@ -1241,7 +1244,7 @@
           while(j<path.length&&own.has(path[j]))inside.push(this.tiles[path[j++]]);
           const exit=this.tiles[path[j]];
           // A destination inside the junction still reserves its approach.
-          const nodes=[from,...inside,...(exit?[exit]:[])],points=[],corners=[],lane=C.CELL*C.PATH_WIDTH_RATIO/2-RADIUS[ant.type]-.4;
+          const nodes=[from,...inside,...(exit?[exit]:[])],points=[],corners=[],lane=C.CELL*C.PATH_WIDTH_RATIO/2-LANE_RADIUS[ant.type]-.4;
           const direction=(a,b)=>{const d=distance(a,b);return {x:(b.x-a.x)/d,y:(b.y-a.y)/d};};
           const start=this.point(from),entry=this.point(cell),dir=direction(start,entry),right={x:-dir.y,y:dir.x};
           const stop={x:(start.x+entry.x)/2-dir.x*(RADIUS[ant.type]+.6)+right.x*lane,y:(start.y+entry.y)/2-dir.y*(RADIUS[ant.type]+.6)+right.y*lane};
@@ -1277,7 +1280,7 @@
         if(Math.min(pointSegment(u,p,q),pointSegment(v,p,q),pointSegment(p,u,v),pointSegment(q,u,v))<margin)return true;
       }return false;
     }
-    syncJunctionQueues(){
+    syncJunctionQueues(dt=0){
       if(this._junctionSyncAt===this.time)return;this._junctionSyncAt=this.time;
       for(const ant of this.ants){
         const q=ant.junctionQueue;
@@ -1295,7 +1298,12 @@
       for(const ant of waiting){
         const q=ant.junctionQueue,conflicts=other=>other.junctionQueue.key===q.key&&(other.junctionQueue.arrived===q.arrived||this.junctionRoutesConflict(q,other.junctionQueue));
         const end=q.points.at(-1);
-        if(active.some(conflicts)||blocked.some(conflicts)||!this.canStand(ant,end.x,end.y)||!this.roomMovementAllows(ant,end)){blocked.push(ant);continue;}
+        if(active.some(conflicts)||blocked.some(conflicts)||!this.roomMovementAllows(ant,end)){blocked.push(ant);continue;}
+        // An idle room resident may occupy the exact exit waypoint forever.
+        // Ask it to park on free floor before granting a crossing, rather than
+        // leaving every approaching ant blocked by a motionless resident.
+        this.clearIdleQueueBlocker(ant,end,dt);
+        if(!this.canStand(ant,end.x,end.y)){blocked.push(ant);continue;}
         q.active=true;q.next=(ant.x-q.stop.x)*q.dir.x+(ant.y-q.stop.y)*q.dir.y>1?1:0;ant.detour=null;ant.yieldGoal=null;active.push(ant);
       }
     }
@@ -1305,7 +1313,7 @@
       return this.junctionZone(this.at(ant))?.key===zone.key||ant.junctionQueue?.active&&ant.junctionQueue.key===zone.key;
     }
     updateJunctionQueue(ant,dt){
-      this.syncJunctionQueues();const q=ant.junctionQueue;if(!q)return false;
+      this.syncJunctionQueues(dt);const q=ant.junctionQueue;if(!q)return false;
       const task=ant.task;task.lastProgress=this.time;ant.passing=null;ant.detour=null;ant.yieldGoal=null;
       if(!q.active){
         if(this.entranceIntent(ant)&&this.updateEntranceQueue(ant,dt))return true;
@@ -1356,12 +1364,12 @@
         }previous=next;
       }return null;
     }
-    queueTrack(intent,r,length){
+    queueTrack(intent,r,length,laneRadius=r){
       const geometry=this.waterPhysics().geometry;if(this._queueTracksGeometry!==geometry){this._queueTracks=new Map();this._queueTracksGeometry=geometry;}
       const cell=this.tiles[intent.from],room=this.rooms.find(a=>a.id===cell.room),signature=room?this.roomTiles(room).map(t=>t.index).join(','):cell.cave??'surface';
-      const key=intent.key+':'+intent.from+':'+intent.to+':'+r+':'+signature;this._queueTracks??=new Map();const cached=this._queueTracks.get(key);if(cached&&cached.length>=length)return cached.track;
+      const key=intent.key+':'+intent.from+':'+intent.to+':'+r+':'+laneRadius+':'+signature;this._queueTracks??=new Map();const cached=this._queueTracks.get(key);if(cached&&cached.length>=length)return cached.track;
       length=Math.max(length,C.CELL*4);
-      const right={x:-intent.dir.y,y:intent.dir.x},lane=C.CELL*C.PATH_WIDTH_RATIO/2-r-.4;
+      const right={x:-intent.dir.y,y:intent.dir.x},lane=C.CELL*C.PATH_WIDTH_RATIO/2-laneRadius-.4;
       const front={x:intent.portal.x+right.x*lane-intent.dir.x*(r+.6),y:intent.portal.y+right.y*lane-intent.dir.y*(r+.6)},track=[front],probe={type:'queue',size:r};
       const from=this.tiles[intent.from],inside=p=>{const t=this.at(p);return t&&(from.y===C.SURFACE?t.y===C.SURFACE:(t.room??t.cave)===(from.room??from.cave));};
       let angle=intent.roomId&&!from.room&&!from.cave&&from.y>C.SURFACE?Math.atan2(-intent.dir.y,-intent.dir.x):Math.atan2(right.y,right.x),travelled=0;
@@ -1392,7 +1400,8 @@
       const delivery=task.type==='carry'&&task.delivery&&task.destinationRoom===room.id&&carried&&this.roomCanEnter(carried,room);
       const food=task.type==='forage'&&task.deliveryDone&&ant.foodCargo&&this.at(task.goal)?.room===room.id;
       if(!service&&!delivery&&!food)return false;
-      if(service&&task.type==='carry')task.range=Math.max(task.range,RADIUS[ant.type]+RADIUS[target.type]+12);
+      // Keep pickup reach based on visible size even though body collision is smaller.
+      if(service&&task.type==='carry')task.range=Math.max(task.range,(LANE_RADIUS[ant.type]??RADIUS[ant.type])+(LANE_RADIUS[target.type]??RADIUS[target.type])+12);
       const clear=p=>{const steps=Math.ceil(distance(ant,p)/2);for(let i=1;i<=steps;i++)if(!this.groundContains(ant.x+(p.x-ant.x)*i/steps,ant.y+(p.y-ant.y)*i/steps))return false;return true;};
       const point=service?target:delivery?(carried.type==='egg'?this.eggSpots(room,carried):this.roomSpots(room)).filter(p=>distance(ant,p)<=C.CELL&&this.canStand(carried,p.x,p.y)&&clear(p)).sort((a,b)=>distance(a,ant)-distance(b,ant))[0]:this.point(this.tiles[intent.to]);
       if(point&&distance(ant,point)<=(service?task.range:C.CELL)&&clear(point)){
@@ -1400,7 +1409,7 @@
         if(food){task.goal={...point};task.range=C.CELL;}
         task.stage='act';if(delivery)ant.entranceQueue.deposit=true;else ant.entranceQueue=null;ant.traffic=null;return 'ready';
       }
-      const lane=C.CELL*C.PATH_WIDTH_RATIO/2-RADIUS[ant.type]-.4,right={x:-intent.dir.y,y:intent.dir.x};
+      const lane=C.CELL*C.PATH_WIDTH_RATIO/2-LANE_RADIUS[ant.type]-.4,right={x:-intent.dir.y,y:intent.dir.x};
       const stop={x:intent.portal.x+right.x*lane-intent.dir.x*.4,y:intent.portal.y+right.y*lane-intent.dir.y*.4};
       ant.entranceQueue.entering=true;ant.traffic={dir:intent.dir,origin:this.point(this.tiles[intent.from]),lane};this.move(ant,stop,dt);task.lastProgress=this.time;return true;
     }
@@ -1411,13 +1420,21 @@
       const joining=members.filter(a=>a.ant.entranceQueue?.key!==intent.key).sort((a,b)=>distance(a.ant,a.intent.portal)-distance(b.ant,b.intent.portal)||Number(a.ant.id.slice(1))-Number(b.ant.id.slice(1)));
       for(const member of joining)member.ant.entranceQueue={key:intent.key,from:member.intent.from,to:member.intent.to,roomId:member.intent.roomId,ticket:this.id++};
       members.sort((a,b)=>a.ant.entranceQueue.ticket-b.ant.entranceQueue.ticket);
-      const rank=members.findIndex(a=>a.ant===ant),radius=Math.max(...members.map(a=>RADIUS[a.ant.type])),spacing=radius*2+2,track=this.queueTrack(intent,radius,rank*spacing+4),slot=track[Math.min(track.length-1,Math.round(rank*spacing/2))];
+      const rank=members.findIndex(a=>a.ant===ant),radius=Math.max(...members.map(a=>RADIUS[a.ant.type])),laneRadius=Math.max(...members.map(a=>LANE_RADIUS[a.ant.type])),spacing=radius*2+2,track=this.queueTrack(intent,radius,rank*spacing+4,laneRadius),slot=track[Math.min(track.length-1,Math.round(rank*spacing/2))];
       const q=ant.entranceQueue;q.rank=rank;q.slot=slot;q.from=intent.from;q.to=intent.to;
       ant.passing=null;ant.traffic=null;ant.yieldGoal=null;ant.detour=null;
       if(distance(ant,slot)<1.5||q.entering)q.joined=true;
       // Form the line in ticket order so simultaneous arrivals cannot wedge
       // one another against the entrance wall while joining their places.
-      const predecessor=members[rank-1]?.ant.entranceQueue;if(rank>0&&!q.joined&&!predecessor?.joined&&!predecessor?.entering){ant.moving=false;ant.task.lastProgress=this.time;return true;}
+      const predecessor=members[rank-1]?.ant.entranceQueue;
+      // A later arrival can already stand on an earlier ticket's joining slot.
+      // Let it move back to its own slot, or both ants wait forever. Tickets
+      // still control entry, and ordinary movement keeps bodies and walls solid.
+      const blocksEarlierSlot=members.slice(0,rank).some(({ant:earlier})=>{
+        const slot=earlier.entranceQueue?.slot;
+        return slot&&!earlier.entranceQueue.joined&&!earlier.entranceQueue.entering&&distance(ant,slot)<RADIUS[ant.type]+RADIUS[earlier.type]+2;
+      });
+      if(rank>0&&!q.joined&&!predecessor?.joined&&!predecessor?.entering&&!blocksEarlierSlot){ant.moving=false;ant.task.lastProgress=this.time;return true;}
       const room=intent.roomId&&this.rooms.find(r=>r.id===intent.roomId),available=!room||this.roomCanEnter(ant,room);
       if(room&&this.at(ant)?.index!==intent.from&&distance(ant,slot)>C.CELL*.5){q.entering=true;ant.task.lastProgress=this.time;return false;}
       if(!available)q.entering=false;
@@ -1815,7 +1832,7 @@
       while(heap.length){
         const node=pop();if(node.cost!==cost.get(node.index))continue;const tile=this.tiles[node.index],center=this.point(tile),previous=parent.get(node.index),from=previous===null?ant:this.point(this.tiles[previous]);
         if(this.walkable(tile,true)){
-          const d=distance(from,center),dir=d>.1?{x:(center.x-from.x)/d,y:(center.y-from.y)/d}:{x:0,y:-1},lane=C.CELL*C.PATH_WIDTH_RATIO/2-RADIUS[ant.type]-.4,quarter=C.CELL/4;
+          const d=distance(from,center),dir=d>.1?{x:(center.x-from.x)/d,y:(center.y-from.y)/d}:{x:0,y:-1},lane=C.CELL*C.PATH_WIDTH_RATIO/2-LANE_RADIUS[ant.type]-.4,quarter=C.CELL/4;
           const spots=tile.room||tile.cave||tile.y<=C.SURFACE?[[0,0],[-quarter,0],[quarter,0],[0,-quarter],[0,quarter],[-quarter,-quarter],[quarter,-quarter],[-quarter,quarter],[quarter,quarter]].map(([dx,dy])=>({x:center.x+dx,y:center.y+dy})):[-quarter,0,quarter].map(along=>({x:center.x-dir.y*lane+dir.x*along,y:center.y+dir.x*lane+dir.y*along}));
           const goal=spots.sort((a,b)=>distance(a,from)-distance(b,from)).find(p=>this.at(p)?.index===tile.index&&this.canStand(ant,p.x,p.y)&&this.roomMovementAllows(ant,p)&&this.swimLine(ant,from,p));
           if(goal){
@@ -1999,6 +2016,6 @@
       }catch{return null;}
     }
   }
-  G.AntGame={...(G.AntGame??{}),C,ROOMS,ART_COLORS,MAX_HP,ATTACK,RADIUS,TASK_NAMES,Simulation,distance,clamp,pathStrokeCells,FRUIT_CROWN,FRUIT_OFFSETS,TREE_TOP};
+  G.AntGame={...(G.AntGame??{}),C,LANE_RADIUS,ROOMS,ART_COLORS,MAX_HP,ATTACK,RADIUS,TASK_NAMES,Simulation,distance,clamp,pathStrokeCells,FRUIT_CROWN,FRUIT_OFFSETS,TREE_TOP};
   if(typeof module!=='undefined')module.exports=G.AntGame;
 })(globalThis);
