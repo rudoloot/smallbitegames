@@ -29,6 +29,13 @@
         const d=this.depth,w=this.width;
         for(const k of this.active)d[k]=Math.min(d[k],(d[k-1]??0)+1,(d[k-w]??0)+1,(d[k-w-1]??0)+Math.SQRT2,(d[k-w+1]??0)+Math.SQRT2);
         for(let i=this.active.length-1;i>=0;i--){const k=this.active[i];d[k]=Math.min(d[k],(d[k+1]??0)+1,(d[k+w]??0)+1,(d[k+w-1]??0)+Math.SQRT2,(d[k+w+1]??0)+Math.SQRT2);}
+        // Keep the old drainage edge for particles falling through a new hole,
+        // while the visible pool uses the complete, current cavity below it.
+        for(const p of s.waterDrops){
+          const old=p.poolBounds;if(!(p.pooled??p.settled)||!Number.isFinite(old?.bottom))continue;
+          const top=Math.max(0,Math.floor((old.level-this.originY)/this.size)),seed=this.poolSeed(p.poolX??p.x,p.poolY??p.y,top,this.height-1),basin=seed&&this.basin(seed.x,seed.y,Math.min(top,Math.floor((seed.y-this.originY)/this.size)));
+          if(basin&&this.originY+(Math.floor(basin.floorKey/this.width)+1)*this.size>old.bottom+this.size*.5)p.poolDrainBottom=Math.min(p.poolDrainBottom??Infinity,old.bottom);
+        }
       }
       for(const p of s.waterDrops){p.id??=s.uid('w');p.vx??=0;p.vy??=0;p.age??=0;p.seek??=0;}
       let imported=false;
@@ -119,7 +126,9 @@
       for(const p of drops){
         const x=p.poolX??p.x,y=p.poolY??p.y,r=this.radiusOf(p),old=p.poolBounds;
         let topRow=Math.max(0,Math.floor(((old?.level??(y-r-this.size))-this.originY)/this.size));
-        const bottomRow=Math.min(this.height-1,old?Math.round((old.bottom-this.originY)/this.size)-1:this.height-1);
+        // A previous pool floor is metadata, not a wall. Newly excavated
+        // connected space below the water must take part in the same basin.
+        const bottomRow=this.height-1;
         const seed=this.poolSeed(x,y,topRow,bottomRow);if(!seed)continue;
         topRow=Math.min(topRow,Math.floor((seed.y-this.originY)/this.size));
         const basin=this.basin(seed.x,seed.y,topRow,bottomRow);if(!basin)continue;
@@ -222,11 +231,11 @@
       const r=this.radiusOf(p),speed=Math.hypot(p.vx,p.vy);
       if(p.pooled){
         const bounds=p.poolBounds??{left:p.poolX-r,right:p.poolX+r,bottom:p.poolY+r+this.size*2,level:p.poolY-r};
-        const outward=(p.x<bounds.left-r*2&&p.vx<-2)||(p.x>bounds.right+r*2&&p.vx>2)||(p.y>bounds.bottom+r*.5&&p.vy>2);
+        const outward=(p.x<bounds.left-r*2&&p.vx<-2)||(p.x>bounds.right+r*2&&p.vx>2)||(p.y>(p.poolDrainBottom??bounds.bottom)+r*.5&&p.vy>2);
         const invalid=!this.sim.groundContains(p.poolX,p.poolY);
         // Jostling anywhere inside the pool does not turn it into droplets.
         p.poolFlow=outward&&speed>2?(p.poolFlow??0)+dt:0;
-        if(invalid||p.poolFlow>=.12){p.pooled=false;p.poolRest=0;delete p.poolX;delete p.poolY;delete p.poolBounds;delete p.poolGroup;p.poolFlow=0;}
+        if(invalid||p.poolFlow>=.12){p.pooled=false;p.poolRest=0;delete p.poolX;delete p.poolY;delete p.poolBounds;delete p.poolGroup;delete p.poolDrainBottom;p.poolFlow=0;}
       }else if(p.settled&&p.poolRest>=.35){
         p.pooled=true;p.poolX=p.x;p.poolY=p.y;p.poolFlow=0;
       }

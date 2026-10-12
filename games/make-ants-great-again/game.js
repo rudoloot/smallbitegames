@@ -24,7 +24,7 @@
   $('clear-selection').onclick=()=>{app.selection.clear();updateSelection();};
   function updateSelection(){
     const n=app.selection.size,preview=app.sim.constructionPreview(app.mode,[...app.selection]);$('selection-actions').hidden=!n;
-    $('selection-count').textContent=app.mode==='fill'?n+'칸 메우기':n+'칸 · '+preview.after+' / '+preview.limit+(preview.overLimit?' · 한도 초과':'');
+    $('selection-count').textContent=app.mode==='fill'?n+'칸 메우기':n+'칸 · '+preview.after+' / '+preview.limit+(preview.roomGroups?.some(g=>g.room)?' · 기존 방 확장':'')+(preview.overLimit?' · 한도 초과':'');
     $('request-build').textContent='확인';$('request-build').disabled=preview.invalid||preview.overLimit||!preview.cells.length;
   }
   $('request-build').onclick=()=>{if(!app.mode)return;app.sim.request(app.mode,[...app.selection]);setMode(null);app.drag=null;updateUI();save();};
@@ -110,6 +110,7 @@
       const ant=sim.ants.find(a=>a.id===app.selected.id&&!a.dead);if(!ant){closeDrawer();return;}
       const task=ant.task?.type==='forage'?(ant.task.deliveryDone?'먹이 운반':ant.task.chunkId?'먹이 덩어리 줍기':'먹이 채집'):ant.task?TASK_NAMES[ant.task.type]:'대기';
       content.innerHTML=`<div class="inspect-header"><canvas id="inspect-ant" width="140" height="180"></canvas><div><span class="eyebrow">군체의 구성원</span><h2>${antNames[ant.type]}</h2><span class="tag">${ant.carriedBy?'운반 중':ant.swimming?.path?.length?'물에서 빠져나오는 중':sim.inWater(ant)?'물 위에 떠 있음':escape(task)}${ant.sick?' · 질병':''}</span>${ant.type==='egg'?`<p>부화까지 ${Math.ceil(Math.max(0,120-ant.age))}초<br>알 보관실과 빈 공간이 필요합니다.</p>`:ant.type==='larva'?'<p>애벌레실에 내려놓으면 상단에서 병정 또는 일꾼으로 성장시킬 수 있습니다.</p>':''}</div></div><div class="stats-grid">${stat('체력',ant.hp,ant.maxHp??MAX_HP[ant.type])}${stat('위생',ant.hygiene,100)}${!['egg','aphid'].includes(ant.type)?stat('포만감',ant.hunger,100):''}${['queen','worker','soldier','enemy'].includes(ant.type)?stat('에너지',ant.energy,100):''}</div>`;
+      if(ant.type==='queen'){const seconds=Math.max(0,Math.ceil((ant.nextEggAt??sim.time+C.LAY_SECONDS)-sim.time-1e-8));content.querySelector('.inspect-header').insertAdjacentHTML('afterend',`<p class="lay-timer">${seconds?`다음 산란까지 ${seconds}초 · ${C.LAY_SECONDS}초 주기`:'산란 대기 · 마른 여왕개미실과 알을 놓을 자리가 필요합니다.'}</p>`);}
       const c=$('inspect-ant').getContext('2d');drawAnt(c,ant.type,70,75,['egg','larva','aphid'].includes(ant.type)?1.4:.48,0,ant.phase,ant.moving,sim.entityColor(ant));
     }else if(app.selected.type==='bug'){
       const bug=sim.foodBugs.find(b=>b.id===app.selected.id);if(!bug){closeDrawer();return;}

@@ -1,9 +1,9 @@
 (function (G) {
   'use strict';
-  const C = { CELL:38, PATH_WIDTH_RATIO:.8, W:34, H:58, SURFACE:4, GRASS_CELLS:2, TREE_X:8, TREE_WIDTH:10, TREE_ROOT:7, SAVE_VERSION:1, INITIAL_FOOD:0, EGG_SECONDS:120, FOOD_BUG_RADIUS:7, FOOD_BUG_LIMIT:5, FOOD_BUG_LIFE:120 };
+  const C = { CELL:38, PATH_WIDTH_RATIO:.8, W:34, H:58, SURFACE:4, GRASS_CELLS:2, TREE_X:8, TREE_WIDTH:10, TREE_ROOT:7, SAVE_VERSION:1, INITIAL_FOOD:0, EGG_SECONDS:120, LAY_SECONDS:20, FOOD_BUG_RADIUS:7, FOOD_BUG_LIMIT:5, FOOD_BUG_LIFE:120 };
   const ROOMS = {
     empty:{name:'빈방',color:'#ead6b1',description:'방을 지정하면 개미들이 목적에 맞게 이용합니다.'},
-    queen:{name:'여왕개미실',color:'#d7ae7d',description:'여왕이 머무르고 알을 낳으며 휴식을 취하는 방입니다.'},
+    queen:{name:'여왕개미실',color:'#d7ae7d',description:'여왕이 머무르고 20초마다 알을 낳으며 휴식을 취하는 방입니다.'},
     food:{name:'음식 보관소',color:'#c4ae75',description:'모든 개미의 먹이를 보관합니다. 일꾼이 채집한 음식을 가져옵니다.'},
     egg:{name:'알 보관실',color:'#e8dcbd',description:'알이 이 방에서 2분을 보내면 애벌레가 됩니다. 한 블록에 2×2로 4개까지 배치합니다.'},
     larva:{name:'애벌레실',color:'#e7ccae',description:'일꾼이 애벌레를 운반하고 먹이를 주며 돌봅니다. 이 방에 내려놓은 애벌레만 병정 또는 일꾼으로 성장시킬 수 있습니다.'},
@@ -338,6 +338,7 @@
     }
     addAnt(type,x,y){
       const ant={id:this.uid('a'),type,x,y,hp:MAX_HP[type],hunger:100,energy:100,hygiene:100,lastDamage:-10,cooldown:0,age:0,angle:0,phase:0,moving:false,task:null,resume:null,lastWork:null,sick:false,dead:false,carriedBy:null,carry:null,toiletNeed:0,stuck:0,replan:0};
+      if(type==='queen')ant.nextEggAt=this.time+C.LAY_SECONDS;
       this.ants.push(ant);return ant;
     }
     queen(){return this.ants.find(a=>a.type==='queen'&&!a.dead);}
@@ -534,14 +535,30 @@
       return new Set([...seen].filter(i=>this.tiles[i].y>C.SURFACE));
     }
     excavationStats(){return {current:this.excavationCells().size,limit:this.counts().total*4};}
+    roomConstructionGroups(cells,selection=cells){
+      const remaining=new Set(cells),groups=[],overlap=new Map();
+      for(const i of new Set(selection)){const t=this.tiles[i];if(t?.open&&t.room)overlap.set(t.room,(overlap.get(t.room)??0)+1);}
+      while(remaining.size){
+        const group=[remaining.values().next().value],contacts=new Map();remaining.delete(group[0]);
+        for(let i=0;i<group.length;i++)for(const t of this.adjacent(this.tiles[group[i]])){
+          if(remaining.delete(t.index))group.push(t.index);
+          if(t.open&&t.room)contacts.set(t.room,(contacts.get(t.room)??0)+1);
+        }
+        // Grow the selected existing room when a stroke overlaps it. Otherwise
+        // prefer the largest shared edge, then the earlier room on a tie.
+        // Other existing rooms keep their own identity and purpose.
+        const room=this.rooms.filter(r=>contacts.has(r.id)).sort((a,b)=>(overlap.get(b.id)??0)-(overlap.get(a.id)??0)||contacts.get(b.id)-contacts.get(a.id))[0]??null;
+        groups.push({cells:group,room,identity:room?.id??{}});
+      }return groups;
+    }
     constructionPreview(type,indices){
       const unique=[...new Set(indices)].filter(i=>Number.isInteger(i)&&this.tiles[i]?.y>C.SURFACE),before=this.excavationStats();
-      const invalid=!['path','room','fill'].includes(type)||type==='room'&&unique.some(i=>this.tiles[i].kind==='rock'||this.tiles[i].room);
+      const invalid=!['path','room','fill'].includes(type)||type==='room'&&unique.some(i=>this.tiles[i].kind==='rock');
       const cells=invalid?[]:unique.filter(i=>type==='fill'?this.tiles[i].open:!this.tiles[i].open&&['soil','root'].includes(this.tiles[i].kind)||type==='room'&&this.tiles[i].open&&!this.tiles[i].room);
       if(type==='fill'||invalid)return {...before,after:before.current,cells,invalid,overLimit:false};
-      const temporary={},saved=cells.map(i=>({tile:this.tiles[i],open:this.tiles[i].open,room:this.tiles[i].room}));let after;
-      try{for(const entry of saved){entry.tile.open=true;if(type==='room')entry.tile.room=temporary;}after=this.excavationCells().size;}finally{for(const entry of saved){entry.tile.open=entry.open;entry.tile.room=entry.room;}}
-      return {...before,after,cells,invalid,overLimit:after>before.limit&&after>before.current};
+      const roomGroups=type==='room'?this.roomConstructionGroups(cells,unique):[],saved=cells.map(i=>({tile:this.tiles[i],open:this.tiles[i].open,room:this.tiles[i].room}));let after;
+      try{for(const entry of saved)entry.tile.open=true;for(const group of roomGroups)for(const i of group.cells)this.tiles[i].room=group.identity;after=this.excavationCells().size;}finally{for(const entry of saved){entry.tile.open=entry.open;entry.tile.room=entry.room;}}
+      return {...before,after,cells,roomGroups,invalid,overLimit:after>before.limit&&after>before.current};
     }
     openConstructionTile(index,roomId=null){
       const t=this.tiles[index];if(t.kind==='root'){t.kind='soil';t.rootRemoved=true;this.updateRootDistances();}
@@ -562,14 +579,17 @@
       if(applied)this.updateMapBounds();return applied;
     }
     request(type,indices){
-      const preview=this.constructionPreview(type,indices);if(preview.invalid){this.record('방은 장애물·다른 방과 겹칠 수 없습니다.',true);return 0;}
+      const preview=this.constructionPreview(type,indices);if(preview.invalid){this.record('방은 돌·바위와 겹칠 수 없습니다.',true);return 0;}
       if(preview.overLimit){this.record('굴착 한도를 초과합니다. '+preview.after+' / '+preview.limit+'칸',true);return 0;}
       if(!preview.cells.length){this.record('적용할 수 있는 칸이 없습니다.',true);return 0;}
-      let room=null;if(type==='room'){room={id:this.uid('r'),type:'empty',cells:[],requested:[...preview.cells],crop:0,planted:false,tended:0};this.rooms.push(room);}
-      for(const i of preview.cells){if(type==='fill'){if(!this.jobs.some(j=>j.type==='fill'&&j.cell===i))this.jobs.push({id:this.uid('j'),type:'fill',cell:i,status:'pending',created:this.time,worker:null,progress:0,player:true});}else this.openConstructionTile(i,room?.id);}
+      if(type==='room')for(const group of preview.roomGroups){
+        let room=group.room;if(!room){room={id:this.uid('r'),type:'empty',cells:[],requested:[],crop:0,planted:false,tended:0};this.rooms.push(room);}
+        room.requested=[...new Set([...(room.requested??room.cells),...group.cells])];
+        for(const i of group.cells)this.openConstructionTile(i,room.id);
+      }else for(const i of preview.cells){if(type==='fill'){if(!this.jobs.some(j=>j.type==='fill'&&j.cell===i))this.jobs.push({id:this.uid('j'),type:'fill',cell:i,status:'pending',created:this.time,worker:null,progress:0,player:true});}else this.openConstructionTile(i);}
       if(type!=='fill'){this.recognizeConnectedCaverns(false);this.updateMapBounds();}else this.processPlayerConstruction();
       const waiting=type==='fill'?this.jobs.filter(j=>j.type==='fill'&&preview.cells.includes(j.cell)).length:0;
-      this.record(preview.cells.length+'칸 '+(type==='fill'?'메우기':'굴착')+' 적용'+(waiting?' · '+waiting+'칸은 안전하게 비워진 뒤 적용':'') ,false);return preview.cells.length;
+      this.record(preview.cells.length+'칸 '+(type==='fill'?'메우기':'굴착')+' 적용'+(preview.roomGroups?.some(g=>g.room)?' · 기존 방에 편입':'')+(waiting?' · '+waiting+'칸은 안전하게 비워진 뒤 적용':'') ,false);return preview.cells.length;
     }
     cancelConstruction(indices=this.jobs.map(j=>j.cell)){
       const cells=new Set(indices),cancelled=this.jobs.filter(j=>j.status!=='done'&&cells.has(j.cell)),ids=new Set(cancelled.map(j=>j.id));
@@ -1659,7 +1679,6 @@
         else if(target&&this.food>0){this.food--;target.hunger=Math.min(100,target.hunger+30);target.toiletNeed++;}
         if(task.type==='feed'&&target?.type==='queen'){
           target.needsFullMeal=target.hunger<100;
-          this.tryLayEgg();
           // A queen's meal continues in 30-point portions until she is full.
           // Keep the task reservation while waiting for another food portion.
           if(target.hunger<100&&this.food>0){task.progress=0;return;}
@@ -1897,12 +1916,15 @@
       }}
     }
     tryLayEgg(){
-      const queen=this.queen();if(!queen)return false;
-      if(queen.hunger<100){queen.laidWhileFull=false;return false;}
+      const queen=this.queen();if(!queen||this.over)return false;
+      if(!Number.isFinite(queen.nextEggAt)||queen.nextEggAt<0)queen.nextEggAt=this.time+C.LAY_SECONDS;
+      if(this.time+1e-8<queen.nextEggAt)return false;
       const cell=this.at(queen),room=this.rooms.find(r=>r.id===cell?.room&&r.type==='queen'&&r.cells.includes(cell.index));
-      if(queen.hunger!==100||queen.laidWhileFull||!room||!cell.open||cell.water>=.025||queen.hygiene<=30||queen.energy<=30||queen.carriedBy)return false;
+      if(!room||!cell.open||cell.water>=.025||this.inWater(queen)||queen.carriedBy)return false;
       const spot=this.roomPlacement(room,{id:'new',type:'egg',x:queen.x,y:queen.y});if(!spot)return false;
-      this.addAnt('egg',spot.x,spot.y);queen.laidWhileFull=true;return true;
+      // A full or flooded room waits for one available place. Missed periods
+      // never become a burst of eggs; the next period starts after this birth.
+      this.addAnt('egg',spot.x,spot.y);queen.nextEggAt=this.time+C.LAY_SECONDS;return true;
     }
     tick(dt){
       if(this.over)return;this.time+=dt;this.scheduleClock+=dt;this.waterClock+=dt;this.mapClock+=dt;
@@ -1932,7 +1954,6 @@
       }
       for(const room of this.rooms){if(room.type==='mushroom'&&room.planted&&this.hasWaterNear(room)&&this.roomTiles(room).length)room.crop=Math.min(30,room.crop+dt);if(room.type==='aphid'&&this.hasRootNear(room)&&this.ants.some(a=>a.type==='aphid'&&!a.dead&&!a.carriedBy&&!a.sick&&a.hygiene>30&&room.cells.includes(this.at(a)?.index)&&this.at(a).water<.025))room.crop=Math.min(30,room.crop+dt);}
       const schedule=this.scheduleClock>=.3;if(schedule)this.scheduleClock=0;
-      this.tryLayEgg();
       if(schedule)this.dispatchTasks();
       for(const ant of this.ants){
         ant.moving=false;ant.replan-=dt;ant.cooldown=Math.max(0,ant.cooldown-dt);if(ant.dead)continue;
@@ -2013,6 +2034,10 @@
         sim.updateMapBounds();
         delete sim.waterCells;
         delete sim.layClock;
+        for(const queen of sim.ants.filter(a=>a.type==='queen')){
+          if(!Number.isFinite(queen.nextEggAt)||queen.nextEggAt<0)queen.nextEggAt=sim.time+C.LAY_SECONDS;
+          delete queen.laidWhileFull;
+        }
         // Use the same collision-safe recovery for saved narrow roads and
         // corners changed by room excavation, keeping tasks and cargo together.
         for(const ant of sim.ants)if(isAdultAnt(ant)&&!ant.dead&&!ant.carriedBy&&sim.at(ant)?.water<.025&&!sim.terrainFits(ant,ant.x,ant.y)){
