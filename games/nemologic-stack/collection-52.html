@@ -13,7 +13,7 @@
 .app{width:100%;max-width:520px;margin:0 auto;padding:18px 10px max(14px,env(safe-area-inset-bottom));min-height:100dvh}.header{display:flex;justify-content:space-between;align-items:center;padding:0 6px 16px}.brand{display:flex;align-items:center;gap:12px}.mark{position:relative;display:block;width:30px;height:34px}.mark i{position:absolute;width:18px;height:18px;border-radius:4px;transform:rotate(-9deg)}.mark i:nth-child(1){background:#df7771;top:0;left:1px}.mark i:nth-child(2){background:#82a989;top:10px;left:11px}.mark i:nth-child(3){background:#779bc4;top:18px;left:0}h1{font-size:20px;letter-spacing:-1px;font-weight:800}h1 span{display:inline-block;font-size:9px;letter-spacing:1px;margin-left:7px;vertical-align:middle;border:1px solid #c6cec5;border-radius:5px;padding:3px 4px;color:#758279}.brand p{font-size:10px;letter-spacing:.15px;color:#839087;margin-top:4px}.icon-button{border:1px solid #d9dfd5;border-radius:50%;width:36px;height:36px;font-size:17px;font-weight:600;background:#fafbf6}.puzzle-info{display:flex;justify-content:space-between;align-items:center;padding:0 6px 8px;font-size:11px}.tag{letter-spacing:1.3px;font-size:10px;font-weight:750}.dimensions{padding-left:12px;color:#7d897f}.progress-label{display:flex;align-items:center;gap:7px;color:#748076;font-variant-numeric:tabular-nums}.save-dot{width:5px;height:5px;background:#91a985;border-radius:50%}.progress-track{height:3px;border-radius:5px;background:#e1e7dc;overflow:hidden;margin:0 6px}.progress-track>div{height:100%;background:#839b70;transition:width .3s}
 .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#eaece5;padding:4px;border-radius:12px;margin:15px 4px 13px}.tabs button{height:39px;border-radius:9px;font-size:13px;font-weight:650;display:flex;align-items:center;justify-content:center;gap:7px;color:#7d857f}.tabs button[aria-selected=true]{background:#fffef9;color:#303b34;box-shadow:0 1px 4px #263c1912}.dot,.all-dot{display:inline-block;width:8px;height:8px;border-radius:50%}.red{background:#dc736c}.green{background:#76a382}.blue{background:#7097c2}.all-dot{background:conic-gradient(#dc736c 0 33%,#76a382 33% 66%,#7097c2 66%)}
 .board-caption{padding:0 5px;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#8c958d;margin-bottom:5px}.board-caption>span:first-child{font-size:9px;letter-spacing:1.6px;font-weight:750;color:var(--accent)}.anchor-symbol{font-size:8px;color:var(--accent);margin-right:3px}.board-caption b{font-weight:600}.board{display:grid;grid-template-columns:var(--gutter) repeat(10,minmax(0,1fr)) var(--end);grid-template-rows:var(--top) repeat(10,auto) var(--bottom);user-select:none;-webkit-user-select:none;width:100%;align-items:stretch}.corner{display:flex;align-items:flex-end;justify-content:center;color:#9aa398;font-size:9px;padding-bottom:7px;line-height:1.35}.clue{font-size:clamp(10px,3.1vw,14px);font-variant-numeric:tabular-nums;font-weight:650;color:#536057;display:flex;align-items:center;justify-content:center;gap:3px;transition:background .1s}.clue.top{flex-direction:column;justify-content:flex-end;padding-bottom:6px;gap:1px}.clue.left{justify-content:flex-end;padding-right:7px;gap:4px}.clue.total{font-size:clamp(10px,2.9vw,12px);color:var(--accent);font-weight:750}.clue.right{margin-left:3px;border-left:1px solid #d9dfd4}.clue.bottom{margin-top:3px;border-top:1px solid #d9dfd4}.clue.active-line{background:var(--tint);border-radius:4px}.clue.done{color:#4a8654}.clue.conflict{color:#be453d;background:#fde0da;border-radius:3px}.cell{position:relative;aspect-ratio:1;padding:0;display:flex;align-items:center;justify-content:center;border-radius:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#fffefb;font-variant-numeric:tabular-nums;font-size:clamp(11px,3.5vw,18px);font-weight:650;min-width:0;min-height:0;line-height:1}.cell.first-col{border-left:1.5px solid #829183}.cell.first-row{border-top:1.5px solid #829183}.cell.major-col{border-right:1.5px solid #829183}.cell.major-row{border-bottom:1.5px solid #829183}.cell.unknown{color:#ccd3c9}.cell.zero{color:#646b71;font-weight:650;background:#dce0e3;font-size:clamp(14px,4vw,19px)}.cell.fixed:after{content:'◆';position:absolute;right:2px;top:2px;font-size:5px;opacity:.65}.cell.selected{z-index:1;outline:2.5px solid #24392f;outline-offset:-2.5px}.cell.selected:before{content:'';position:absolute;inset:2px;border:1px solid #fff8;pointer-events:none}.cell.hint-cell{outline:3px solid #b08a22;outline-offset:-3px}.cell.error{box-shadow:inset 0 0 0 2px #df4e46}.cell .micro{position:absolute;bottom:2px;display:flex;gap:2px}.cell .micro i{width:3px;height:2px;background:currentColor;opacity:.5}.cell.merged{font-size:10px}.cell .unknown-rgb{position:absolute;bottom:2px;right:3px;font-size:8px;color:#fff;text-shadow:0 1px 2px #0009}.under-board{display:flex;justify-content:space-between;padding:4px 5px 0;font-size:9px;color:#8d978c}.under-board b{font-weight:500;color:#647460}.diagonals{display:flex;gap:8px;margin:8px 4px 0;font-size:10px;color:#778372}.diagonals span{border-radius:5px;background:#e8eddf;padding:5px 9px}.diagonals b{color:#536f41;font-weight:650}
-.input-panel{margin:16px 4px 0;padding-top:12px;border-top:1px solid #dfe4d8}.selection-info{display:flex;align-items:center;justify-content:space-between;min-height:26px;font-size:11px;color:#788475;margin-bottom:8px}.rgb-readout{display:flex;gap:4px}.rgb-readout button{border:1px solid #dbe0d6;background:#fafbf6;border-radius:5px;font-size:10px;padding:4px 6px;font-variant-numeric:tabular-nums}.rgb-readout button.active{border-color:var(--accent);color:var(--accent)}.height-picker{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.height-picker button{height:54px;border:1px solid #d8dfd1;border-radius:10px;display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;background:#fffef9;box-shadow:0 2px 1px #29391305}.height-picker strong{font-size:21px;font-weight:650}.height-picker span{font-size:9px;color:#8d9787}.height-picker button.current{border-color:var(--accent);background:var(--tint);color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.input-note{font-size:10px;color:#889380;text-align:center;margin-top:8px;min-height:14px}.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:14px 4px 0}.tools button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:41px;background:#e9ede1;border-radius:8px;font-size:11px;white-space:nowrap}.tools button span{font-size:18px;line-height:1}.tools #hint{background:#263b2f;color:#f8f8f0}.tools #hint.pending{background:#9a762d}.message{font-size:11px;color:#73826c;line-height:1.65;margin:11px 7px 0;min-height:36px;word-break:keep-all}.message.warning{color:#ad5145}footer{display:flex;align-items:center;justify-content:space-between;padding:8px 7px 0;color:#a0aa95;font-size:8px;letter-spacing:1.5px}footer button{font-size:10px;letter-spacing:0;color:#87957e;padding:5px}
+.input-panel{margin:16px 4px 0;padding-top:12px;border-top:1px solid #dfe4d8}.selection-info{display:flex;align-items:center;justify-content:space-between;min-height:26px;font-size:11px;color:#788475;margin-bottom:8px}.rgb-readout{display:flex;gap:4px}.rgb-readout button{border:1px solid #dbe0d6;background:#fafbf6;border-radius:5px;font-size:10px;padding:4px 6px;font-variant-numeric:tabular-nums}.rgb-readout button.active{border-color:var(--accent);color:var(--accent)}.height-picker{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}.height-picker button{height:54px;border:1px solid #d8dfd1;border-radius:10px;display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;background:#fffef9;box-shadow:0 2px 1px #29391305}.height-picker strong{font-size:21px;font-weight:650}.height-picker span{font-size:9px;color:#8d9787}.height-picker button.current{border-color:var(--accent);background:var(--tint);color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.input-note{font-size:10px;color:#889380;text-align:center;margin-top:8px;min-height:14px}.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:14px 4px 0}.tools button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:41px;background:#e9ede1;border-radius:8px;font-size:11px;white-space:nowrap}.tools button span{font-size:18px;line-height:1}.tools #hint{background:#263b2f;color:#f8f8f0}.tools #hint.pending{background:#9a762d}.message{font-size:11px;color:#73826c;line-height:1.65;margin:11px 7px 0;min-height:36px;word-break:keep-all}.message.warning{color:#ad5145}footer{display:flex;align-items:center;justify-content:space-between;padding:8px 7px 0;color:#a0aa95;font-size:8px;letter-spacing:1.5px}footer button{font-size:10px;letter-spacing:0;color:#87957e;padding:5px}
 dialog{border:1px solid #dce1d2;border-radius:20px;max-width:430px;width:calc(100% - 32px);padding:24px;color:#293c2f;background:#fafbf4;max-height:88dvh;box-shadow:0 20px 80px #26382e30}dialog::backdrop{background:#15281d80;backdrop-filter:blur(4px)}.dialog-top{display:flex;align-items:center;justify-content:space-between}.eyebrow{font-size:9px;letter-spacing:2px;font-weight:750;color:#899879}h2{font-size:27px;line-height:1.25;letter-spacing:-1px;margin:16px 0}dialog p,dialog li{font-size:12px;line-height:1.75;color:#6b7a62}dialog ul{padding-left:17px;margin:17px 0}dialog li{padding-bottom:6px}.fine-print{font-size:10px!important;margin-top:13px!important}.rule-example{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 0;margin-top:10px;border-block:1px solid #e0e5d7}.rule-example>div{display:flex;flex-direction:column;gap:4px;align-items:center}.rule-example span{font-size:9px;color:#829176}.rule-example .example-cells{flex-direction:row;gap:2px}.example-cells i{font-style:normal;width:24px;height:27px;background:#edd8cf;color:#9b5b4d;display:grid;place-items:center;font-size:12px;border-radius:2px}.primary-button{border-radius:10px;background:#293f30;color:#fff;padding:13px 18px;font-size:13px;font-weight:600}dialog>.primary-button{display:block;width:100%;margin-top:20px}.dialog-actions{display:flex;justify-content:flex-end;align-items:center;gap:18px;margin-top:24px}.dialog-actions button{font-size:12px}#win-dialog{text-align:center}#win-art{width:190px;height:190px;image-rendering:pixelated;background:#172128;border-radius:12px;margin:8px 0}
 @media(max-width:599px){:root{--top:42px}.app{padding-top:12px}.header{padding-bottom:10px}.tabs{margin-top:12px;margin-bottom:9px}.input-panel{margin-top:10px;padding-top:8px}.tools{margin-top:10px}.message{margin-top:8px;min-height:30px}footer{padding-top:4px}}@media(min-width:600px){body{background:radial-gradient(ellipse at 30% 10%,#e8ebdf,transparent 60%),#edf0e7}.app{margin:24px auto;border:1px solid #d9e0d1;border-radius:22px;background:#f5f5ef;padding:22px 17px;min-height:0;box-shadow:0 15px 60px #3546270b}}@media(max-width:360px){:root{--gutter:34px;--end:27px;--top:40px}.app{padding-inline:5px;padding-top:12px}.header{padding-bottom:11px}.tabs{margin-top:11px}.tabs button{height:35px}.height-picker{gap:5px}.height-picker button{height:48px}.tools button{font-size:10px;gap:3px}.input-panel{margin-top:11px}.clue.left{gap:3px;padding-right:5px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 .run-tokens{display:contents}
@@ -136,10 +136,9 @@ footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-si
       <button id="deselect" aria-label="입력 도구 선택 해제"><strong><svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 3 6 17 3-7 7-3L4 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m16 16 5 5m0-5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></strong><span>선택해제</span></button>
       <button id="erase" aria-label="지우개 선택"><strong><svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 19-6-6a2 2 0 0 1 0-3l7-7a2 2 0 0 1 3 0l8 8a2 2 0 0 1 0 3l-5 5H9Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m7 6 11 11M8 19h13" stroke="currentColor" stroke-width="1.6"/></svg></strong><span>지우개</span></button>
       <button data-value="0"><strong>×</strong><span>0%</span></button>
-      <button data-value="1"><strong>1</strong><span>25%</span></button>
-      <button data-value="2"><strong>2</strong><span>50%</span></button>
-      <button data-value="3"><strong>3</strong><span>75%</span></button>
-      <button data-value="4"><strong>4</strong><span>100%</span></button>
+      <button data-value="1"><strong>1</strong><span>33%</span></button>
+      <button data-value="2"><strong>2</strong><span>67%</span></button>
+      <button data-value="3"><strong>3</strong><span>100%</span></button>
     </div>
     <p class="input-note" id="input-note">도구 선택 → 칸을 누르거나 드래그</p>
   </section>
@@ -149,22 +148,22 @@ footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-si
     <button id="check"><span aria-hidden="true">✓</span>검사</button>
   </div>
   <div id="message" class="message" aria-live="polite">같은 높이 구간의 스택 합계와 최대 높이를 단서로 시작해 보세요.</div>
-  <footer><span>5 LEVELS · 125 COLORS</span><button id="reset">처음부터</button></footer>
+  <footer><span>4 LEVELS · 64 COLORS</span><button id="reset">처음부터</button></footer>
   </section>
 </main>
 <dialog id="help-dialog">
   <div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div>
   <h2>모양을 찾고,<br>색을 쌓아 보세요.</h2>
-  <p>빨강·녹색·파랑을 각각 0~4스택으로 채워 하나의 그림을 완성해요.</p>
+  <p>빨강·녹색·파랑을 각각 0~3스택으로 채워 하나의 그림을 완성해요.</p>
   <div class="rule-example"><div><b>2 4 3 4 1</b><span>11 | 000 | 22 | 3 | 22 | 00 | 1</span></div><div><b>3</b><span>최대 높이</span></div></div>
-  <ul><li><b>색상판 위·왼쪽:</b> 같은 높이가 연속된 구간의 스택 합계예요. 높이 2가 세 칸이면 6으로 표시해요. 칸 수와 높이를 함께 추론하세요.</li><li><b>빈 구간은 생략:</b> 빈 구간의 0은 모두 표시하지 않아요. 양 끝과 숫자 구간 사이에 빈칸이 있을 수 있어요. 서로 다른 높이는 붙어도 되고, 같은 높이의 별도 구간 사이에는 빈칸이 필요해요. 줄 전체가 비어 있으면 구간 단서는 비어 있고 최대 높이는 0이에요.</li><li><b>전체뷰 위·왼쪽:</b> 각 칸의 R+G+B 높이(0~12)를 기준으로 같은 높이 구간의 스택 합계를 표시해요. 합산 높이 3,3,5,5,0,2는 6 10 2예요.</li><li><b>우측·하단:</b> 색상판은 선택한 색상의 최대 높이(0~4), 전체뷰는 RGB 합산 높이의 최댓값(0~12)이에요.</li><li><b>공개칸 없음:</b> 모든 칸은 미정으로 시작해요. ×는 0스택, 지우개는 미정으로 돌아가요.</li><li><b>행·열 선택:</b> 단서나 목록을 누르면 두 판의 같은 줄을 강조하고 단서를 크게 보여줘요. 다시 누르면 해제돼요.</li></ul>
-  <p>아래에서 지우개·×·숫자를 선택한 뒤 칸을 누르거나 드래그하세요. 한 번의 드래그는 되돌리기로 한꺼번에 취소할 수 있어요. ×는 회색으로 표시되는 0스택 확정, 지우개는 미정으로 되돌리기예요. 위에서 전체뷰를 보면서 아래의 빨강·녹색·파랑 탭에서 스택을 입력해요. 아래에서 바꾼 높이는 위 전체뷰에도 바로 반영돼요. 키보드는 방향키, 0~4, Delete, Ctrl/⌘+Z를 지원해요.</p>
+  <ul><li><b>색상판 위·왼쪽:</b> 같은 높이가 연속된 구간의 스택 합계예요. 높이 2가 세 칸이면 6으로 표시해요. 칸 수와 높이를 함께 추론하세요.</li><li><b>빈 구간은 생략:</b> 빈 구간의 0은 모두 표시하지 않아요. 양 끝과 숫자 구간 사이에 빈칸이 있을 수 있어요. 서로 다른 높이는 붙어도 되고, 같은 높이의 별도 구간 사이에는 빈칸이 필요해요. 줄 전체가 비어 있으면 구간 단서는 비어 있고 최대 높이는 0이에요.</li><li><b>전체뷰 위·왼쪽:</b> 각 칸의 R+G+B 높이(0~9)를 기준으로 같은 높이 구간의 스택 합계를 표시해요. 합산 높이 3,3,5,5,0,2는 6 10 2예요.</li><li><b>우측·하단:</b> 색상판은 선택한 색상의 최대 높이(0~3), 전체뷰는 RGB 합산 높이의 최댓값(0~9)이에요.</li><li><b>공개칸 없음:</b> 모든 칸은 미정으로 시작해요. ×는 0스택, 지우개는 미정으로 돌아가요.</li><li><b>행·열 선택:</b> 단서나 목록을 누르면 두 판의 같은 줄을 강조하고 단서를 크게 보여줘요. 다시 누르면 해제돼요.</li></ul>
+  <p>아래에서 지우개·×·숫자를 선택한 뒤 칸을 누르거나 드래그하세요. 한 번의 드래그는 되돌리기로 한꺼번에 취소할 수 있어요. ×는 회색으로 표시되는 0스택 확정, 지우개는 미정으로 되돌리기예요. 위에서 전체뷰를 보면서 아래의 빨강·녹색·파랑 탭에서 스택을 입력해요. 아래에서 바꾼 높이는 위 전체뷰에도 바로 반영돼요. 키보드는 방향키, 0~3, Delete, Ctrl/⌘+Z를 지원해요.</p>
   <p class="fine-print">진행률은 입력한 칸의 비율이에요. 완성된 줄은 힌트와 일치하면 초록색, 모순이 있으면 붉은색이 돼요. 논리 힌트는 한 칸을 고르는 근거를 설명하고, 한 번 더 누르면 적용해요. 공개 높이와 대각선 없이, 색상별·전체뷰의 같은 높이 구간 스택 합계와 최대 높이만으로 모든 높이를 추측 없이 풀 수 있어요. 두 판은 화면 폭에 맞춰 표시해요. 아래로 스크롤하며 입력할 수 있어요.</p>
-  <p class="source-credit">도안 출처: <a href="https://dodocraft.com/pixel-art-templates/10x10/" target="_blank" rel="noopener noreferrer">Dodocraft 10×10</a>. 원본 형태를 바탕으로 RGB 5단계와 배경색을 조정했어요. 빈칸 비율은 그림마다 달라요.</p><button class="primary-button" data-close="help-dialog">시작하기</button>
+  <p class="source-credit">도안 출처: <a href="https://dodocraft.com/pixel-art-templates/10x10/" target="_blank" rel="noopener noreferrer">Dodocraft 10×10</a>. 원본 형태를 바탕으로 RGB 4단계와 배경색을 조정했어요. 빈칸 비율은 그림마다 달라요.</p><button class="primary-button" data-close="help-dialog">시작하기</button>
 </dialog>
 <dialog id="reset-dialog"><span class="eyebrow">START AGAIN</span><h2>처음부터 다시 풀까요?</h2><p>입력한 높이를 모두 지우고 빈 보드에서 시작해요.</p><div class="dialog-actions"><button data-close="reset-dialog">계속 풀기</button><button class="primary-button" id="confirm-reset">다시 시작</button></div></dialog>
 <dialog id="win-dialog"><span class="eyebrow">ALL COLORS FOUND</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300" aria-label="완성된 문제 52 그림"></canvas><p>세 가지 색으로 숨은 그림을 완성했어요.<br>300개의 높이를 모두 찾았어요.</p><button class="primary-button" data-close="win-dialog">완성된 그림 보기</button><a class="collection-next" href="collection-53.html">다음 문제 풀기</a></dialog>
-<script>globalThis.PUZZLE_SPEC={"title":"문제 52","width":10,"height":10,"maxStack":4,"levels":[0,0.25,0.5,0.75,1],"paletteSize":125,"cells":[[0,0,1],[0,2,0],[0,0,1],[0,2,0],[1,3,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[1,3,0],[4,4,4],[0,2,0],[4,4,4],[4,4,4],[0,2,0],[0,2,0],[0,0,1],[1,3,0],[0,0,1],[0,0,1],[1,3,0],[0,2,0],[0,2,0],[4,4,4],[1,3,0],[4,4,4],[0,2,0],[4,4,4],[1,3,0],[0,0,1],[1,3,0],[0,0,1],[4,2,0],[0,2,0],[4,4,4],[1,3,0],[0,2,0],[0,2,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[2,1,0],[4,4,4],[1,3,0],[2,1,0],[0,0,1],[0,0,1],[1,3,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[4,2,0],[4,4,4],[4,2,0],[0,0,1],[0,0,1],[1,3,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[2,1,0],[4,4,4],[2,1,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[4,2,0],[2,1,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[4,4,2],[4,4,0],[2,1,0],[2,1,0],[4,4,0],[4,4,2],[0,0,1],[0,0,1],[0,0,1],[4,4,2],[4,4,0],[4,4,0],[4,4,0],[4,4,0],[4,4,2],[4,4,2],[4,4,2],[0,0,1]],"usedColors":8,"totalStacks":384,"omitAllZeros":true,"adjustment":{"targetEmptyPercent":40,"method":"Quantized source colors; border-connected white background adapted; choose visually coherent palette near target occupancy","channels":[{"channel":"R","afterEmpty":56},{"channel":"G","afterEmpty":45},{"channel":"B","afterEmpty":39}]},"storageKey":"rgb-dodocraft-20-v1-52","rule":"height-runs-max","omitOuterZeros":true};
+<script>globalThis.PUZZLE_SPEC={"title":"문제 52","width":10,"height":10,"maxStack":3,"levels":[0,0.3333333333333333,0.6666666666666666,1],"paletteSize":64,"cells":[[0,0,1],[0,2,0],[0,0,1],[0,2,0],[1,2,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[1,2,0],[3,3,3],[0,2,0],[3,3,3],[3,3,3],[0,2,0],[0,2,0],[0,0,1],[1,2,0],[0,0,1],[0,0,1],[1,2,0],[0,2,0],[0,2,0],[3,3,3],[1,2,0],[3,3,3],[0,2,0],[3,3,3],[1,2,0],[0,0,1],[1,2,0],[0,0,1],[3,2,0],[0,2,0],[3,3,3],[1,2,0],[0,2,0],[0,2,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[2,1,0],[3,3,3],[1,2,0],[2,1,0],[0,0,1],[0,0,1],[1,2,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[3,2,0],[3,3,3],[3,2,0],[0,0,1],[0,0,1],[1,2,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[2,1,0],[3,3,3],[2,1,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[3,2,0],[2,1,0],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[0,0,1],[3,3,2],[3,3,0],[2,1,0],[2,1,0],[3,3,0],[3,3,2],[0,0,1],[0,0,1],[0,0,1],[3,3,2],[3,3,0],[3,3,0],[3,3,0],[3,3,0],[3,3,2],[3,3,2],[3,3,2],[0,0,1]],"usedColors":8,"totalStacks":315,"omitAllZeros":true,"adjustment":{"targetEmptyPercent":40,"method":"Quantized source colors; border-connected white background adapted; choose visually coherent palette near target occupancy","channels":[{"channel":"R","afterEmpty":56},{"channel":"G","afterEmpty":45},{"channel":"B","afterEmpty":39}]},"conversion":{"fromMaxStack":4,"mapping":[0,1,2,2,3],"adjustment":null},"storageKey":"nemologic-stack-3-v1-52","rule":"height-runs-max","omitOuterZeros":true};
 (function(root){
   'use strict';
   const runs=line=>{const out=[];let last=null;for(const v of line){if(v!==last){out.push(v===0?0:1);last=v;}else if(v!==0)out[out.length-1]++;}return out;};
@@ -204,9 +203,10 @@ footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-si
     collect(first);return support;
   }
   function createCore(spec){
+    const maxStack=spec.maxStack??3,domainMask=(1<<(maxStack+1))-1;
     const N=spec.width,solution=spec.cells,sum=a=>a.reduce((x,y)=>x+y,0);
     const indices=(axis,line)=>Array.from({length:N},(_,p)=>axis==='row'?line*N+p:p*N+line);
-    const values=mask=>[0,1,2,3,4].filter(v=>mask&(1<<v)),singleton=m=>m>0&&(m&(m-1))===0;
+    const values=mask=>Array.from({length:maxStack+1},(_,v)=>v).filter(v=>mask&(1<<v)),singleton=m=>m>0&&(m&(m-1))===0;
     const clues=[0,1,2].map(c=>['row','col'].flatMap(axis=>Array.from({length:N},(_,line)=>{
       const cells=indices(axis,line),v=cells.map(i=>solution[i][c]),maximum=Math.max(...v);
       return {axis,line,cells,groups:runs(v),maximum,total:maximum};
@@ -234,13 +234,13 @@ footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-si
     }
     function solve(givens){
       const domains=[],steps=[];
-      for(let c=0;c<3;c++){const initial=Array(N*N).fill(31);for(const g of givens)if(g.channel===c)initial[g.index]=1<<g.value;const result=propagate(c,initial);domains.push(result.domains);steps.push(...result.steps);}
+      for(let c=0;c<3;c++){const initial=Array(N*N).fill(domainMask);for(const g of givens)if(g.channel===c)initial[g.index]=1<<g.value;const result=propagate(c,initial);domains.push(result.domains);steps.push(...result.steps);}
       return {domains,steps};
     }
     function makeGivens(progress=()=>{}){
       const givens=[];
       for(let channel=0;channel<3;channel++){
-        let result=propagate(channel,Array(N*N).fill(31)),added=0;
+        let result=propagate(channel,Array(N*N).fill(domainMask)),added=0;
         while(result.domains.some(d=>!singleton(d))){
           const rows=Array(N).fill(0),cols=Array(N).fill(0);
           result.domains.forEach((d,i)=>{if(!singleton(d)){rows[Math.floor(i/N)]++;cols[i%N]++;}});
@@ -249,7 +249,7 @@ footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-si
           let best;
           for(const {index} of candidates.slice(0,8)){
             const next=result.domains.slice();next[index]=1<<solution[index][channel];const trial=propagate(channel,next);
-            const score=trial.domains.reduce((s,d)=>s+(singleton(d)?30:5-values(d).length),0);
+            const score=trial.domains.reduce((s,d)=>s+(singleton(d)?30:maxStack+1-values(d).length),0);
             if(!best||score>best.score)best={index,trial,score};
           }
           givens.push({channel,index:best.index,value:solution[best.index][channel]});result=best.trial;added++;
@@ -261,9 +261,9 @@ footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-si
       for(let p=givens.length-1;p>=0;p--){const trial=givens.filter((_,i)=>i!==p);if(solve(trial).domains.every(d=>d.every(singleton)))givens.splice(p,1);}
       return givens;
     }
-    function deduce(board,stop=true){const domains=[],steps=[];for(let c=0;c<3;c++){const r=propagate(c,board.map(v=>v[c]===null?31:1<<v[c]),stop);domains.push(r.domains);steps.push(...r.steps);if(stop&&r.steps.some(s=>singleton(s.after)))break;}return {domains,steps};}
-    function lineStatus(line,groups,maximum){const valid=lineSupports(groups,maximum,line.map(v=>v===null?31:1<<v));return !valid?'conflict':line.some(v=>v===null)?'':'done';}
-    return {N,solution,sum,indices,values,singleton,runs,clues,propagate,solve,makeGivens,deduce,lineStatus,lineSupports,rule:'height-runs-max',showTerrainValues:false};
+    function deduce(board,stop=true){const domains=[],steps=[];for(let c=0;c<3;c++){const r=propagate(c,board.map(v=>v[c]===null?domainMask:1<<v[c]),stop);domains.push(r.domains);steps.push(...r.steps);if(stop&&r.steps.some(s=>singleton(s.after)))break;}return {domains,steps};}
+    function lineStatus(line,groups,maximum){const valid=lineSupports(groups,maximum,line.map(v=>v===null?domainMask:1<<v));return !valid?'conflict':line.some(v=>v===null)?'':'done';}
+    return {N,maxStack,domainMask,solution,sum,indices,values,singleton,runs,clues,propagate,solve,makeGivens,deduce,lineStatus,lineSupports,rule:'height-runs-max',showTerrainValues:false};
   }
   if(typeof module!=='undefined')module.exports={createCore,runs,lineSupports};
   root.HeightRunCore={createCore,runs,lineSupports};
@@ -354,7 +354,7 @@ function supportsNoZeros(groups,maximum,domains){
 }
 
 function createCore(spec){
-  const legacy=base.createCore(spec),{N,solution,indices,singleton,values}=legacy;
+  const legacy=base.createCore(spec),{N,solution,indices,singleton,values,domainMask}=legacy;
   const omitAllZeros=!!spec.omitAllZeros,omitOuterZeros=!!spec.omitOuterZeros;
   const clueRuns=line=>omitAllZeros?runs(line).filter(v=>v>0):omitOuterZeros?trimOuterZeros(runs(line)):runs(line);
   const lineSupports=(groups,maximum,domains)=>omitAllZeros?supportsNoZeros(groups,maximum,domains):supports(groups,maximum,domains,omitOuterZeros);
@@ -395,11 +395,11 @@ function createCore(spec){
     }
     return {domains,steps};
   }
-  function solve(givens=[]){const domains=Array.from({length:3},()=>Array(N*N).fill(31));for(const g of givens)domains[g.channel][g.index]=1<<g.value;return propagate(domains);}
-  const deduce=(board,stop=true)=>propagate([0,1,2].map(c=>board.map(t=>t[c]===null?31:1<<t[c])),stop);
-  function lineStatus(line,groups,maximum){const valid=lineSupports(groups,maximum,line.map(v=>v===null?31:1<<v));return !valid?'conflict':line.some(v=>v===null)?'':'done';}
+  function solve(givens=[]){const domains=Array.from({length:3},()=>Array(N*N).fill(domainMask));for(const g of givens)domains[g.channel][g.index]=1<<g.value;return propagate(domains);}
+  const deduce=(board,stop=true)=>propagate([0,1,2].map(c=>board.map(t=>t[c]===null?domainMask:1<<t[c])),stop);
+  function lineStatus(line,groups,maximum){const valid=lineSupports(groups,maximum,line.map(v=>v===null?domainMask:1<<v));return !valid?'conflict':line.some(v=>v===null)?'':'done';}
   function combinedStatus(board,clue){
-    const sums=clue.cells.map(i=>triples(board[i].map(v=>v===null?31:1<<v)).reduce((m,t)=>m|(1<<(t[0]+t[1]+t[2])),0));
+    const sums=clue.cells.map(i=>triples(board[i].map(v=>v===null?domainMask:1<<v)).reduce((m,t)=>m|(1<<(t[0]+t[1]+t[2])),0));
     return !cached(clue,sums)?'conflict':clue.cells.every(i=>board[i].every(v=>v!==null))?'done':'';
   }
   const hintReason=step=>`${step.kind==='combined-run-sums'?'전체뷰 RGB 합산 높이': ['빨강','녹색','파랑'][step.channel]} ${step.line+1}${step.axis==='row'?'행':'열'}의 구간 스택 합계 [${step.groups.join(' ')}], 최대 높이 ${step.maximum}와 교차하는 줄의 조건을 적용하면`;
@@ -411,7 +411,7 @@ if(root.PUZZLE_SPEC)root.PicrossCore=createCore(root.PUZZLE_SPEC);
 </script>
 <script>const GIVEN_DATA=[];
 'use strict';
-const C=PicrossCore, N=C.N, names=['빨강','녹색','파랑'], letters=['R','G','B'];
+const C=PicrossCore, N=C.N, MAX_STACK=C.maxStack, names=['빨강','녹색','파랑'], letters=['R','G','B'];
 const themes=[['#c6544d','#fae8e3'],['#518568','#e2f0e4'],['#547fae','#e1ebf7']];
 const key=C.storageKey||(C.rule==='height-runs-max'?'rgb-stack-picross-v2-bull-height-runs-max':globalThis.PUZZLE_SPEC?'rgb-stack-picross-v1-bull-30-adjust30':'rgb-stack-picross-v1-rocket-10');
 const $=id=>document.getElementById(id);
@@ -430,7 +430,7 @@ function fresh(){const a=Array.from({length:N*N},()=>[null,null,null]);GIVEN_DAT
 try{
   const ownSave=localStorage.getItem(key),legacySave=!C.noGivens&&!ownSave&&C.rule==='height-runs-max'?localStorage.getItem('rgb-stack-picross-v1-bull-30-adjust30'):null;
   const saved=JSON.parse(ownSave||legacySave||'null');
-  if(saved && Array.isArray(saved.cells) && saved.cells.length===N*N && saved.cells.every(a=>Array.isArray(a)&&a.length===3&&a.every(v=>v===null||Number.isInteger(v)&&v>=0&&v<=4))){
+  if(saved && Array.isArray(saved.cells) && saved.cells.length===N*N && saved.cells.every(a=>Array.isArray(a)&&a.length===3&&a.every(v=>v===null||Number.isInteger(v)&&v>=0&&v<=MAX_STACK))){
     boardState=saved.cells;
     if(legacySave)for(const g of globalThis.LEGACY_GIVENS||[])boardState[g.index][g.channel]=null;
     GIVEN_DATA.forEach(g=>boardState[g.index][g.channel]=g.value);
@@ -441,16 +441,16 @@ try{
 function save(){try{localStorage.setItem(key,JSON.stringify({cells:boardState,tab}));}catch{storageOK=false;}document.querySelector('.save-dot').style.background=storageOK?'#91a985':'#bca879';document.querySelector('.save-dot').title=storageOK?'이 기기에 자동 저장됨':'이 브라우저에서는 자동 저장할 수 없어요';}
 function say(message,warning=false){$('message').textContent=message;$('message').classList.toggle('warning',warning);}
 function isSolved(){return boardState.every((cell,i)=>cell.every((v,c)=>v===C.solution[i][c]));}
-function rgb(values){return `rgb(${values.map(v=>Math.round((v??0)*255/4)).join(',')})`;}
+function rgb(values){return `rgb(${values.map(v=>Math.round((v??0)*255/MAX_STACK)).join(',')})`;}
 function cancelHint(){pendingHint=null;$('hint').classList.remove('pending');$('hint').innerHTML='<span aria-hidden="true">✦</span>논리 힌트';}
 function status(cells,channel,groups,total,knownClue){
   const data=cells.map(i=>channel==='all'?(boardState[i].every(v=>v!==null)?C.sum(boardState[i]):null):boardState[i][channel]);
   if(C.lineStatus)return C.lineStatus(data,groups,total,knownClue||C.clues[channel]?.find(clue=>clue.cells.every((v,p)=>v===cells[p])));
   if(channel==='all'){
-    const lo=C.sum(cells.flatMap(i=>boardState[i].map(v=>v??0))), hi=C.sum(cells.flatMap(i=>boardState[i].map(v=>v??4)));
+    const lo=C.sum(cells.flatMap(i=>boardState[i].map(v=>v??0))), hi=C.sum(cells.flatMap(i=>boardState[i].map(v=>v??MAX_STACK)));
     if(lo>total||hi<total)return 'conflict';
   }else{
-    const lo=C.sum(data.map(v=>v??0)),hi=C.sum(data.map(v=>v??4));
+    const lo=C.sum(data.map(v=>v??0)),hi=C.sum(data.map(v=>v??MAX_STACK));
     if(lo>total||hi<total)return 'conflict';
     const clue=knownClue||C.clues[channel].find(c=>c.cells.every((v,p)=>v===cells[p]));
     if(!clue.patterns.some(mask=>data.every((v,p)=>v===null||Boolean((mask>>p)&1)===(v>0))))return 'conflict';
@@ -472,7 +472,7 @@ function cellAppearance(i,channel){
   }else if(value===null){classes.push('unknown');content='·';}
   else if(value===0){classes.push('zero');content='×';}
   else{
-    const opacity=[0,.18,.36,.58,.84][value],colors=[[213,91,80],[73,143,92],[69,125,185]][channel];
+    const opacity=[0,.18,.36,.58,.84][Math.round(value*4/MAX_STACK)],colors=[[213,91,80],[73,143,92],[69,125,185]][channel];
     bg=`rgba(${colors.join(',')},${opacity})`;fg=value>=3?'#fff':themes[channel][0];
     content=`${value}<span class="micro" aria-hidden="true">${'<i></i>'.repeat(value)}</span>`;
   }
@@ -558,6 +558,7 @@ function render(){
 }
 function setTab(value){if(![0,1,2].includes(value))return;finishStroke();tab=value;cancelHint();render();save();}
 function edit(value){
+  if(value!==null&&(!Number.isInteger(value)||value<0||value>MAX_STACK))return;
   if(tab==='all'||value==='select'||selected===null||fixed[selected][tab])return;
   const before=boardState[selected][tab];if(before===value)return;
   history.push({channel:tab,changes:[{index:selected,before,after:value}]});
@@ -589,7 +590,7 @@ function hint(){
   }
   const channels=tab==='all'?[0,1,2]:[tab,...[0,1,2].filter(c=>c!==tab)];
   for(const channel of channels){
-    const initial=boardState.map(cell=>cell[channel]===null?31:1<<cell[channel]);
+    const initial=boardState.map(cell=>cell[channel]===null?C.domainMask:1<<cell[channel]);
     let result;try{result=C.propagate(channel,initial,true);}catch{say('입력과 힌트가 서로 맞지 않아요. 검사를 눌러 확인해 주세요.',true);return;}
     const step=result.steps.find(s=>C.singleton(s.after)&&boardState[s.index][channel]===null);
     if(!step)continue;
@@ -602,7 +603,7 @@ function hint(){
   }
   say('현재 입력에서 새로운 확정 칸을 찾지 못했어요.',true);
 }
-function choosePaint(value){finishStroke();paintValue=value;if(value==='select')selected=null;cancelHint();render();}
+function choosePaint(value){if(value!==null&&value!=='select'&&(!Number.isInteger(value)||value<0||value>MAX_STACK))return;finishStroke();paintValue=value;if(value==='select')selected=null;cancelHint();render();}
 function refreshDrag(){
   dragFrame=0;
   if(!stroke)return;
@@ -726,7 +727,7 @@ document.addEventListener('keydown',e=>{
     e.preventDefault();const current=selected??0,row=Math.floor(current/N),col=current%N;
     selected=e.key==='ArrowUp'?Math.max(0,row-1)*N+col:e.key==='ArrowDown'?Math.min(N-1,row+1)*N+col:e.key==='ArrowLeft'?row*N+Math.max(0,col-1):row*N+Math.min(N-1,col+1);
     cancelHint();render();$('board').querySelector(`[data-index="${selected}"]`).focus({preventScroll:true});if(window.revealBoardCell)window.revealBoardCell(selected);
-  }else if(/^[0-4]$/.test(e.key)){e.preventDefault();choosePaint(Number(e.key));edit(paintValue);}
+  }else if(/^[0-9]$/.test(e.key)&&Number(e.key)<=MAX_STACK){e.preventDefault();choosePaint(Number(e.key));edit(paintValue);}
   else if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();choosePaint(null);edit(null);}
 });
 render();save();
@@ -753,7 +754,7 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       label.textContent=empty?'':String(total);
       // Choose contrast against the actual translucent tile color.
       const linear=value.map((v,c)=>{
-        const color=(v??0)/4,background=[237,240,232][c]/255;
+        const color=(v??0)/C.maxStack,background=[237,240,232][c]/255;
         const s=partial?color*.65+background*.35:color;
         return s<=.04045?s/12.92:((s+.055)/1.055)**2.4;
       });
@@ -857,8 +858,8 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
 </script>
 <script>(()=>{
       const originalSave=save;
-      function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('rgb-collection-status-52',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
+      function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('nemologic-stack-3-status-52',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
       save=function(){originalSave();updateCollection();};
       updateCollection();
-    })();</script><script src="site-integration.js?v=da947059e9e7" defer></script></body>
+    })();</script><script src="site-integration.js?v=89c03e0efd80" defer></script></body>
 </html>
