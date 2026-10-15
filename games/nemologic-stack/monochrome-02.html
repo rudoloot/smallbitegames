@@ -99,6 +99,7 @@ footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-si
 #terrain-line-sums,.large-line-clue{height:auto;min-height:30px;white-space:normal;line-height:15px;overflow-wrap:anywhere;padding:3px 1px}
 .overview-stack-total{font-size:5px;font-weight:700;font-variant-numeric:tabular-nums;user-select:none}
 .stack-sum-game .cell,.stack-sum-game .cell.zero{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .78))}
+.cell-cross{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
 .stack-sum-game .clue.total{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .75))}
 
 /* Full-width game with the same branding as the collection. */
@@ -173,13 +174,11 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
   </div>
   <div id="message" class="message sr-only" aria-live="polite">같은 높이 구간의 스택 합계와 최대 높이를 단서로 시작해 보세요.</div>
   </section>
-  <section id="terrain-panel" aria-label="명암 전체뷰">
-    <div class="overview-stage"><svg id="overview-svg" role="group" aria-label="10행 10열 명암 전체뷰"></svg></div>
-  </section>
+
 </main>
-<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li><li>아래 전체뷰는 풀이 중에는 높이만 보여주고, 완성하면 흑백 그림을 보여줘요.</li></ul><p>숫자를 선택한 뒤 칸을 누르거나 드래그하세요. 선택 도구로는 입력값을 바꾸지 않고 칸을 살펴볼 수 있어요. 한 번의 드래그는 되돌리기 한 번으로 취소돼요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
+<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li></ul><p>숫자를 선택한 뒤 칸을 누르거나 드래그하세요. 선택 도구로는 입력값을 바꾸지 않고 칸을 살펴볼 수 있어요. 한 번의 드래그는 되돌리기 한 번으로 취소돼요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
 <dialog id="reset-dialog"><span class="eyebrow">START AGAIN</span><h2>처음부터 다시 풀까요?</h2><p>입력한 높이를 모두 지우고 빈 보드에서 시작해요.</p><div class="dialog-actions"><button data-close="reset-dialog">계속 풀기</button><button class="primary-button" id="confirm-reset">다시 시작</button></div></dialog>
-<dialog id="win-dialog"><span class="eyebrow">PICTURE COMPLETE</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300" aria-label="완성된 흑백 그림"></canvas><p>100개의 높이를 모두 찾았어요.</p><button class="primary-button" data-close="win-dialog">완성된 그림 보기</button><a class="collection-next" href="collection.html#monochrome">흑백게임 목록으로</a></dialog>
+<dialog id="win-dialog"><span class="eyebrow">PICTURE COMPLETE</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300" aria-label="완성된 흑백 그림"></canvas><p>100개의 높이를 모두 찾았어요.</p><button class="primary-button" data-close="win-dialog">완성된 그림 보기</button><a class="collection-next" href="monochrome-03.html">다음 문제 풀기</a></dialog>
 <script>globalThis.MONO_SPEC={"id":"02","width":10,"channels":1,"maxStack":3,"paletteSize":4,"levels":[0,0.3333333333333333,0.6666666666666666,1],"cells":[[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[0],[0],[0],[0],[0],[0],[1],[3],[3],[0],[0],[0],[0],[0],[0],[0],[1],[3],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[3],[0],[0],[0],[0],[0],[0],[0],[0],[3],[2],[3],[0],[0],[0],[0],[0],[0],[3],[2],[1],[2],[3],[0],[0],[0],[0],[3],[2],[1],[1],[1],[2],[3],[0],[0],[3],[3],[3],[3],[3],[3],[3],[3],[3]],"adjustment":{"targetEmptyPercent":67},"source":"Original monochrome design","storageKey":"nonogram-stack-mono-v1-02","rule":"height-runs-max","omitOuterZeros":true,"omitAllZeros":true};
 (function(root){
   'use strict';
@@ -524,10 +523,10 @@ function cellAppearance(i,channel){
   if((C.diagonals?.[window.overviewDiagonal]?.cells||C.diagonal?.cells)?.includes(i))classes.push('diagonal-cell');
   if(channel===null){
     classes.push('merged');
-    if(cell.every(v=>v===null)){classes.push('unknown');content='·';}
+    if(cell.every(v=>v===null)){classes.push('unknown');}
     else if(cell.every(v=>v===0)){classes.push('zero');content='×';}
     else{bg=rgb(cell);fg='#ffffff';content=cell.some(v=>v===null)?'<span class="unknown-rgb">?</span>':'';}
-  }else if(value===null){classes.push('unknown');content='·';}
+  }else if(value===null){classes.push('unknown');}
   else if(value===0){classes.push('zero');content='×';if(MONO)bg='#fff';}
   else if(MONO){bg=rgb(cell);fg=value>=2?'#fff':'#333';content=String(value);}
   else{
@@ -535,6 +534,7 @@ function cellAppearance(i,channel){
     bg=`rgba(${colors.join(',')},${opacity})`;fg=value>=3?'#fff':themes[channel][0];
     content=`${value}<span class="micro" aria-hidden="true">${'<i></i>'.repeat(value)}</span>`;
   }
+  if(content==='×')content='<svg class="cell-cross" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2L22 22M22 2L2 22"/></svg>';
   const desc=channel===null?cell.map((v,c)=>`${names[c]} ${v===null?'미정':v+'스택'}`).join(', '):`${names[channel]} ${value===null?'미정':value+'스택'}${anchor?', 공개 높이':''}`;
   return {row,col,classes:classes.join(' '),bg,fg,content,label:`${row+1}행 ${col+1}열, ${desc}`};
 }
@@ -804,6 +804,9 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
 /* Show accumulated heights while solving; reveal colors only after completion. */
 (() => {
   const svg=$('overview-svg');
+  function selectLine(axis,line){const same=terrainSelection?.axis===axis&&terrainSelection.line===line;selectBoardLine(axis,line===null||same?null:line);}
+  window.selectTerrainLine=selectLine;window.clearTerrainSelection=()=>selectLine('row',null);
+  if(!svg)return;
   let tiles=[],stackLabels=[],lastValues=[],lastWidth=0,lastSolved=null,layout;
   function updateStatus(lines){
     for(const l of lines){
@@ -859,10 +862,9 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
     if(terrainSelection){const {axis,line}=terrainSelection;outline.setAttribute('x',left+(axis==='col'?line*cell:0));outline.setAttribute('y',top+(axis==='row'?line*cell:0));outline.setAttribute('width',axis==='row'?extent:cell);outline.setAttribute('height',axis==='row'?cell:extent);}
     svg.querySelectorAll('.overview-marker').forEach(el=>el.setAttribute('aria-pressed',terrainSelection?.axis===el.dataset.axis&&terrainSelection.line===Number(el.dataset.line)));
   }
-  function selectLine(axis,line){const same=terrainSelection?.axis===axis&&terrainSelection.line===line;selectBoardLine(axis,line===null||same?null:line);}
   const activate=e=>{const marker=e.target.closest('.overview-marker');if(marker)selectLine(marker.dataset.axis,Number(marker.dataset.line));};
   svg.addEventListener('click',activate);svg.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)&&e.target.closest('.overview-marker')){e.preventDefault();activate(e);}});
-  window.renderTerrain=renderOverview;window.updateTerrainCells=updateCells;window.selectTerrainLine=selectLine;window.clearTerrainSelection=()=>selectLine('row',null);
+  window.renderTerrain=renderOverview;window.updateTerrainCells=updateCells;
   render();
 })();
 
@@ -892,5 +894,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   window.syncLargeUI();
 })();
 </script>
-<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-mono-status-02',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=44935965e4fe" defer></script></body>
+<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-mono-status-02',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=10d0791e1f9d" defer></script></body>
 </html>

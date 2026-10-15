@@ -99,6 +99,7 @@ footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-si
 #terrain-line-sums,.large-line-clue{height:auto;min-height:30px;white-space:normal;line-height:15px;overflow-wrap:anywhere;padding:3px 1px}
 .overview-stack-total{font-size:5px;font-weight:700;font-variant-numeric:tabular-nums;user-select:none}
 .stack-sum-game .cell,.stack-sum-game .cell.zero{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .78))}
+.cell-cross{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
 .stack-sum-game .clue.total{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .75))}
 
 /* Full-width game with the same branding as the collection. */
@@ -498,10 +499,10 @@ function cellAppearance(i,channel){
   if((C.diagonals?.[window.overviewDiagonal]?.cells||C.diagonal?.cells)?.includes(i))classes.push('diagonal-cell');
   if(channel===null){
     classes.push('merged');
-    if(cell.every(v=>v===null)){classes.push('unknown');content='·';}
+    if(cell.every(v=>v===null)){classes.push('unknown');}
     else if(cell.every(v=>v===0)){classes.push('zero');content='×';}
     else{bg=rgb(cell);fg='#ffffff';content=cell.some(v=>v===null)?'<span class="unknown-rgb">?</span>':'';}
-  }else if(value===null){classes.push('unknown');content='·';}
+  }else if(value===null){classes.push('unknown');}
   else if(value===0){classes.push('zero');content='×';if(MONO)bg='#fff';}
   else if(MONO){bg=rgb(cell);fg=value>=2?'#fff':'#333';content=String(value);}
   else{
@@ -509,6 +510,7 @@ function cellAppearance(i,channel){
     bg=`rgba(${colors.join(',')},${opacity})`;fg=value>=3?'#fff':themes[channel][0];
     content=`${value}<span class="micro" aria-hidden="true">${'<i></i>'.repeat(value)}</span>`;
   }
+  if(content==='×')content='<svg class="cell-cross" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2L22 22M22 2L2 22"/></svg>';
   const desc=channel===null?cell.map((v,c)=>`${names[c]} ${v===null?'미정':v+'스택'}`).join(', '):`${names[channel]} ${value===null?'미정':value+'스택'}${anchor?', 공개 높이':''}`;
   return {row,col,classes:classes.join(' '),bg,fg,content,label:`${row+1}행 ${col+1}열, ${desc}`};
 }
@@ -778,6 +780,9 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
 /* Show accumulated heights while solving; reveal colors only after completion. */
 (() => {
   const svg=$('overview-svg');
+  function selectLine(axis,line){const same=terrainSelection?.axis===axis&&terrainSelection.line===line;selectBoardLine(axis,line===null||same?null:line);}
+  window.selectTerrainLine=selectLine;window.clearTerrainSelection=()=>selectLine('row',null);
+  if(!svg)return;
   let tiles=[],stackLabels=[],lastValues=[],lastWidth=0,lastSolved=null,layout;
   function updateStatus(lines){
     for(const l of lines){
@@ -833,10 +838,9 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
     if(terrainSelection){const {axis,line}=terrainSelection;outline.setAttribute('x',left+(axis==='col'?line*cell:0));outline.setAttribute('y',top+(axis==='row'?line*cell:0));outline.setAttribute('width',axis==='row'?extent:cell);outline.setAttribute('height',axis==='row'?cell:extent);}
     svg.querySelectorAll('.overview-marker').forEach(el=>el.setAttribute('aria-pressed',terrainSelection?.axis===el.dataset.axis&&terrainSelection.line===Number(el.dataset.line)));
   }
-  function selectLine(axis,line){const same=terrainSelection?.axis===axis&&terrainSelection.line===line;selectBoardLine(axis,line===null||same?null:line);}
   const activate=e=>{const marker=e.target.closest('.overview-marker');if(marker)selectLine(marker.dataset.axis,Number(marker.dataset.line));};
   svg.addEventListener('click',activate);svg.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)&&e.target.closest('.overview-marker')){e.preventDefault();activate(e);}});
-  window.renderTerrain=renderOverview;window.updateTerrainCells=updateCells;window.selectTerrainLine=selectLine;window.clearTerrainSelection=()=>selectLine('row',null);
+  window.renderTerrain=renderOverview;window.updateTerrainCells=updateCells;
   render();
 })();
 
@@ -871,5 +875,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('nemologic-stack-3-status-10',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
       save=function(){originalSave();updateCollection();};
       updateCollection();
-    })();</script><script src="site-integration.js?v=44935965e4fe" defer></script></body>
+    })();</script><script src="site-integration.js?v=10d0791e1f9d" defer></script></body>
 </html>
