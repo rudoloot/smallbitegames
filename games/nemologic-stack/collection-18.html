@@ -437,17 +437,18 @@ function createCore(spec){
   return {...legacy,clues,combinedClues,runs:clueRuns,solve,deduce,propagate,lineStatus,combinedStatus,hintReason,stackSumRuns:true,omitAllZeros,omitOuterZeros,noGivens:true,storageKey:spec.storageKey||'rgb-stack-picross-fruit-square-v1'};
 }
 if(typeof module!=='undefined')module.exports={createCore,runs,trimOuterZeros,lineSupports:supports,lineSupportsNoZeros:supportsNoZeros};
+root.StackSumCore={createCore,runs,lineSupportsNoZeros:supportsNoZeros};
 if(root.PUZZLE_SPEC)root.PicrossCore=createCore(root.PUZZLE_SPEC);
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script>
 <script>const GIVEN_DATA=[];
 'use strict';
-const C=PicrossCore, N=C.N, MAX_STACK=C.maxStack, names=['빨강','녹색','파랑'], letters=['R','G','B'];
-const themes=[['#c6544d','#fae8e3'],['#518568','#e2f0e4'],['#547fae','#e1ebf7']];
+const C=PicrossCore, N=C.N, MAX_STACK=C.maxStack, CHANNEL_COUNT=C.channels||3, CHANNELS=Array.from({length:CHANNEL_COUNT},(_,i)=>i), MONO=CHANNEL_COUNT===1, names=MONO?['명암']:['빨강','녹색','파랑'];
+const themes=MONO?[['#555555','#e5e5e5']]:[['#c6544d','#fae8e3'],['#518568','#e2f0e4'],['#547fae','#e1ebf7']];
 const key=C.storageKey||(C.rule==='height-runs-max'?'rgb-stack-picross-v2-bull-height-runs-max':globalThis.PUZZLE_SPEC?'rgb-stack-picross-v1-bull-30-adjust30':'rgb-stack-picross-v1-rocket-10');
 const $=id=>document.getElementById(id);
 document.documentElement.style.setProperty('--n',N);
-const fixed=Array.from({length:N*N},()=>[false,false,false]);
+const fixed=Array.from({length:N*N},()=>Array(CHANNEL_COUNT).fill(false));
 GIVEN_DATA.forEach(g=>fixed[g.index][g.channel]=true);
 let boardState=fresh(), tab=0, selected=null, history=[], pendingHint=null, errors=new Set(), completed=false, storageOK=true;
 let paintValue=0, stroke=null;
@@ -457,22 +458,22 @@ function activeClue(axis,line){return terrainSelection!==null?terrainSelection.a
 function selectBoardLine(axis,line){finishStroke();terrainSelection=line===null?null:{axis,line};selected=null;cancelHint();render();if(window.revealBoardLine)window.revealBoardLine(axis,line);}
 let cellNodes=[],clueNodes=[],dragFrame=0,renderedSelection=null;
 const dirtyCells=new Set();
-function fresh(){const a=Array.from({length:N*N},()=>[null,null,null]);GIVEN_DATA.forEach(g=>a[g.index][g.channel]=g.value);return a;}
+function fresh(){const a=Array.from({length:N*N},()=>Array(CHANNEL_COUNT).fill(null));GIVEN_DATA.forEach(g=>a[g.index][g.channel]=g.value);return a;}
 try{
   const ownSave=localStorage.getItem(key),legacySave=!C.noGivens&&!ownSave&&C.rule==='height-runs-max'?localStorage.getItem('rgb-stack-picross-v1-bull-30-adjust30'):null;
   const saved=JSON.parse(ownSave||legacySave||'null');
-  if(saved && Array.isArray(saved.cells) && saved.cells.length===N*N && saved.cells.every(a=>Array.isArray(a)&&a.length===3&&a.every(v=>v===null||Number.isInteger(v)&&v>=0&&v<=MAX_STACK))){
+  if(saved && Array.isArray(saved.cells) && saved.cells.length===N*N && saved.cells.every(a=>Array.isArray(a)&&a.length===CHANNEL_COUNT&&a.every(v=>v===null||Number.isInteger(v)&&v>=0&&v<=MAX_STACK))){
     boardState=saved.cells;
     if(legacySave)for(const g of globalThis.LEGACY_GIVENS||[])boardState[g.index][g.channel]=null;
     GIVEN_DATA.forEach(g=>boardState[g.index][g.channel]=g.value);
-    if([0,1,2].includes(saved.tab))tab=saved.tab;
+    if(CHANNELS.includes(saved.tab))tab=saved.tab;
     completed=isSolved();
   }
 }catch{storageOK=false;}
 function save(){try{localStorage.setItem(key,JSON.stringify({cells:boardState,tab}));}catch{storageOK=false;}if(!storageOK)say('이 브라우저에서는 자동 저장할 수 없어요.',true);}
 function say(message,warning=false){$('message').textContent=message;$('message').classList.toggle('warning',warning);}
 function isSolved(){return boardState.every((cell,i)=>cell.every((v,c)=>v===C.solution[i][c]));}
-function rgb(values){return `rgb(${values.map(v=>Math.round((v??0)*255/MAX_STACK)).join(',')})`;}
+function rgb(values){const levels=MONO?Array(3).fill(255-Math.round((values[0]??0)*255/MAX_STACK)):values.map(v=>Math.round((v??0)*255/MAX_STACK));return 'rgb('+levels.join(',')+')';}
 function cancelHint(){pendingHint=null;if(!$('hint'))return;$('hint').classList.remove('pending');$('hint').innerHTML='<span aria-hidden="true">✦</span>논리 힌트';}
 function status(cells,channel,groups,total,knownClue){
   const data=cells.map(i=>channel==='all'?(boardState[i].every(v=>v!==null)?C.sum(boardState[i]):null):boardState[i][channel]);
@@ -501,7 +502,8 @@ function cellAppearance(i,channel){
     else if(cell.every(v=>v===0)){classes.push('zero');content='×';}
     else{bg=rgb(cell);fg='#ffffff';content=cell.some(v=>v===null)?'<span class="unknown-rgb">?</span>':'';}
   }else if(value===null){classes.push('unknown');content='·';}
-  else if(value===0){classes.push('zero');content='×';}
+  else if(value===0){classes.push('zero');content='×';if(MONO)bg='#fff';}
+  else if(MONO){bg=rgb(cell);fg=value>=2?'#fff':'#333';content=String(value);}
   else{
     const opacity=[0,.18,.36,.58,.84][Math.round(value*4/MAX_STACK)],colors=[[213,91,80],[73,143,92],[69,125,185]][channel];
     bg=`rgba(${colors.join(',')},${opacity})`;fg=value>=3?'#fff':themes[channel][0];
@@ -512,7 +514,7 @@ function cellAppearance(i,channel){
 }
 function updateProgress(){
   const filled=boardState.flat().filter(v=>v!==null).length;
-  if($('progress-text'))$('progress-text').textContent=`${filled} / ${N*N*3}`;if($('progress-fill'))$('progress-fill').style.width=`${filled/(N*N*3)*100}%`;
+  if($('progress-text'))$('progress-text').textContent=`${filled} / ${N*N*CHANNEL_COUNT}`;if($('progress-fill'))$('progress-fill').style.width=`${filled/(N*N*CHANNEL_COUNT)*100}%`;
 }
 function render(){
   if(dragFrame)cancelAnimationFrame(dragFrame);
@@ -579,7 +581,7 @@ function render(){
   if(typeof window.renderTerrain==='function')window.renderTerrain();
   if(window.syncLargeUI)window.syncLargeUI();
 }
-function setTab(value){if(![0,1,2].includes(value))return;finishStroke();tab=value;cancelHint();render();save();}
+function setTab(value){if(!CHANNELS.includes(value))return;finishStroke();tab=value;cancelHint();render();save();}
 function edit(value){
   if(value!==null&&(!Number.isInteger(value)||value<0||value>MAX_STACK))return;
   if(tab==='all'||value==='select'||selected===null||fixed[selected][tab])return;
@@ -589,10 +591,10 @@ function edit(value){
 }
 function checkWin(){
   if(!isSolved())return;
-  cancelHint();if(typeof window.clearTerrainSelection==='function')window.clearTerrainSelection();render();save();say(`완성! ${N*N*3}개의 높이가 모두 맞아요.`);
+  cancelHint();if(typeof window.clearTerrainSelection==='function')window.clearTerrainSelection();render();save();say(`완성! ${N*N*CHANNEL_COUNT}개의 높이가 모두 맞아요.`);
   if(completed)return;completed=true;
   const ctx=$('win-art').getContext('2d');
-  ctx.fillStyle='#172128';ctx.fillRect(0,0,300,300);
+  ctx.fillStyle=MONO?'#fff':'#172128';ctx.fillRect(0,0,300,300);
   C.solution.forEach((cell,i)=>{if(C.sum(cell)===0)return;ctx.fillStyle=rgb(cell);ctx.fillRect((i%N)*(260/N)+20,Math.floor(i/N)*(260/N)+20,260/N,260/N);});
   $('win-dialog').showModal();
 }
@@ -611,7 +613,7 @@ function hint(){
     say(`${reason}, ${Math.floor(step.index/N)+1}행 ${step.index%N+1}열 ${names[step.channel]}은 ${value}스택이에요. 다시 누르면 적용해요.`);
     $('hint').classList.add('pending');$('hint').innerHTML='<span aria-hidden="true">✦</span>적용';render();save();if(window.revealBoardCell)window.revealBoardCell(selected);return;
   }
-  const channels=tab==='all'?[0,1,2]:[tab,...[0,1,2].filter(c=>c!==tab)];
+  const channels=tab==='all'?CHANNELS:[tab,...CHANNELS.filter(c=>c!==tab)];
   for(const channel of channels){
     const initial=boardState.map(cell=>cell[channel]===null?C.domainMask:1<<cell[channel]);
     let result;try{result=C.propagate(channel,initial,true);}catch{say('입력과 힌트가 서로 맞지 않아요. 검사를 눌러 확인해 주세요.',true);return;}
@@ -729,7 +731,7 @@ $('board').addEventListener('click',e=>{
   if(tab==='all'||paintValue==='select')render();else edit(paintValue);
 });
 document.querySelector('.tabs').addEventListener('click',e=>{const button=e.target.closest('[data-tab]');if(button)setTab(Number(button.dataset.tab));});
-document.querySelector('.tabs').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const order=[0,1,2],pos=order.indexOf(tab);setTab(e.key==='Home'?0:e.key==='End'?2:order[(pos+(e.key==='ArrowRight'?1:2))%3]);document.querySelector(`[data-tab="${tab}"]`).focus();});
+document.querySelector('.tabs').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const order=CHANNELS,pos=order.indexOf(tab);setTab(e.key==='Home'?0:e.key==='End'?order.at(-1):order[(pos+(e.key==='ArrowRight'?1:order.length-1))%order.length]);document.querySelector(`[data-tab="${tab}"]`).focus();});
 $('height-picker').addEventListener('click',e=>{const button=e.target.closest('[data-value]');if(button&&!button.disabled)choosePaint(Number(button.dataset.value));});
 $('undo').onclick=undo;$('deselect').onclick=()=>choosePaint('select');$('erase').onclick=()=>choosePaint(null);if($('hint'))$('hint').onclick=hint;
 if($('check'))$('check').onclick=()=>{
@@ -812,7 +814,7 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       svg.parentElement.style.height=height+'px';
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
       const legendSize=Math.min(12,(left-8)/7);
-      let html=`<text class="overview-legend" x="${left/2}" y="${top/2-5}" text-anchor="middle" style="font-size:${legendSize}px">RGB 합산 높이</text><text class="overview-legend" x="${left/2}" y="${top/2+12}" text-anchor="middle" style="font-size:${legendSize}px">구간 스택 합</text>`;
+      let html=`<text class="overview-legend" x="${left/2}" y="${top/2-5}" text-anchor="middle" style="font-size:${legendSize}px">${C.channels===1?'명암 높이':'RGB 합산 높이'}</text><text class="overview-legend" x="${left/2}" y="${top/2+12}" text-anchor="middle" style="font-size:${legendSize}px">구간 스택 합</text>`;
       for(let i=0;i<N*N;i++)html+=`<rect class="overview-cell" data-overview-cell="${i}" x="${left+i%N*cell}" y="${top+Math.floor(i/N)*cell}" width="${cell}" height="${cell}" stroke="#cbd4c4" stroke-width="1"><title></title></rect>`;
       for(let i=0;i<N*N;i++)html+=`<text class="overview-stack-total" data-stack-total="${i}" x="${left+i%N*cell+cell/2}" y="${top+Math.floor(i/N)*cell+cell/2}" text-anchor="middle" dominant-baseline="central" pointer-events="none" aria-hidden="true" style="font-size:${font}px"></text>`;
       for(const clue of C.combinedClues){
@@ -869,5 +871,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('nemologic-stack-3-status-18',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
       save=function(){originalSave();updateCollection();};
       updateCollection();
-    })();</script><script src="site-integration.js?v=2281a22488fa" defer></script></body>
+    })();</script><script src="site-integration.js?v=44935965e4fe" defer></script></body>
 </html>
