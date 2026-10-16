@@ -141,7 +141,7 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
 .overview-stage{margin-top:16px}
 
 .monochrome-game .clue.done{color:#555}.monochrome-game .overview-marker.done .clue-text{fill:#555}.monochrome-game .cell.zero{background:#fff;color:#555}.collection-next{display:block;margin-top:14px;color:#42684d;font-size:13px}</style>
-<link rel="stylesheet" href="site-integration.css?v=fbe208c6b04f"></head>
+<link rel="stylesheet" href="site-integration.css?v=4f9e58ff7df9"></head>
 <body class="individual-sums stack-sum-game monochrome-game">
 <main class="app">
   <header class="header">
@@ -894,5 +894,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   window.syncLargeUI();
 })();
 </script>
-<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-mono-status-15',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=10d0791e1f9d" defer></script></body>
+<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-mono-status-15',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=29315447c916" defer></script></body>
 </html>

@@ -1,0 +1,107 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f5f5ef"><title>튜토리얼 · 노노그램스택</title><style>*{box-sizing:border-box}html{overflow-anchor:none;scroll-padding-bottom:var(--lesson-dock-height,350px)}
+body{margin:0;background:#f5f5ef;color:#293e30;font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+button,a{-webkit-tap-highlight-color:transparent}button{font:inherit;cursor:pointer;color:inherit}button:disabled{cursor:default;opacity:.4}
+button:focus-visible,a:focus-visible{outline:3px solid #548c67;outline-offset:3px}
+.tutorial-app{max-width:600px;margin:auto;padding:20px 12px calc(var(--lesson-dock-height,350px) + 28px)}
+.header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:22px}.brand{display:flex;align-items:center;gap:11px;min-width:0}.brand h1{font-size:20px;letter-spacing:-.7px;font-weight:700;white-space:nowrap;margin:0}
+.mark{display:flex;flex-direction:column;gap:3px;flex-shrink:0;width:28px;height:24px}.mark i{display:block;width:28px;height:6px;border-radius:2px;background:#e45d58}.mark i:nth-child(2){background:#58a66c}.mark i:nth-child(3){background:#518bd1}
+.back-to-list{font-size:12px;white-space:nowrap;color:#42684d;text-decoration:none;padding:8px 0}
+.lesson-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;color:#70816f;font-size:12px}.lesson-heading button{font-size:11px;border:0;background:transparent;padding:6px;color:#70816f}
+.board{display:grid;grid-template-columns:48px repeat(5,minmax(0,1fr)) 28px;grid-template-rows:68px repeat(5,auto) 28px;width:var(--tutorial-board-width,100%);max-width:100%;margin-left:auto;margin-right:auto;user-select:none;-webkit-user-select:none}
+.corner{font-size:10px;color:#899687;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.6}
+.clue{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;gap:7px;color:#536057;border-radius:5px}.clue.top{flex-direction:column;justify-content:flex-end;padding-bottom:8px;gap:3px}.clue.left{justify-content:flex-end;padding-right:9px}.clue.right,.clue.bottom{font-size:11px}
+.cell{position:relative;aspect-ratio:1;min-width:0;padding:0;display:flex;align-items:center;justify-content:center;border:0;border-right:1px solid #cbd4c4;border-bottom:1px solid #cbd4c4;border-radius:0;background:#fffefb;font-weight:650;font-size:18px;touch-action:manipulation}.cell.first-col{border-left:1px solid #cbd4c4}.cell.first-row{border-top:1px solid #cbd4c4}
+.cell-cross{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
+.cell.guided{box-shadow:inset 0 0 0 2px #548c67}.cell.selected{outline:3px solid #293e30;outline-offset:-3px;z-index:1}.clue.guided{background:#dcebd9;box-shadow:inset 0 0 0 1px #7b9c75}
+.board.intro{outline:2px solid #adc5a5;outline-offset:4px;border-radius:4px}.board.finished .cell{border-color:transparent}
+.lesson-dock{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,600px);padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,#f5f5ef 12px);z-index:5}
+.tutorial-tools{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-bottom:12px;background:#f5f5ef;padding-top:4px}.tutorial-tools button{min-height:36px;padding:6px 0;border:1px solid #d6dfcf;border-radius:7px;background:#fffefb;font-size:11px}.tutorial-tools strong{font-size:16px}.tutorial-tools button.current{background:#e2e9de;border-color:#71876b}.tutorial-tools button.guided{outline:2px solid #548c67;outline-offset:1px}.tutorial-tools #tutorial-undo{grid-column:1/-1;min-height:28px;background:#e9eddf;font-size:12px;border:0}
+.speech-bubble{position:relative;background:#fffefb;border:1px solid #bfd0b7;border-radius:16px;padding:14px 16px;box-shadow:0 4px 18px #293e3010}.speech-bubble:before{content:'';position:absolute;top:-7px;left:30px;width:12px;height:12px;background:#fffefb;border-left:1px solid #bfd0b7;border-top:1px solid #bfd0b7;transform:rotate(45deg)}
+#step-count{display:block;font-size:10px;color:#7b8d73;font-variant-numeric:tabular-nums}h2{font-size:16px;margin:5px 0 8px;letter-spacing:-.4px}.speech-copy p{font-size:13px;line-height:1.65;margin:0}.speech-copy #step-note{font-size:11px;line-height:1.5;color:#718369;margin-top:6px;min-height:0}#step-note:empty{display:none}
+.step-actions{display:flex;justify-content:space-between;gap:10px;margin-top:13px}.step-actions button{min-height:38px;border:0;border-radius:9px;padding:8px 16px;font-size:13px;font-weight:650}#previous{background:#edf0e8;color:#63745c}#next{background:#293e30;color:#fff;min-width:110px}
+@media(min-width:700px){.tutorial-app{max-width:900px;padding-right:380px;padding-bottom:30px}.lesson-dock{left:calc(50% + 80px);top:110px;bottom:auto;transform:none;width:350px;background:none}.board{margin-top:28px}.speech-copy p{font-size:14px}.tutorial-tools{background:transparent}.header{width:calc(100% + 368px)}}
+@media(max-width:699px) and (max-height:700px){.tutorial-app{padding-top:10px}.header{margin-bottom:6px}.lesson-heading{margin-bottom:6px}.speech-bubble{padding:9px 12px}.speech-copy p{font-size:12px;line-height:1.45}.speech-copy #step-note{display:none}h2{font-size:14px;margin:4px 0 6px}.step-actions{margin-top:8px}.step-actions button{min-height:34px;padding:6px 12px}.tutorial-tools{margin-bottom:10px}.tutorial-tools button{min-height:32px}.tutorial-tools #tutorial-undo{min-height:24px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style><link rel="stylesheet" href="site-integration.css?v=4f9e58ff7df9"></head>
+<body><main class="tutorial-app"><header class="header"><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><h1>노노그램스택</h1></div><a class="back-to-list" href="collection.html#tutorial">← 목록으로</a></header>
+<div class="lesson-heading"><span>5×5 튜토리얼</span><button id="restart">다시 배우기</button></div>
+<section id="tutorial-board" class="board" aria-label="5행 5열 명암 퍼즐"></section>
+<div class="lesson-dock"><div class="tutorial-tools" aria-label="높이 입력"><button data-tool="select" aria-label="선택 도구">선택</button><button data-tool="erase" aria-label="지우개">지우개</button><button data-tool="0" aria-label="0 흰색"><strong>×</strong></button><button data-tool="1" aria-label="1 밝은 회색"><strong>1</strong></button><button data-tool="2" aria-label="2 어두운 회색"><strong>2</strong></button><button data-tool="3" aria-label="3 검정"><strong>3</strong></button><button id="tutorial-undo">↶ 되돌리기</button></div>
+<aside class="speech-bubble" aria-label="튜토리얼 안내"><div class="speech-copy" aria-live="polite" aria-atomic="true"><span id="step-count"></span><h2 id="step-title"></h2><p id="step-text"></p><p id="step-note"></p></div><div class="step-actions"><button id="previous">이전</button><button id="next">다음 →</button></div></aside></div>
+</main><script>const TUTORIAL={"cells":[0,1,0,1,0,1,1,1,1,1,2,2,2,2,2,0,3,3,3,0,0,0,3,0,0],"steps":[{"title":"숨은 그림을 함께 찾아봐요","text":"이 판은 가로 5칸, 세로 5칸이에요. 지금은 모두 미정이에요. 말풍선을 읽고 다음을 누르면 한 단계씩 함께 풀 수 있어요.","target":"board"},{"title":"숫자가 클수록 더 진해져요","text":"×는 0, 즉 흰색이에요. 1은 밝은 회색, 2는 어두운 회색, 3은 검정이에요. 숫자를 따라 명암을 채워보세요.","target":"values"},{"title":"오른쪽과 아래는 최대 높이예요","text":"오른쪽은 가로줄, 아래는 세로줄에서 가장 큰 숫자를 알려줘요. 둘째 가로줄의 최대 높이는 1이므로, 그 줄에는 2나 3이 들어가지 않아요.","target":"maximum","line":1},{"title":"왼쪽의 5는 무엇일까요?","text":"왼쪽과 위 숫자는 같은 높이가 이어진 구간의 합이에요. 둘째 줄은 합이 5, 최대가 1이므로 1이 다섯 칸 이어져요.","target":"row","line":1,"value":1,"action":[[5,1],[6,1],[7,1],[8,1],[9,1]],"note":"밝은 칸을 눌러 보거나 다음을 눌러 함께 채워요."},{"title":"2를 다섯 칸 쌓으면 10","text":"셋째 줄은 합이 10, 최대가 2예요. 2 + 2 + 2 + 2 + 2 = 10이므로 다섯 칸을 2로 채워요.","target":"row","line":2,"value":2,"action":[[10,2],[11,2],[12,2],[13,2],[14,2]],"note":"같은 높이가 이어질 때는 한 덩어리로 더해요."},{"title":"이번에는 3을 채워봐요","text":"넷째 줄의 9와 최대 3은 3이 세 칸 이어진다는 뜻이에요. 이번 안내에서는 가운데 세 칸에 놓아볼게요. 세로 단서도 이어서 확인해요.","target":"row","line":3,"value":3,"action":[[16,3],[17,3],[18,3]]},{"title":"위쪽 단서도 같은 방법으로 읽어요","text":"가운데 세로줄의 1 · 2 · 6을 보세요. 1 한 칸, 2 한 칸, 그리고 3 두 칸의 합 6이에요. 맨 아래 가운데를 3으로 채우면 맞아요.","target":"col","line":2,"value":3,"action":[[22,3]]},{"title":"떨어진 구간은 따로 표시해요","text":"첫째 줄의 1 · 1은 1 한 칸짜리 구간 두 개예요. 둘째·넷째 세로줄의 위 단서와 맞춰, 첫째 줄의 둘째 칸과 넷째 칸을 채워요.","target":"row","line":0,"value":1,"action":[[1,1],[3,1]]},{"title":"빈 곳을 확정할 때는 X","text":"미정인 칸과 흰색으로 확정한 칸은 달라요. 이제 남은 칸에 ×를 넣어 0으로 확정해요. 0 구간은 위·왼쪽 단서에서 생략돼요.","target":"zero","value":0,"action":[[0,0],[2,0],[4,0],[15,0],[19,0],[20,0],[21,0],[23,0],[24,0]]},{"title":"지우개는 미정으로 되돌려요","text":"지우개로 둘째 줄 가운데를 지워볼게요. X를 넣는 것과 달리, 아직 결정하지 않은 빈칸으로 돌아가요.","target":"erase","value":"erase","action":[[7,null]],"note":"지우개를 고른 뒤 표시된 칸을 누르거나 다음을 눌러요."},{"title":"되돌리기로 방금 작업을 취소해요","text":"방금 지운 칸을 되돌리면 원래의 1로 돌아와요. 실제 게임에서는 한 번의 드래그도 되돌리기 한 번으로 취소할 수 있어요.","target":"undo","action":[[7,1]],"note":"되돌리기를 누르거나 다음을 눌러 복원해요."},{"title":"선택은 숫자를 바꾸지 않아요","text":"선택 도구로는 입력값을 바꾸지 않고 칸을 살펴봐요. 칸을 눌러 보세요. 가로·세로 단서와 값이 맞으면 그림 완성이에요!","target":"select","value":"select"},{"title":"그림 완성! 이제 직접 풀어봐요","text":"밝은 회색에서 검정까지, 명암을 쌓아 숨은 그림을 찾았어요. 흑백게임에서는 같은 방법으로 10×10 그림에 도전할 수 있어요.","target":"complete"}],"storageKey":"nonogram-stack-tutorial-v1"};</script><script>(() => {
+  const {cells:answer,steps,storageKey}=TUTORIAL,$=id=>document.getElementById(id);
+  let step=0,board=Array(25).fill(null),tool='select',selected=null,history=[];
+  const canonical=index=>{const cells=Array(25).fill(null);for(let i=0;i<index;i++)for(const [p,v] of steps[i].action||[])cells[p]=v;return cells;};
+  try{
+    const saved=JSON.parse(localStorage.getItem(storageKey)||'null');
+    if(saved&&Number.isInteger(saved.step)&&saved.step>=0&&saved.step<steps.length){
+      step=saved.step;board=canonical(step);
+      const after=board.slice();for(const [p,v] of steps[step].action||[])after[p]=v;
+      if(Array.isArray(saved.cells)&&saved.cells.length===25&&saved.cells.every((v,i)=>v===board[i]||v===after[i]))board=saved.cells.slice();
+    }
+  }catch{}
+  function save(){try{localStorage.setItem(storageKey,JSON.stringify({step,cells:board,complete:step===steps.length-1&&board.every((v,i)=>v===answer[i])}));}catch{}}
+  const runs=values=>{const groups=[];for(let i=0;i<values.length;){const v=values[i];let end=i+1;while(end<values.length&&values[end]===v)end++;if(v)groups.push(v*(end-i));i=end;}return groups;};
+  function render(){
+    const current=steps[step],done=step===steps.length-1;
+    const targets=new Set((current.action||[]).map(([i])=>i));
+    let html='<div class="corner">구간<br>스택 합</div>';
+    for(let line=0;line<5;line++)for(const axis of ['row','col']){
+      const values=Array.from({length:5},(_,i)=>answer[axis==='row'?line*5+i:i*5+line]);
+      const guided=(current.target===axis&&line===current.line)||(current.target==='maximum'&&line===current.line);
+      const row=axis==='row',position=row?`grid-row:${line+2};grid-column:1`:`grid-row:1;grid-column:${line+2}`;
+      html+=`<div class="clue ${row?'left':'top'} ${guided&&current.target!=='maximum'?'guided':''}" data-axis="${axis}" data-line="${line}" style="${position}" aria-label="${line+1}${row?'행':'열'} 구간 합 ${runs(values).join(' ')}">${runs(values).map(v=>'<span>'+v+'</span>').join('')}</div>`;
+      html+=`<div class="clue ${row?'right':'bottom'} ${guided?'guided':''}" style="grid-row:${row?line+2:7};grid-column:${row?7:line+2}" aria-label="${line+1}${row?'행':'열'} 최대 ${Math.max(...values)}">${Math.max(...values)}</div>`;
+    }
+    for(let i=0;i<25;i++){
+      const v=board[i],level=v===null?null:255-v*85;
+      const content=done||v===null?'':v===0?'<svg class="cell-cross" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2L22 22M22 2L2 22"/></svg>':v;
+      html+=`<button class="cell ${i%5===0?'first-col':''} ${i<5?'first-row':''} ${targets.has(i)?'guided':''} ${selected===i?'selected':''}" data-index="${i}" style="grid-row:${Math.floor(i/5)+2};grid-column:${i%5+2};${level!==null?'background:rgb('+[level,level,level].join(',')+');color:'+(v>=2?'#fff':'#555')+';':''}" aria-label="${Math.floor(i/5)+1}행 ${i%5+1}열 ${v===null?'미정':v+'스택'}${targets.has(i)?', 안내 칸':''}" aria-pressed="${selected===i}">${content}</button>`;
+    }
+    html+='<div class="corner" style="grid-row:7;grid-column:1">최대</div>';
+    const focus=document.activeElement?.dataset.index;
+    $('tutorial-board').innerHTML=html;$('tutorial-board').classList.toggle('intro',current.target==='board');$('tutorial-board').classList.toggle('finished',done);
+    if(focus!==undefined)$('tutorial-board').querySelector(`[data-index="${focus}"]`)?.focus({preventScroll:true});
+    $('step-count').textContent=`${step+1} / ${steps.length}`;$('step-title').textContent=current.title;$('step-text').textContent=current.text;$('step-note').textContent=current.note||'';
+    $('previous').disabled=step===0;$('next').textContent=done?'흑백게임 시작 →':'다음 →';
+    for(const button of document.querySelectorAll('[data-tool]')){
+      const value=button.dataset.tool;
+      button.classList.toggle('current',value===String(tool));button.setAttribute('aria-pressed',value===String(tool));
+      button.classList.toggle('guided',current.target==='values'&&/^\d$/.test(value)||current.value!==undefined&&String(current.value)===value);
+    }
+    $('tutorial-undo').classList.toggle('guided',current.target==='undo');$('tutorial-undo').disabled=!history.length&&current.target!=='undo';
+  }
+  function enter(){tool=steps[step].value??'select';selected=null;render();save();}
+  function change(patches){const changes=patches.filter(([i,v])=>board[i]!==v).map(([i,v])=>({i,before:board[i],after:v}));if(changes.length){history.push(changes);for(const c of changes)board[c.i]=c.after;}render();save();}
+  $('next').onclick=()=>{
+    if(step===steps.length-1){const destination=new URL('collection.html#monochrome',location.href);destination.search=location.search;location.href=destination.href;return;}
+    for(const [i,v] of steps[step].action||[])board[i]=v;
+    step++;history=[];enter();
+  };
+  $('previous').onclick=()=>{if(step===0)return;step--;board=canonical(step);history=[];enter();};
+  $('restart').onclick=()=>{step=0;board=canonical(0);history=[];enter();};
+  for(const button of document.querySelectorAll('[data-tool]'))button.onclick=()=>{tool=/^\d$/.test(button.dataset.tool)?Number(button.dataset.tool):button.dataset.tool;render();};
+  $('tutorial-board').onclick=e=>{
+    const cell=e.target.closest('[data-index]');if(!cell||step===steps.length-1)return;const i=Number(cell.dataset.index);selected=i;
+    if(tool==='select'){render();return;}
+    const expected=steps[step].action?.find(([p])=>p===i),value=tool==='erase'?null:tool;
+    if(expected&&expected[1]===value)change([[i,value]]);
+    else{render();$('step-note').textContent='말풍선에서 안내하는 도구와 초록 테두리 칸을 따라가 보세요. 다음을 눌러 함께 채울 수도 있어요.';}
+  };
+  $('tutorial-undo').onclick=()=>{
+    if(steps[step].target==='undo'){change([[7,1]]);return;}
+    const changes=history.pop();if(!changes)return;for(const c of changes)board[c.i]=c.before;render();save();
+  };
+  function fitBoard(){
+    const dock=document.querySelector('.lesson-dock').getBoundingClientRect(),grid=$('tutorial-board');
+    document.documentElement.style.setProperty('--lesson-dock-height',dock.height+'px');
+    if(innerWidth>=700){grid.style.removeProperty('--tutorial-board-width');return;}
+    const available=innerHeight-dock.height-(grid.getBoundingClientRect().top+scrollY)-16;
+    const width=Math.min(document.querySelector('.lesson-heading').clientWidth,76+5*Math.max(24,(available-96)/5));
+    grid.style.setProperty('--tutorial-board-width',width+'px');
+  }
+  new ResizeObserver(fitBoard).observe(document.querySelector('.lesson-dock'));
+  addEventListener('resize',fitBoard);
+  enter();
+})();
+</script><script src="site-integration.js?v=29315447c916" defer></script></body></html>

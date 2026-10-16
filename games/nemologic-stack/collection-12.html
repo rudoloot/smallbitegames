@@ -141,7 +141,7 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
 .overview-stage{margin-top:16px}
 
 .collection-next{display:block;margin-top:14px;color:#42684d;font-size:13px}.source-credit{font-size:10px!important}.source-credit a{color:#42684d}</style>
-<link rel="stylesheet" href="site-integration.css?v=fbe208c6b04f"></head>
+<link rel="stylesheet" href="site-integration.css?v=4f9e58ff7df9"></head>
 <body class="individual-sums stack-sum-game">
 <main class="app">
   <header class="header">
@@ -875,5 +875,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('nemologic-stack-3-status-12',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
       save=function(){originalSave();updateCollection();};
       updateCollection();
-    })();</script><script src="site-integration.js?v=10d0791e1f9d" defer></script></body>
+    })();</script><script src="site-integration.js?v=29315447c916" defer></script></body>
 </html>
