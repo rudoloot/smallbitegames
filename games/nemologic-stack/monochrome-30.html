@@ -98,6 +98,9 @@ footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-si
 .overview-marker .clue-text{fill:#536057;font-size:6.5px}.overview-marker.done .clue-text{fill:#4a8654}.overview-marker.conflict rect{fill:#fde0da}.overview-marker.conflict .clue-text{fill:#be453d}
 #terrain-line-sums,.large-line-clue{height:auto;min-height:30px;white-space:normal;line-height:15px;overflow-wrap:anywhere;padding:3px 1px}
 .overview-stack-total{font-size:5px;font-weight:700;font-variant-numeric:tabular-nums;user-select:none}
+.stack-sum-game .clue.clue-done,.stack-sum-game .clue .clue-done{color:#398349}
+.stack-sum-game .clue.clue-conflict,.stack-sum-game .clue .clue-conflict{color:#be453d}
+.overview-marker .clue-done{fill:#398349}.overview-marker .clue-conflict{fill:#be453d}
 .stack-sum-game .cell,.stack-sum-game .cell.zero{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .78))}
 .cell-cross{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
 .stack-sum-game .clue.total{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .75))}
@@ -176,7 +179,7 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
   </section>
 
 </main>
-<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li></ul><p>숫자를 선택한 뒤 칸을 누르거나 드래그하세요. 선택 도구로는 입력값을 바꾸지 않고 칸을 살펴볼 수 있어요. 한 번의 드래그는 되돌리기 한 번으로 취소돼요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><p>도안 출처: <a href="https://dodocraft.com/pixel-art-templates/10x10/" target="_blank" rel="noopener noreferrer">Dodocraft 10×10</a>. 컬러 도안을 명암 단계로 변환했어요.</p><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
+<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li></ul><p>양 끝에서부터 맞춰진 구간의 단서는 녹색, 현재 입력으로 성립할 수 없는 단서는 빨간색이에요. 색은 해당 줄의 단서와 입력만으로 판단해요.</p><p>숫자를 선택한 뒤 칸을 누르거나 드래그하세요. 선택 도구로는 입력값을 바꾸지 않고 칸을 살펴볼 수 있어요. 한 번의 드래그는 되돌리기 한 번으로 취소돼요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><p>도안 출처: <a href="https://dodocraft.com/pixel-art-templates/10x10/" target="_blank" rel="noopener noreferrer">Dodocraft 10×10</a>. 컬러 도안을 명암 단계로 변환했어요.</p><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
 <dialog id="reset-dialog"><span class="eyebrow">START AGAIN</span><h2>처음부터 다시 풀까요?</h2><p>입력한 높이를 모두 지우고 빈 보드에서 시작해요.</p><div class="dialog-actions"><button data-close="reset-dialog">계속 풀기</button><button class="primary-button" id="confirm-reset">다시 시작</button></div></dialog>
 <dialog id="win-dialog"><span class="eyebrow">PICTURE COMPLETE</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300" aria-label="완성된 흑백 그림"></canvas><p>100개의 높이를 모두 찾았어요.</p><button class="primary-button" data-close="win-dialog">완성된 그림 보기</button><a class="collection-next" href="monochrome-31.html">다음 문제 풀기</a></dialog>
 <script>globalThis.MONO_SPEC={"id":"30","title":"흑백 문제 30","width":10,"height":10,"channels":1,"maxStack":3,"paletteSize":4,"levels":[0,0.3333333333333333,0.6666666666666666,1],"cells":[[3],[3],[3],[3],[3],[1],[1],[1],[3],[3],[3],[3],[3],[3],[3],[3],[2],[0],[3],[3],[3],[2],[2],[2],[3],[3],[0],[0],[3],[3],[3],[1],[0],[0],[2],[2],[0],[0],[3],[3],[3],[1],[0],[0],[0],[0],[2],[2],[3],[3],[3],[1],[0],[2],[2],[2],[2],[2],[2],[2],[1],[1],[1],[1],[2],[2],[2],[2],[2],[1],[3],[1],[0],[0],[1],[1],[1],[1],[1],[3],[1],[0],[1],[1],[0],[0],[0],[0],[0],[1],[1],[1],[1],[2],[0],[1],[1],[1],[1],[1]],"adjustment":{"targetEmptyPercent":21},"source":{"colorPuzzleId":"56","page":"https://dodocraft.com/pixel-art-templates/10x10/the-sea/sea-3/","image":"https://dodocraft.com/wp-content/uploads/dodocraft-translated/en/Sea-3-scaled-1024x724.png"},"conversion":{"method":"weighted-luminance","weights":[0.2126,0.7152,0.0722],"thresholds":[0.5,1.5,2.5]},"storageKey":"nonogram-stack-mono-v1-30","rule":"height-runs-max","omitOuterZeros":true,"omitAllZeros":true};
@@ -467,6 +470,61 @@ if(root.MONO_SPEC)root.PicrossCore=createCore(root.MONO_SPEC);
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script>
 <script>const GIVEN_DATA=[];
+(function(root){
+  'use strict';
+  const cache=new Map();
+  // Only visible line clues and entered values are accepted; no answer data.
+  function evaluate(line,groups,maximum){
+    const key=JSON.stringify([line,groups,maximum]);if(cache.has(key))return cache.get(key);
+    const tokens=groups.map(()=>''),known=line.filter(v=>v!==null);
+    let maximumState=known.some(v=>v>maximum)||known.length===line.length&&Math.max(...known)!==maximum?'conflict':known.includes(maximum)?'done':'';
+    const mark=(i,state)=>{if(i>=0&&i<tokens.length&&(tokens[i]!=='conflict'||state==='conflict'))tokens[i]=state;};
+    function scan(values,reverse){
+      let pos=0,k=0;
+      while(pos<values.length){
+        while(values[pos]===0)pos++;
+        if(pos===values.length||values[pos]===null)return;
+        const index=reverse?groups.length-1-k:k,target=groups[index],value=values[pos];
+        if(target===undefined){mark(reverse?0:groups.length-1,'conflict');return;}
+        let sum=0;while(pos<values.length&&values[pos]===value){sum+=value;pos++;}
+        const closed=pos===values.length||values[pos]!==null;
+        if(value>maximum||target%value!==0||sum>target||closed&&sum!==target){mark(index,'conflict');return;}
+        if(sum===target)mark(index,'done');
+        if(!closed)return;
+        k++;
+      }
+    }
+    scan(line,false);scan(line.slice().reverse(),true);
+    const allows=(i,v)=>line[i]===null||line[i]===v,memo=new Map(),suffix=Array(groups.length+1).fill(0);
+    if(maximum>0)for(let k=groups.length-1;k>=0;k--)suffix[k]=suffix[k+1]+Math.ceil(groups[k]/maximum);
+    function fits(k,pos,previous,hit){
+      const id=[k,pos,previous,+hit].join(',');if(memo.has(id))return memo.get(id);
+      let result=false;
+      if(k===groups.length)result=hit&&line.slice(pos).every(v=>v===null||v===0);
+      else if(maximum>0)outer:for(let start=pos;start+suffix[k]<=line.length;start++){
+        if(start>pos&&!allows(start-1,0))break;
+        for(let value=1;value<=maximum;value++){
+          if(groups[k]%value||start===pos&&previous===value)continue;
+          const length=groups[k]/value;if(start+length+suffix[k+1]>line.length)continue;
+          let valid=true;for(let i=start;i<start+length;i++)if(!allows(i,value)){valid=false;break;}
+          if(valid&&fits(k+1,start+length,value,hit||value===maximum)){result=true;break outer;}
+        }
+      }
+      memo.set(id,result);return result;
+    }
+    const possible=fits(0,0,0,maximum===0);
+    if(!possible&&!tokens.includes('conflict')){
+      // If a contradiction cannot be assigned to an edge run, flag the
+      // unresolved clues together. Never claim a specific cell is wrong.
+      const pending=tokens.some(s=>s!=='done');
+      for(let i=0;i<tokens.length;i++)if(!pending||tokens[i]!=='done')tokens[i]='conflict';
+    }
+    const result={tokens,maximum:maximumState,possible};
+    if(cache.size>1600)cache.clear();cache.set(key,result);return result;
+  }
+  const api={evaluate};if(typeof module!=='undefined')module.exports=api;root.ClueFeedback=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
 'use strict';
 const C=PicrossCore, N=C.N, MAX_STACK=C.maxStack, CHANNEL_COUNT=C.channels||3, CHANNELS=Array.from({length:CHANNEL_COUNT},(_,i)=>i), MONO=CHANNEL_COUNT===1, names=MONO?['명암']:['빨강','녹색','파랑'];
 const themes=MONO?[['#555555','#e5e5e5']]:[['#c6544d','#fae8e3'],['#518568','#e2f0e4'],['#547fae','#e1ebf7']];
@@ -554,9 +612,9 @@ function render(){
   if($('board-title'))$('board-title').textContent=channel===null?'COLOR COMPOSITE':['RED CHANNEL','GREEN CHANNEL','BLUE CHANNEL'][channel];
   if($('anchor-count'))$('anchor-count').textContent=channel===null?GIVEN_DATA.length:GIVEN_DATA.filter(g=>g.channel===channel).length;
   const lineInfo=['row','col'].map(axis=>Array.from({length:N},(_,line)=>{
-    const cells=C.indices(axis,line),target=cells.map(i=>channel===null?C.sum(C.solution[i]):C.solution[i][channel]);
-    const groups=C.runs(target),total=C.rule==='height-runs-max'?Math.max(...target):C.sum(target);
-    return {groups,total,state:status(cells,tab,groups,total)==='done'?'done':''};
+    const clue=(channel===null?C.combinedClues:C.clues[channel])[line+(axis==='col'?N:0)],cells=clue.cells,groups=clue.groups,total=clue.maximum??clue.total;
+    const values=cells.map(i=>channel===null?(boardState[i].includes(null)?null:C.sum(boardState[i])):boardState[i][channel]);
+    return {groups,total,feedback:ClueFeedback.evaluate(values,groups,total)};
   }));
   let html=`<div class="corner" style="grid-row:1;grid-column:1">${C.stackSumRuns?'동일 높이<br>구간 스택 합':C.channelTotals?'같은 높이<br>연속 칸 수':'칸 수'}</div>`;
   for(let l=0;l<N;l++){
@@ -564,10 +622,10 @@ function render(){
       const a=axis==='row'?0:1,info=lineInfo[a][l],active=activeClue(axis,l);
       const place=a===0?`grid-row:${l+2};grid-column:1`:`grid-row:1;grid-column:${l+2}`;
       const totalPlace=a===0?`grid-row:${l+2};grid-column:${N+2}`:`grid-row:${N+2};grid-column:${l+2}`;
-      const classes=`${info.state} ${active?'active-line':''}`;
+      const classes=active?'active-line':'';
       const tokens=info.groups.map(n=>C.rule==='height-runs-max'&&!C.stackSumRuns&&n===0?'·':n);
-      html+=`<div class="clue ${a===0?'left':'top'} ${classes}" data-clue="${a*N+l}" style="${place}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'동일 높이 구간':'연속 칸 수'} ${tokens.join(' ')||(C.omitAllZeros?'빈 줄':0)}"><div class="run-tokens">${(tokens.length||C.omitAllZeros?tokens:[0]).map(n=>`<span class="${n==='·'?'gap-token':''}">${n}</span>`).join('')}</div></div>`;
-      html+=`<div class="clue total ${a===0?'right':'bottom'} ${classes}" data-clue="${a*N+l}" style="${totalPlace}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'최대 높이':'스택 합'} ${info.total}">${info.total}</div>`;
+      html+=`<div class="clue ${a===0?'left':'top'} ${classes}" data-clue="${a*N+l}" style="${place}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'동일 높이 구간':'연속 칸 수'} ${tokens.join(' ')||(C.omitAllZeros?'빈 줄':0)}"><div class="run-tokens">${(tokens.length||C.omitAllZeros?tokens:[0]).map((n,k)=>`<span data-clue-token="${k}" class="${n==='·'?'gap-token':''} clue-${info.feedback.tokens[k]||'pending'}">${n}</span>`).join('')}</div></div>`;
+      html+=`<div class="clue total ${a===0?'right':'bottom'} ${classes} clue-${info.feedback.maximum||'pending'}" data-clue="${a*N+l}" style="${totalPlace}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'최대 높이':'스택 합'} ${info.total}">${info.total}</div>`;
     }
   }
   for(let i=0;i<N*N;i++){
@@ -672,10 +730,12 @@ function refreshDrag(){
     lines.add(Math.floor(i/N));lines.add(N+i%N);
   }
   for(const index of lines){
-    const clue=C.clues[channel][index],state=status(clue.cells,channel,clue.groups,clue.total,clue);
+    const clue=C.clues[channel][index],feedback=ClueFeedback.evaluate(clue.cells.map(i=>boardState[i][channel]),clue.groups,clue.maximum??clue.total);
     const active=activeClue(index<N?'row':'col',index%N);
     for(const el of clueNodes[index]){
-      el.classList.toggle('active-line',active);el.classList.toggle('done',state==='done');el.classList.remove('conflict');
+      el.classList.toggle('active-line',active);
+      if(el.classList.contains('total')){el.classList.toggle('clue-done',feedback.maximum==='done');el.classList.toggle('clue-conflict',feedback.maximum==='conflict');}
+      else for(const token of el.querySelectorAll('[data-clue-token]')){const state=feedback.tokens[Number(token.dataset.clueToken)];token.classList.toggle('clue-done',state==='done');token.classList.toggle('clue-conflict',state==='conflict');}
     }
   }
   if(typeof window.updateTerrainCells==='function')window.updateTerrainCells(dirtyCells);
@@ -810,8 +870,9 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   let tiles=[],stackLabels=[],lastValues=[],lastWidth=0,lastSolved=null,layout;
   function updateStatus(lines){
     for(const l of lines){
-      const state=C.combinedStatus(boardState,C.combinedClues[l]);
-      svg.querySelectorAll(`[data-overview-clue="${l}"]`).forEach(el=>{el.classList.toggle('done',state==='done');el.classList.remove('conflict');});
+      const clue=C.combinedClues[l],feedback=ClueFeedback.evaluate(clue.cells.map(i=>boardState[i].includes(null)?null:C.sum(boardState[i])),clue.groups,clue.maximum);
+      svg.querySelectorAll(`[data-overview-clue="${l}"] [data-clue-token]`).forEach(el=>{const state=feedback.tokens[Number(el.dataset.clueToken)];el.classList.toggle('clue-done',state==='done');el.classList.toggle('clue-conflict',state==='conflict');});
+      svg.querySelectorAll(`.overview-maximum[data-overview-clue="${l}"] .clue-text`).forEach(el=>{el.classList.toggle('clue-done',feedback.maximum==='done');el.classList.toggle('clue-conflict',feedback.maximum==='conflict');});
     }
   }
   function updateCells(indices){
@@ -849,7 +910,7 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       for(const clue of C.combinedClues){
         const {axis,line,groups,maximum}=clue,row=axis==='row',l=line+(row?0:N),label=groups.join(' ');
         const x=row?0:left+line*cell,y=row?top+line*cell:0;
-        const text=!groups.length?'':row?`<text class="clue-text" x="${left-padding}" y="${cell/2}" text-anchor="end" dominant-baseline="central" style="font-size:${font}px">${groups.map((n,k)=>`<tspan dx="${k?gap:0}">${n}</tspan>`).join('')}</text>`:groups.map((t,k)=>`<text class="clue-text" x="${cell/2}" y="${top-padding-lineHeight/2-(groups.length-k-1)*(lineHeight+columnGap)}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${t}</text>`).join('');
+        const text=!groups.length?'':row?`<text class="clue-text" x="${left-padding}" y="${cell/2}" text-anchor="end" dominant-baseline="central" style="font-size:${font}px">${groups.map((n,k)=>`<tspan data-clue-token="${k}" dx="${k?gap:0}">${n}</tspan>`).join('')}</text>`:groups.map((t,k)=>`<text data-clue-token="${k}" class="clue-text" x="${cell/2}" y="${top-padding-lineHeight/2-(groups.length-k-1)*(lineHeight+columnGap)}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${t}</text>`).join('');
         html+=`<g class="overview-marker overview-run-clue" data-axis="${axis}" data-line="${line}" data-overview-clue="${l}" role="button" tabindex="0" aria-label="전체 ${line+1}${row?'행':'열'} 구간 스택 합계 ${label}" transform="translate(${x},${y})"><rect width="${row?left:cell}" height="${row?cell:top}"/>${text}</g>`;
         html+=`<g class="overview-marker overview-maximum" data-axis="${axis}" data-line="${line}" data-overview-clue="${l}" role="button" tabindex="0" aria-label="전체 ${line+1}${row?'행':'열'} 최대 높이 ${maximum}" transform="translate(${row?left+extent:left+line*cell},${row?top+line*cell:top+extent})"><rect width="${row?end:cell}" height="${row?cell:end}"/><text class="clue-text" x="${(row?end:cell)/2}" y="${(row?cell:end)/2}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${maximum}</text></g>`;
       }
@@ -894,5 +955,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   window.syncLargeUI();
 })();
 </script>
-<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-mono-status-30',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=db77ce358b26" defer></script></body>
+<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-mono-status-30',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=68d1c4f54ebb" defer></script></body>
 </html>
