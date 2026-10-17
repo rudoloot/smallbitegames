@@ -489,12 +489,8 @@ if(root.PUZZLE_SPEC)root.PicrossCore=createCore(root.PUZZLE_SPEC);
       memo.set(id,result);return result;
     }
     const possible=fits(0,0,0,maximum===0);
-    if(!possible&&!tokens.includes('conflict')){
-      // If a contradiction cannot be assigned to an edge run, flag the
-      // unresolved clues together. Never claim a specific cell is wrong.
-      const pending=tokens.some(s=>s!=='done');
-      for(let i=0;i<tokens.length;i++)if(!pending||tokens[i]!=='done')tokens[i]='conflict';
-    }
+    // Feasibility is diagnostic only. An impossible full-line completion must
+    // not color unresolved clues: only the two edge scans grade those tokens.
     const result={tokens,maximum:maximumState,possible};
     if(cache.size>1600)cache.clear();cache.set(key,result);return result;
   }
@@ -936,5 +932,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('nemologic-stack-3-status-09',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
       save=function(){originalSave();updateCollection();};
       updateCollection();
-    })();</script><script src="site-integration.js?v=68d1c4f54ebb" defer></script></body>
+    })();</script><script src="site-integration.js?v=12abbb2b30ac" defer></script></body>
 </html>
