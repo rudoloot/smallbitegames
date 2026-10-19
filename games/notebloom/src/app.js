@@ -1,12 +1,12 @@
-import { TRACKS, MusicPlayer } from './music.js?v=7fcc13f571c6';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=7fcc13f571c6';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=7fcc13f571c6';
-import { World } from './scene.js?v=7fcc13f571c6';
-import { exitGame } from './launch.js?v=7fcc13f571c6';
-import { setupFullscreen } from './fullscreen.js?v=7fcc13f571c6';
-import { beginGesture, updateGesture } from './gesture.js?v=7fcc13f571c6';
-import { updatePlayHUD } from './hud.js?v=7fcc13f571c6';
-import { loadRhythm } from './rhythm-loader.js?v=7fcc13f571c6';
+import { TRACKS, MusicPlayer } from './music.js?v=67d77c6fbbe3';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=67d77c6fbbe3';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=67d77c6fbbe3';
+import { World } from './scene.js?v=67d77c6fbbe3';
+import { exitGame } from './launch.js?v=67d77c6fbbe3';
+import { setupFullscreen } from './fullscreen.js?v=67d77c6fbbe3';
+import { beginGesture, updateGesture } from './gesture.js?v=67d77c6fbbe3';
+import { updatePlayHUD } from './hud.js?v=67d77c6fbbe3';
+import { loadRhythm } from './rhythm-loader.js?v=67d77c6fbbe3';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -19,7 +19,7 @@ let difficulty = 'easy';
 $('hardToggle').addEventListener('click', () => {
   difficulty = difficulty === 'hard' ? 'easy' : 'hard';
   $('hardToggle').setAttribute('aria-pressed', String(difficulty === 'hard'));
-  $('hardToggle').title = difficulty === 'hard' ? 'Hard · 보스 체력 (음표 수 ÷ 20) × 600' : '쉬움 · 지뢰 1~2개, 속도 75%, 중간 지뢰 패턴 절반';
+  $('hardToggle').title = difficulty === 'hard' ? 'Hard · 보스 체력 (음표 수 ÷ 20) × 600' : '일반 · 지뢰 2~3개, 속도 87.5%, 중간 지뢰 패턴 75%, 보스 체력 (음표 수 ÷ 20) × 500';
 });
 let selected = TRACKS[0], state = null, mode = 'home', playerX = 0;
 let preparing = false, countdownTimer = null, countdownRemaining = 3, feedbackUntil = 0, damageUntil = 0;
@@ -99,12 +99,16 @@ async function start() {
     await audio.unlock();
     const buffer = await audio.load(selected);
     if (selected.localFile) { selected.duration = formatTime(buffer.duration); selectTrack(selected); }
-    $('loadingText').textContent = '박자를 찾고 음표의 길을 만드는 중';
+    $('loadingText').textContent = '저장된 음표 정보를 확인하는 중';
     // Allow the loading text to paint before the bounded analysis work.
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     let analysis = analyses.get(selected.id);
     if (!analysis) {
       const rhythm = await loadRhythm(selected, buffer.duration, text => { $('loadingText').textContent = text; }, buffer);
+      // This lightweight road/theme preparation is separate from neural analysis.
+      const rhythmStatus = $('loadingText').textContent;
+      $('loadingText').textContent = `${rhythmStatus} · 도로를 준비하는 중`;
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       // Stereo mix for terrain/theme too: do not discard right-channel attacks.
       const samples = buffer.getChannelData(0).slice();
       if (buffer.numberOfChannels > 1) {

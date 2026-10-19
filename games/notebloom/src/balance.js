@@ -1,5 +1,5 @@
-export const BOSS_BALANCE = Object.freeze({ version: 6, notesPerUnit: 20,
-  healthPerUnit: Object.freeze({ hard: 600, easy: 400 }) });
+export const BOSS_BALANCE = Object.freeze({ version: 7, notesPerUnit: 20,
+  healthPerUnit: Object.freeze({ hard: 600, easy: 500 }) });
 
 export function estimateBossHealth(chart, difficulty = chart.difficulty ?? 'easy') {
   const noteCount = chart.events.filter(event => event.type === 'note').length;

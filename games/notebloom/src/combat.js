@@ -1,11 +1,11 @@
-import { clamp, seededRandom, RULES } from './engine.js?v=7fcc13f571c6';
-import { weaponForId, attackForEnergy } from './weapons.js?v=7fcc13f571c6';
-import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=7fcc13f571c6';
-import { themeForChart } from './themes.js?v=7fcc13f571c6';
-import { estimateBossHealth } from './balance.js?v=7fcc13f571c6';
-import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=7fcc13f571c6';
-import { fireworkLifetime } from './fireworks.js?v=7fcc13f571c6';
-import { selectRhythmNotes } from './rhythm.js?v=7fcc13f571c6';
+import { clamp, seededRandom, RULES } from './engine.js?v=67d77c6fbbe3';
+import { weaponForId, attackForEnergy } from './weapons.js?v=67d77c6fbbe3';
+import { projectileSpeed, projectilePoint, intersectBoss, intersectShield, bossPose, advanceMissile } from './projectiles.js?v=67d77c6fbbe3';
+import { themeForChart } from './themes.js?v=67d77c6fbbe3';
+import { estimateBossHealth } from './balance.js?v=67d77c6fbbe3';
+import { bossWeakPointAt, bossShieldAt } from './boss-rotation.js?v=67d77c6fbbe3';
+import { fireworkLifetime } from './fireworks.js?v=67d77c6fbbe3';
+import { selectRhythmNotes } from './rhythm.js?v=67d77c6fbbe3';
 
 export const LANE_COUNT = 4;
 export const laneX = lane => (lane - 1.5) * 1.22;
@@ -51,7 +51,7 @@ function thinEasyMines(events, seed) {
     rows.get(event.time).push(event);
   }
   for (const mines of rows.values()) {
-    const count = random() < .5 ? 1 : 2;
+    const count = random() < .75 ? 2 : 3;
     for (let i = mines.length - 1; i > 0; i--) {
       const other = Math.floor(random() * (i + 1));
       [mines[i], mines[other]] = [mines[other], mines[i]];
@@ -78,9 +78,9 @@ export function makeChart(duration, analysis, difficulty = 'easy', seed = 42) {
   });
   addInterludeMines(events, beat, duration, seed, analysis.rhythm);
   if (difficulty === 'easy') {
-    // Remove whole alternate gates, preserving each retained gate's safe lane.
+    // Keep three out of four gates, preserving each retained gate's safe lane.
     const rows = [...new Set(events.filter(event => event.pattern).map(event => event.time))].sort((a, b) => a - b);
-    const removed = new Set(rows.filter((_, index) => index % 2 === 0));
+    const removed = new Set(rows.filter((_, index) => index % 4 === 0));
     for (let i = events.length - 1; i >= 0; i--) {
       if (events[i].pattern && removed.has(events[i].time)) events.splice(i, 1);
     }
@@ -88,7 +88,7 @@ export function makeChart(duration, analysis, difficulty = 'easy', seed = 42) {
   }
   events.sort((a, b) => a.time - b.time || (a.type === 'note' ? 0 : 1) - (b.type === 'note' ? 0 : 1) || a.lane - b.lane);
   events.forEach((event, id) => { event.id = id; });
-  const chart = { duration, events, beat, seed, difficulty, scrollSpeed: difficulty === 'easy' ? .75 : 1, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm,
+  const chart = { duration, events, beat, seed, difficulty, scrollSpeed: difficulty === 'easy' ? .875 : 1, mood: analysis.mood, terrain: analysis.terrain, bpm: analysis.bpm,
     themeId: themeForChart({ mood: analysis.mood }).id,
     sections: [], noteCount: events.filter(event => event.type === 'note').length };
   chart.balance = estimateBossHealth(chart);

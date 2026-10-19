@@ -1,8 +1,8 @@
-import * as ort from '../vendor/onnxruntime-web/dist/ort.wasm.min.mjs?v=7fcc13f571c6';
-import {extractMobileFeatures, measuredMobileAttacks, modelWindows, MOBILE_MELS} from './mobile-audio-features.js?v=7fcc13f571c6';
-import {buildMobileRhythm} from './mobile-rhythm-select.js?v=7fcc13f571c6';
-import {rhythmCache} from './rhythm-cache.js?v=7fcc13f571c6';
-import {MOBILE_MODEL_HASH as MODEL_HASH, MOBILE_MODEL_BYTES} from '../models/beat-this/config.js?v=7fcc13f571c6';
+import * as ort from '../vendor/onnxruntime-web/dist/ort.wasm.min.mjs?v=67d77c6fbbe3';
+import {extractMobileFeatures, measuredMobileAttacks, modelWindows, MOBILE_MELS} from './mobile-audio-features.js?v=67d77c6fbbe3';
+import {buildMobileRhythm} from './mobile-rhythm-select.js?v=67d77c6fbbe3';
+import {rhythmCache} from './rhythm-cache.js?v=67d77c6fbbe3';
+import {MOBILE_MODEL_HASH as MODEL_HASH, MOBILE_MODEL_BYTES} from '../models/beat-this/config.js?v=67d77c6fbbe3';
 
 const progress = text => postMessage({type:'progress',text});
 

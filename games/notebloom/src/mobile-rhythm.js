@@ -1,6 +1,6 @@
-import {MOBILE_RATE} from './mobile-audio-features.js?v=7fcc13f571c6';
-import {pcmCacheKey, rhythmCache} from './rhythm-cache.js?v=7fcc13f571c6';
-import {validateRhythm} from './rhythm.js?v=7fcc13f571c6';
+import {MOBILE_RATE} from './mobile-audio-features.js?v=67d77c6fbbe3';
+import {pcmCacheKey, rhythmCache} from './rhythm-cache.js?v=67d77c6fbbe3';
+import {validateRhythm} from './rhythm.js?v=67d77c6fbbe3';
 
 export async function resampleForMobile(buffer) {
   const Offline = globalThis.OfflineAudioContext || globalThis.webkitOfflineAudioContext;
@@ -17,12 +17,16 @@ export async function analyzeOnDevice(buffer, onProgress = () => {}) {
   const samples = await resampleForMobile(buffer), key = pcmCacheKey(samples, buffer.duration);
   const cached = await rhythmCache('get', key);
   if (cached) {
-    try { return validateRhythm(cached, buffer.duration); }
+    try {
+      const rhythm = validateRhythm(cached, buffer.duration);
+      onProgress('저장된 음표 정보를 불러왔어요');
+      return rhythm;
+    }
     catch { /* Ignore stale/corrupt results and reanalyse locally. */ }
   }
   if (typeof Worker === 'undefined') throw new Error('이 브라우저에서는 음악 분석을 지원하지 않아요. 최신 브라우저로 다시 시도해 주세요.');
   const rhythm = await new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./mobile-rhythm-worker.js?v=7fcc13f571c6', import.meta.url), {type:'module'});
+    const worker = new Worker(new URL('./mobile-rhythm-worker.js?v=67d77c6fbbe3', import.meta.url), {type:'module'});
     const timeout = setTimeout(()=>finish(new Error('음악 분석 시간이 너무 길어졌어요. 더 짧은 곡으로 다시 시도해 주세요.')), 15 * 60 * 1000);
     function finish(error, result) { clearTimeout(timeout); worker.terminate(); error ? reject(error) : resolve(result); }
     worker.onerror = () => finish(new Error('음악 분석 모델을 실행하지 못했어요. 페이지를 새로고침하거나 최신 브라우저로 다시 시도해 주세요.'));
@@ -34,7 +38,8 @@ export async function analyzeOnDevice(buffer, onProgress = () => {}) {
     };
     worker.postMessage({samples,duration:buffer.duration}, [samples.buffer]);
   });
-  await rhythmCache('put', key, rhythm);
-  onProgress('음악 분석 완료');
+  const stored = await rhythmCache('put', key, rhythm);
+  onProgress(stored ? '음표 정보를 기기에 저장했어요'
+    : '기기 저장 공간을 사용할 수 없어 다음 실행 때 다시 분석할 수 있어요');
   return rhythm;
 }

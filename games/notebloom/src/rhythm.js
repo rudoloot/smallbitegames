@@ -1,7 +1,8 @@
 export const RHYTHM_VERSION = 2;
 
 // Choose from measured attacks only. Never invent evenly spaced notes or snap
-// rubato playing to one global BPM. Hard contains every Easy note.
+// rubato playing to one global BPM. The default (legacy key 'easy') keeps
+// the strong base plus half of Hard's extra attacks, spread across the song.
 export function selectRhythmNotes(rhythm, difficulty = 'easy') {
   const hard = difficulty !== 'easy';
   const sections = rhythm.sections;
@@ -37,8 +38,13 @@ export function selectRhythmNotes(rhythm, difficulty = 'easy') {
       if (!crowded) chosen.push(candidate);
     }
   }
-  add(false); if (hard) add(true);
-  return chosen.sort((a,b)=>a.time-b.time).map(c=>c.time);
+  add(false);
+  const base = new Set(chosen);
+  add(true);
+  let extraIndex = 0;
+  return chosen.sort((a,b)=>a.time-b.time)
+    .filter(candidate => hard || base.has(candidate) || extraIndex++ % 2 === 0)
+    .map(candidate=>candidate.time);
 }
 
 export function validateRhythm(rhythm, duration) {
