@@ -1,4 +1,4 @@
-import {RHYTHM_VERSION} from './rhythm.js?v=67d77c6fbbe3';
+import {RHYTHM_VERSION} from './rhythm.js?v=32bab304e58d';
 
 export function modelBeatPeaks(logits) {
   const peaks = [];

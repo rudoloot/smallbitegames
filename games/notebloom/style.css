@@ -23,3 +23,16 @@
 .hard-toggle[aria-pressed=false]::before{background:#758891;box-shadow:none}
 .hard-toggle:hover{filter:brightness(1.15)}
 .hard-toggle:focus-visible{outline:2px solid #b6f3e2;outline-offset:3px}
+.settings-modal{width:min(420px,calc(100vw - 32px))}
+.sensitivity-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:28px 0 12px;font-size:14px}
+.sensitivity-heading output{font-size:24px;font-weight:700;color:var(--mint);font-variant-numeric:tabular-nums}
+.sensitivity-range{display:block;width:100%;height:44px;margin:0;accent-color:var(--mint);cursor:pointer;touch-action:pan-y}
+.sensitivity-ticks{display:flex;justify-content:space-between;font-size:10px;color:var(--muted)}
+.settings-help{font-size:12px;line-height:1.8;color:#a8b3ca;margin:20px 0}
+.settings-status{font-size:11px;line-height:1.7;color:var(--mint);min-height:20px;margin:12px 0}
+.settings-modal .primary-button{margin-top:16px}
+#pausePanel{overflow-y:auto;justify-content:flex-start}
+#pausePanel>*{flex-shrink:0}
+#pausePanel>.overlay-symbol{margin-top:auto}
+#pausePanel>#pauseExitButton{margin-bottom:auto}
+#pausePanel>[data-open-settings]{margin:4px 0 0}

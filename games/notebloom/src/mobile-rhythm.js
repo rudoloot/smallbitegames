@@ -1,6 +1,6 @@
-import {MOBILE_RATE} from './mobile-audio-features.js?v=67d77c6fbbe3';
-import {pcmCacheKey, rhythmCache} from './rhythm-cache.js?v=67d77c6fbbe3';
-import {validateRhythm} from './rhythm.js?v=67d77c6fbbe3';
+import {MOBILE_RATE} from './mobile-audio-features.js?v=32bab304e58d';
+import {pcmCacheKey, rhythmCache} from './rhythm-cache.js?v=32bab304e58d';
+import {validateRhythm} from './rhythm.js?v=32bab304e58d';
 
 export async function resampleForMobile(buffer) {
   const Offline = globalThis.OfflineAudioContext || globalThis.webkitOfflineAudioContext;
@@ -26,7 +26,7 @@ export async function analyzeOnDevice(buffer, onProgress = () => {}) {
   }
   if (typeof Worker === 'undefined') throw new Error('이 브라우저에서는 음악 분석을 지원하지 않아요. 최신 브라우저로 다시 시도해 주세요.');
   const rhythm = await new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./mobile-rhythm-worker.js?v=67d77c6fbbe3', import.meta.url), {type:'module'});
+    const worker = new Worker(new URL('./mobile-rhythm-worker.js?v=32bab304e58d', import.meta.url), {type:'module'});
     const timeout = setTimeout(()=>finish(new Error('음악 분석 시간이 너무 길어졌어요. 더 짧은 곡으로 다시 시도해 주세요.')), 15 * 60 * 1000);
     function finish(error, result) { clearTimeout(timeout); worker.terminate(); error ? reject(error) : resolve(result); }
     worker.onerror = () => finish(new Error('음악 분석 모델을 실행하지 못했어요. 페이지를 새로고침하거나 최신 브라우저로 다시 시도해 주세요.'));

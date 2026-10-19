@@ -1,12 +1,13 @@
-import { TRACKS, MusicPlayer } from './music.js?v=67d77c6fbbe3';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=67d77c6fbbe3';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=67d77c6fbbe3';
-import { World } from './scene.js?v=67d77c6fbbe3';
-import { exitGame } from './launch.js?v=67d77c6fbbe3';
-import { setupFullscreen } from './fullscreen.js?v=67d77c6fbbe3';
-import { beginGesture, updateGesture } from './gesture.js?v=67d77c6fbbe3';
-import { updatePlayHUD } from './hud.js?v=67d77c6fbbe3';
-import { loadRhythm } from './rhythm-loader.js?v=67d77c6fbbe3';
+import { TRACKS, MusicPlayer } from './music.js?v=32bab304e58d';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=32bab304e58d';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=32bab304e58d';
+import { World } from './scene.js?v=32bab304e58d';
+import { exitGame } from './launch.js?v=32bab304e58d';
+import { setupFullscreen } from './fullscreen.js?v=32bab304e58d';
+import { beginGesture, updateGesture } from './gesture.js?v=32bab304e58d';
+import { updatePlayHUD } from './hud.js?v=32bab304e58d';
+import { loadRhythm } from './rhythm-loader.js?v=32bab304e58d';
+import { readSensitivity, saveSensitivity, normalizeSensitivity, draggedPlayerX } from './movement.js?v=32bab304e58d';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -88,6 +89,23 @@ $('localMusicFile').addEventListener('change', async () => {
   finally { $('localMusicButton').disabled = false; }
 });
 $('helpButton').addEventListener('click', () => $('helpDialog').showModal());
+let movementSensitivity = readSensitivity();
+function updateSensitivity(value, persist = false) {
+  movementSensitivity = normalizeSensitivity(value);
+  const percent = Math.round(movementSensitivity * 100);
+  $('movementSensitivity').value = percent;
+  $('sensitivityValue').textContent = `${percent}%`;
+  $('movementSensitivity').setAttribute('aria-valuetext', `${percent}%${percent === 100 ? ' · 기본' : ''}`);
+  if (persist) $('settingsStatus').textContent = saveSensitivity(movementSensitivity)
+    ? '설정이 저장됐어요.' : '이번 탭에 적용됐어요. 기기 저장 공간을 사용할 수 없어 다음 접속에는 기본값으로 돌아갈 수 있어요.';
+}
+updateSensitivity(movementSensitivity);
+document.querySelectorAll('[data-open-settings]').forEach(button => button.addEventListener('click', () => {
+  $('settingsStatus').textContent = '';
+  $('settingsDialog').showModal();
+}));
+$('movementSensitivity').addEventListener('input', e => updateSensitivity(Number(e.target.value) / 100, true));
+$('resetSensitivity').addEventListener('click', () => updateSensitivity(1, true));
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => $(button.dataset.close).close()));
 document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', e => { if (e.target === dialog) { const r = dialog.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close(); } }));
 
@@ -227,8 +245,7 @@ stage.addEventListener('pointerdown', e => {
 });
 stage.addEventListener('pointermove', e => {
   if (!drag || drag.id !== e.pointerId || mode !== 'playing') return;
-  const lanePixels = world.viewWidth * .135;
-  playerX = clamp(drag.player + (e.clientX - drag.x) / lanePixels, -1.5, 1.5);
+  playerX = draggedPlayerX(drag.player, e.clientX - drag.x, world.viewWidth, movementSensitivity);
   if (updateGesture(drag.gesture, e.clientX, e.clientY, stage.clientHeight)) attack();
 });
 stage.addEventListener('pointerup', e => {
