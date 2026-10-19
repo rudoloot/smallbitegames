@@ -1,5 +1,5 @@
-import {MOBILE_MODEL_HASH} from '../models/beat-this/config.js?v=32bab304e58d';
-import {validateRhythm} from './rhythm.js?v=32bab304e58d';
+import {MOBILE_MODEL_HASH} from '../models/beat-this/config.js?v=b8cbb4f66a3f';
+import {validateRhythm} from './rhythm.js?v=b8cbb4f66a3f';
 // Cache failures (private browsing or quota limits) must not disable analysis.
 const DATABASE = 'notebloom.rhythm.mobile.v1';
 export async function rhythmCache(action, key, value) {

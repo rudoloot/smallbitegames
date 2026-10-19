@@ -1,13 +1,13 @@
-import { TRACKS, MusicPlayer } from './music.js?v=32bab304e58d';
-import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=32bab304e58d';
-import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=32bab304e58d';
-import { World } from './scene.js?v=32bab304e58d';
-import { exitGame } from './launch.js?v=32bab304e58d';
-import { setupFullscreen } from './fullscreen.js?v=32bab304e58d';
-import { beginGesture, updateGesture } from './gesture.js?v=32bab304e58d';
-import { updatePlayHUD } from './hud.js?v=32bab304e58d';
-import { loadRhythm } from './rhythm-loader.js?v=32bab304e58d';
-import { readSensitivity, saveSensitivity, normalizeSensitivity, draggedPlayerX } from './movement.js?v=32bab304e58d';
+import { TRACKS, MusicPlayer } from './music.js?v=b8cbb4f66a3f';
+import { libraryTrack, saveLibraryTrack, loadLibraryTracks } from './music-library.js?v=b8cbb4f66a3f';
+import { GameState, analyzeSamples, makeChart, clamp } from './engine.js?v=b8cbb4f66a3f';
+import { World } from './scene.js?v=b8cbb4f66a3f';
+import { exitGame } from './launch.js?v=b8cbb4f66a3f';
+import { setupFullscreen } from './fullscreen.js?v=b8cbb4f66a3f';
+import { beginGesture, updateGesture } from './gesture.js?v=b8cbb4f66a3f';
+import { updatePlayHUD } from './hud.js?v=b8cbb4f66a3f';
+import { loadRhythm } from './rhythm-loader.js?v=b8cbb4f66a3f';
+import { readSensitivity, saveSensitivity, normalizeSensitivity, draggedPlayerX } from './movement.js?v=b8cbb4f66a3f';
 
 const $ = id => document.getElementById(id);
 const stage = $('stage');
@@ -20,7 +20,7 @@ let difficulty = 'easy';
 $('hardToggle').addEventListener('click', () => {
   difficulty = difficulty === 'hard' ? 'easy' : 'hard';
   $('hardToggle').setAttribute('aria-pressed', String(difficulty === 'hard'));
-  $('hardToggle').title = difficulty === 'hard' ? 'Hard · 보스 체력 (음표 수 ÷ 20) × 600' : '일반 · 지뢰 2~3개, 속도 87.5%, 중간 지뢰 패턴 75%, 보스 체력 (음표 수 ÷ 20) × 500';
+  $('hardToggle').title = difficulty === 'hard' ? 'Hard · 보스 체력 (음표 수 ÷ 30) × 2000 × 0.7' : '일반 · 지뢰 2~3개, 속도 87.5%, 중간 지뢰 패턴 75%, 보스 체력 (음표 수 ÷ 30) × 2000 × 0.7';
 });
 let selected = TRACKS[0], state = null, mode = 'home', playerX = 0;
 let preparing = false, countdownTimer = null, countdownRemaining = 3, feedbackUntil = 0, damageUntil = 0;

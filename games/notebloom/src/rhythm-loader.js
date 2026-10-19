@@ -1,10 +1,10 @@
-import {validateRhythm} from './rhythm.js?v=32bab304e58d';
-import {fileRhythmKey, reuseRhythm} from './rhythm-cache.js?v=32bab304e58d';
+import {validateRhythm} from './rhythm.js?v=b8cbb4f66a3f';
+import {fileRhythmKey, reuseRhythm} from './rhythm-cache.js?v=b8cbb4f66a3f';
 
 export async function loadRhythm(track, duration, onProgress = () => {}, buffer) {
   if (!track.localFile) {
     try {
-      const response = await fetch(new URL(`../charts/${encodeURIComponent(track.id)}.json?v=32bab304e58d`, import.meta.url));
+      const response = await fetch(new URL(`../charts/${encodeURIComponent(track.id)}.json?v=b8cbb4f66a3f`, import.meta.url));
       if (response.ok) {
         const rhythm = validateRhythm(await response.json(), duration);
         onProgress('준비된 음표 정보를 불러왔어요');
@@ -22,7 +22,7 @@ export async function loadRhythm(track, duration, onProgress = () => {}, buffer)
       buffer = await context.decodeAudioData(audioBytes.slice(0));
     }
     // Built-in precomputed charts never download the model/runtime.
-    const {analyzeOnDevice} = await import('./mobile-rhythm.js?v=32bab304e58d');
+    const {analyzeOnDevice} = await import('./mobile-rhythm.js?v=b8cbb4f66a3f');
     return analyzeOnDevice(buffer, onProgress);
   }
   return bytes ? reuseRhythm(fileRhythmKey(bytes), duration, analyse, onProgress) : analyse();
