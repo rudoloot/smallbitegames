@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#778560">
+  <title>Pebble Warrior — 조약돌 전사</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2219%22%20fill%3D%22%23294a3d%22%2F%3E%3Cpath%20d%3D%22M17%2025Q7%2023%209%2012Q14%2020%2022%2018M47%2025Q57%2023%2055%2012Q50%2020%2042%2018%22%20fill%3D%22%23f2dfb1%22%2F%3E%3Cpath%20d%3D%22M18%2033Q17%2012%2032%2013Q47%2012%2046%2033%22%20fill%3D%22%23a1b8a2%22%2F%3E%3Cpath%20d%3D%22M18%2032H46V43L32%2055L18%2043%22%20fill%3D%22%23c77943%22%2F%3E%3Cpath%20d%3D%22M23%2034H41V40L32%2045L23%2040%22%20fill%3D%22%23f1caa0%22%2F%3E%3Cpath%20d%3D%22M23%2036H28M36%2036H41%22%20stroke%3D%22%23294a3d%22%20stroke-width%3D%223%22%2F%3E%3Cpath%20d%3D%22M16%2029H48%22%20stroke%3D%22%23e5d3a0%22%20stroke-width%3D%225%22%2F%3E%3C%2Fsvg%3E%0A" type="image/svg+xml">
+  <style>
+:root{font-family:system-ui,"Noto Sans KR",sans-serif;color:#293f35;background:#778560}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid #dd7845;outline-offset:3px}
+svg{width:22px;height:22px}
+.svg-defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+.arena-wrap{position:fixed;inset:0;width:100%;height:100%;height:100dvh;overflow:hidden;isolation:isolate}
+#arena{display:block;width:100%;height:100%;touch-action:none;outline:none;cursor:grab}
+#arena:active{cursor:grabbing}
+#arena:focus-visible{box-shadow:inset 0 0 0 2px #dd7845}
+.hud,.game-controls{position:absolute;top:calc(14px + env(safe-area-inset-top));display:flex;align-items:center;gap:8px}
+.hud{left:calc(14px + env(safe-area-inset-left));pointer-events:none;font-size:12px;font-weight:600}
+.hud>span{padding:9px 12px;background:#f5f5e5d9;border:1px solid #ffffff66;border-radius:10px;backdrop-filter:blur(6px)}
+.game-controls{right:calc(14px + env(safe-area-inset-right))}
+.icon-button{display:grid;place-items:center;width:40px;height:40px;background:#f5f5e5d9;border:1px solid #ffffff66;border-radius:11px;backdrop-filter:blur(6px)}
+.icon-button:hover{background:#fffdeb}
+.combo-label{position:absolute;top:calc(70px + env(safe-area-inset-top));left:0;right:0;text-align:center;pointer-events:none;color:#a6532d;font-size:20px;font-weight:800;text-shadow:0 1px #f7f4df;opacity:0;transition:opacity .2s}
+.combo-label.visible{opacity:1}
+.power-meter{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;width:min(260px,65%);padding:10px 14px;border-radius:12px;background:#f5f5e5e6;pointer-events:none}
+.power-meter[hidden]{display:none}
+.power-track{height:5px;flex:1;border-radius:4px;background:#cad2b8;overflow:hidden}
+#power-fill{height:100%;width:0;background:#dd7845}
+#power-value{min-width:36px;text-align:right;font-size:12px}
+.result-overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:20px;background:#283d2a55;backdrop-filter:blur(4px)}
+.result-overlay[hidden]{display:none}
+.result-card{width:min(100%,330px);padding:28px 22px;text-align:center;border:1px solid #ffffff88;border-radius:18px;background:#f6f5ef;box-shadow:0 12px 40px #233c3433}
+.result-card h1{font-size:25px;margin:0 0 22px}
+.result-stats{display:flex;justify-content:center;gap:22px;margin-bottom:24px;font-size:10px;color:#7c896f}
+.result-stats strong{display:block;margin-top:6px;font-size:24px;color:#446a49}
+.primary-button{width:100%;padding:13px 16px;border-radius:9px;background:#dd7845;color:#fff7e9;font-weight:700;font-size:13px}
+.primary-button:hover{background:#c96a38}
+.text-button{background:transparent;padding:13px 8px 0;font-size:12px;color:#6f7e62}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+</style>
+</head>
+<body>
+  <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="viking" viewBox="0 0 120 120">
+      <ellipse cx="60" cy="105" rx="32" ry="7" fill="#233c34" opacity=".16"/>
+      <path d="M31 78Q26 98 35 105L85 105Q94 97 88 77" fill="#344f43" stroke="#263c33" stroke-width="3"/>
+      <path d="M43 88L39 108M77 88L81 108" stroke="#695546" stroke-width="12" stroke-linecap="round"/>
+      <path d="M27 72L19 86M93 71L101 86" stroke="#e3b585" stroke-width="11" stroke-linecap="round"/>
+      <path d="M42 73L78 73L79 95L41 95Z" fill="#b88555"/>
+      <path d="M59 74V98" stroke="#805e40" stroke-width="4"/>
+      <rect x="39" y="91" width="42" height="7" rx="3" fill="#56493b"/><rect x="56" y="90" width="10" height="9" rx="2" fill="#dfba6b"/>
+      <path d="M33 47Q29 67 39 81L60 94L81 81Q92 65 85 47" fill="#b6643b" stroke="#864e32" stroke-width="2"/>
+      <path d="M40 48L80 48L77 68Q60 80 43 68Z" fill="#edc7a1"/>
+      <path d="M48 69Q60 78 72 69L68 87L60 94L52 87Z" fill="#cd8150"/>
+      <path d="M46 61L53 60M67 60L74 61" stroke="#293c34" stroke-width="4" stroke-linecap="round"/>
+      <path d="M57 63L55 69L64 69" fill="#d49b73"/>
+      <path d="M34 45Q34 20 60 19Q86 20 86 45L86 51L34 51Z" fill="#718b88" stroke="#334e48" stroke-width="3"/>
+      <path d="M57 20L57 48" stroke="#c0d2c8" stroke-width="7"/>
+      <path d="M35 37Q15 39 17 15Q21 28 37 25M85 37Q105 39 103 15Q99 28 83 25" fill="#f0e2be" stroke="#a79771" stroke-width="2" stroke-linejoin="round"/>
+      <rect x="31" y="44" width="58" height="10" rx="4" fill="#a0b5a7" stroke="#334e48" stroke-width="2"/>
+      <circle cx="40" cy="49" r="2" fill="#e9d8a5"/><circle cx="80" cy="49" r="2" fill="#e9d8a5"/>
+      <path d="M18 81L18 104" stroke="#614b3c" stroke-width="5" stroke-linecap="round"/><path d="M18 83L7 78L8 66L18 69Z" fill="#9daaa0" stroke="#41594c" stroke-width="2"/>
+      <ellipse cx="99" cy="91" rx="12" ry="16" fill="#bc7950" stroke="#5d4e3b" stroke-width="3"/><path d="M99 77V105M89 91H109" stroke="#d7b68a" stroke-width="3"/><circle cx="99" cy="91" r="4" fill="#8a9a88"/>
+    </symbol>
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12H19M13 6L19 12L13 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="shuffle" viewBox="0 0 24 24"><path d="M4 6H7C11 6 13 18 17 18H20M16 14L20 18L16 22M4 18H7C9 18 10 15 11 12M14 8C15 6 16 6 20 6M16 2L20 6L16 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-restart" viewBox="0 0 24 24"><path d="M5 8A8 8 0 1 1 4 14M5 3V8H10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs></svg>
+
+  <main class="arena-wrap" id="arena-wrap" aria-label="Pebble Warrior">
+    <canvas id="arena" width="720" height="900" tabindex="0" aria-label="바이킹을 당겨서 발사하세요. 방향키로 조준하고 Space 또는 Enter로 발사할 수 있습니다."></canvas>
+    <div class="hud" aria-live="polite"><span id="turn-label">턴 01</span><span><strong id="defeated-count">0</strong> / 50</span></div>
+    <div class="game-controls">
+      <button id="sound-toggle" class="icon-button" aria-label="효과음 켜기" aria-pressed="false" title="효과음"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M11 5L6 9H3V15H6L11 19Z"/><path id="sound-waves" d="M16 9L21 15M21 9L16 15"/></svg></button>
+      <button class="icon-button" id="restart" title="같은 맵 처음부터" aria-label="같은 맵 처음부터"><svg><use href="#icon-restart"/></svg></button>
+      <button class="icon-button" id="new-map" title="새로운 무작위 배치" aria-label="새로운 무작위 배치"><svg><use href="#shuffle"/></svg></button>
+    </div>
+    <div id="combo-label" class="combo-label" aria-live="polite"></div>
+    <div class="power-meter" id="power-meter" hidden aria-label="발사 세기"><div class="power-track"><div id="power-fill"></div></div><strong id="power-value">0%</strong></div>
+    <div class="result-overlay" id="result-overlay" hidden><div class="result-card"><h1 id="result-title">게임 오버</h1><div id="result-stats" class="result-stats"></div><button class="primary-button" id="result-retry">다시 도전</button><button class="text-button" id="result-new">새로운 배치</button></div></div>
+  </main>
+<script>
+/* Pure, deterministic game rules. Shared by the browser and Node checks. */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.PebblePhysics = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+  const WIDTH = 1080, HEIGHT = 1080, COUNT = 50;
+  const BOUNDS = { left: 24, right: 1056, top: 24, bottom: 1056 };
+  const PLAYER_RADIUS = 24, MAX_PULL = 150, FRICTION = 185;
+  const ENEMY_DISTANCE = 36, ENEMY_DURATION = .65, ENEMY_GAP = 4;
+  const EPS = 0.00001;
+
+  function random(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a += 0x6D2B79F5;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function createGame(seed) {
+    const rng = random(seed);
+    const player = { x: 540, y: 850, vx: 0, vy: 0, r: PLAYER_RADIUS, level: 2 };
+    const enemies = [];
+    // A nearby level-one stone makes every seed playable from the initial shot.
+    enemies.push({ id: 0, x: 495 + rng() * 90, y: 700 + rng() * 22, r: 25, level: 1, alive: true, shape: rng() * 6.28 });
+    for (let i = 1; i < COUNT; i++) {
+      const level = i < 10 ? i + 1 : 1 + Math.floor(rng() * 10);
+      const r = 24 + level * 0.45;
+      let found = false;
+      for (let attempt = 0; attempt < 12000; attempt++) {
+        const x = 66 + rng() * 948, y = 66 + rng() * 948;
+        if (Math.hypot(x - player.x, y - player.y) < 155) continue;
+        if (enemies.some(e => Math.hypot(x - e.x, y - e.y) < e.r + r + 17)) continue;
+        enemies.push({ id: i, x, y, r, level, alive: true, shape: rng() * 6.28 });
+        found = true;
+        break;
+      }
+      if (!found) throw new Error('Could not place all fifty stones without overlap.');
+    }
+    return { seed: seed >>> 0, player, enemies, phase: 'ready', shots: 0, defeated: 0, combo: 0, bestCombo: 0, turn: 1, enemyTurns: 0, enemyRemaining: 0, enemyOrder: [], merges: 0, events: [] };
+  }
+
+  function launch(state, dx, dy) {
+    if (state.phase !== 'ready') return false;
+    const distance = Math.hypot(dx, dy);
+    if (distance < 8) return false;
+    const speed = Math.min(distance, MAX_PULL) * 6.2;
+    state.player.vx = dx / distance * speed;
+    state.player.vy = dy / distance * speed;
+    state.phase = 'moving';
+    state.shots++;
+    state.combo = 0;
+    state.events.push({ type: 'launch', speed });
+    return true;
+  }
+
+  function circleHit(p, enemy, duration) {
+    const dx = p.x - enemy.x, dy = p.y - enemy.y;
+    const r = p.r + enemy.r;
+    const a = p.vx * p.vx + p.vy * p.vy;
+    if (a < EPS) return null;
+    const b = 2 * (dx * p.vx + dy * p.vy);
+    if (b >= 0) return null;
+    const c = dx * dx + dy * dy - r * r;
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) return null;
+    const t = c <= EPS ? 0 : (-b - Math.sqrt(discriminant)) / (2 * a);
+    if (t < -EPS || t > duration + EPS) return null;
+    const cx = dx + p.vx * t, cy = dy + p.vy * t;
+    const length = Math.hypot(cx, cy) || 1;
+    return { t: Math.max(0, t), nx: cx / length, ny: cy / length, enemy };
+  }
+
+  function nextCollision(state, duration) {
+    const p = state.player;
+    let best = null;
+    const offer = hit => {
+      if (hit && hit.t >= -EPS && hit.t <= duration + EPS && (!best || hit.t < best.t)) best = hit;
+    };
+    if (p.vx < -EPS) offer({ t: (BOUNDS.left + p.r - p.x) / p.vx, nx: 1, ny: 0 });
+    if (p.vx > EPS) offer({ t: (BOUNDS.right - p.r - p.x) / p.vx, nx: -1, ny: 0 });
+    if (p.vy < -EPS) offer({ t: (BOUNDS.top + p.r - p.y) / p.vy, nx: 0, ny: 1 });
+    if (p.vy > EPS) offer({ t: (BOUNDS.bottom - p.r - p.y) / p.vy, nx: 0, ny: -1 });
+    for (const e of state.enemies) if (e.alive) offer(circleHit(p, e, duration));
+    return best;
+  }
+
+  function finishShot(state) {
+    state.player.vx = 0;
+    state.player.vy = 0;
+    if (state.enemies.every(e => !e.alive)) {
+      state.phase = 'won';
+      state.events.push({ type: 'win', combo: state.combo });
+      return;
+    }
+    state.events.push({ type: 'rest', combo: state.combo });
+    startEnemyTurn(state);
+  }
+
+  function startEnemyTurn(state) {
+    state.phase = 'enemy';
+    state.enemyTurns++;
+    state.enemyRemaining = ENEMY_DURATION;
+    state.enemyOrder = state.enemies.filter(e => e.alive).sort((a, b) =>
+      Math.hypot(a.x - state.player.x, a.y - state.player.y) - Math.hypot(b.x - state.player.x, b.y - state.player.y) || a.id - b.id);
+    for (const e of state.enemyOrder) e.turnTravel = 0;
+    state.events.push({ type: 'enemy_start', count: state.enemyOrder.length });
+  }
+
+  function enemyIntent(state, e) {
+    const sign = Math.sign(e.level - state.player.level);
+    if (!sign) return { dx: 0, dy: 0, type: 'hold' };
+    const dx = state.player.x - e.x, dy = state.player.y - e.y;
+    const length = Math.hypot(dx, dy) || 1;
+    return { dx: dx / length * sign, dy: dy / length * sign, type: sign > 0 ? 'chase' : sign < 0 ? 'flee' : 'hold' };
+  }
+
+  function loseToEnemy(state, e) {
+    state.phase = 'lost';
+    state.player.vx = state.player.vy = 0;
+    state.events.push({ type: 'lose', enemyLevel: e.level, x: state.player.x, y: state.player.y, cause: 'enemy_attack' });
+  }
+
+  function mergeEnemies(state, absorbed, survivor) {
+    const fromLevel = survivor.level;
+    absorbed.alive = false;
+    absorbed.mergedInto = survivor.id;
+    survivor.level += absorbed.level;
+    survivor.units = (survivor.units || 1) + (absorbed.units || 1);
+    state.merges++;
+    // Keep the survivor's collider and center so merging never creates overlap.
+    state.events.push({ type: 'merge', aId: absorbed.id, bId: survivor.id, fromLevel, level: survivor.level, x: survivor.x, y: survivor.y, fromX: absorbed.x, fromY: absorbed.y });
+    if (survivor.level > state.player.level && Math.hypot(survivor.x - state.player.x, survivor.y - state.player.y) <= survivor.r + state.player.r + EPS) loseToEnemy(state, survivor);
+  }
+
+  function stepEnemies(state, dt) {
+    const duration = Math.min(dt, state.enemyRemaining);
+    // Resolve existing contact first, including stationary stones at player level.
+    for (let i = 0; i < state.enemyOrder.length && state.phase === 'enemy'; i++) {
+      const a = state.enemyOrder[i];
+      if (!a.alive) continue;
+      for (let j = i + 1; j < state.enemyOrder.length; j++) {
+        const b = state.enemyOrder[j];
+        if (b.alive && a.level === b.level && Math.hypot(a.x - b.x, a.y - b.y) <= a.r + b.r + EPS) {
+          mergeEnemies(state, b, a);
+          if (state.phase !== 'enemy') return;
+          j = i; // A newly doubled stone can merge again on contact.
+        }
+      }
+    }
+    for (const e of state.enemyOrder) {
+      if (!e.alive || state.phase !== 'enemy') continue;
+      if (e.level > state.player.level && Math.hypot(e.x - state.player.x, e.y - state.player.y) <= e.r + state.player.r + EPS) { loseToEnemy(state, e); return; }
+      const intent = enemyIntent(state, e);
+      if (intent.type === 'hold') continue;
+      const speed = ENEMY_DISTANCE / ENEMY_DURATION;
+      const mover = { x: e.x, y: e.y, r: e.r, vx: intent.dx * speed, vy: intent.dy * speed };
+      let allowed = duration, collision = null;
+      const offer = (hit, kind, other = null) => {
+        if (hit && hit.t <= allowed + EPS) { allowed = Math.max(0, hit.t); collision = { kind, other }; }
+      };
+      const wall = t => { if (t >= -EPS && t <= allowed) { allowed = Math.max(0, t); collision = { kind: 'wall' }; } };
+      if (mover.vx < -EPS) wall((BOUNDS.left + e.r - e.x) / mover.vx);
+      if (mover.vx > EPS) wall((BOUNDS.right - e.r - e.x) / mover.vx);
+      if (mover.vy < -EPS) wall((BOUNDS.top + e.r - e.y) / mover.vy);
+      if (mover.vy > EPS) wall((BOUNDS.bottom - e.r - e.y) / mover.vy);
+      offer(circleHit(mover, state.player, duration), 'player');
+      for (const other of state.enemyOrder) {
+        if (other === e || !other.alive) continue;
+        const canMerge = e.level === other.level;
+        offer(circleHit(mover, { ...other, r: other.r + (canMerge ? 0 : ENEMY_GAP) }, duration), canMerge ? 'merge' : 'blocked', other);
+      }
+      const travel = collision && collision.kind === 'blocked' ? Math.max(0, allowed - .000001) : allowed;
+      e.x = Math.max(BOUNDS.left + e.r, Math.min(BOUNDS.right - e.r, e.x + mover.vx * travel));
+      e.y = Math.max(BOUNDS.top + e.r, Math.min(BOUNDS.bottom - e.r, e.y + mover.vy * travel));
+      e.turnTravel += speed * travel;
+      if (e.level > state.player.level && Math.hypot(e.x - state.player.x, e.y - state.player.y) <= e.r + state.player.r + EPS) { loseToEnemy(state, e); return; }
+      if (collision?.kind === 'merge') {
+        mergeEnemies(state, e, collision.other);
+        if (state.phase !== 'enemy') return;
+      }
+    }
+    state.enemyRemaining = Math.max(0, state.enemyRemaining - duration);
+    if (state.enemyRemaining < EPS) {
+      state.phase = 'ready';
+      state.turn = state.shots + 1;
+      state.events.push({ type: 'enemy_end', moved: state.enemyOrder.filter(e => e.alive && e.turnTravel > .1).length });
+      state.enemyOrder = [];
+    }
+  }
+
+  function step(state, dt) {
+    dt = Math.max(0, Math.min(dt, 1 / 30));
+    if (state.phase === 'enemy') { stepEnemies(state, dt); return; }
+    if (state.phase !== 'moving') return;
+    const p = state.player;
+    let remaining = Math.min(dt, 1 / 30);
+    let loops = 0;
+    while (remaining > EPS && state.phase === 'moving' && loops++ < 12) {
+      const hit = nextCollision(state, remaining);
+      if (!hit) { p.x += p.vx * remaining; p.y += p.vy * remaining; break; }
+      p.x += p.vx * hit.t;
+      p.y += p.vy * hit.t;
+      remaining -= hit.t;
+      const impact = p.vx * hit.nx + p.vy * hit.ny;
+      if (hit.enemy) {
+        const e = hit.enemy;
+        if (e.level > p.level) {
+          state.phase = 'lost';
+          state.events.push({ type: 'lose', enemyLevel: e.level, x: p.x, y: p.y, cause: 'player_collision' });
+          p.vx = p.vy = 0;
+          return;
+        }
+        if (e.level === p.level) {
+          state.events.push({ type: 'equal', level: e.level, x: e.x, y: e.y });
+          finishShot(state);
+          return;
+        }
+        e.alive = false;
+        p.level += e.level;
+        state.defeated += e.units || 1;
+        state.combo++;
+        state.bestCombo = Math.max(state.bestCombo, state.combo);
+        state.events.push({ type: 'defeat', x: e.x, y: e.y, r: e.r, shape: e.shape, level: e.level, playerLevel: p.level, combo: state.combo, vx: -hit.nx * (Math.abs(impact) * .66 + 140), vy: -hit.ny * (Math.abs(impact) * .66 + 140) });
+      } else {
+        state.events.push({ type: 'wall', x: p.x, y: p.y });
+      }
+      const retention = hit.enemy ? 0.92 : 0.83;
+      p.vx = (p.vx - 2 * impact * hit.nx) * retention;
+      p.vy = (p.vy - 2 * impact * hit.ny) * retention;
+      p.x += hit.nx * .04;
+      p.y += hit.ny * .04;
+    }
+    // Numerical guard: a collision-heavy corner can never move the player outside.
+    p.x = Math.max(BOUNDS.left + p.r, Math.min(BOUNDS.right - p.r, p.x));
+    p.y = Math.max(BOUNDS.top + p.r, Math.min(BOUNDS.bottom - p.r, p.y));
+    const speed = Math.hypot(p.vx, p.vy);
+    const nextSpeed = Math.max(0, speed - FRICTION * dt);
+    if (nextSpeed < 13) finishShot(state);
+    else { p.vx *= nextSpeed / speed; p.vy *= nextSpeed / speed; }
+  }
+
+  function aimEndpoint(state, dx, dy) {
+    const length = Math.hypot(dx, dy);
+    if (!length) return { x: state.player.x, y: state.player.y, hit: false };
+    const preview = { player: { ...state.player, vx: dx / length, vy: dy / length }, enemies: state.enemies };
+    const maxDistance = Math.min(190, length * 1.5);
+    const hit = nextCollision(preview, maxDistance);
+    const distance = hit ? hit.t : maxDistance;
+    return { x: state.player.x + dx / length * distance, y: state.player.y + dy / length * distance, hit: !!hit };
+  }
+
+  function predictEnemyTurn(state, aim = null) {
+    const copy = { ...state, player: { ...state.player }, enemies: state.enemies.map(e => ({ ...e })), enemyOrder: [], events: [] };
+    if (aim && Math.hypot(aim.dx, aim.dy) >= 8 && copy.phase === 'ready') {
+      launch(copy, aim.dx, aim.dy);
+      for (let i = 0; i < 1200 && copy.phase === 'moving'; i++) step(copy, 1 / 120);
+    } else if (copy.phase === 'ready' || copy.phase === 'enemy') startEnemyTurn(copy);
+    for (let i = 0; i < 120 && copy.phase === 'enemy'; i++) step(copy, 1 / 120);
+    return { merges: copy.events.filter(e => e.type === 'merge'), danger: copy.events.find(e => e.type === 'lose' && e.cause === 'enemy_attack') || null };
+  }
+
+  return { WIDTH, HEIGHT, COUNT, BOUNDS, PLAYER_RADIUS, MAX_PULL, FRICTION, ENEMY_DISTANCE, ENEMY_DURATION, ENEMY_GAP, random, createGame, launch, step, aimEndpoint, circleHit, enemyIntent, predictEnemyTurn };
+});
+
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.PebbleCamera = factory();
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+  function create(worldWidth, worldHeight, width = 720, height = 900) {
+    return { x: 0, y: 0, worldWidth, worldHeight, width, height };
+  }
+  function follow(camera, player) {
+    camera.x = player.x - camera.width / 2;
+    camera.y = player.y - camera.height / 2;
+  }
+  function transform(camera) {
+    return { scale: 1, ox: -camera.x, oy: -camera.y };
+  }
+  function screenToWorld(camera, point) {
+    const t = transform(camera);
+    return { x: (point.x - t.ox) / t.scale, y: (point.y - t.oy) / t.scale };
+  }
+  function worldToScreen(camera, point) {
+    const t = transform(camera);
+    return { x: point.x * t.scale + t.ox, y: point.y * t.scale + t.oy };
+  }
+  return { create, follow, transform, screenToWorld, worldToScreen };
+});
+
+(() => {
+  'use strict';
+  const P = window.PebblePhysics;
+  const C = window.PebbleCamera;
+  const $ = id => document.getElementById(id);
+  const canvas = $('arena'), ctx = canvas.getContext('2d');
+  const W = P.WIDTH, H = P.HEIGHT;
+  let VW = canvas.width, VH = canvas.height;
+  const camera = C.create(W, H, VW, VH);
+  let seed = Number(new URLSearchParams(location.search).get('seed')) || freshSeed();
+  let state, drag = null, keyboardAim = null, effects = [], particles = [], flyaways = [], trail = [];
+  let totalTime = 0, lastFrame = 0, accumulator = 0, effectClock = 0, lastUi = '', soundOn = false, audio = null;
+  let resultShown = false, firstShot = true;
+  let forecast = { merges: [], danger: null }, forecastKey = '', forecastAge = 0;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const viking = new Image();
+  const vikingSymbol = document.querySelector('#viking').innerHTML;
+  viking.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">${vikingSymbol}</svg>`);
+  const floor = document.createElement('canvas');
+  floor.width = W; floor.height = H;
+  const floorCtx = floor.getContext('2d');
+
+  function freshSeed() { return crypto.getRandomValues(new Uint32Array(1))[0]; }
+  function reset(nextSeed = seed) {
+    seed = nextSeed;
+    state = P.createGame(seed);
+    drag = keyboardAim = null;
+    C.follow(camera, state.player);
+    effects = []; particles = []; flyaways = []; trail = [];
+    effectClock = 0; resultShown = false; firstShot = true; accumulator = 0;
+    forecastKey = ''; forecastAge = 0;
+    $('result-overlay').hidden = true;
+    $('combo-label').classList.remove('visible');
+    $('arena-wrap').classList.remove('enemy-turn');
+    paintFloor();
+    syncUi(true); setPower(0); updateForecast(true);
+  }
+
+  function paintFloor() {
+    const c = floorCtx, rng = P.random(seed ^ 0x9513);
+    const grd = c.createLinearGradient(0, 0, W, H);
+    grd.addColorStop(0, '#dbe1c4'); grd.addColorStop(.5, '#d5ddbb'); grd.addColorStop(1, '#dce1c5');
+    c.fillStyle = grd; c.fillRect(0, 0, W, H);
+    for (let i = 0; i < 3600; i++) {
+      const x = rng() * W, y = rng() * H;
+      c.fillStyle = rng() > .5 ? '#bac79d35' : '#f4f2d72c';
+      c.beginPath(); c.ellipse(x, y, 1 + rng() * 4, .7 + rng() * 2, rng() * 3, 0, Math.PI * 2); c.fill();
+    }
+    for (let i = 0; i < 110; i++) {
+      const x = 12 + rng() * (W - 24), y = 53 + rng() * (H - 70);
+      c.strokeStyle = '#97aa7830'; c.lineWidth = 1.3;
+      c.beginPath(); c.moveTo(x - 4, y); c.lineTo(x - 2, y - 5); c.lineTo(x, y); c.lineTo(x + 4, y - 7); c.stroke();
+    }
+    c.strokeStyle = '#83936766'; c.lineWidth = 11;
+    c.beginPath(); c.roundRect(20, 25, W - 40, H - 40, 17); c.stroke();
+    c.strokeStyle = '#b7c49a'; c.lineWidth = 8;
+    c.beginPath(); c.roundRect(20, 20, W - 40, H - 40, 15); c.stroke();
+    c.strokeStyle = '#f4f1d8'; c.lineWidth = 2;
+    c.beginPath(); c.roundRect(24, 24, W - 48, H - 48, 11); c.stroke();
+    // A subtle, decorative compass belongs to the ordinary floor, not a hazard.
+    c.save(); c.translate(W - 80, H - 80); c.strokeStyle = '#93a87555'; c.fillStyle = '#93a87555'; c.lineWidth = 1;
+    c.beginPath(); c.arc(0, 0, 19, 0, Math.PI * 2); c.stroke();
+    c.beginPath(); c.moveTo(0, -29); c.lineTo(5, 0); c.lineTo(0, 24); c.lineTo(-5, 0); c.closePath(); c.stroke();
+    c.beginPath(); c.moveTo(-25, 0); c.lineTo(25, 0); c.stroke();
+    c.font = '9px sans-serif'; c.textAlign = 'center'; c.fillText('N', 0, -34); c.restore();
+    c.save(); c.strokeStyle = '#a8b78e66'; c.setLineDash([3, 7]); c.beginPath(); c.arc(540, 850, 56, 0, Math.PI * 2); c.stroke(); c.restore();
+  }
+
+  function relation(level) { return level < state.player.level ? 'weak' : level === state.player.level ? 'equal' : 'strong'; }
+  const colors = {
+    weak: { light: '#f1f8d8', top: '#d5e6b5', base: '#a8c284', rim: '#58733e', text: '#344f27', shadow: '#426236' },
+    equal: { light: '#fff5d7', top: '#f0df9f', base: '#c8ad62', rim: '#8c7139', text: '#6e5425', shadow: '#796032' },
+    strong: { light: '#f5eee0', top: '#dacfbc', base: '#ac9d86', rim: '#776852', text: '#594938', shadow: '#635441' }
+  };
+
+  function drawStone(x, y, r, level, shape = 0, type, alpha = 1, angle = 0) {
+    const palette = colors[type || relation(level)], c = ctx;
+    c.save(); c.translate(x, y); c.globalAlpha = alpha;
+    c.save(); c.translate(r * .16, r * .53); c.scale(1.2, .57);
+    const shadow = c.createRadialGradient(0, 0, r * .1, 0, 0, r * 1.25);
+    shadow.addColorStop(0, '#35492d65'); shadow.addColorStop(.55, '#35492d30'); shadow.addColorStop(1, '#35492d00');
+    c.fillStyle = shadow; c.beginPath(); c.arc(0, 0, r * 1.25, 0, Math.PI * 2); c.fill(); c.restore();
+    const grd = c.createRadialGradient(-r * .37, -r * .44, r * .03, r * .18, r * .25, r * 1.25);
+    grd.addColorStop(0, palette.light); grd.addColorStop(.29, palette.top); grd.addColorStop(.64, palette.base); grd.addColorStop(.87, palette.rim); grd.addColorStop(1, palette.shadow);
+    c.fillStyle = grd; c.strokeStyle = palette.rim; c.lineWidth = 1.1;
+    c.beginPath(); c.arc(0, 0, r, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.save(); c.beginPath(); c.arc(0, 0, r - 1, 0, Math.PI * 2); c.clip();
+    c.strokeStyle = '#ffffff66'; c.lineWidth = 1.5;
+    c.beginPath(); c.arc(-r * .08, -r * .08, r * .86, Math.PI * 1.12, Math.PI * 1.66); c.stroke();
+    c.rotate(shape + angle); c.fillStyle = palette.shadow; c.globalAlpha *= .15;
+    for (let i = 0; i < 6; i++) { const a = i * 2.4; c.beginPath(); c.arc(Math.cos(a) * r * .74, Math.sin(a) * r * .74, i % 2 + .65, 0, Math.PI * 2); c.fill(); }
+    c.restore();
+    c.fillStyle = '#fff9e999'; c.beginPath(); c.ellipse(-r * .36, -r * .47, r * .19, r * .09, -.65, 0, Math.PI * 2); c.fill();
+    c.font = `700 ${level >= 100 ? 19 : 23}px 'Outfit',sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillStyle = '#ffffff66'; c.fillText(String(level), 0, .5);
+    c.fillStyle = palette.text; c.fillText(String(level), 0, 1.8);
+    c.restore();
+  }
+
+  function drawEnemyIntents() {
+    if (!['ready', 'enemy'].includes(state.phase)) return;
+    ctx.save(); ctx.lineWidth = 1.8;
+    for (const e of state.enemies) {
+      if (!e.alive) continue;
+      const intent = P.enemyIntent(state, e);
+      if (intent.type === 'hold') continue;
+      ctx.strokeStyle = ctx.fillStyle = intent.type === 'chase' ? '#ad604dba' : '#478b79ba';
+      const nx = intent.dx, ny = intent.dy, tip = e.r + 22;
+      ctx.beginPath(); ctx.moveTo(e.x + nx * (e.r + 5), e.y + ny * (e.r + 5)); ctx.lineTo(e.x + nx * tip, e.y + ny * tip); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(e.x + nx * tip, e.y + ny * tip);
+      ctx.lineTo(e.x + nx * (tip - 5) - ny * 3.5, e.y + ny * (tip - 5) + nx * 3.5);
+      ctx.lineTo(e.x + nx * (tip - 5) + ny * 3.5, e.y + ny * (tip - 5) - nx * 3.5); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function updateForecast(force = false) {
+    if (!force && (state.phase !== 'ready' || forecastAge < .12)) return;
+    const aim = currentAim();
+    const key = `${state.turn}:${state.phase}:${state.player.level}:${state.merges}:${aim ? aim.dx.toFixed(2) + ',' + aim.dy.toFixed(2) : 'rest'}`;
+    if (!force && key === forecastKey) return;
+    forecast = P.predictEnemyTurn(state, aim); forecastKey = key; forecastAge = 0;
+  }
+
+  function drawMergeForecast() {
+    if (!['ready', 'enemy'].includes(state.phase) || !forecast.merges.length) return;
+    const view=C.transform(camera);
+    ctx.save(); ctx.lineWidth = 2; ctx.font = "600 13px 'Outfit',sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const pair of forecast.merges) {
+      const a = state.enemies.find(e => e.id === pair.aId && e.alive), b = state.enemies.find(e => e.id === pair.bId && e.alive);
+      if (!a || !b || a.level !== pair.fromLevel || b.level !== pair.fromLevel) continue;
+      if (![a,b].some(e=>{const p=C.worldToScreen(camera,e);return p.x>=-e.r&&p.x<=VW+e.r&&p.y>=-e.r&&p.y<=VH+e.r;})) continue;
+      ctx.strokeStyle = '#8960b5'; ctx.setLineDash([5, 5]); ctx.lineDashOffset = -totalTime * 10;
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      for (const e of [a,b]) { ctx.beginPath(); ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2); ctx.stroke(); }
+      ctx.setLineDash([]);
+      let x = (a.x+b.x)/2, y=Math.min(a.y-a.r,b.y-b.r)-20;
+      const label=`${pair.fromLevel} + ${pair.fromLevel} → ${pair.level}`;
+      const width = ctx.measureText(label).width + 16;
+      const pos=C.worldToScreen(camera,{x,y}),half=width*view.scale/2;
+      pos.x=Math.max(half+8,Math.min(VW-half-8,pos.x));
+      pos.y=Math.max(78,Math.min(VH-18,pos.y));
+      const placed=C.screenToWorld(camera,pos);x=placed.x;y=placed.y;
+      ctx.fillStyle = '#f4ecffed'; ctx.beginPath(); ctx.roundRect(x-width/2,y-11,width,22,6); ctx.fill();
+      ctx.strokeStyle = '#b5a0ce'; ctx.lineWidth = 1; ctx.stroke(); ctx.lineWidth = 2;
+      ctx.fillStyle = '#775099'; ctx.fillText(label,x,y);
+    }
+    ctx.restore();
+  }
+
+  function drawPlayer() {
+    const p = state.player, moving = state.phase === 'moving';
+    if (moving) {
+      for (let i = 0; i < trail.length; i++) {
+        const t = trail[i]; ctx.fillStyle = `rgba(95,118,67,${i / trail.length * .13})`;
+        ctx.beginPath(); ctx.arc(t.x, t.y, p.r * i / trail.length * .85, 0, Math.PI * 2); ctx.fill();
+      }
+      drawStone(p.x, p.y, 25, p.level, 1.1, 'weak');
+      ctx.save(); ctx.translate(p.x, p.y); ctx.strokeStyle = '#506943'; ctx.lineWidth = 2.2; ctx.globalAlpha = .7;
+      ctx.beginPath(); ctx.arc(0, 0, 19, totalTime * 5, totalTime * 5 + 1.2); ctx.stroke(); ctx.restore();
+      return;
+    }
+    ctx.fillStyle = '#53663f27'; ctx.beginPath(); ctx.ellipse(p.x, p.y + 13, 27, 10, 0, 0, Math.PI * 2); ctx.fill();
+    if (state.phase === 'ready') {
+      ctx.strokeStyle = drag || keyboardAim ? '#e3945d' : '#eff1d9'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(p.x, p.y + 1, 33 + (firstShot && !reducedMotion ? Math.sin(totalTime * 2) * 2 : 0), 0, Math.PI * 2); ctx.stroke();
+    }
+    if (viking.complete && viking.naturalWidth) ctx.drawImage(viking, p.x - 37, p.y - 49, 74, 74);
+    else drawStone(p.x, p.y, 25, p.level, 1.1, 'weak');
+    ctx.fillStyle = '#45613a'; ctx.beginPath(); ctx.roundRect(p.x - 24, p.y + 22, 48, 22, 9); ctx.fill();
+    ctx.fillStyle = '#f5f3de'; ctx.font = "600 14px 'Outfit',sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(`Lv.${p.level}`, p.x, p.y + 33);
+  }
+
+  function currentAim() {
+    if (drag) return { dx: drag.startX - drag.x, dy: drag.startY - drag.y };
+    if (keyboardAim) return { dx: Math.cos(keyboardAim.angle) * keyboardAim.power, dy: Math.sin(keyboardAim.angle) * keyboardAim.power };
+    return null;
+  }
+
+  function drawAim() {
+    const aim = currentAim();
+    if (!aim || state.phase !== 'ready') return;
+    const p = state.player, distance = Math.hypot(aim.dx, aim.dy);
+    if (distance < 2) return;
+    const nx = aim.dx / distance, ny = aim.dy / distance, pull = Math.min(distance, P.MAX_PULL);
+    const end = P.aimEndpoint(state, aim.dx, aim.dy);
+    ctx.save();
+    ctx.strokeStyle = '#f5f1d8aa'; ctx.lineWidth = 9; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - nx * pull * .58, p.y - ny * pull * .58); ctx.stroke();
+    ctx.strokeStyle = '#bc7447aa'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - nx * pull * .58, p.y - ny * pull * .58); ctx.stroke();
+    ctx.fillStyle = '#f3edd5'; ctx.strokeStyle = '#c48f62'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(p.x - nx * pull * .58, p.y - ny * pull * .58, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#526e40c0'; ctx.lineWidth = 3; ctx.setLineDash([3, 10]); ctx.lineDashOffset = -totalTime * 16;
+    ctx.beginPath(); ctx.moveTo(p.x + nx * 37, p.y + ny * 37); ctx.lineTo(end.x, end.y); ctx.stroke(); ctx.setLineDash([]);
+    if (Math.hypot(end.x - p.x, end.y - p.y) > 40) {
+      const a = Math.atan2(ny, nx); ctx.fillStyle = '#526e40'; ctx.beginPath();
+      ctx.moveTo(end.x, end.y); ctx.lineTo(end.x - Math.cos(a - .5) * 12, end.y - Math.sin(a - .5) * 12);
+      ctx.lineTo(end.x - Math.cos(a + .5) * 12, end.y - Math.sin(a + .5) * 12); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function burst(x, y, count = 13, tint = '#9eae7d', force = 1) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2, v = (45 + Math.random() * 120) * force;
+      particles.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 20, life: .35 + Math.random() * .4, max: .75, size: 2 + Math.random() * 4, color: tint, angle: Math.random() * 6 });
+    }
+  }
+
+  function updateEffects(dt) {
+    for (const f of flyaways) {
+      f.life -= dt; f.x += f.vx * dt; f.y += f.vy * dt; f.angle += dt * 7;
+      f.vx *= Math.exp(-2 * dt); f.vy *= Math.exp(-2 * dt);
+      if (f.life <= 0 && !f.burst) { f.burst = true; burst(f.x, f.y, reducedMotion ? 5 : 15, '#a5b486'); }
+    }
+    flyaways = flyaways.filter(f => f.life > 0);
+    for (const p of particles) { p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += dt * 140; p.angle += dt * 5; }
+    particles = particles.filter(p => p.life > 0);
+    for (const e of effects) { e.life -= dt; e.y -= dt * 25; }
+    effects = effects.filter(e => e.life > 0);
+    if (effectClock > 0) { effectClock -= dt; if (effectClock <= 0) $('combo-label').classList.remove('visible'); }
+  }
+
+  function drawEffects() {
+    for (const f of flyaways) drawStone(f.x, f.y, f.r, f.level, f.shape, 'weak', Math.min(1, f.life * 5), f.angle);
+    for (const p of particles) {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle); ctx.globalAlpha = Math.min(1, p.life * 3); ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.moveTo(-p.size, p.size * .6); ctx.lineTo(0, -p.size); ctx.lineTo(p.size, p.size); ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+    for (const e of effects) {
+      ctx.globalAlpha = Math.min(1, e.life * 2); ctx.fillStyle = e.color || '#42613b'; ctx.font = `700 ${e.size || 24}px 'Outfit','Noto Sans KR',sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.strokeStyle = '#e6e9cf'; ctx.lineWidth = 4; ctx.strokeText(e.text, e.x, e.y); ctx.fillText(e.text, e.x, e.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function sound(kind) {
+    if (!soundOn) return;
+    try {
+      audio ||= new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') audio.resume();
+      const osc = audio.createOscillator(), gain = audio.createGain(), now = audio.currentTime;
+      const frequency = kind === 'defeat' ? 320 + Math.min(state.combo, 10) * 65 : kind === 'lose' ? 100 : kind === 'wall' ? 140 : kind === 'equal' ? 200 : 260;
+      osc.type = kind === 'lose' ? 'triangle' : 'sine'; osc.frequency.setValueAtTime(frequency, now);
+      osc.frequency.exponentialRampToValueAtTime(frequency * (kind === 'defeat' ? 1.4 : .5), now + .13);
+      gain.gain.setValueAtTime(.055, now); gain.gain.exponentialRampToValueAtTime(.001, now + .18);
+      osc.connect(gain); gain.connect(audio.destination); osc.start(); osc.stop(now + .2);
+    } catch { soundOn = false; syncSound(); }
+  }
+
+  function handleEvents() {
+    for (const e of state.events.splice(0)) {
+      if (e.type === 'launch') {
+        firstShot = false; sound('launch');
+      } else if (e.type === 'defeat') {
+        flyaways.push({ ...e, life: .28, angle: 0, burst: false });
+        effects.push({ x: e.x, y: e.y - 26, text: `+${e.level}`, life: .95 });
+        if (e.combo >= 2) { $('combo-label').textContent = `${e.combo} COMBO · 연속 격파`; $('combo-label').classList.add('visible'); effectClock = 1.7; }
+        sound('defeat');
+      } else if (e.type === 'equal') {
+        effects.push({ x: e.x, y: e.y - 32, text: '같은 레벨 · 멈춤', life: 1.3, size: 17, color: '#9b824c' });
+        sound('equal');
+      } else if (e.type === 'wall') {
+        if (!reducedMotion) burst(e.x, e.y, 4, '#a5b287', .45); sound('wall');
+      } else if (e.type === 'lose') {
+        burst(e.x, e.y, reducedMotion ? 7 : 24, '#b49776', 1.3);
+        $('arena-wrap').classList.remove('enemy-turn'); sound('lose');
+      } else if (e.type === 'merge') {
+        burst(e.x,e.y,reducedMotion ? 5 : 18,'#aa83c9');
+        effects.push({x:e.x,y:e.y-35,text:`${e.fromLevel} + ${e.fromLevel} → ${e.level}`,color:'#8053a5',size:20,life:1.4});
+        sound('merge');
+      } else if (e.type === 'rest' || e.type === 'win') {
+        trail = [];
+        if (e.type === 'win') sound('defeat');
+      } else if (e.type === 'enemy_start') {
+        $('arena-wrap').classList.add('enemy-turn');
+        updateForecast(true);
+      } else if (e.type === 'enemy_end') {
+        $('arena-wrap').classList.remove('enemy-turn');
+        updateForecast(true);
+      }
+    }
+  }
+
+  function syncUi(force = false) {
+    const key = [state.player.level, state.defeated, state.shots, state.bestCombo, state.phase, state.merges].join(':');
+    if (!force && key === lastUi) return; lastUi = key;
+    $('defeated-count').textContent = state.defeated;
+    $('turn-label').textContent = state.phase === 'enemy' ? '적의 턴' : `턴 ${String(state.phase === 'moving' ? state.shots : state.turn).padStart(2, '0')}`;
+    if (state.phase === 'lost' || state.phase === 'won') {
+      if (!resultShown) { resultShown = true; setTimeout(showResult, 520); }
+    }
+  }
+
+  function showResult() {
+    if (!['lost', 'won'].includes(state.phase)) return;
+    const won = state.phase === 'won';
+    $('result-title').textContent = won ? '스테이지 클리어!' : '게임 오버';
+    $('result-stats').replaceChildren();
+    for (const [label, value] of [['도달 레벨', state.player.level], ['격파한 돌', state.defeated], ['발사 횟수', state.shots]]) {
+      const el = document.createElement('div'); el.textContent = label;
+      const strong = document.createElement('strong'); strong.textContent = value; el.append(strong); $('result-stats').append(el);
+    }
+    $('result-overlay').hidden = false;
+    $('result-retry').focus({ preventScroll: true });
+  }
+
+  function setPower(distance) {
+    const percent = Math.round(Math.min(1, distance / P.MAX_PULL) * 100);
+    $('power-meter').hidden = percent === 0;
+    $('power-fill').style.width = percent + '%'; $('power-value').replaceChildren(document.createTextNode(String(percent)));
+    const unit = document.createElement('span'); unit.textContent = '%'; $('power-value').append(unit);
+  }
+  function screenPosition(event) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: (event.clientX - rect.left) / rect.width * VW, y: (event.clientY - rect.top) / rect.height * VH };
+  }
+  function position(event) { return C.screenToWorld(camera, screenPosition(event)); }
+  function cancelAim() { drag = null; keyboardAim = null; setPower(0); }
+  function fire(aim) {
+    if (!aim) return;
+    P.launch(state, aim.dx, aim.dy);
+    cancelAim(); handleEvents(); syncUi();
+  }
+
+  canvas.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || state.phase !== 'ready' || drag) return;
+    const point = position(e), rect = canvas.getBoundingClientRect();
+    // The player has at least a 48 CSS-pixel target even on a small phone.
+    e.preventDefault(); keyboardAim = null;
+    if (Math.hypot(point.x - state.player.x, point.y - state.player.y) <= Math.max(45, 26 * VW / rect.width)) {
+      drag = { startX: point.x, startY: point.y, x: point.x, y: point.y, pointerId: e.pointerId };
+    } else return;
+    canvas.setPointerCapture(e.pointerId); canvas.focus({ preventScroll: true });
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    const point = position(e); drag.x = point.x; drag.y = point.y;
+    setPower(Math.hypot(drag.startX - drag.x, drag.startY - drag.y));
+  });
+  canvas.addEventListener('pointerup', e => {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    const point = position(e); drag.x = point.x; drag.y = point.y;
+    const aim = currentAim(); canvas.releasePointerCapture(e.pointerId); fire(aim);
+  });
+  canvas.addEventListener('pointercancel', cancelAim);
+  canvas.addEventListener('lostpointercapture', () => { if (drag) cancelAim(); });
+  window.addEventListener('blur', cancelAim);
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { cancelAim(); return; }
+    if (state.phase !== 'ready' || document.activeElement !== canvas) return;
+    const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-', '_', ' ', 'Enter'];
+    if (!keys.includes(e.key)) return;
+    e.preventDefault();
+    keyboardAim ||= { angle: -Math.PI / 2, power: 80 };
+    if (e.key === 'ArrowLeft') keyboardAim.angle -= Math.PI / 36;
+    if (e.key === 'ArrowRight') keyboardAim.angle += Math.PI / 36;
+    if (e.key === 'ArrowUp') keyboardAim.power = Math.min(P.MAX_PULL, keyboardAim.power + 5);
+    if (e.key === 'ArrowDown') keyboardAim.power = Math.max(9, keyboardAim.power - 5);
+    if (['+', '='].includes(e.key)) keyboardAim.power = Math.min(P.MAX_PULL, keyboardAim.power + 10);
+    if (['-', '_'].includes(e.key)) keyboardAim.power = Math.max(9, keyboardAim.power - 10);
+    if (e.key === ' ' || e.key === 'Enter') { fire(currentAim()); return; }
+    setPower(keyboardAim.power);
+  });
+  $('restart').addEventListener('click', () => reset());
+  $('new-map').addEventListener('click', () => reset(freshSeed()));
+  $('result-retry').addEventListener('click', () => { reset(); canvas.focus({ preventScroll: true }); });
+  $('result-new').addEventListener('click', () => { reset(freshSeed()); canvas.focus({ preventScroll: true }); });
+  function syncSound() {
+    $('sound-toggle').setAttribute('aria-pressed', String(soundOn)); $('sound-toggle').setAttribute('aria-label', soundOn ? '효과음 끄기' : '효과음 켜기');
+    $('sound-waves').setAttribute('d', soundOn ? 'M15 8Q20 12 15 16M18 5Q25 12 18 19' : 'M16 9L21 15M21 9L16 15');
+  }
+  $('sound-toggle').addEventListener('click', () => { soundOn = !soundOn; syncSound(); if (soundOn) sound('defeat'); });
+  document.addEventListener('visibilitychange', () => { lastFrame = 0; accumulator = 0; if (document.hidden) cancelAim(); });
+
+  function frame(timestamp) {
+    const dt = lastFrame ? Math.min((timestamp - lastFrame) / 1000, .05) : 0;
+    lastFrame = timestamp; totalTime += dt; accumulator += dt; forecastAge += dt;
+    while (accumulator >= 1 / 120) {
+      P.step(state, 1 / 120); handleEvents(); accumulator -= 1 / 120;
+    }
+    if (state.phase === 'moving') { trail.push({ x: state.player.x, y: state.player.y }); if (trail.length > 16) trail.shift(); }
+    updateEffects(dt); syncUi(); updateForecast();
+    C.follow(camera, state.player);
+    ctx.setTransform(canvas.width / VW, 0, 0, canvas.height / VH, 0, 0);
+    ctx.clearRect(0, 0, VW, VH); ctx.fillStyle = '#778560'; ctx.fillRect(0, 0, VW, VH); ctx.save();
+    const view = C.transform(camera); ctx.translate(view.ox, view.oy); ctx.scale(view.scale, view.scale);
+    ctx.drawImage(floor, 0, 0);
+    drawEnemyIntents();
+    for (const enemy of state.enemies.filter(e => e.alive).sort((a, b) => a.y - b.y)) drawStone(enemy.x, enemy.y, enemy.r, enemy.level, enemy.shape);
+    drawMergeForecast(); drawAim(); drawPlayer(); drawEffects(); ctx.restore();
+    requestAnimationFrame(frame);
+  }
+  function resizeViewport() {
+    const rect = canvas.getBoundingClientRect();
+    const scale = 720 / Math.max(1, Math.min(rect.width, rect.height));
+    VW = rect.width * scale; VH = rect.height * scale;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    camera.width = VW; camera.height = VH;
+    cancelAim();
+    if (state) C.follow(camera, state.player);
+  }
+  new ResizeObserver(resizeViewport).observe($('arena-wrap'));
+  resizeViewport(); reset(); requestAnimationFrame(frame);
+})();
+
+</script>
+<style>
+#site-exit{position:fixed;left:calc(14px + env(safe-area-inset-left));bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;width:44px;height:44px}#site-exit[hidden]{display:none}
+</style><button id="site-exit" class="icon-button" type="button" aria-label="게임 종료하기" title="사이트로 돌아가기" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4H4V20H10M9 12H21M17 8L21 12L17 16"/></svg></button>
+<script>(()=>{const button=document.getElementById('site-exit');let target=null;try{const raw=new URLSearchParams(location.search).get('returnTo');if(raw){const url=new URL(raw);if(url.protocol==='https:'&&url.origin===location.origin&&!url.username&&!url.password)target=url;}}catch{}if(target){button.hidden=false;button.addEventListener('click',()=>location.replace(target.href));}})();</script>
+</body>
+</html>
