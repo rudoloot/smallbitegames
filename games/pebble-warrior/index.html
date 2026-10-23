@@ -140,7 +140,7 @@
   'use strict';
   const NODE_TYPES={
     start:{name:'출발',icon:'camp',description:'아래에서 시작해 길을 선택하세요.'},
-    battle:{name:'전투',icon:'swords',description:'30턴 동안 소환되는 적을 모두 처치하세요.'},
+    battle:{name:'전투',icon:'swords',description:'20웨이브 동안 소환되는 적을 모두 처치하세요.'},
     elite:{name:'엘리트',icon:'skull',description:'지속되는 증원 속에서 엘리트를 처치하세요.'},
     boss:{name:'보스',icon:'crown',description:'지역의 모든 길이 이곳으로 모입니다.'},
     village:{name:'마을',icon:'village',description:'아이템 구매·판매와 유료 체력 회복.'},
@@ -191,25 +191,26 @@
   const PLAYER_RADIUS=23,ENEMY_SCALE=.5,ENEMY_HITBOX_SCALE=.8;
   const ELITE_VISUAL_RADIUS=40*ENEMY_SCALE,BOSS_VISUAL_RADIUS=48*ENEMY_SCALE;
   const ELITE_RADIUS=ELITE_VISUAL_RADIUS*ENEMY_HITBOX_SCALE,BOSS_RADIUS=BOSS_VISUAL_RADIUS*ENEMY_HITBOX_SCALE;
-  const UNITS_PER_METER=PLAYER_RADIUS*2,ARENA_METERS=20,VIEW_HEIGHT_METERS=15;
+  const UNITS_PER_METER=PLAYER_RADIUS*2,ARENA_METERS=12,VIEW_HEIGHT_METERS=15;
   const WIDTH=ARENA_METERS*UNITS_PER_METER+64,HEIGHT=WIDTH,MAX_PULL=150,FRICTION=225,ENEMY_DURATION=.72;
   const KNOCKBACK_HIT_SPEED=300;
-  const INITIAL_ENEMIES=10;
-  const ENEMY_ATTACK_SCALE=.75,LEADER_ATTACK_RANGE=850*ENEMY_ATTACK_SCALE;
+  const INITIAL_ENEMIES=5,NORMAL_WAVES=20;
+  const ENEMY_DAMAGE_MULTIPLIER=3;
+  const ENEMY_ATTACK_SCALE=.75,ENEMY_RANGE_SCALE=ENEMY_ATTACK_SCALE*.5,LEADER_ATTACK_RANGE=850*ENEMY_RANGE_SCALE;
   const BOUNDS={left:32,right:WIDTH-32,top:32,bottom:HEIGHT-32};
   const layoutX=x=>BOUNDS.left+(x-32)/1016*(BOUNDS.right-BOUNDS.left);
   const layoutY=y=>BOUNDS.top+(y-32)/1016*(BOUNDS.bottom-BOUNDS.top);
   const STAGES=[
-    {name:'이끼 평원',subtitle:'MOSSY COMMONS',boss:'숲의 파수꾼',spawnPerTurn:5,bossSpeed:64,eliteSpeed:92,bossHp:156,bossArmor:2,bossDamage:13,friction:225,patterns:['cone','line','nova'],floor:['#e2e5c8','#cbd7ae'],edge:'#8eaa70',accent:'#dbae58',outside:'#788c67',types:['grunt','grunt','lancer','shaman']},
-    {name:'서리 회랑',subtitle:'FROSTBOUND PASS',boss:'서리 왕관',spawnPerTurn:5,bossSpeed:54,eliteSpeed:78,bossHp:245,bossArmor:4,bossDamage:16,friction:205,patterns:['cross','meteor','ring'],floor:['#e2e9e2','#b9d0cd'],edge:'#7b9f9c',accent:'#7dced3',outside:'#698588',types:['lancer','shaman','skitter','warden']},
-    {name:'잿불 분지',subtitle:'EMBER HOLLOW',boss:'잿빛 군주',spawnPerTurn:5,bossSpeed:72,eliteSpeed:106,bossHp:355,bossArmor:6,bossDamage:20,friction:225,patterns:['trident','ring','meteor','nova'],floor:['#ddcfbd','#b7a38e'],edge:'#8e7560',accent:'#e58d55',outside:'#786658',types:['skitter','warden','shaman','lancer','grunt']}
+    {name:'이끼 평원',subtitle:'MOSSY COMMONS',boss:'숲의 파수꾼',spawnPerTurn:2,bossSpeed:64,eliteSpeed:92,bossHp:156,bossArmor:2,bossDamage:13,friction:225,patterns:['cone','line','nova'],floor:['#e2e5c8','#cbd7ae'],edge:'#8eaa70',accent:'#dbae58',outside:'#788c67',types:['grunt','grunt','lancer','shaman']},
+    {name:'서리 회랑',subtitle:'FROSTBOUND PASS',boss:'서리 왕관',spawnPerTurn:2,bossSpeed:54,eliteSpeed:78,bossHp:245,bossArmor:4,bossDamage:16,friction:205,patterns:['cross','meteor','ring'],floor:['#e2e9e2','#b9d0cd'],edge:'#7b9f9c',accent:'#7dced3',outside:'#698588',types:['lancer','shaman','skitter','warden']},
+    {name:'잿불 분지',subtitle:'EMBER HOLLOW',boss:'잿빛 군주',spawnPerTurn:2,bossSpeed:72,eliteSpeed:106,bossHp:355,bossArmor:6,bossDamage:20,friction:225,patterns:['trident','ring','meteor','nova'],floor:['#ddcfbd','#b7a38e'],edge:'#8e7560',accent:'#e58d55',outside:'#786658',types:['skitter','warden','shaman','lancer','grunt']}
   ];
   const TYPES={
-    grunt:{name:'이끼돌',hp:32,r:PLAYER_RADIUS*ENEMY_SCALE,speed:68,range:215*ENEMY_ATTACK_SCALE,pattern:'cone',armor:0,damage:9,every:1},
-    lancer:{name:'창병',hp:39,r:PLAYER_RADIUS*ENEMY_SCALE,speed:42,range:470*ENEMY_ATTACK_SCALE,pattern:'line',armor:2,damage:10,every:2},
-    shaman:{name:'주술사',hp:29,r:PLAYER_RADIUS*ENEMY_SCALE,speed:27,range:510*ENEMY_ATTACK_SCALE,pattern:'meteor',armor:0,damage:11,every:2},
-    skitter:{name:'돌진충',hp:27,r:PLAYER_RADIUS*ENEMY_SCALE,speed:108,range:205*ENEMY_ATTACK_SCALE,pattern:'nova',armor:0,damage:8,every:1},
-    warden:{name:'수호돌',hp:56,r:PLAYER_RADIUS*ENEMY_SCALE,speed:31,range:260*ENEMY_ATTACK_SCALE,pattern:'ring',armor:5,damage:12,every:2}
+    grunt:{name:'이끼돌',hp:32,r:PLAYER_RADIUS*ENEMY_SCALE,speed:68,range:215*ENEMY_RANGE_SCALE,pattern:'cone',armor:0,damage:9,every:1},
+    lancer:{name:'창병',hp:39,r:PLAYER_RADIUS*ENEMY_SCALE,speed:42,range:470*ENEMY_RANGE_SCALE,pattern:'line',armor:2,damage:10,every:2},
+    shaman:{name:'주술사',hp:29,r:PLAYER_RADIUS*ENEMY_SCALE,speed:27,range:510*ENEMY_RANGE_SCALE,pattern:'meteor',armor:0,damage:11,every:2},
+    skitter:{name:'돌진충',hp:27,r:PLAYER_RADIUS*ENEMY_SCALE,speed:108,range:205*ENEMY_RANGE_SCALE,pattern:'nova',armor:0,damage:8,every:1},
+    warden:{name:'수호돌',hp:56,r:PLAYER_RADIUS*ENEMY_SCALE,speed:31,range:260*ENEMY_RANGE_SCALE,pattern:'ring',armor:5,damage:12,every:2}
   };
   for(const type of Object.values(TYPES)){type.visualR=type.r;type.r*=ENEMY_HITBOX_SCALE;}
   const ITEMS=[
@@ -230,6 +231,10 @@
   const CONSUMABLE_SLOTS=['potion','rune',null];
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const length=(x,y)=>Math.hypot(x,y);
+  function scaleEnemyDamage(body,key) {
+    if(Number.isFinite(body[key]))body[key]*=ENEMY_DAMAGE_MULTIPLIER/(body.damageScale||1);
+    body.damageScale=ENEMY_DAMAGE_MULTIPLIER;return body;
+  }
   function random(seed) { let a=seed>>>0; return ()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;}; }
   function roll(s) { s.rng=(s.rng+0x6D2B79F5)>>>0;let t=s.rng;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296; }
   const event=(s,type,details={})=>s.events.push({...details,type});
@@ -251,12 +256,12 @@
     p.x=WIDTH/2;p.y=layoutY(865);p.vx=p.vy=0;p.spin=0;p.berserk=false;p.knockedBack=false;
     s.phase='ready';s.shots=0;s.turn=1;s.kills=0;s.stageXp=0;s.settled=false;s.hazards=[];s.boxes=[];s.contacts={};s.hitAttacks={};s.pendingClear=false;
     s.encounter.supplyDrops=0;s.encounter.supplyLimit=roll(s)<.5?1:2;s.encounter.supplyTurn=2+Math.floor(roll(s)*4);
-    s.spawnSerial=0;s.spawnPending=0;s.spawnedCount=0;s.wavesSpawned=1;s.waveLimit=type==='battle'?30:null;
+    s.spawnSerial=0;s.spawnPending=0;s.spawnedCount=0;s.wavesSpawned=1;s.waveLimit=type==='battle'?NORMAL_WAVES:null;
     s.enemies=[];
     if(type!=='battle') {
       const elite=type==='elite',scale=(1+s.encounter.depth*.06)*(elite?.7:1);
       const hp=Math.round(config.bossHp*scale);
-      s.enemies.push({id:s.nextId++,kind:'boss',name:elite?['묘지의 집행자','서리의 망령','잿불 도살자'][s.stage]:config.boss,boss:!elite,elite,leader:true,x:WIDTH/2,y:HEIGHT/2,r:elite?ELITE_RADIUS:BOSS_RADIUS,visualR:elite?ELITE_VISUAL_RADIUS:BOSS_VISUAL_RADIUS,hp,maxHp:hp,armor:config.bossArmor,attack:Math.round(config.bossDamage*(elite?.85:1)),damagePct:0,critChance:0,critMultiplier:1.5,dodge:0,level:3+s.stage*3,speed:elite?config.eliteSpeed:config.bossSpeed,range:LEADER_ATTACK_RANGE,every:1,patternIndex:0,patterns:elite?config.patterns.slice(0,2):config.patterns,alive:true,xp:(elite?10:18)+s.stage*6,crystals:(elite?18:30)+s.stage*10,flash:0});
+      s.enemies.push({id:s.nextId++,kind:'boss',name:elite?['묘지의 집행자','서리의 망령','잿불 도살자'][s.stage]:config.boss,boss:!elite,elite,leader:true,x:WIDTH/2,y:HEIGHT/2,r:elite?ELITE_RADIUS:BOSS_RADIUS,visualR:elite?ELITE_VISUAL_RADIUS:BOSS_VISUAL_RADIUS,hp,maxHp:hp,armor:config.bossArmor,attack:Math.round(config.bossDamage*(elite?.85:1))*ENEMY_DAMAGE_MULTIPLIER,damageScale:ENEMY_DAMAGE_MULTIPLIER,damagePct:0,critChance:0,critMultiplier:1.5,dodge:0,level:3+s.stage*3,speed:elite?config.eliteSpeed:config.bossSpeed,range:LEADER_ATTACK_RANGE,every:1,patternIndex:0,patterns:elite?config.patterns.slice(0,2):config.patterns,alive:true,xp:(elite?10:18)+s.stage*6,crystals:(elite?18:30)+s.stage*10,flash:0});
     }
     const spots=[{x:460,y:740},{x:680,y:800},{x:340,y:570},{x:760,y:570},{x:240,y:300},{x:840,y:300},{x:510,y:230},{x:210,y:820},{x:875,y:870},{x:140,y:540},{x:940,y:530},{x:690,y:170},{x:365,y:160},{x:170,y:170},{x:910,y:150}];
     const count=INITIAL_ENEMIES-s.enemies.length;
@@ -270,7 +275,7 @@
   }
   function createEnemy(s,kind,x,y) {
     const t=TYPES[kind],hp=t.hp+s.stage*10+Math.floor((s.encounter?.depth||0)/3)*4;
-    return {id:s.nextId++,kind,name:t.name,boss:false,x,y,r:t.r,visualR:t.visualR,hp,maxHp:hp,armor:t.armor+s.stage,attack:t.damage+s.stage*3,damagePct:0,critChance:0,critMultiplier:1.5,dodge:kind==='skitter'?6:0,level:1+s.stage*2,speed:t.speed,range:t.range,every:t.every,patternIndex:0,alive:true,xp:4+s.stage,crystals:5+s.stage*2,flash:0,spawnFlash:0};
+    return {id:s.nextId++,kind,name:t.name,boss:false,x,y,r:t.r,visualR:t.visualR,hp,maxHp:hp,armor:t.armor+s.stage,attack:(t.damage+s.stage*3)*ENEMY_DAMAGE_MULTIPLIER,damageScale:ENEMY_DAMAGE_MULTIPLIER,damagePct:0,critChance:0,critMultiplier:1.5,dodge:kind==='skitter'?6:0,level:1+s.stage*2,speed:t.speed,range:t.range,every:t.every,patternIndex:0,alive:true,xp:4+s.stage,crystals:5+s.stage*2,flash:0,spawnFlash:0};
   }
   function findEnemySpawn(s,r) {
     const free=(x,y)=>length(x-s.player.x,y-s.player.y)>=r+s.player.r+150
@@ -328,23 +333,27 @@
     event(s,'item',{id,name:item.name});return true;
   }
   const xpRequired=level=>8+level*4;
+  function openLevelUp(s,resumePhase=s.phase) {
+    if(s.levelPoints<=0||s.phase==='levelup')return false;
+    s.player.hp=s.player.maxHp;s.resumePhase=resumePhase;s.phase='levelup';
+    event(s,'levelup',{levels:s.levelPoints,level:s.player.level,points:s.levelPoints});return true;
+  }
   function gainExperience(s,amount) {
     s.xp+=amount;let levels=0;
     while(s.xp>=xpRequired(s.player.level)){
       s.xp-=xpRequired(s.player.level);s.player.level++;s.levelPoints++;levels++;
     }
-    if(levels){
-      s.player.hp=s.player.maxHp;
-      if(s.phase!=='levelup'){s.resumePhase=s.phase;s.phase='levelup';}
-      event(s,'levelup',{levels,level:s.player.level,points:s.levelPoints});
-    }
+    if(levels&&!['moving','recoil','lost'].includes(s.phase))openLevelUp(s);
   }
   function chooseUpgrade(s,key) {
     if(s.phase!=='levelup'||s.levelPoints<=0)return false;
     const option=J.UPGRADES.find(o=>o.key===key);if(!option||option.cap&&s.player[key]>=option.cap)return false;
     s.player[key]+=option.amount;if(key==='maxHp')s.player.hp=s.player.maxHp;
     s.levelPoints--;
-    if(!s.levelPoints){s.phase=s.resumePhase;s.resumePhase=null;}
+    if(!s.levelPoints){
+      const resume=s.resumePhase;s.resumePhase=null;s.phase=resume;
+      if(resume==='finishShot')finishShot(s);else if(resume==='finishRecoil')finishRecoil(s);
+    }
     event(s,'upgrade',{key});return true;
   }
   function battleCleared(s) {return s.encounter?.type==='battle'&&s.wavesSpawned>=s.waveLimit&&!s.spawnPending&&s.enemies.every(e=>!e.alive);}
@@ -448,6 +457,7 @@
   function wait(s) {if(s.phase!=='ready')return false;s.shots++;s.totalShots++;s.player.berserk=false;event(s,'wait');finishShot(s);return true;}
   function finishShot(s) {
     const p=s.player;p.vx=p.vy=0;p.spin=0;p.berserk=false;p.knockedBack=false;
+    if(openLevelUp(s,'finishShot'))return;
     healPlayer(s,s.player.regen||0,'regen');
     if(s.pendingClear||battleCleared(s)){settleStage(s);return;}
     // Active attacks expire only after the whole player action, including knockback.
@@ -455,6 +465,11 @@
     s.phase='enemy';s.enemyElapsed=0;
     for(const e of s.enemies)if(e.alive){const intent=enemyIntent(s,e);e.moveX=intent.dx;e.moveY=intent.dy;e.turnTravel=0;}
     event(s,'enemy_start');
+  }
+  function finishRecoil(s) {
+    const p=s.player;p.vx=p.vy=0;p.spin=0;p.knockedBack=false;
+    if(openLevelUp(s,'finishRecoil'))return;
+    if(s.pendingClear||battleCleared(s))settleStage(s);else s.phase='ready';
   }
   function enemyIntent(s,e) {
     if(length(e.knockVx||0,e.knockVy||0)>0)return {dx:0,dy:0};
@@ -465,9 +480,9 @@
       const approachDistance=(e.elite?2.8:3.5)*UNITS_PER_METER;
       if(d<=approachDistance){const direction=(e.id+s.stage)%2?1:-1;return {dx:-ny*direction,dy:nx*direction};}
     }
-    else if(e.kind==='lancer') {if(d<145*ENEMY_ATTACK_SCALE){nx=-nx;ny=-ny;}else if(d<290*ENEMY_ATTACK_SCALE)return {dx:0,dy:0};}
-    else if(e.kind==='shaman') {if(d<160*ENEMY_ATTACK_SCALE){nx=-nx;ny=-ny;}else if(d<400*ENEMY_ATTACK_SCALE){const ox=nx;nx=-ny;ny=ox;}}
-    else if(d<85)return {dx:0,dy:0};
+    else if(e.kind==='lancer') {if(d<145*ENEMY_RANGE_SCALE){nx=-nx;ny=-ny;}else if(d<290*ENEMY_RANGE_SCALE)return {dx:0,dy:0};}
+    else if(e.kind==='shaman') {if(d<160*ENEMY_RANGE_SCALE){nx=-nx;ny=-ny;}else if(d<400*ENEMY_RANGE_SCALE){const ox=nx;nx=-ny;ny=ox;}}
+    else if(d<85*ENEMY_RANGE_SCALE/ENEMY_ATTACK_SCALE)return {dx:0,dy:0};
     return {dx:nx,dy:ny};
   }
   function resizeAttackArea(h) {
@@ -483,7 +498,7 @@
       const angle=Math.atan2(dy,dx),attackId=s.nextId++;
       const pattern=e.leader?e.patterns[e.patternIndex%e.patterns.length]:TYPES[e.kind].pattern;
       e.patternIndex++;
-      const base={attackId,sourceId:e.id,mode:'warning',x:e.x,y:e.y,damage:e.attack,armor:e.armor,knockback:e.leader?370:280,pattern};
+      const base={attackId,sourceId:e.id,mode:'warning',x:e.x,y:e.y,damage:e.attack,damageScale:ENEMY_DAMAGE_MULTIPLIER,armor:e.armor,knockback:e.leader?370:280,pattern};
       const add=shape=>s.hazards.push(resizeAttackArea({...base,id:s.nextId++,...shape}));
       if(pattern==='line')add({shape:'line',dx:dx/d,dy:dy/d,length:e.leader?760:520,width:e.leader?38:24});
       else if(pattern==='cone')add({shape:'cone',angle,spread:e.leader?1.5:1.35,radius:e.leader?300:185});
@@ -664,10 +679,7 @@
     s.motionTime+=dt;
     if(next<12||s.motionTime>14) {
       if(s.phase==='moving')finishShot(s);
-      else if(s.phase==='recoil'){
-        p.vx=p.vy=0;p.spin=0;p.knockedBack=false;
-        if(s.pendingClear||battleCleared(s))settleStage(s);else s.phase='ready';
-      }
+      else if(s.phase==='recoil')finishRecoil(s);
     }
   }
   function stepEnemyKnockback(s,dt) {
@@ -719,7 +731,7 @@
     }
     return points;
   }
-  return {WIDTH,HEIGHT,BOUNDS,PLAYER_RADIUS,ENEMY_SCALE,ENEMY_HITBOX_SCALE,ELITE_VISUAL_RADIUS,BOSS_VISUAL_RADIUS,ELITE_RADIUS,BOSS_RADIUS,INITIAL_ENEMIES,ENEMY_ATTACK_SCALE,LEADER_ATTACK_RANGE,resizeAttackArea,UNITS_PER_METER,ARENA_METERS,VIEW_HEIGHT_METERS,MAX_PULL,FRICTION,ENEMY_DURATION,STAGES,TYPES,ITEMS,CONSUMABLE_SLOTS,NODE_TYPES:J.NODE_TYPES,UPGRADES:J.UPGRADES,EVENTS:J.EVENTS,availableNodes:J.availableNodes,chooseNode,chooseUpgrade,gainExperience,sell,villageHeal,villageHealPrice,leaveVillage,resolveEvent,random,createGame,launch,wait,step,circleHit,reflectVelocity,aimEndpoint,aimPreview,enemyIntent,calculateDamage,pointInHazard,segmentHitsHazard,prepareAttacks,checkHazards,killEnemy,attackEnemy,gainItem,xpRequired,buy,rerollShop,rerollPrice,useRune,useConsumable,spawnBox};
+  return {WIDTH,HEIGHT,BOUNDS,PLAYER_RADIUS,ENEMY_SCALE,ENEMY_HITBOX_SCALE,ELITE_VISUAL_RADIUS,BOSS_VISUAL_RADIUS,ELITE_RADIUS,BOSS_RADIUS,INITIAL_ENEMIES,NORMAL_WAVES,ENEMY_DAMAGE_MULTIPLIER,scaleEnemyDamage,ENEMY_ATTACK_SCALE,ENEMY_RANGE_SCALE,LEADER_ATTACK_RANGE,resizeAttackArea,UNITS_PER_METER,ARENA_METERS,VIEW_HEIGHT_METERS,MAX_PULL,FRICTION,ENEMY_DURATION,STAGES,TYPES,ITEMS,CONSUMABLE_SLOTS,NODE_TYPES:J.NODE_TYPES,UPGRADES:J.UPGRADES,EVENTS:J.EVENTS,availableNodes:J.availableNodes,chooseNode,chooseUpgrade,gainExperience,sell,villageHeal,villageHealPrice,leaveVillage,resolveEvent,random,createGame,launch,wait,step,circleHit,reflectVelocity,aimEndpoint,aimPreview,enemyIntent,calculateDamage,pointInHazard,segmentHitsHazard,prepareAttacks,checkHazards,killEnemy,attackEnemy,gainItem,xpRequired,buy,rerollShop,rerollPrice,useRune,useConsumable,spawnBox};
 });
 
 (function (root, factory) {
@@ -823,8 +835,16 @@
       const data=JSON.parse(localStorage.getItem('pebble-warrior-v4'));
       if(data?.version!==4||!['ready','map','village','event','levelup'].includes(data.state?.phase)||!P.STAGES[data.state.stage]||!Array.isArray(data.state.items)||!data.state.player||!data.state.journey)return false;
       state=data.state;seed=state.seed;state.events=[];state.player.spin=0;if(state.phase!=='levelup')state.player.vx=state.player.vy=0;
+      if(state.phase==='levelup'&&['moving','recoil'].includes(state.resumePhase)){
+        state.phase=state.resumePhase;state.resumePhase=null;
+      }
       for(const e of state.enemies){if(e.leader){e.speed=P.STAGES[state.stage][e.elite?'eliteSpeed':'bossSpeed'];e.r=e.elite?P.ELITE_RADIUS:P.BOSS_RADIUS;e.visualR=e.elite?P.ELITE_VISUAL_RADIUS:P.BOSS_VISUAL_RADIUS;e.range=P.LEADER_ATTACK_RANGE;}else if(P.TYPES[e.kind]){e.r=P.TYPES[e.kind].r;e.visualR=P.TYPES[e.kind].visualR;e.range=P.TYPES[e.kind].range;}}
-      for(const h of state.hazards)P.resizeAttackArea(h);
+      for(const e of state.enemies)P.scaleEnemyDamage(e,'attack');
+      for(const h of state.hazards){P.resizeAttackArea(h);P.scaleEnemyDamage(h,'damage');}
+      if(state.encounter?.type==='battle'){
+        if(state.waveLimit!==P.NORMAL_WAVES){state.wavesSpawned=Math.min(state.wavesSpawned||1,P.NORMAL_WAVES);state.spawnPending=Math.min(state.spawnPending||0,P.STAGES[state.stage].spawnPerTurn);}
+        state.waveLimit=P.NORMAL_WAVES;
+      }
       if(state.worldWidth!==W||state.worldHeight!==H){
         const oldWidth=state.worldWidth||1080,oldHeight=state.worldHeight||1080;
         for(const body of [state.player,...state.enemies,...state.boxes,...state.rocks,...state.hazards]){
@@ -1177,7 +1197,7 @@
     entry.choices.forEach((choice,index)=>{const button=document.createElement('button');button.className='event-choice';button.disabled=choice.kind==='sacrifice'&&state.player.hp<=Math.ceil(state.player.maxHp*.2);const name=document.createElement('strong');name.textContent=choice.title;const desc=document.createElement('span');desc.textContent=choice.kind==='coins'?`수정 ${18+state.stage*6}개 획득`:choice.desc;button.append(name,desc);button.addEventListener('click',()=>{if(P.resolveEvent(state,index)){handleEvents();syncUi();checkpoint(true);}});$('event-choices').append(button);});
   }
   function renderLevelUp() {
-    $('level-title').textContent=`LEVEL ${state.player.level}`;$('level-points').textContent=`남은 능력치 선택 ${state.levelPoints}회 · 하나를 선택하면 진행을 이어갑니다`;$('upgrade-choices').replaceChildren();
+    $('level-title').textContent=`LEVEL ${state.player.level}`;$('level-points').textContent=`남은 능력치 선택 ${state.levelPoints}회 · 모두 선택하면 진행을 이어갑니다`;$('upgrade-choices').replaceChildren();
     for(const option of P.UPGRADES){
       const button=document.createElement('button');button.className='upgrade-choice';button.disabled=!!option.cap&&state.player[option.key]>=option.cap;
       const art=document.createElement('span');art.className='item-art';art.innerHTML=itemIcon(option);const text=document.createElement('div');const name=document.createElement('strong');name.textContent=option.name;const desc=document.createElement('small');desc.textContent=option.desc;text.append(name,desc);button.append(art,text);
@@ -1228,7 +1248,7 @@
     $('health-fill').style.width=`${p.hp/p.maxHp*100}%`;$('health-value').textContent=`${p.hp} / ${p.maxHp}`;$('xp-fill').style.width=`${state.xp/P.xpRequired(p.level)*100}%`;$('hud-level').textContent=`Lv.${p.level}`;
     $('crystals').textContent=state.crystals;$('turn-label').textContent=`턴 ${state.turn}`;
     $('boss-hud').hidden=!state.encounter;
-    if(state.encounter?.type==='battle'){$('boss-name').textContent=`소환 ${state.wavesSpawned} / 30 · 남은 적 ${remaining}`;$('boss-fill').style.width=`${state.wavesSpawned/30*100}%`;}
+    if(state.encounter?.type==='battle'){$('boss-name').textContent=`소환 ${state.wavesSpawned} / ${state.waveLimit} · 남은 적 ${remaining}`;$('boss-fill').style.width=`${Math.min(1,state.wavesSpawned/state.waveLimit)*100}%`;}
     else if(leader){$('boss-name').textContent=leader.name;$('boss-fill').style.width=`${leader.hp/leader.maxHp*100}%`;}
     $('turn-status').textContent=state.phase==='enemy'?'적의 턴':state.phase==='moving'?'':state.phase==='recoil'?'넉백':state.phase==='ready'?'당신의 턴':'';
     $('turn-status').classList.toggle('enemy',state.phase==='enemy');
