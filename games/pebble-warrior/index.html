@@ -188,7 +188,9 @@
   else root.PebblePhysics = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function (J) {
   'use strict';
-  const PLAYER_RADIUS=23,ENEMY_SCALE=.5,ELITE_RADIUS=40*ENEMY_SCALE,BOSS_RADIUS=48*ENEMY_SCALE;
+  const PLAYER_RADIUS=23,ENEMY_SCALE=.5,ENEMY_HITBOX_SCALE=.8;
+  const ELITE_VISUAL_RADIUS=40*ENEMY_SCALE,BOSS_VISUAL_RADIUS=48*ENEMY_SCALE;
+  const ELITE_RADIUS=ELITE_VISUAL_RADIUS*ENEMY_HITBOX_SCALE,BOSS_RADIUS=BOSS_VISUAL_RADIUS*ENEMY_HITBOX_SCALE;
   const UNITS_PER_METER=PLAYER_RADIUS*2,ARENA_METERS=20,VIEW_HEIGHT_METERS=15;
   const WIDTH=ARENA_METERS*UNITS_PER_METER+64,HEIGHT=WIDTH,MAX_PULL=150,FRICTION=225,ENEMY_DURATION=.72;
   const KNOCKBACK_HIT_SPEED=300;
@@ -209,6 +211,7 @@
     skitter:{name:'돌진충',hp:27,r:PLAYER_RADIUS*ENEMY_SCALE,speed:108,range:205*ENEMY_ATTACK_SCALE,pattern:'nova',armor:0,damage:8,every:1},
     warden:{name:'수호돌',hp:56,r:PLAYER_RADIUS*ENEMY_SCALE,speed:31,range:260*ENEMY_ATTACK_SCALE,pattern:'ring',armor:5,damage:12,every:2}
   };
+  for(const type of Object.values(TYPES)){type.visualR=type.r;type.r*=ENEMY_HITBOX_SCALE;}
   const ITEMS=[
     {id:'edge',name:'숫돌',icon:'blade',desc:'공격력 +4',price:14,stats:{attack:4},color:'#c08655'},
     {id:'fury',name:'전사의 문장',icon:'flame',desc:'피해량 +12%',price:18,stats:{damagePct:12},color:'#bf664c'},
@@ -253,7 +256,7 @@
     if(type!=='battle') {
       const elite=type==='elite',scale=(1+s.encounter.depth*.06)*(elite?.7:1);
       const hp=Math.round(config.bossHp*scale);
-      s.enemies.push({id:s.nextId++,kind:'boss',name:elite?['묘지의 집행자','서리의 망령','잿불 도살자'][s.stage]:config.boss,boss:!elite,elite,leader:true,x:WIDTH/2,y:HEIGHT/2,r:elite?ELITE_RADIUS:BOSS_RADIUS,hp,maxHp:hp,armor:config.bossArmor,attack:Math.round(config.bossDamage*(elite?.85:1)),damagePct:0,critChance:0,critMultiplier:1.5,dodge:0,level:3+s.stage*3,speed:elite?config.eliteSpeed:config.bossSpeed,range:LEADER_ATTACK_RANGE,every:1,patternIndex:0,patterns:elite?config.patterns.slice(0,2):config.patterns,alive:true,xp:(elite?10:18)+s.stage*6,crystals:(elite?18:30)+s.stage*10,flash:0});
+      s.enemies.push({id:s.nextId++,kind:'boss',name:elite?['묘지의 집행자','서리의 망령','잿불 도살자'][s.stage]:config.boss,boss:!elite,elite,leader:true,x:WIDTH/2,y:HEIGHT/2,r:elite?ELITE_RADIUS:BOSS_RADIUS,visualR:elite?ELITE_VISUAL_RADIUS:BOSS_VISUAL_RADIUS,hp,maxHp:hp,armor:config.bossArmor,attack:Math.round(config.bossDamage*(elite?.85:1)),damagePct:0,critChance:0,critMultiplier:1.5,dodge:0,level:3+s.stage*3,speed:elite?config.eliteSpeed:config.bossSpeed,range:LEADER_ATTACK_RANGE,every:1,patternIndex:0,patterns:elite?config.patterns.slice(0,2):config.patterns,alive:true,xp:(elite?10:18)+s.stage*6,crystals:(elite?18:30)+s.stage*10,flash:0});
     }
     const spots=[{x:460,y:740},{x:680,y:800},{x:340,y:570},{x:760,y:570},{x:240,y:300},{x:840,y:300},{x:510,y:230},{x:210,y:820},{x:875,y:870},{x:140,y:540},{x:940,y:530},{x:690,y:170},{x:365,y:160},{x:170,y:170},{x:910,y:150}];
     const count=INITIAL_ENEMIES-s.enemies.length;
@@ -267,7 +270,7 @@
   }
   function createEnemy(s,kind,x,y) {
     const t=TYPES[kind],hp=t.hp+s.stage*10+Math.floor((s.encounter?.depth||0)/3)*4;
-    return {id:s.nextId++,kind,name:t.name,boss:false,x,y,r:t.r,hp,maxHp:hp,armor:t.armor+s.stage,attack:t.damage+s.stage*3,damagePct:0,critChance:0,critMultiplier:1.5,dodge:kind==='skitter'?6:0,level:1+s.stage*2,speed:t.speed,range:t.range,every:t.every,patternIndex:0,alive:true,xp:4+s.stage,crystals:5+s.stage*2,flash:0,spawnFlash:0};
+    return {id:s.nextId++,kind,name:t.name,boss:false,x,y,r:t.r,visualR:t.visualR,hp,maxHp:hp,armor:t.armor+s.stage,attack:t.damage+s.stage*3,damagePct:0,critChance:0,critMultiplier:1.5,dodge:kind==='skitter'?6:0,level:1+s.stage*2,speed:t.speed,range:t.range,every:t.every,patternIndex:0,alive:true,xp:4+s.stage,crystals:5+s.stage*2,flash:0,spawnFlash:0};
   }
   function findEnemySpawn(s,r) {
     const free=(x,y)=>length(x-s.player.x,y-s.player.y)>=r+s.player.r+150
@@ -415,7 +418,7 @@
   }
   function killEnemy(s,e) {
     if(!e.alive)return;
-    e.alive=false;s.kills++;s.totalKills++;s.stageXp+=e.xp;s.crystals+=e.crystals;
+    e.alive=false;e.knockVx=e.knockVy=0;s.kills++;s.totalKills++;s.stageXp+=e.xp;s.crystals+=e.crystals;
     s.hazards=s.hazards.filter(h=>h.sourceId!==e.id);
     event(s,'defeat',{x:e.x,y:e.y,boss:e.boss,leader:!!e.leader,xp:e.xp,crystals:e.crystals});
     if(e.leader||battleCleared(s))s.pendingClear=true;
@@ -432,6 +435,7 @@
     if(s.player.healOnHit)s.player.hp=Math.min(s.player.maxHp,s.player.hp+s.player.healOnHit);
     event(s,'hit',{x:e.x,y:e.y,amount,crit,target:'enemy',knockback,impactSpeed});
     if(e.hp<=0)killEnemy(s,e);
+    return true;
   }
   function launch(s,dx,dy,spin=0) {
     if(s.phase!=='ready')return false;
@@ -453,6 +457,7 @@
     event(s,'enemy_start');
   }
   function enemyIntent(s,e) {
+    if(length(e.knockVx||0,e.knockVy||0)>0)return {dx:0,dy:0};
     if(s.hazards.some(h=>h.sourceId===e.id&&(h.mode==='warning'||h.mode==='active')))return {dx:0,dy:0};
     const dx=s.player.x-e.x,dy=s.player.y-e.y,d=length(dx,dy)||1;
     let nx=dx/d,ny=dy/d;
@@ -588,7 +593,7 @@
     const attacking=new Set(s.hazards.filter(h=>h.mode==='warning'||h.mode==='active').map(h=>h.sourceId));
     const solids=[p,...s.enemies.filter(e=>e.alive),...s.rocks,...s.boxes.filter(b=>b.alive&&b.fall<=0)];
     for(const e of s.enemies) {
-      if(!e.alive||attacking.has(e.id))continue;
+      if(!e.alive||attacking.has(e.id)||length(e.knockVx||0,e.knockVy||0)>0)continue;
       const mover={x:e.x,y:e.y,r:e.r,vx:e.moveX*e.speed,vy:e.moveY*e.speed};
       if(!mover.vx&&!mover.vy)continue;
       let allowed=duration;
@@ -632,7 +637,15 @@
       });
       if(hit.body) {
         const body=hit.body;
-        if(body.alive&&body.kind)attackEnemy(s,body,p.knockedBack||s.phase==='recoil'?impactSpeed:null);
+        if(body.alive&&body.kind){
+          const landed=attackEnemy(s,body,p.knockedBack||s.phase==='recoil'?impactSpeed:null);
+          if(landed&&body.alive&&impactSpeed>0){
+            const weight=body.leader?(body.elite ? .7 : .5):1,force=Math.min(440,Math.max(30,impactSpeed*.5))*weight;
+            body.knockVx=(body.knockVx||0)*.35-hit.nx*force;body.knockVy=(body.knockVy||0)*.35-hit.ny*force;
+            const speed=length(body.knockVx,body.knockVy),limit=440*weight;
+            if(speed>limit){body.knockVx*=limit/speed;body.knockVy*=limit/speed;}
+          }
+        }
         else if(body.alive&&body.item&&s.phase==='moving') {
           body.alive=false;gainItem(s,body.item);event(s,'box_break',{x:body.x,y:body.y});
         }
@@ -657,6 +670,25 @@
       }
     }
   }
+  function stepEnemyKnockback(s,dt) {
+    const pushed=s.enemies.filter(e=>e.alive&&length(e.knockVx||0,e.knockVy||0)>0);if(!pushed.length)return;
+    const solids=[s.player,...s.enemies.filter(e=>e.alive),...s.rocks,...s.boxes.filter(b=>b.alive&&b.fall<=0)];
+    for(const e of pushed){
+      const speed=length(e.knockVx,e.knockVy);
+      const mover={x:e.x,y:e.y,r:e.r,vx:e.knockVx,vy:e.knockVy};let allowed=dt;
+      if(mover.vx<0)allowed=Math.min(allowed,Math.max(0,(BOUNDS.left+e.r-e.x)/mover.vx));
+      if(mover.vx>0)allowed=Math.min(allowed,Math.max(0,(BOUNDS.right-e.r-e.x)/mover.vx));
+      if(mover.vy<0)allowed=Math.min(allowed,Math.max(0,(BOUNDS.top+e.r-e.y)/mover.vy));
+      if(mover.vy>0)allowed=Math.min(allowed,Math.max(0,(BOUNDS.bottom-e.r-e.y)/mover.vy));
+      for(const other of solids){
+        if(other===e)continue;const hit=circleHit(mover,other,allowed);
+        if(hit)allowed=Math.max(0,hit.t-.00001);
+      }
+      e.x=clamp(e.x+mover.vx*allowed,BOUNDS.left+e.r,BOUNDS.right-e.r);e.y=clamp(e.y+mover.vy*allowed,BOUNDS.top+e.r,BOUNDS.bottom-e.r);
+      const next=allowed<dt?0:Math.max(0,speed-1100*dt);
+      e.knockVx=mover.vx*next/speed;e.knockVy=mover.vy*next/speed;
+    }
+  }
   function step(s,dt) {
     if(!['ready','moving','enemy','recoil'].includes(s.phase))return;
     let left=Math.max(0,Math.min(dt,1/20));
@@ -667,6 +699,7 @@
       s.player.flash=Math.max(0,(s.player.flash||0)-t);
       if(s.phase==='enemy')stepEnemies(s,t);
       else if(s.phase==='moving'||s.phase==='recoil')movePlayer(s,t);
+      if(['ready','moving','enemy','recoil'].includes(s.phase))stepEnemyKnockback(s,t);
     }
   }
   function aimEndpoint(s,dx,dy) {
@@ -686,7 +719,7 @@
     }
     return points;
   }
-  return {WIDTH,HEIGHT,BOUNDS,PLAYER_RADIUS,ENEMY_SCALE,ELITE_RADIUS,BOSS_RADIUS,INITIAL_ENEMIES,ENEMY_ATTACK_SCALE,LEADER_ATTACK_RANGE,resizeAttackArea,UNITS_PER_METER,ARENA_METERS,VIEW_HEIGHT_METERS,MAX_PULL,FRICTION,ENEMY_DURATION,STAGES,TYPES,ITEMS,CONSUMABLE_SLOTS,NODE_TYPES:J.NODE_TYPES,UPGRADES:J.UPGRADES,EVENTS:J.EVENTS,availableNodes:J.availableNodes,chooseNode,chooseUpgrade,gainExperience,sell,villageHeal,villageHealPrice,leaveVillage,resolveEvent,random,createGame,launch,wait,step,circleHit,reflectVelocity,aimEndpoint,aimPreview,enemyIntent,calculateDamage,pointInHazard,segmentHitsHazard,prepareAttacks,checkHazards,killEnemy,attackEnemy,gainItem,xpRequired,buy,rerollShop,rerollPrice,useRune,useConsumable,spawnBox};
+  return {WIDTH,HEIGHT,BOUNDS,PLAYER_RADIUS,ENEMY_SCALE,ENEMY_HITBOX_SCALE,ELITE_VISUAL_RADIUS,BOSS_VISUAL_RADIUS,ELITE_RADIUS,BOSS_RADIUS,INITIAL_ENEMIES,ENEMY_ATTACK_SCALE,LEADER_ATTACK_RANGE,resizeAttackArea,UNITS_PER_METER,ARENA_METERS,VIEW_HEIGHT_METERS,MAX_PULL,FRICTION,ENEMY_DURATION,STAGES,TYPES,ITEMS,CONSUMABLE_SLOTS,NODE_TYPES:J.NODE_TYPES,UPGRADES:J.UPGRADES,EVENTS:J.EVENTS,availableNodes:J.availableNodes,chooseNode,chooseUpgrade,gainExperience,sell,villageHeal,villageHealPrice,leaveVillage,resolveEvent,random,createGame,launch,wait,step,circleHit,reflectVelocity,aimEndpoint,aimPreview,enemyIntent,calculateDamage,pointInHazard,segmentHitsHazard,prepareAttacks,checkHazards,killEnemy,attackEnemy,gainItem,xpRequired,buy,rerollShop,rerollPrice,useRune,useConsumable,spawnBox};
 });
 
 (function (root, factory) {
@@ -779,6 +812,7 @@
   }
   function checkpoint(force=false) {
     if(params.has('seed')||!['ready','map','village','event','levelup'].includes(state.phase))return;
+    if(state.phase==='ready'&&state.enemies.some(e=>e.alive&&Math.hypot(e.knockVx||0,e.knockVy||0)>0))return;
     const key=[state.stage,state.turn,state.phase,state.journey.currentId,state.encounter?.supplyDrops,state.items.length,state.crystals,state.player.hp,state.xp,state.levelPoints,state.player.runeCharges,state.player.berserk].join(':');
     if(!force&&saveKey===key)return;
     try{localStorage.setItem('pebble-warrior-v4',JSON.stringify({version:4,state:{...state,events:[]}}));saveKey=key;}catch{}
@@ -789,7 +823,7 @@
       const data=JSON.parse(localStorage.getItem('pebble-warrior-v4'));
       if(data?.version!==4||!['ready','map','village','event','levelup'].includes(data.state?.phase)||!P.STAGES[data.state.stage]||!Array.isArray(data.state.items)||!data.state.player||!data.state.journey)return false;
       state=data.state;seed=state.seed;state.events=[];state.player.spin=0;if(state.phase!=='levelup')state.player.vx=state.player.vy=0;
-      for(const e of state.enemies){if(e.leader){e.speed=P.STAGES[state.stage][e.elite?'eliteSpeed':'bossSpeed'];e.r=e.elite?P.ELITE_RADIUS:P.BOSS_RADIUS;e.range=P.LEADER_ATTACK_RANGE;}else if(P.TYPES[e.kind]){e.r=P.TYPES[e.kind].r;e.range=P.TYPES[e.kind].range;}}
+      for(const e of state.enemies){if(e.leader){e.speed=P.STAGES[state.stage][e.elite?'eliteSpeed':'bossSpeed'];e.r=e.elite?P.ELITE_RADIUS:P.BOSS_RADIUS;e.visualR=e.elite?P.ELITE_VISUAL_RADIUS:P.BOSS_VISUAL_RADIUS;e.range=P.LEADER_ATTACK_RANGE;}else if(P.TYPES[e.kind]){e.r=P.TYPES[e.kind].r;e.visualR=P.TYPES[e.kind].visualR;e.range=P.TYPES[e.kind].range;}}
       for(const h of state.hazards)P.resizeAttackArea(h);
       if(state.worldWidth!==W||state.worldHeight!==H){
         const oldWidth=state.worldWidth||1080,oldHeight=state.worldHeight||1080;
@@ -865,7 +899,7 @@
   }
   function drawEnemy(e) {
     ctx.save();ctx.translate(e.x,e.y);ctx.scale(P.ENEMY_SCALE,P.ENEMY_SCALE);ctx.translate(-e.x,-e.y);
-    drawEnemyArt({...e,r:e.r/P.ENEMY_SCALE});ctx.restore();
+    drawEnemyArt({...e,r:(e.visualR??e.r/P.ENEMY_HITBOX_SCALE)/P.ENEMY_SCALE});ctx.restore();
   }
   function drawEnemyArt(e) {
     const c=ctx,r=e.r,palette=e.leader?[P.STAGES[state.stage].floor[0],P.STAGES[state.stage].accent,'#696143']:PALETTES[e.kind];
