@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f5ef">
+  <title>흑백 문제 032 · 노노그램스택</title>
+  <style>:root{font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;color:#242e2b;background:#f5f5ef;font-synthesis:none;--accent:#c6544d;--tint:#fae8e3;--line:#cdd2cb;--gutter:39px;--end:30px;--top:58px;--bottom:34px}
+.board.is-painting .clue{transition:none}
+.height-picker #deselect{padding-inline:1px}.height-picker #deselect span{white-space:nowrap;font-size:8px}
+.board .cell{touch-action:none;-webkit-touch-callout:none}.height-picker button[data-value="0"]{background:#e2e5e7;border-color:#c2c8cd;color:#626b73}.height-picker button[data-value="0"] span{color:#7b838a}.height-picker button[data-value="0"].current{background:#cdd3d8;border-color:#697782;color:#3e4b56;box-shadow:0 0 0 1px #697782}.height-picker #erase strong,.height-picker #deselect strong{height:25px;display:grid;place-items:center}
+*{box-sizing:border-box}body{margin:0}button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}button:focus-visible{outline:3px solid #286da0;outline-offset:2px}button:disabled{cursor:default;opacity:.38}button,h1,p{margin:0}button{border:0;background:none}button:hover:not(:disabled){filter:brightness(.95)}[hidden]{display:none!important}
+.app{width:100%;max-width:520px;margin:0 auto;padding:18px 10px max(14px,env(safe-area-inset-bottom));min-height:100dvh}.header{display:flex;justify-content:space-between;align-items:center;padding:0 6px 16px}.brand{display:flex;align-items:center;gap:12px}.mark{position:relative;display:block;width:30px;height:34px}.mark i{position:absolute;width:18px;height:18px;border-radius:4px;transform:rotate(-9deg)}.mark i:nth-child(1){background:#df7771;top:0;left:1px}.mark i:nth-child(2){background:#82a989;top:10px;left:11px}.mark i:nth-child(3){background:#779bc4;top:18px;left:0}h1{font-size:20px;letter-spacing:-1px;font-weight:800}h1 span{display:inline-block;font-size:9px;letter-spacing:1px;margin-left:7px;vertical-align:middle;border:1px solid #c6cec5;border-radius:5px;padding:3px 4px;color:#758279}.brand p{font-size:10px;letter-spacing:.15px;color:#839087;margin-top:4px}.icon-button{border:1px solid #d9dfd5;border-radius:50%;width:36px;height:36px;font-size:17px;font-weight:600;background:#fafbf6}.puzzle-info{display:flex;justify-content:space-between;align-items:center;padding:0 6px 8px;font-size:11px}.tag{letter-spacing:1.3px;font-size:10px;font-weight:750}.dimensions{padding-left:12px;color:#7d897f}.progress-label{display:flex;align-items:center;gap:7px;color:#748076;font-variant-numeric:tabular-nums}.save-dot{width:5px;height:5px;background:#91a985;border-radius:50%}.progress-track{height:3px;border-radius:5px;background:#e1e7dc;overflow:hidden;margin:0 6px}.progress-track>div{height:100%;background:#839b70;transition:width .3s}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#eaece5;padding:4px;border-radius:12px;margin:15px 4px 13px}.tabs button{height:39px;border-radius:9px;font-size:13px;font-weight:650;display:flex;align-items:center;justify-content:center;gap:7px;color:#7d857f}.tabs button[aria-selected=true]{background:#fffef9;color:#303b34;box-shadow:0 1px 4px #263c1912}.dot,.all-dot{display:inline-block;width:8px;height:8px;border-radius:50%}.red{background:#dc736c}.green{background:#76a382}.blue{background:#7097c2}.all-dot{background:conic-gradient(#dc736c 0 33%,#76a382 33% 66%,#7097c2 66%)}
+.board-caption{padding:0 5px;display:flex;align-items:center;justify-content:space-between;font-size:10px;color:#8c958d;margin-bottom:5px}.board-caption>span:first-child{font-size:9px;letter-spacing:1.6px;font-weight:750;color:var(--accent)}.anchor-symbol{font-size:8px;color:var(--accent);margin-right:3px}.board-caption b{font-weight:600}.board{display:grid;grid-template-columns:var(--gutter) repeat(10,minmax(0,1fr)) var(--end);grid-template-rows:var(--top) repeat(10,auto) var(--bottom);user-select:none;-webkit-user-select:none;width:100%;align-items:stretch}.corner{display:flex;align-items:flex-end;justify-content:center;color:#9aa398;font-size:9px;padding-bottom:7px;line-height:1.35}.clue{font-size:clamp(10px,3.1vw,14px);font-variant-numeric:tabular-nums;font-weight:650;color:#536057;display:flex;align-items:center;justify-content:center;gap:3px;transition:background .1s}.clue.top{flex-direction:column;justify-content:flex-end;padding-bottom:6px;gap:1px}.clue.left{justify-content:flex-end;padding-right:7px;gap:4px}.clue.total{font-size:clamp(10px,2.9vw,12px);color:var(--accent);font-weight:750}.clue.right{margin-left:3px;border-left:1px solid #d9dfd4}.clue.bottom{margin-top:3px;border-top:1px solid #d9dfd4}.clue.active-line{background:var(--tint);border-radius:4px}.clue.done{color:#4a8654}.clue.conflict{color:#be453d;background:#fde0da;border-radius:3px}.cell{position:relative;aspect-ratio:1;padding:0;display:flex;align-items:center;justify-content:center;border-radius:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#fffefb;font-variant-numeric:tabular-nums;font-size:clamp(11px,3.5vw,18px);font-weight:650;min-width:0;min-height:0;line-height:1}.cell.first-col{border-left:1.5px solid #829183}.cell.first-row{border-top:1.5px solid #829183}.cell.major-col{border-right:1.5px solid #829183}.cell.major-row{border-bottom:1.5px solid #829183}.cell.unknown{color:#ccd3c9}.cell.zero{color:#646b71;font-weight:650;background:#dce0e3;font-size:clamp(14px,4vw,19px)}.cell.fixed:after{content:'◆';position:absolute;right:2px;top:2px;font-size:5px;opacity:.65}.cell.selected{z-index:1;outline:2.5px solid #24392f;outline-offset:-2.5px}.cell.selected:before{content:'';position:absolute;inset:2px;border:1px solid #fff8;pointer-events:none}.cell.hint-cell{outline:3px solid #b08a22;outline-offset:-3px}.cell.error{box-shadow:inset 0 0 0 2px #df4e46}.cell .micro{position:absolute;bottom:2px;display:flex;gap:2px}.cell .micro i{width:3px;height:2px;background:currentColor;opacity:.5}.cell.merged{font-size:10px}.cell .unknown-rgb{position:absolute;bottom:2px;right:3px;font-size:8px;color:#fff;text-shadow:0 1px 2px #0009}.under-board{display:flex;justify-content:space-between;padding:4px 5px 0;font-size:9px;color:#8d978c}.under-board b{font-weight:500;color:#647460}.diagonals{display:flex;gap:8px;margin:8px 4px 0;font-size:10px;color:#778372}.diagonals span{border-radius:5px;background:#e8eddf;padding:5px 9px}.diagonals b{color:#536f41;font-weight:650}
+.input-panel{margin:16px 4px 0;padding-top:12px;border-top:1px solid #dfe4d8}.selection-info{display:flex;align-items:center;justify-content:space-between;min-height:26px;font-size:11px;color:#788475;margin-bottom:8px}.rgb-readout{display:flex;gap:4px}.rgb-readout button{border:1px solid #dbe0d6;background:#fafbf6;border-radius:5px;font-size:10px;padding:4px 6px;font-variant-numeric:tabular-nums}.rgb-readout button.active{border-color:var(--accent);color:var(--accent)}.height-picker{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}.height-picker button{height:54px;border:1px solid #d8dfd1;border-radius:10px;display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;background:#fffef9;box-shadow:0 2px 1px #29391305}.height-picker strong{font-size:21px;font-weight:650}.height-picker span{font-size:9px;color:#8d9787}.height-picker button.current{border-color:var(--accent);background:var(--tint);color:var(--accent);box-shadow:0 0 0 1px var(--accent)}.input-note{font-size:10px;color:#889380;text-align:center;margin-top:8px;min-height:14px}.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:14px 4px 0}.tools button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:41px;background:#e9ede1;border-radius:8px;font-size:11px;white-space:nowrap}.tools button span{font-size:18px;line-height:1}.tools #hint{background:#263b2f;color:#f8f8f0}.tools #hint.pending{background:#9a762d}.message{font-size:11px;color:#73826c;line-height:1.65;margin:11px 7px 0;min-height:36px;word-break:keep-all}.message.warning{color:#ad5145}footer{display:flex;align-items:center;justify-content:space-between;padding:8px 7px 0;color:#a0aa95;font-size:8px;letter-spacing:1.5px}footer button{font-size:10px;letter-spacing:0;color:#87957e;padding:5px}
+dialog{border:1px solid #dce1d2;border-radius:20px;max-width:430px;width:calc(100% - 32px);padding:24px;color:#293c2f;background:#fafbf4;max-height:88dvh;box-shadow:0 20px 80px #26382e30}dialog::backdrop{background:#15281d80;backdrop-filter:blur(4px)}.dialog-top{display:flex;align-items:center;justify-content:space-between}.eyebrow{font-size:9px;letter-spacing:2px;font-weight:750;color:#899879}h2{font-size:27px;line-height:1.25;letter-spacing:-1px;margin:16px 0}dialog p,dialog li{font-size:12px;line-height:1.75;color:#6b7a62}dialog ul{padding-left:17px;margin:17px 0}dialog li{padding-bottom:6px}.fine-print{font-size:10px!important;margin-top:13px!important}.rule-example{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 0;margin-top:10px;border-block:1px solid #e0e5d7}.rule-example>div{display:flex;flex-direction:column;gap:4px;align-items:center}.rule-example span{font-size:9px;color:#829176}.rule-example .example-cells{flex-direction:row;gap:2px}.example-cells i{font-style:normal;width:24px;height:27px;background:#edd8cf;color:#9b5b4d;display:grid;place-items:center;font-size:12px;border-radius:2px}.primary-button{border-radius:10px;background:#293f30;color:#fff;padding:13px 18px;font-size:13px;font-weight:600}dialog>.primary-button{display:block;width:100%;margin-top:20px}.dialog-actions{display:flex;justify-content:flex-end;align-items:center;gap:18px;margin-top:24px}.dialog-actions button{font-size:12px}#win-dialog{text-align:center}#win-art{width:190px;height:190px;image-rendering:pixelated;background:#172128;border-radius:12px;margin:8px 0}
+@media(max-width:599px){:root{--top:42px}.app{padding-top:12px}.header{padding-bottom:10px}.tabs{margin-top:12px;margin-bottom:9px}.input-panel{margin-top:10px;padding-top:8px}.tools{margin-top:10px}.message{margin-top:8px;min-height:30px}footer{padding-top:4px}}@media(min-width:600px){body{background:radial-gradient(ellipse at 30% 10%,#e8ebdf,transparent 60%),#edf0e7}.app{margin:24px auto;border:1px solid #d9e0d1;border-radius:22px;background:#f5f5ef;padding:22px 17px;min-height:0;box-shadow:0 15px 60px #3546270b}}@media(max-width:360px){:root{--gutter:34px;--end:27px;--top:40px}.app{padding-inline:5px;padding-top:12px}.header{padding-bottom:11px}.tabs{margin-top:11px}.tabs button{height:35px}.height-picker{gap:5px}.height-picker button{height:48px}.tools button{font-size:10px;gap:3px}.input-panel{margin-top:11px}.clue.left{gap:3px;padding-right:5px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.run-tokens{display:contents}
+
+.terrain-heading{display:flex;align-items:center;justify-content:space-between;margin:17px 7px 3px}.terrain-heading h2{font-size:21px;margin:6px 0 0;letter-spacing:-.7px}.terrain-heading .eyebrow{font-size:8px;color:#83999c}.terrain-badge{font-size:9px;color:#70868a;background:#e6edeb;padding:6px 8px;border-radius:20px}.terrain-stage{position:relative;background:radial-gradient(ellipse at 50% 38%,#fcfefd 0%,#edf2f0 65%,#e5ece8 100%);border:1px solid #e0e7e1;border-radius:15px;margin-top:13px;overflow:hidden}.terrain-stage svg{width:100%;display:block;touch-action:manipulation}.iso-marker{cursor:pointer;outline:none}.iso-marker .hit{fill:transparent}.iso-marker .disc{fill:#f7faf5;stroke:#c8d6cb;stroke-width:1}.iso-marker text{font-family:inherit;font-size:13px;font-weight:600;fill:#71897e;pointer-events:none;text-anchor:middle;dominant-baseline:central}.iso-marker[aria-pressed=true] .disc{fill:#3c665e;stroke:#3c665e}.iso-marker[aria-pressed=true] text{fill:white}.iso-marker:focus-visible .disc{stroke:#184cad;stroke-width:3}.terrain-number{font:700 14px Inter,'Segoe UI',sans-serif;fill:#234c43;text-anchor:middle;dominant-baseline:central;paint-order:stroke;stroke:#f7fcf6;stroke-width:5px;stroke-linejoin:round;pointer-events:none}.terrain-axis-label{font-size:13px;font-weight:600;fill:#80978d;text-anchor:middle;letter-spacing:3px;pointer-events:none}
+
+/* A persistent terrain preview above an independently scrollable editor. */
+.line-outline{border:2px solid var(--accent);z-index:2;pointer-events:none;min-width:0;min-height:0}
+.board{grid-template-columns:var(--gutter) repeat(var(--n,10),minmax(0,1fr)) var(--end);grid-template-rows:var(--top) repeat(var(--n,10),auto) var(--bottom)}
+html,body{height:100%;overflow:hidden}
+.app{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:8px 8px max(6px,env(safe-area-inset-bottom));margin:0 auto;border-radius:0}
+.header{flex-shrink:0;padding:0 4px 5px}.brand{gap:8px}.brand h1{font-size:17px}.brand p{display:none}.mark{transform:scale(.8);transform-origin:left center;width:25px;height:28px}.icon-button{width:30px;height:30px}.puzzle-info{flex-shrink:0;padding:0 5px 4px;font-size:10px}.progress-track{flex-shrink:0;height:2px;margin:0 4px 6px}
+#terrain-panel{flex:0 0 auto;position:relative;z-index:2;padding:0 3px 7px;border-bottom:1px solid #d4decf}
+.terrain-heading{margin:0 2px 4px;min-height:16px}.terrain-heading h2{font-size:11px;letter-spacing:0;margin:0;font-weight:650;color:#61796c}.terrain-badge{font-size:8px;padding:2px 6px}
+.terrain-stage{margin:0;height:auto;aspect-ratio:550/330;border-radius:10px}#terrain-svg{height:100%;width:100%}
+#editor-panel{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;padding:0 2px 8px;position:relative}
+.tabs{grid-template-columns:repeat(3,1fr);margin:7px 2px 6px;padding:3px}.tabs button{height:31px;font-size:12px}.board-caption{font-size:9px;margin:0 0 2px}.board-caption>span:first-child{font-size:8px}.board{--top:32px;--bottom:26px}.under-board{padding-top:2px;font-size:8px}
+.input-panel{margin:6px 2px 0;padding-top:5px}.selection-info{min-height:20px;margin-bottom:4px;font-size:10px}.rgb-readout button{font-size:9px;padding:3px 5px}.height-picker button{height:43px;border-radius:7px}.height-picker strong{font-size:18px}.height-picker span{font-size:8px}.input-note{font-size:9px;margin-top:4px;min-height:12px}.tools{margin:6px 2px 0}.tools button{min-height:31px;font-size:10px}.tools button span{font-size:16px}.message{font-size:10px;line-height:1.5;margin:5px 4px 0;min-height:15px}footer{padding:2px 4px 0;font-size:7px}footer button{font-size:9px}
+@media(min-width:600px){.app{max-width:520px;border-block:0;padding:9px 12px}}
+@media(max-height:650px){.terrain-heading{display:none}.header{padding-bottom:2px}.puzzle-info{display:none}}
+@media(max-width:360px){.app{padding-inline:4px}#editor-panel{padding-inline:0}}
+
+.terrain-overlay{position:absolute;z-index:1;display:grid;place-items:center;min-height:36px;border:1px solid #d3ded5;border-radius:8px;background:#fafff7e8;color:#486c5b;box-shadow:0 2px 6px #3653430b;cursor:pointer}
+.terrain-overlay[hidden]{display:none}
+#terrain-top{right:7px;top:7px;width:36px;padding:7px}#terrain-top svg{width:21px;height:21px;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+#terrain-top .iso-icon{display:none}#terrain-top[aria-pressed=true] .top-icon{display:none}#terrain-top[aria-pressed=true] .iso-icon{display:block}
+#terrain-clear{right:7px;bottom:7px;padding:5px 10px;font-size:10px}.terrain-overlay:disabled{opacity:.45;cursor:default}.terrain-overlay:focus-visible{outline:2px solid #486c5b;outline-offset:2px}
+
+/* Fit both square boards to the available width; scroll the page vertically. */
+html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
+.app{max-width:620px;height:auto;min-height:100dvh;overflow:visible;gap:0;padding:6px 4px max(4px,env(safe-area-inset-bottom))}
+#terrain-panel,#editor-panel,#game-panel{display:contents}
+.header,.puzzle-info,.progress-track,.terrain-heading,.diagonal-card,#terrain-line-sums,.tabs,.large-controls,.large-line-clue,.board-caption,.input-panel,.tools,.message,footer{flex-shrink:0}
+.terrain-heading{display:flex;align-items:center;gap:7px;height:23px;margin:0 2px 2px}
+.terrain-heading .terrain-badge{margin-right:auto;font-size:8px}
+#terrain-clear{position:static;padding:3px 7px;font-size:9px;border:1px solid #cbd6c7;border-radius:5px;background:#fafcf5}
+.overview-stage,#board-viewport{position:relative;flex:0 0 auto;aspect-ratio:1;min-height:0;width:100%;overflow:hidden;border:1px solid #c9d5c6;background:#f0f3ec;border-radius:4px}
+#overview-svg{display:block;width:100%;height:100%}
+#board-viewport{display:grid;place-items:center;touch-action:pan-y}
+.individual-sums .board{--gutter:60px;--end:10px;--top:60px;--bottom:10px;--cell-size:10px;width:calc(var(--gutter) + var(--end) + var(--n) * var(--cell-size));height:calc(var(--top) + var(--bottom) + var(--n) * var(--cell-size));grid-template-columns:var(--gutter) repeat(var(--n),var(--cell-size)) var(--end);grid-template-rows:var(--top) repeat(var(--n),var(--cell-size)) var(--bottom)}
+.cell,.cell.zero{font-size:calc(var(--cell-size) * .78);border-width:.5px}
+.cell.major-col,.cell.major-row,.cell.first-col,.cell.first-row{border-width:.7px}
+.cell .micro{display:none}.cell.selected:before{display:none}
+.clue{font-size:calc(var(--cell-size) * .72);background:#f5f5ef;z-index:3;cursor:pointer;overflow:hidden;gap:0;line-height:1}
+.individual-sums .clue.left{padding:0 2px;justify-content:flex-end}
+.individual-sums .clue.top{padding:2px 0;justify-content:flex-end}
+.clue.total{font-size:calc(var(--cell-size) * .75)}
+.clue.right{margin-left:0}.clue.bottom{margin-top:0}
+.corner{font-size:calc(var(--cell-size) * .65);padding:2px;align-items:center}
+.individual-sums .run-tokens{display:flex;gap:.35em;line-height:1;white-space:nowrap;max-width:100%;max-height:100%}
+.individual-sums .clue.top .run-tokens{flex-direction:column;align-items:center;gap:0}
+.run-tokens span{flex-shrink:0}.gap-token{font-weight:800}
+.line-outline{border-width:1.5px;z-index:4}
+.under-board,.input-note{display:none}
+.overview-marker,.overview-diagonal-marker{cursor:pointer;outline:none}.overview-marker rect{fill:#f5f5ef}.overview-diagonal-marker rect{fill:#f4f0e5}
+.overview-marker text,.overview-diagonal-marker text{font-size:6.5px;font-weight:650;pointer-events:none}
+.overview-marker .overview-line-number{font-size:4.5px;fill:#87967f;font-weight:400}
+.overview-legend{font-size:7px;fill:#687b60}
+.overview-marker[aria-pressed=true] rect,.overview-marker:focus-visible rect{fill:#d4dfc8}
+.overview-diagonal-marker[aria-pressed=true] rect,.overview-diagonal-marker:focus-visible rect{fill:#e8d8a6}
+.overview-diagonal{display:none;pointer-events:none}.show-diagonal .overview-diagonal{display:block}
+.show-diagonal .diagonal-cell{box-shadow:inset 0 0 0 1px #c19940}
+[data-sum-channel="0"],.sum-color-0{color:#ae4b43}[data-sum-channel="1"],.sum-color-1{color:#386c48}[data-sum-channel="2"],.sum-color-2{color:#416b9b}
+.diagonal-card{display:flex;align-items:center;gap:7px;font-size:10px;height:26px;color:#6a613e}
+#diagonal-values{display:flex;gap:8px;font-variant-numeric:tabular-nums}
+#show-diagonal{margin-left:auto;border:1px solid #d0c5a4;background:#f7f4e9;border-radius:5px;padding:3px 7px;font-size:9px;color:#78622e;cursor:pointer}
+#show-diagonal[aria-pressed=true]{background:#eee3bb;border-color:#bca45b}
+#terrain-line-sums{display:flex;gap:12px;align-items:center;font-size:10px;height:20px;color:#788475;white-space:nowrap}
+.tabs{margin:3px 0;padding:2px}.tabs button{height:27px}
+.large-controls{display:flex;align-items:center;gap:7px;height:25px;font-size:10px}
+.large-controls label{display:flex;align-items:center;gap:3px}.large-controls select{height:23px;border:1px solid #cbd6c7;border-radius:5px;background:#fafcf5;color:#53694e;font-size:10px}
+.large-controls>span{margin-left:auto;font-size:9px;color:#889380}
+.large-line-clue{height:30px;display:flex;align-items:center;font-size:10px;line-height:14px;color:#3f5743;font-variant-numeric:tabular-nums;word-spacing:1px}
+.board-caption{margin-bottom:1px;font-size:8px}
+.input-panel{margin:3px 0 0;padding-top:3px}.selection-info{min-height:19px;height:19px;margin-bottom:3px;font-size:10px;gap:3px}.rgb-readout button{padding:2px 4px;font-size:9px}
+.height-picker{gap:3px}.height-picker button{height:35px;border-radius:6px;gap:0}.height-picker strong{font-size:15px}.height-picker span{font-size:7px}
+.tools{margin:4px 0 0}.tools button{min-height:28px;font-size:10px}.tools button span{font-size:15px}
+.message{margin:3px 1px 0;min-height:15px;max-height:45px;overflow:auto;font-size:10px;line-height:15px}
+footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-size:9px}
+@media(max-height:700px){.puzzle-info{display:none}.header{padding-bottom:0}.terrain-heading{height:20px}.terrain-heading .terrain-badge{display:none}.progress-track{margin-bottom:2px}.tabs button{height:23px}.large-controls{height:22px}.large-controls select{height:21px}.large-line-clue{height:28px;font-size:9px}.selection-info{font-size:9px}.height-picker button{height:30px}.tools button{min-height:24px}.diagonal-card{height:23px}.message{max-height:30px;font-size:9px}footer{height:19px}}
+
+.overview-marker .clue-text{fill:#536057;font-size:6.5px}.overview-marker.done .clue-text{fill:#4a8654}.overview-marker.conflict rect{fill:#fde0da}.overview-marker.conflict .clue-text{fill:#be453d}
+#terrain-line-sums,.large-line-clue{height:auto;min-height:30px;white-space:normal;line-height:15px;overflow-wrap:anywhere;padding:3px 1px}
+.overview-stack-total{font-size:5px;font-weight:700;font-variant-numeric:tabular-nums;user-select:none}
+.stack-sum-game .clue.clue-done,.stack-sum-game .clue .clue-done{color:#398349}
+.stack-sum-game .clue.clue-conflict,.stack-sum-game .clue .clue-conflict{color:#be453d}
+.overview-marker .clue-done{fill:#398349}.overview-marker .clue-conflict{fill:#be453d}
+.stack-sum-game .cell,.stack-sum-game .cell.zero{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .78))}
+.cell-cross{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
+.stack-sum-game .clue.total{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .75))}
+
+/* Full-width game with the same branding as the collection. */
+html{overflow-anchor:none;--input-dock-height:calc(101px + env(safe-area-inset-bottom));scroll-padding-bottom:calc(var(--input-dock-height) + 12px)}
+html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f5f5ef;color:#293e30}
+.app{width:100%;max-width:none;margin:0;padding:20px 4px calc(var(--input-dock-height) + 12px);border:0;border-radius:0;box-shadow:none;background:#f5f5ef}
+.header{padding:0 8px;margin-bottom:20px;gap:8px}
+.brand{gap:11px;min-width:0}
+.brand h1{font-size:20px;letter-spacing:-.7px;font-weight:700;white-space:nowrap}
+.mark{display:flex;flex-direction:column;gap:3px;flex-shrink:0;position:static;transform:none;width:28px;height:24px}
+.mark i{position:static;display:block;width:28px;height:6px;border-radius:2px;transform:none;background:#e45d58}
+.mark i:nth-child(1){background:#e45d58}.mark i:nth-child(2){background:#58a66c}.mark i:nth-child(3){background:#518bd1}
+.header-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.back-to-list{font-size:12px;white-space:nowrap;color:#42684d;text-decoration:none;padding:8px 0}
+.back-to-list:focus-visible{outline:3px solid #548c67;outline-offset:3px}
+.header .icon-button{width:30px;height:30px}
+.overview-stage,#board-viewport{aspect-ratio:auto;border:0;border-radius:0;width:100%;background:#f5f5ef}
+.individual-sums .clue{font-size:var(--number-size);line-height:1}
+.individual-sums .clue.left{padding:0 6px}
+.individual-sums .clue.top{padding:6px 0}
+.individual-sums .run-tokens{gap:var(--clue-gap,5px);font-size:var(--number-size);font-family:system-ui;line-height:1.25}
+.individual-sums .clue.top .run-tokens{gap:var(--clue-column-gap,4px)}
+.individual-sums .corner{font-size:12px;line-height:1.4;text-align:center}
+.tabs{margin:10px 0}
+.tabs button{height:32px}
+.tools{grid-template-columns:1fr;margin:6px 0 0}
+.tools button{min-height:34px}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%);white-space:nowrap;border:0}
+.reset-in-help{display:block;margin-top:16px;color:#647460;font-size:12px;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:360px){.header{gap:6px}.header-actions{gap:6px}.back-to-list{font-size:11px}}
+
+/* Keep input tools visible without covering the final row of the board. */
+.input-dock{position:fixed;inset:auto 0 0;z-index:20;height:var(--input-dock-height);padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:#f5f5ef;border-top:1px solid #d4dccf;box-shadow:0 -3px 14px #293e3010}
+.input-dock .input-panel{margin:0;padding:0;border:0}
+.input-dock .height-picker button{height:44px}
+.input-dock .tools{margin:6px 0 0}
+.input-dock .tools button{height:34px;min-height:34px}
+
+.overview-stage{margin-top:16px}
+
+.monochrome-game .clue.done{color:#555}.monochrome-game .overview-marker.done .clue-text{fill:#555}.monochrome-game .cell.zero{background:#fff;color:#555}.collection-next{display:block;margin-top:14px;color:#42684d;font-size:13px}</style>
+<link rel="stylesheet" href="site-integration.css?v=4f9e58ff7df9"></head>
+<body class="individual-sums stack-sum-game monochrome-game">
+<main class="app">
+  <header class="header">
+    <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><div><h1>노노그램스택</h1></div></div>
+    <div class="header-actions"><a class="back-to-list" href="collection.html#monochrome">← 목록으로</a><button class="icon-button" id="help" aria-label="게임 방법">?</button></div>
+  </header>
+  <section id="editor-panel" aria-label="명암 스택 입력">
+  <nav class="tabs" aria-label="명암 입력" hidden><button data-tab="0" aria-selected="true">명암</button></nav>
+  <section id="game-panel" aria-label="빨강 퍼즐">
+
+    <div id="board-viewport" aria-label="화면에 맞춘 10×10 입력판"><div id="board" class="board" role="group" aria-label="10행 10열 피크로스"></div></div>
+    <div class="under-board"><span>위·왼쪽 <b>연속 칸 수</b></span><span>아래·오른쪽 <b>최대 높이</b></span></div>
+    <div id="diagonals" class="diagonals" hidden></div>
+  </section>
+  <div class="input-dock">
+  <section class="input-panel" aria-label="높이 입력">
+    <div class="height-picker" id="height-picker" aria-label="입력할 스택 선택">
+      <button id="deselect" aria-label="선택 도구"><strong><svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 3 6 17 3-7 7-3L4 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></strong><span>선택</span></button>
+      <button id="erase" aria-label="지우개 선택"><strong><svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 19-6-6a2 2 0 0 1 0-3l7-7a2 2 0 0 1 3 0l8 8a2 2 0 0 1 0 3l-5 5H9Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m7 6 11 11M8 19h13" stroke="currentColor" stroke-width="1.6"/></svg></strong><span>지우개</span></button>
+      <button data-value="0"><strong>×</strong></button>
+      <button data-value="1"><strong>1</strong></button>
+      <button data-value="2"><strong>2</strong></button>
+      <button data-value="3"><strong>3</strong></button>
+    </div>
+    <p class="input-note" id="input-note">도구 선택 → 칸을 누르거나 드래그</p>
+  </section>
+  <div class="tools">
+    <button id="undo"><span aria-hidden="true">↶</span>되돌리기</button>
+  </div>
+  </div>
+  <div id="message" class="message sr-only" aria-live="polite">같은 높이 구간의 스택 합계와 최대 높이를 단서로 시작해 보세요.</div>
+  </section>
+
+</main>
+<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li></ul><p>양 끝에서부터 맞춰진 구간의 단서는 녹색, 현재 입력으로 성립할 수 없는 단서는 빨간색이에요. 색은 해당 줄의 단서와 입력만으로 판단해요.</p><p>숫자를 선택한 뒤 칸을 누르거나 드래그하세요. 선택 도구로는 입력값을 바꾸지 않고 칸을 살펴볼 수 있어요. 한 번의 드래그는 되돌리기 한 번으로 취소돼요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
+<dialog id="reset-dialog"><span class="eyebrow">START AGAIN</span><h2>처음부터 다시 풀까요?</h2><p>입력한 높이를 모두 지우고 빈 보드에서 시작해요.</p><div class="dialog-actions"><button data-close="reset-dialog">계속 풀기</button><button class="primary-button" id="confirm-reset">다시 시작</button></div></dialog>
+<dialog id="win-dialog"><span class="eyebrow">PICTURE COMPLETE</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300" aria-label="완성된 흑백 그림"></canvas><p>100개의 높이를 모두 찾았어요.</p><button class="primary-button" data-close="win-dialog">완성된 그림 보기</button><a class="collection-next" href="monochrome-0702.html">다음 문제 풀기</a></dialog>
+<script>globalThis.MONO_SPEC={"id":"0611","title":"흑백 문제 032","width":10,"height":10,"channels":1,"maxStack":3,"paletteSize":4,"levels":[0,0.3333333333333333,0.6666666666666666,1],"rule":"height-runs-max","omitAllZeros":true,"noGivens":true,"cells":[[0],[1],[1],[1],[3],[1],[1],[1],[3],[0],[0],[1],[2],[2],[3],[1],[2],[2],[3],[0],[0],[1],[2],[2],[3],[1],[2],[2],[3],[0],[0],[3],[3],[3],[3],[3],[3],[3],[3],[0],[0],[1],[1],[1],[3],[1],[1],[1],[3],[0],[0],[1],[2],[2],[3],[1],[2],[2],[3],[0],[0],[1],[2],[2],[3],[1],[2],[2],[3],[0],[0],[3],[3],[3],[3],[3],[3],[3],[3],[0],[0],[1],[1],[1],[3],[1],[1],[1],[3],[0],[0],[1],[2],[2],[3],[1],[2],[2],[3],[0]],"storageKey":"nonogram-stack-approved-v1-0611-084b8a7b7d0420b8","adjustment":{"targetEmptyPercent":20},"source":{"kind":"human-approved-catalog","subject":"초콜릿","categoryId":"06","category":"디저트","rank":11,"versionId":"488907ef-bf94-44ca-a97a-ca65c654d931","imageSha256":"084b8a7b7d0420b8add7ce7c55d93da6740779e9880604e1fa3616d85551c9c1","folder":"06-디저트/10x10/11-초콜릿/draft-488907ef","approvedAt":"2026-10-24T14:01:09.257Z"},"omitOuterZeros":true};
+(function(root){
+  'use strict';
+  const runs=line=>{const out=[];let last=null;for(const v of line){if(v!==last){out.push(v===0?0:1);last=v;}else if(v!==0)out[out.length-1]++;}return out;};
+  // Segment DP: dot consumes >=1 zeros; positive token consumes exactly that many
+  // equal positive heights; adjacent positive segments must have different heights.
+  function lineSupports(groups,maximum,domains,total=null){
+    const n=domains.length,suffix=Array(groups.length+1).fill(0),memo=new Map();
+    const positiveSuffix=Array(groups.length+1).fill(0);
+    for(let k=groups.length-1;k>=0;k--)suffix[k]=suffix[k+1]+(groups[k]||1);
+    for(let k=groups.length-1;k>=0;k--)positiveSuffix[k]=positiveSuffix[k+1]+groups[k];
+    function visit(k,pos,previous,hit,remaining){
+      if(total!==null&&(remaining<positiveSuffix[k]||remaining>positiveSuffix[k]*maximum))return {ok:false,edges:[]};
+      const base=((k*(n+1)+pos)*(maximum+1)+previous)*2+Number(hit);
+      const key=total===null?base:base*(total+1)+remaining;
+      if(memo.has(key))return memo.get(key);
+      const node={ok:false,edges:[]};memo.set(key,node);
+      if(k===groups.length){node.ok=pos===n&&hit&&(total===null||remaining===0);return node;}
+      if(pos+suffix[k]>n)return node;
+      const add=(length,value)=>{
+        const child=visit(k+1,pos+length,value,hit||value===maximum,total===null?null:remaining-length*value);
+        if(child.ok){node.ok=true;node.edges.push({start:pos,length,value,child});}
+      };
+      if(groups[k]===0){
+        for(let length=1;pos+length+suffix[k+1]<=n;length++){
+          if(!(domains[pos+length-1]&1))break;add(length,0);
+        }
+      }else{
+        const length=groups[k];let shared=(1<<(maximum+1))-2;
+        for(let p=pos;p<pos+length;p++)shared&=domains[p];
+        for(let v=1;v<=maximum;v++)if(v!==previous&&(shared&(1<<v)))add(length,v);
+      }
+      return node;
+    }
+    const first=visit(0,0,0,maximum===0,total);if(!first.ok)return null;
+    const support=Array(n).fill(0),seen=new Set();
+    function collect(node){if(seen.has(node))return;seen.add(node);for(const e of node.edges){for(let p=e.start;p<e.start+e.length;p++)support[p]|=1<<e.value;collect(e.child);}}
+    collect(first);return support;
+  }
+  function createCore(spec){
+    const maxStack=spec.maxStack??3,domainMask=(1<<(maxStack+1))-1;
+    const N=spec.width,solution=spec.cells,sum=a=>a.reduce((x,y)=>x+y,0);
+    const indices=(axis,line)=>Array.from({length:N},(_,p)=>axis==='row'?line*N+p:p*N+line);
+    const values=mask=>Array.from({length:maxStack+1},(_,v)=>v).filter(v=>mask&(1<<v)),singleton=m=>m>0&&(m&(m-1))===0;
+    const clues=[0,1,2].map(c=>['row','col'].flatMap(axis=>Array.from({length:N},(_,line)=>{
+      const cells=indices(axis,line),v=cells.map(i=>solution[i][c]),maximum=Math.max(...v);
+      return {axis,line,cells,groups:runs(v),maximum,total:maximum};
+    })));
+    const caches=clues.map(list=>list.map(()=>new Map()));
+    function supports(channel,index,domains){
+      const clue=clues[channel][index],line=clue.cells.map(i=>domains[i]),key=line.join(','),cache=caches[channel][index];
+      if(cache.has(key))return cache.get(key);
+      const result=lineSupports(clue.groups,clue.maximum,line);
+      if(cache.size>1500)cache.clear();cache.set(key,result);return result;
+    }
+    function propagate(channel,initial,stop=false){
+      const domains=initial.slice(),steps=[];let changed=true;
+      while(changed){changed=false;
+        for(let line=0;line<2*N;line++){
+          const clue=clues[channel][line],support=supports(channel,line,domains);
+          if(!support)throw new Error('동일 높이 구간 또는 최대 높이와 맞지 않는 입력이 있어요.');
+          for(let p=0;p<N;p++){
+            const index=clue.cells[p],before=domains[index],after=before&support[p];
+            if(after!==before){domains[index]=after;changed=true;steps.push({channel,index,before,after,axis:clue.axis,line:clue.line,kind:'height-runs',groups:clue.groups,maximum:clue.maximum});if(stop&&singleton(after))return {domains,steps};}
+          }
+        }
+      }
+      return {domains,steps};
+    }
+    function solve(givens){
+      const domains=[],steps=[];
+      for(let c=0;c<3;c++){const initial=Array(N*N).fill(domainMask);for(const g of givens)if(g.channel===c)initial[g.index]=1<<g.value;const result=propagate(c,initial);domains.push(result.domains);steps.push(...result.steps);}
+      return {domains,steps};
+    }
+    function makeGivens(progress=()=>{}){
+      const givens=[];
+      for(let channel=0;channel<3;channel++){
+        let result=propagate(channel,Array(N*N).fill(domainMask)),added=0;
+        while(result.domains.some(d=>!singleton(d))){
+          const rows=Array(N).fill(0),cols=Array(N).fill(0);
+          result.domains.forEach((d,i)=>{if(!singleton(d)){rows[Math.floor(i/N)]++;cols[i%N]++;}});
+          const candidates=result.domains.map((d,index)=>({d,index})).filter(x=>!singleton(x.d));
+          candidates.sort((a,b)=>values(a.d).length-values(b.d).length||Math.min(rows[Math.floor(a.index/N)],cols[a.index%N])-Math.min(rows[Math.floor(b.index/N)],cols[b.index%N])||a.index-b.index);
+          let best;
+          for(const {index} of candidates.slice(0,8)){
+            const next=result.domains.slice();next[index]=1<<solution[index][channel];const trial=propagate(channel,next);
+            const score=trial.domains.reduce((s,d)=>s+(singleton(d)?30:maxStack+1-values(d).length),0);
+            if(!best||score>best.score)best={index,trial,score};
+          }
+          givens.push({channel,index:best.index,value:solution[best.index][channel]});result=best.trial;added++;
+          if(added%25===0)progress({channel,added,remaining:result.domains.filter(d=>!singleton(d)).length});
+        }
+        progress({channel,added,remaining:0});
+      }
+      // Remove anchors that later deductions made unnecessary.
+      for(let p=givens.length-1;p>=0;p--){const trial=givens.filter((_,i)=>i!==p);if(solve(trial).domains.every(d=>d.every(singleton)))givens.splice(p,1);}
+      return givens;
+    }
+    function deduce(board,stop=true){const domains=[],steps=[];for(let c=0;c<3;c++){const r=propagate(c,board.map(v=>v[c]===null?domainMask:1<<v[c]),stop);domains.push(r.domains);steps.push(...r.steps);if(stop&&r.steps.some(s=>singleton(s.after)))break;}return {domains,steps};}
+    function lineStatus(line,groups,maximum){const valid=lineSupports(groups,maximum,line.map(v=>v===null?domainMask:1<<v));return !valid?'conflict':line.some(v=>v===null)?'':'done';}
+    return {N,maxStack,domainMask,solution,sum,indices,values,singleton,runs,clues,propagate,solve,makeGivens,deduce,lineStatus,lineSupports,rule:'height-runs-max',showTerrainValues:false};
+  }
+  if(typeof module!=='undefined')module.exports={createCore,runs,lineSupports};
+  root.HeightRunCore={createCore,runs,lineSupports};
+  if(root.PUZZLE_SPEC)root.PicrossCore=createCore(root.PUZZLE_SPEC);
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+(function(root){
+'use strict';
+const base=typeof module!=='undefined'?require('./puzzle-core-height-runs.js'):root.HeightRunCore;
+function runs(line){
+  const out=[];let previous=null;
+  for(const value of line){if(value!==previous)out.push(value);else if(value>0)out[out.length-1]+=value;previous=value;}
+  return out;
+}
+function trimOuterZeros(groups){const out=groups.slice();if(out[0]===0)out.shift();if(out.at(-1)===0)out.pop();return out.length?out:[0];}
+function supports(groups,maximum,domains,omitOuterZeros=false){
+  const n=domains.length,memo=new Map(),suffix=Array(groups.length+1).fill(0);
+  for(let k=groups.length-1;k>=0;k--)suffix[k]=suffix[k+1]+(groups[k]===0?1:Math.ceil(groups[k]/maximum));
+  function visit(k,pos,previous,hit){
+    const key=[k,pos,previous,Number(hit)].join(',');if(memo.has(key))return memo.get(key);
+    const node={ok:false,edges:[]};memo.set(key,node);
+    if(k===groups.length){
+      node.ok=hit&&(pos===n||omitOuterZeros&&domains.slice(pos).every(mask=>mask&1));
+      if(node.ok&&pos<n)node.edges.push({pos,length:n-pos,value:0,child:{ok:true,edges:[]}});
+      return node;
+    }
+    if(pos+suffix[k]>n)return node;
+    function add(length,value){
+      const child=visit(k+1,pos+length,value,hit||value===maximum);
+      if(child.ok){node.ok=true;node.edges.push({pos,length,value,child});}
+    }
+    if(groups[k]===0){
+      for(let length=1;pos+length+suffix[k+1]<=n;length++){if(!(domains[pos+length-1]&1))break;add(length,0);}
+    }else for(let value=1;value<=maximum;value++){
+      if(value===previous||groups[k]%value!==0)continue;
+      const length=groups[k]/value;if(pos+length+suffix[k+1]>n)continue;
+      if(domains.slice(pos,pos+length).every(mask=>mask&(1<<value)))add(length,value);
+    }
+    return node;
+  }
+  let root;
+  if(omitOuterZeros&&maximum>0){
+    root={ok:false,edges:[]};
+    for(let start=0;start<=n;start++){
+      if(start>0&&!(domains[start-1]&1))break;
+      const child=visit(0,start,0,false);
+      if(child.ok){root.ok=true;root.edges.push({pos:0,length:start,value:0,child});}
+    }
+  }else root=visit(0,0,0,maximum===0);
+  if(!root.ok)return null;
+  const masks=Array(n).fill(0),seen=new Set();
+  function collect(node){if(seen.has(node))return;seen.add(node);for(const e of node.edges){for(let i=e.pos;i<e.pos+e.length;i++)masks[i]|=1<<e.value;collect(e.child);}}
+  collect(root);return masks;
+}
+
+// A hidden zero gap can occur before any positive run. Equal heights need a
+// nonempty gap; different heights may touch or have a gap of unknown length.
+function supportsNoZeros(groups,maximum,domains){
+  const n=domains.length;
+  if(!groups.length)return maximum===0&&domains.every(m=>m&1)?domains.map(()=>1):null;
+  if(maximum<=0)return null;
+  const memo=new Map(),suffix=Array(groups.length+1).fill(0);
+  for(let k=groups.length-1;k>=0;k--)suffix[k]=suffix[k+1]+Math.ceil(groups[k]/maximum);
+  function visit(k,pos,previous,hit){
+    const key=[k,pos,previous,+hit].join(','),cached=memo.get(key);if(cached)return cached;
+    const node={ok:false,edges:[]};memo.set(key,node);
+    if(k===groups.length){
+      node.ok=hit&&domains.slice(pos).every(m=>m&1);
+      if(node.ok)node.edges.push({segments:[[pos,n-pos,0]],child:null});
+      return node;
+    }
+    for(let start=pos;start+suffix[k]<=n;start++){
+      if(start>pos&&!(domains[start-1]&1))break;
+      for(let value=1;value<=maximum;value++){
+        if(groups[k]%value||start===pos&&previous===value)continue;
+        const length=groups[k]/value;
+        if(start+length+suffix[k+1]>n||!domains.slice(start,start+length).every(m=>m&(1<<value)))continue;
+        const child=visit(k+1,start+length,value,hit||value===maximum);
+        if(child.ok){node.ok=true;node.edges.push({segments:[[pos,start-pos,0],[start,length,value]],child});}
+      }
+    }
+    return node;
+  }
+  const root=visit(0,0,0,false);if(!root.ok)return null;
+  const masks=Array(n).fill(0),seen=new Set();
+  function collect(node){if(!node||seen.has(node))return;seen.add(node);for(const e of node.edges){for(const [pos,length,value] of e.segments)for(let i=pos;i<pos+length;i++)masks[i]|=1<<value;collect(e.child);}}
+  collect(root);return masks;
+}
+
+function createCore(spec){
+  const legacy=base.createCore(spec),{N,solution,indices,singleton,values,domainMask}=legacy;
+  const omitAllZeros=!!spec.omitAllZeros,omitOuterZeros=!!spec.omitOuterZeros;
+  const clueRuns=line=>omitAllZeros?runs(line).filter(v=>v>0):omitOuterZeros?trimOuterZeros(runs(line)):runs(line);
+  const lineSupports=(groups,maximum,domains)=>omitAllZeros?supportsNoZeros(groups,maximum,domains):supports(groups,maximum,domains,omitOuterZeros);
+  function makeClues(channel){return ['row','col'].flatMap(axis=>Array.from({length:N},(_,line)=>{
+    const cells=indices(axis,line),heights=cells.map(i=>channel===null?solution[i].reduce((s,v)=>s+v,0):solution[i][channel]);
+    return {axis,line,cells,groups:clueRuns(heights),maximum:Math.max(...heights),total:Math.max(...heights)};
+  }));}
+  const clues=[0,1,2].map(makeClues),combinedClues=makeClues(null),caches=new Map();
+  function cached(clue,domains){
+    let cache=caches.get(clue);if(!cache){cache=new Map();caches.set(clue,cache);}
+    const key=domains.join(',');if(cache.has(key))return cache.get(key);
+    const result=lineSupports(clue.groups,clue.maximum,domains);if(cache.size>1200)cache.clear();cache.set(key,result);return result;
+  }
+  function triples(masks){const out=[];for(const r of values(masks[0]))for(const g of values(masks[1]))for(const b of values(masks[2]))out.push([r,g,b]);return out;}
+  function propagate(initial,stop=false){
+    const domains=initial.map(d=>d.slice()),steps=[];let changed=true;
+    function apply(channel,index,after,clue,combined){
+      const before=domains[channel][index];after&=before;if(!after)throw new Error('구간 스택 합계 또는 최대 높이와 맞지 않아요.');
+      if(after===before)return false;
+      domains[channel][index]=after;changed=true;
+      steps.push({channel,index,before,after,kind:combined?'combined-run-sums':'run-stack-sums',axis:clue.axis,line:clue.line,groups:clue.groups,maximum:clue.maximum});
+      return stop&&singleton(after);
+    }
+    while(changed){changed=false;
+      for(let c=0;c<3;c++)for(const clue of clues[c]){
+        const allowed=cached(clue,clue.cells.map(i=>domains[c][i]));if(!allowed)throw new Error('구간 스택 합계 또는 최대 높이와 맞지 않아요.');
+        for(let p=0;p<N;p++)if(apply(c,clue.cells[p],allowed[p],clue,false))return {domains,steps};
+      }
+      for(const clue of combinedClues){
+        const combinations=clue.cells.map(i=>triples(domains.map(d=>d[i])));
+        const sums=combinations.map(list=>list.reduce((m,t)=>m|(1<<(t[0]+t[1]+t[2])),0));
+        const allowed=cached(clue,sums);if(!allowed)throw new Error('전체뷰의 구간 합계 또는 최대 높이와 맞지 않아요.');
+        for(let p=0;p<N;p++){
+          const masks=[0,0,0];for(const t of combinations[p])if(allowed[p]&(1<<(t[0]+t[1]+t[2])))for(let c=0;c<3;c++)masks[c]|=1<<t[c];
+          for(let c=0;c<3;c++)if(apply(c,clue.cells[p],masks[c],clue,true))return {domains,steps};
+        }
+      }
+    }
+    return {domains,steps};
+  }
+  function solve(givens=[]){const domains=Array.from({length:3},()=>Array(N*N).fill(domainMask));for(const g of givens)domains[g.channel][g.index]=1<<g.value;return propagate(domains);}
+  const deduce=(board,stop=true)=>propagate([0,1,2].map(c=>board.map(t=>t[c]===null?domainMask:1<<t[c])),stop);
+  function lineStatus(line,groups,maximum){const valid=lineSupports(groups,maximum,line.map(v=>v===null?domainMask:1<<v));return !valid?'conflict':line.some(v=>v===null)?'':'done';}
+  function combinedStatus(board,clue){
+    const sums=clue.cells.map(i=>triples(board[i].map(v=>v===null?domainMask:1<<v)).reduce((m,t)=>m|(1<<(t[0]+t[1]+t[2])),0));
+    return !cached(clue,sums)?'conflict':clue.cells.every(i=>board[i].every(v=>v!==null))?'done':'';
+  }
+  const hintReason=step=>`${step.kind==='combined-run-sums'?'전체뷰 RGB 합산 높이': ['빨강','녹색','파랑'][step.channel]} ${step.line+1}${step.axis==='row'?'행':'열'}의 구간 스택 합계 [${step.groups.join(' ')}], 최대 높이 ${step.maximum}와 교차하는 줄의 조건을 적용하면`;
+  return {...legacy,clues,combinedClues,runs:clueRuns,solve,deduce,propagate,lineStatus,combinedStatus,hintReason,stackSumRuns:true,omitAllZeros,omitOuterZeros,noGivens:true,storageKey:spec.storageKey||'rgb-stack-picross-fruit-square-v1'};
+}
+if(typeof module!=='undefined')module.exports={createCore,runs,trimOuterZeros,lineSupports:supports,lineSupportsNoZeros:supportsNoZeros};
+root.StackSumCore={createCore,runs,lineSupportsNoZeros:supportsNoZeros};
+if(root.PUZZLE_SPEC)root.PicrossCore=createCore(root.PUZZLE_SPEC);
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+(function(root){
+'use strict';
+const helpers=typeof module!=='undefined'?require('./puzzle-core-stack-sums.js'):root.StackSumCore;
+function createCore(spec){
+  const N=spec.width,maxStack=3,domainMask=15,solution=spec.cells.map(cell=>cell.slice());
+  const sum=values=>values.reduce((a,b)=>a+b,0),singleton=mask=>mask>0&&(mask&(mask-1))===0;
+  const values=mask=>[0,1,2,3].filter(value=>mask&(1<<value));
+  const indices=(axis,line)=>Array.from({length:N},(_,i)=>axis==='row'?line*N+i:i*N+line);
+  const runs=line=>helpers.runs(line).filter(value=>value>0);
+  const lineClues=['row','col'].flatMap(axis=>Array.from({length:N},(_,line)=>{
+    const cells=indices(axis,line),heights=cells.map(i=>solution[i][0]);
+    return {axis,line,cells,groups:runs(heights),maximum:Math.max(...heights),total:Math.max(...heights)};
+  }));
+  const supports=(clue,masks)=>helpers.lineSupportsNoZeros(clue.groups,clue.maximum,masks);
+  function propagate(initial,stop=false){
+    const domains=initial.slice(),steps=[];let changed=true;
+    while(changed){changed=false;for(const clue of lineClues){
+      const allowed=supports(clue,clue.cells.map(i=>domains[i]));
+      if(!allowed)throw new Error('구간 스택 합계 또는 최대 높이와 맞지 않아요.');
+      for(let p=0;p<N;p++){
+        const index=clue.cells[p],before=domains[index],after=allowed[p]&before;
+        if(after===before)continue;
+        domains[index]=after;changed=true;
+        steps.push({channel:0,index,before,after,kind:'run-stack-sums',axis:clue.axis,line:clue.line,groups:clue.groups,maximum:clue.maximum});
+        if(stop&&singleton(after))return {domains:[domains],steps};
+      }
+    }}
+    return {domains:[domains],steps};
+  }
+  function solve(givens=[]){const masks=Array(N*N).fill(domainMask);for(const g of givens)masks[g.index]=1<<g.value;return propagate(masks);}
+  const deduce=(board,stop=true)=>propagate(board.map(cell=>cell[0]===null?domainMask:1<<cell[0]),stop);
+  const lineStatus=(line,groups,maximum)=>!helpers.lineSupportsNoZeros(groups,maximum,line.map(v=>v===null?domainMask:1<<v))?'conflict':line.includes(null)?'':'done';
+  return {N,maxStack,domainMask,channels:1,solution,sum,singleton,values,indices,runs,clues:[lineClues],combinedClues:lineClues,solve,deduce,lineStatus,
+    combinedStatus:(board,clue)=>lineStatus(clue.cells.map(i=>board[i][0]),clue.groups,clue.maximum),
+    storageKey:spec.storageKey,rule:'height-runs-max',stackSumRuns:true,omitAllZeros:true,omitOuterZeros:true,noGivens:true,showTerrainValues:false};
+}
+if(typeof module!=='undefined')module.exports={createCore};
+if(root.MONO_SPEC)root.PicrossCore=createCore(root.MONO_SPEC);
+})(typeof globalThis!=='undefined'?globalThis:this);
+</script>
+<script>const GIVEN_DATA=[];
+(function(root){
+  'use strict';
+  const cache=new Map();
+  // Only visible line clues and entered values are accepted; no answer data.
+  function evaluate(line,groups,maximum){
+    const key=JSON.stringify([line,groups,maximum]);if(cache.has(key))return cache.get(key);
+    const tokens=groups.map(()=>''),known=line.filter(v=>v!==null);
+    const maximumState=known.some(v=>v>maximum)?'conflict':known.includes(maximum)?'done':'';
+    const mark=(i,state)=>{if(i>=0&&i<tokens.length&&(tokens[i]!=='conflict'||state==='conflict'))tokens[i]=state;};
+    function scan(values,reverse){
+      let pos=0,k=0;
+      while(pos<values.length){
+        while(values[pos]===0)pos++;
+        if(pos===values.length||values[pos]===null)return;
+        const index=reverse?groups.length-1-k:k,target=groups[index],value=values[pos];
+        if(target===undefined){mark(reverse?0:groups.length-1,'conflict');return;}
+        let sum=0;while(pos<values.length&&values[pos]===value){sum+=value;pos++;}
+        const closed=pos===values.length||values[pos]!==null;
+        if(value>maximum||target%value!==0||sum>target||closed&&sum!==target){mark(index,'conflict');return;}
+        if(sum===target)mark(index,'done');
+        if(!closed)return;
+        k++;
+      }
+    }
+    scan(line,false);scan(line.slice().reverse(),true);
+    const allows=(i,v)=>line[i]===null||line[i]===v,memo=new Map(),suffix=Array(groups.length+1).fill(0);
+    if(maximum>0)for(let k=groups.length-1;k>=0;k--)suffix[k]=suffix[k+1]+Math.ceil(groups[k]/maximum);
+    function fits(k,pos,previous,hit){
+      const id=[k,pos,previous,+hit].join(',');if(memo.has(id))return memo.get(id);
+      let result=false;
+      if(k===groups.length)result=hit&&line.slice(pos).every(v=>v===null||v===0);
+      else if(maximum>0)outer:for(let start=pos;start+suffix[k]<=line.length;start++){
+        if(start>pos&&!allows(start-1,0))break;
+        for(let value=1;value<=maximum;value++){
+          if(groups[k]%value||start===pos&&previous===value)continue;
+          const length=groups[k]/value;if(start+length+suffix[k+1]>line.length)continue;
+          let valid=true;for(let i=start;i<start+length;i++)if(!allows(i,value)){valid=false;break;}
+          if(valid&&fits(k+1,start+length,value,hit||value===maximum)){result=true;break outer;}
+        }
+      }
+      memo.set(id,result);return result;
+    }
+    const possible=fits(0,0,0,maximum===0);
+    // Feasibility is diagnostic only. An impossible full-line completion must
+    // not color unresolved clues: only the two edge scans grade those tokens.
+    const result={tokens,maximum:maximumState,possible};
+    if(cache.size>1600)cache.clear();cache.set(key,result);return result;
+  }
+  const api={evaluate};if(typeof module!=='undefined')module.exports=api;root.ClueFeedback=api;
+})(typeof globalThis!=='undefined'?globalThis:this);
+
+'use strict';
+const C=PicrossCore, N=C.N, MAX_STACK=C.maxStack, CHANNEL_COUNT=C.channels||3, CHANNELS=Array.from({length:CHANNEL_COUNT},(_,i)=>i), MONO=CHANNEL_COUNT===1, names=MONO?['명암']:['빨강','녹색','파랑'];
+const themes=MONO?[['#555555','#e5e5e5']]:[['#c6544d','#fae8e3'],['#518568','#e2f0e4'],['#547fae','#e1ebf7']];
+const key=C.storageKey||(C.rule==='height-runs-max'?'rgb-stack-picross-v2-bull-height-runs-max':globalThis.PUZZLE_SPEC?'rgb-stack-picross-v1-bull-30-adjust30':'rgb-stack-picross-v1-rocket-10');
+const $=id=>document.getElementById(id);
+document.documentElement.style.setProperty('--n',N);
+const fixed=Array.from({length:N*N},()=>Array(CHANNEL_COUNT).fill(false));
+GIVEN_DATA.forEach(g=>fixed[g.index][g.channel]=true);
+let boardState=fresh(), tab=0, selected=null, history=[], pendingHint=null, errors=new Set(), completed=false, storageOK=true;
+let paintValue=0, stroke=null;
+let terrainSelection=null;
+function inTerrainLine(i){return terrainSelection!==null&&(terrainSelection.axis==='row'?Math.floor(i/N):i%N)===terrainSelection.line;}
+function activeClue(axis,line){return terrainSelection!==null?terrainSelection.axis===axis&&terrainSelection.line===line:selected!==null&&(axis==='row'?Math.floor(selected/N):selected%N)===line;}
+function selectBoardLine(axis,line){finishStroke();terrainSelection=line===null?null:{axis,line};selected=null;cancelHint();render();if(window.revealBoardLine)window.revealBoardLine(axis,line);}
+let cellNodes=[],clueNodes=[],dragFrame=0,renderedSelection=null;
+const dirtyCells=new Set();
+function fresh(){const a=Array.from({length:N*N},()=>Array(CHANNEL_COUNT).fill(null));GIVEN_DATA.forEach(g=>a[g.index][g.channel]=g.value);return a;}
+try{
+  const ownSave=localStorage.getItem(key),legacySave=!C.noGivens&&!ownSave&&C.rule==='height-runs-max'?localStorage.getItem('rgb-stack-picross-v1-bull-30-adjust30'):null;
+  const saved=JSON.parse(ownSave||legacySave||'null');
+  if(saved && Array.isArray(saved.cells) && saved.cells.length===N*N && saved.cells.every(a=>Array.isArray(a)&&a.length===CHANNEL_COUNT&&a.every(v=>v===null||Number.isInteger(v)&&v>=0&&v<=MAX_STACK))){
+    boardState=saved.cells;
+    if(legacySave)for(const g of globalThis.LEGACY_GIVENS||[])boardState[g.index][g.channel]=null;
+    GIVEN_DATA.forEach(g=>boardState[g.index][g.channel]=g.value);
+    if(CHANNELS.includes(saved.tab))tab=saved.tab;
+    completed=isSolved();
+  }
+}catch{storageOK=false;}
+function save(){try{localStorage.setItem(key,JSON.stringify({cells:boardState,tab}));}catch{storageOK=false;}if(!storageOK)say('이 브라우저에서는 자동 저장할 수 없어요.',true);}
+function say(message,warning=false){$('message').textContent=message;$('message').classList.toggle('warning',warning);}
+function isSolved(){return boardState.every((cell,i)=>cell.every((v,c)=>v===C.solution[i][c]));}
+function rgb(values){const levels=MONO?Array(3).fill(255-Math.round((values[0]??0)*255/MAX_STACK)):values.map(v=>Math.round((v??0)*255/MAX_STACK));return 'rgb('+levels.join(',')+')';}
+function cancelHint(){pendingHint=null;if(!$('hint'))return;$('hint').classList.remove('pending');$('hint').innerHTML='<span aria-hidden="true">✦</span>논리 힌트';}
+function status(cells,channel,groups,total,knownClue){
+  const data=cells.map(i=>channel==='all'?(boardState[i].every(v=>v!==null)?C.sum(boardState[i]):null):boardState[i][channel]);
+  if(C.lineStatus)return C.lineStatus(data,groups,total,knownClue||C.clues[channel]?.find(clue=>clue.cells.every((v,p)=>v===cells[p])));
+  if(channel==='all'){
+    const lo=C.sum(cells.flatMap(i=>boardState[i].map(v=>v??0))), hi=C.sum(cells.flatMap(i=>boardState[i].map(v=>v??MAX_STACK)));
+    if(lo>total||hi<total)return 'conflict';
+  }else{
+    const lo=C.sum(data.map(v=>v??0)),hi=C.sum(data.map(v=>v??MAX_STACK));
+    if(lo>total||hi<total)return 'conflict';
+    const clue=knownClue||C.clues[channel].find(c=>c.cells.every((v,p)=>v===cells[p]));
+    if(!clue.patterns.some(mask=>data.every((v,p)=>v===null||Boolean((mask>>p)&1)===(v>0))))return 'conflict';
+  }
+  if(data.some(v=>v===null))return '';
+  return C.sum(data)===total&&C.runs(data).join(',')===groups.join(',')?'done':'conflict';
+}
+function cellAppearance(i,channel){
+  const row=Math.floor(i/N),col=i%N,cell=boardState[i],value=channel===null?null:cell[channel],anchor=channel===null?fixed[i].some(Boolean):fixed[i][channel];
+  const classes=['cell',col===0?'first-col':'',row===0?'first-row':'',col%5===4?'major-col':'',row%5===4?'major-row':'',selected===i?'selected':'',anchor?'fixed':'',pendingHint?.index===i?'hint-cell':'',errors.has(`${i}:${channel}`)?'error':''];
+  let bg='',fg='',content='';
+  if(inTerrainLine(i))classes.push('line-focused');
+  if((C.diagonals?.[window.overviewDiagonal]?.cells||C.diagonal?.cells)?.includes(i))classes.push('diagonal-cell');
+  if(channel===null){
+    classes.push('merged');
+    if(cell.every(v=>v===null)){classes.push('unknown');}
+    else if(cell.every(v=>v===0)){classes.push('zero');content='×';}
+    else{bg=rgb(cell);fg='#ffffff';content=cell.some(v=>v===null)?'<span class="unknown-rgb">?</span>':'';}
+  }else if(value===null){classes.push('unknown');}
+  else if(value===0){classes.push('zero');content='×';if(MONO)bg='#fff';}
+  else if(MONO){bg=rgb(cell);fg=value>=2?'#fff':'#333';content=String(value);}
+  else{
+    const opacity=[0,.18,.36,.58,.84][Math.round(value*4/MAX_STACK)],colors=[[213,91,80],[73,143,92],[69,125,185]][channel];
+    bg=`rgba(${colors.join(',')},${opacity})`;fg=value>=3?'#fff':themes[channel][0];
+    content=`${value}<span class="micro" aria-hidden="true">${'<i></i>'.repeat(value)}</span>`;
+  }
+  if(content==='×')content='<svg class="cell-cross" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2L22 22M22 2L2 22"/></svg>';
+  const desc=channel===null?cell.map((v,c)=>`${names[c]} ${v===null?'미정':v+'스택'}`).join(', '):`${names[channel]} ${value===null?'미정':value+'스택'}${anchor?', 공개 높이':''}`;
+  return {row,col,classes:classes.join(' '),bg,fg,content,label:`${row+1}행 ${col+1}열, ${desc}`};
+}
+function updateProgress(){
+  const filled=boardState.flat().filter(v=>v!==null).length;
+  if($('progress-text'))$('progress-text').textContent=`${filled} / ${N*N*CHANNEL_COUNT}`;if($('progress-fill'))$('progress-fill').style.width=`${filled/(N*N*CHANNEL_COUNT)*100}%`;
+}
+function render(){
+  if(dragFrame)cancelAnimationFrame(dragFrame);
+  dragFrame=0;dirtyCells.clear();
+  const focused=document.activeElement?.dataset?.index;
+  const channel=tab==='all'?null:tab;
+  const theme=channel===null?['#64804e','#e8eedf']:themes[channel];
+  document.documentElement.style.setProperty('--accent',theme[0]);document.documentElement.style.setProperty('--tint',theme[1]);
+  document.querySelectorAll('[data-tab]').forEach(button=>{const active=button.dataset.tab===String(tab);button.setAttribute('aria-selected',active);button.tabIndex=active?0:-1;});
+  $('game-panel').setAttribute('aria-label',`${channel===null?'전체':names[channel]} 퍼즐`);
+  if($('board-title'))$('board-title').textContent=channel===null?'COLOR COMPOSITE':['RED CHANNEL','GREEN CHANNEL','BLUE CHANNEL'][channel];
+  if($('anchor-count'))$('anchor-count').textContent=channel===null?GIVEN_DATA.length:GIVEN_DATA.filter(g=>g.channel===channel).length;
+  const lineInfo=['row','col'].map(axis=>Array.from({length:N},(_,line)=>{
+    const clue=(channel===null?C.combinedClues:C.clues[channel])[line+(axis==='col'?N:0)],cells=clue.cells,groups=clue.groups,total=clue.maximum??clue.total;
+    const values=cells.map(i=>channel===null?(boardState[i].includes(null)?null:C.sum(boardState[i])):boardState[i][channel]);
+    return {groups,total,feedback:ClueFeedback.evaluate(values,groups,total)};
+  }));
+  let html=`<div class="corner" style="grid-row:1;grid-column:1">${C.stackSumRuns?'동일 높이<br>구간 스택 합':C.channelTotals?'같은 높이<br>연속 칸 수':'칸 수'}</div>`;
+  for(let l=0;l<N;l++){
+    for(const axis of ['row','col']){
+      const a=axis==='row'?0:1,info=lineInfo[a][l],active=activeClue(axis,l);
+      const place=a===0?`grid-row:${l+2};grid-column:1`:`grid-row:1;grid-column:${l+2}`;
+      const totalPlace=a===0?`grid-row:${l+2};grid-column:${N+2}`:`grid-row:${N+2};grid-column:${l+2}`;
+      const classes=active?'active-line':'';
+      const tokens=info.groups.map(n=>C.rule==='height-runs-max'&&!C.stackSumRuns&&n===0?'·':n);
+      html+=`<div class="clue ${a===0?'left':'top'} ${classes}" data-clue="${a*N+l}" style="${place}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'동일 높이 구간':'연속 칸 수'} ${tokens.join(' ')||(C.omitAllZeros?'빈 줄':0)}"><div class="run-tokens">${(tokens.length||C.omitAllZeros?tokens:[0]).map((n,k)=>`<span data-clue-token="${k}" class="${n==='·'?'gap-token':''} clue-${info.feedback.tokens[k]||'pending'}">${n}</span>`).join('')}</div></div>`;
+      html+=`<div class="clue total ${a===0?'right':'bottom'} ${classes} clue-${info.feedback.maximum||'pending'}" data-clue="${a*N+l}" style="${totalPlace}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'최대 높이':'스택 합'} ${info.total}">${info.total}</div>`;
+    }
+  }
+  for(let i=0;i<N*N;i++){
+    const a=cellAppearance(i,channel);
+    html+=`<button class="${a.classes}" data-index="${i}" style="grid-row:${a.row+2};grid-column:${a.col+2};${a.bg?'background:'+a.bg+';':''}${a.fg?'color:'+a.fg+';':''}" tabindex="${i===(selected??0)?0:-1}" aria-label="${a.label}" aria-pressed="${selected===i}">${a.content}</button>`;
+  }
+  if(terrainSelection){
+    const {axis,line}=terrainSelection;
+    const place=axis==='row'?`grid-row:${line+2};grid-column:2 / ${N+2}`:`grid-row:2 / ${N+2};grid-column:${line+2}`;
+    html+=`<div class="line-outline" style="${place}" aria-hidden="true"></div>`;
+  }
+  html+=`<div class="corner" style="grid-row:${N+2};grid-column:1;align-items:center;padding:0">${C.rule==='height-runs-max'?'최대':'합계'}</div>`;
+  $('board').innerHTML=html;
+  cellNodes=Array.from($('board').querySelectorAll('[data-index]'));
+  clueNodes=Array.from({length:2*N},()=>[]);
+  $('board').querySelectorAll('[data-clue]').forEach(el=>clueNodes[Number(el.dataset.clue)].push(el));
+  renderedSelection=selected;
+  if(focused!==undefined)$('board').querySelector(`[data-index="${focused}"]`)?.focus({preventScroll:true});
+  updateProgress();
+  $('diagonals').hidden=channel!==null;
+  if(channel===null)$('diagonals').innerHTML=[false,true].map(reverse=>{
+    const ids=Array.from({length:N},(_,p)=>p*N+(reverse?N-1-p:p));
+    const goal=C.sum(ids.flatMap(i=>C.solution[i]));
+    const current=C.sum(ids.flatMap(i=>boardState[i].map(v=>v??0)));
+    return `<span>${reverse?'↙':'↘'} 대각선 <b>${current} / ${goal}</b></span>`;
+  }).join('');
+
+  document.querySelectorAll('[data-value]').forEach(b=>{b.disabled=channel===null;const active=channel!==null&&paintValue===Number(b.dataset.value);b.classList.toggle('current',active);b.setAttribute('aria-pressed',active);});
+  $('input-note').textContent=channel===null?'전체는 미리보기 · R / G / B를 눌러 색상별로 입력':paintValue==='select'?'선택 · 값을 바꾸지 않고 칸을 살펴볼 수 있어요':`${paintValue===null?'지우개':paintValue===0?'× · 0스택':paintValue+'스택'} 선택 중 · 칸을 누르거나 드래그하세요`;
+  $('deselect').disabled=channel===null;
+  $('deselect').classList.toggle('current',channel!==null&&paintValue==='select');
+  $('deselect').setAttribute('aria-pressed',channel!==null&&paintValue==='select');
+  $('erase').disabled=channel===null;
+  $('erase').classList.toggle('current',channel!==null&&paintValue===null);
+  $('erase').setAttribute('aria-pressed',channel!==null&&paintValue===null);
+  $('undo').disabled=history.length===0;
+  if(typeof window.renderTerrain==='function')window.renderTerrain();
+  if(window.syncLargeUI)window.syncLargeUI();
+}
+function setTab(value){if(!CHANNELS.includes(value))return;finishStroke();tab=value;cancelHint();render();save();}
+function edit(value){
+  if(value!==null&&(!Number.isInteger(value)||value<0||value>MAX_STACK))return;
+  if(tab==='all'||value==='select'||selected===null||fixed[selected][tab])return;
+  const before=boardState[selected][tab];if(before===value)return;
+  history.push({channel:tab,changes:[{index:selected,before,after:value}]});
+  boardState[selected][tab]=value;errors.clear();cancelHint();save();render();checkWin();
+}
+function checkWin(){
+  if(!isSolved())return;
+  cancelHint();if(typeof window.clearTerrainSelection==='function')window.clearTerrainSelection();render();save();say(`완성! ${N*N*CHANNEL_COUNT}개의 높이가 모두 맞아요.`);
+  if(completed)return;completed=true;
+  const ctx=$('win-art').getContext('2d');
+  ctx.fillStyle=MONO?'#fff':'#172128';ctx.fillRect(0,0,300,300);
+  C.solution.forEach((cell,i)=>{if(C.sum(cell)===0)return;ctx.fillStyle=rgb(cell);ctx.fillRect((i%N)*(260/N)+20,Math.floor(i/N)*(260/N)+20,260/N,260/N);});
+  $('win-dialog').showModal();
+}
+function undo(){finishStroke();const action=history.pop();if(!action)return;for(const change of action.changes)boardState[change.index][action.channel]=change.before;selected=action.changes[0].index;tab=action.channel;completed=false;errors.clear();cancelHint();save();render();say(`${action.changes.length}칸의 입력을 되돌렸어요.`);}
+function findMistakes(){const result=[];boardState.forEach((cell,i)=>cell.forEach((v,c)=>{if(v!==null&&v!==C.solution[i][c])result.push({index:i,channel:c});}));return result;}
+function hint(){
+  if(pendingHint){const h=pendingHint;selected=h.index;tab=h.channel;edit(h.value);if(!isSolved())say(`${names[h.channel]} ${Math.floor(h.index/N)+1}행 ${h.index%N+1}열을 ${h.value}스택으로 적용했어요.`);return;}
+  if(isSolved()){say('이미 모든 높이를 찾았어요!');return;}
+  if(findMistakes().length){say('현재 입력 중 정답과 다른 높이가 있어요. ‘검사’로 위치를 확인한 뒤 힌트를 받아 보세요.',true);return;}
+  if(C.deduce){
+    const result=C.deduce(boardState,true),step=result.steps.find(s=>C.singleton(s.after)&&boardState[s.index][s.channel]===null);
+    if(!step){say('현재 입력에서 새로운 확정 칸을 찾지 못했어요.',true);return;}
+    const value=C.values(step.after)[0];pendingHint={...step,value};selected=step.index;tab=step.channel;
+    const range=step.otherMinimum===step.otherMaximum?String(step.otherMinimum):`${step.otherMinimum}~${step.otherMaximum}`;
+    const reason=C.hintReason?C.hintReason(step):step.kind==='diagonal-sum'?`${step.edge==='right'?'우측':'하단'} ${step.line+1}번 ↘ 대각선의 ${names[step.channel]} 합계 ${step.total}와 남은 후보를 적용하면`:step.kind==='height-runs-sum'?`${step.line+1}${step.axis==='row'?'행':'열'}의 ${names[step.channel]} 합계 ${step.total}, 같은 높이 구간과 최대 높이 ${step.maximum}를 적용하면`:step.kind==='height-runs'?`${step.line+1}${step.axis==='row'?'행':'열'}의 구간 [${step.groups.map(n=>n===0?'·':n).join(' ')}], 최대 높이 ${step.maximum}와 교차하는 줄의 조건을 적용하면`:step.kind==='height'?`이 칸의 RGB 총높이는 ${step.total}, 다른 두 색의 가능한 합은 ${range}이므로`:step.kind==='shape'?`${step.line+1}${step.axis==='row'?'행':'열'}의 연속 칸 수 [${step.groups.join(', ')||0}]와 교차하는 줄의 조건을 적용하면`:`${step.line+1}${step.axis==='row'?'행':'열'}의 합 ${step.total}에서 다른 칸의 가능한 합 ${range}을 고려하면`;
+    say(`${reason}, ${Math.floor(step.index/N)+1}행 ${step.index%N+1}열 ${names[step.channel]}은 ${value}스택이에요. 다시 누르면 적용해요.`);
+    $('hint').classList.add('pending');$('hint').innerHTML='<span aria-hidden="true">✦</span>적용';render();save();if(window.revealBoardCell)window.revealBoardCell(selected);return;
+  }
+  const channels=tab==='all'?CHANNELS:[tab,...CHANNELS.filter(c=>c!==tab)];
+  for(const channel of channels){
+    const initial=boardState.map(cell=>cell[channel]===null?C.domainMask:1<<cell[channel]);
+    let result;try{result=C.propagate(channel,initial,true);}catch{say('입력과 힌트가 서로 맞지 않아요. 검사를 눌러 확인해 주세요.',true);return;}
+    const step=result.steps.find(s=>C.singleton(s.after)&&boardState[s.index][channel]===null);
+    if(!step)continue;
+    const value=C.values(step.after)[0];pendingHint={...step,value};selected=step.index;tab=channel;
+    const where=`${step.line+1}${step.axis==='row'?'행':'열'}`;
+    const range=step.otherMinimum===step.otherMaximum?String(step.otherMinimum):`${step.otherMinimum}~${step.otherMaximum}`;
+    const reason=step.kind==='shape'?`${where}의 연속 칸 수 [${step.groups.join(', ')||0}]와 교차하는 줄의 조건을 적용하면`:`다른 줄의 조건까지 적용했을 때 ${where}의 나머지 칸 합은 ${range}이에요. 이 줄의 총합 ${step.total}을 맞추면`;
+    say(`${names[channel]} · ${reason}, ${Math.floor(step.index/N)+1}행 ${step.index%N+1}열은 ${value}스택으로 확정돼요. ‘적용’을 누르면 입력해요.`);
+    $('hint').classList.add('pending');$('hint').innerHTML='<span aria-hidden="true">✦</span>적용';render();save();return;
+  }
+  say('현재 입력에서 새로운 확정 칸을 찾지 못했어요.',true);
+}
+function choosePaint(value){if(value!==null&&value!=='select'&&(!Number.isInteger(value)||value<0||value>MAX_STACK))return;finishStroke();paintValue=value;if(value==='select')selected=null;cancelHint();render();}
+function refreshDrag(){
+  dragFrame=0;
+  if(!stroke)return;
+  const channel=stroke.channel,lines=new Set();
+  if(renderedSelection!==selected){
+    dirtyCells.add(renderedSelection??0);
+    if(selected!==null)dirtyCells.add(selected);
+  }
+  for(const i of dirtyCells){
+    const el=cellNodes[i],a=cellAppearance(i,channel);
+    el.className=a.classes;el.style.background=a.bg;el.style.color=a.fg;
+    if(el.innerHTML!==a.content)el.innerHTML=a.content;
+    el.tabIndex=i===(selected??0)?0:-1;
+    el.setAttribute('aria-label',a.label);el.setAttribute('aria-pressed',i===selected);
+    lines.add(Math.floor(i/N));lines.add(N+i%N);
+  }
+  for(const index of lines){
+    const clue=C.clues[channel][index],feedback=ClueFeedback.evaluate(clue.cells.map(i=>boardState[i][channel]),clue.groups,clue.maximum??clue.total);
+    const active=activeClue(index<N?'row':'col',index%N);
+    for(const el of clueNodes[index]){
+      el.classList.toggle('active-line',active);
+      if(el.classList.contains('total')){el.classList.toggle('clue-done',feedback.maximum==='done');el.classList.toggle('clue-conflict',feedback.maximum==='conflict');}
+      else for(const token of el.querySelectorAll('[data-clue-token]')){const state=feedback.tokens[Number(token.dataset.clueToken)];token.classList.toggle('clue-done',state==='done');token.classList.toggle('clue-conflict',state==='conflict');}
+    }
+  }
+  if(typeof window.updateTerrainCells==='function')window.updateTerrainCells(dirtyCells);
+  dirtyCells.clear();renderedSelection=selected;
+updateProgress();
+}
+function scheduleDragRefresh(){
+  if(!dragFrame&&(dirtyCells.size||renderedSelection!==selected))dragFrame=requestAnimationFrame(refreshDrag);
+}
+function paintAt(x,y){
+  if(!stroke)return;
+  const g=stroke.geometry,px=x+window.scrollX-g.left,py=y+window.scrollY-g.top;
+  if(x<g.clipLeft||x>=g.clipRight||y<g.clipTop||y>=g.clipBottom)return;
+  if(px<0||py<0||px>=g.width||py>=g.height)return;
+  const index=Math.floor(py/g.cellHeight)*N+Math.floor(px/g.cellWidth);selected=index;
+  if(stroke.visited.has(index))return;
+  stroke.visited.add(index);
+  if(stroke.value==='select'||fixed[index][stroke.channel])return;
+  const before=boardState[index][stroke.channel];
+  if(before===stroke.value)return;
+  stroke.changes.push({index,before,after:stroke.value});
+  boardState[index][stroke.channel]=stroke.value;
+  dirtyCells.add(index);
+}
+function paintSegment(x,y){
+  if(!stroke)return;
+  const [px,py]=stroke.last,steps=Math.max(1,Math.ceil(Math.hypot(x-px,y-py)/stroke.spacing));
+  for(let p=1;p<=steps;p++)paintAt(px+(x-px)*p/steps,py+(y-py)*p/steps);
+  stroke.last=[x,y];
+}
+function finishStroke(){
+  if(!stroke)return;
+  const finished=stroke;stroke=null;
+  $('board').classList.remove('is-painting');
+  if($('board').hasPointerCapture(finished.pointerId))$('board').releasePointerCapture(finished.pointerId);
+  if(finished.changes.length){history.push({channel:finished.channel,changes:finished.changes});save();}
+  render();if(finished.changes.length)checkWin();
+}
+$('board').addEventListener('pointerdown',e=>{
+  const cell=e.target.closest('[data-index]');
+  if(!cell||!e.isPrimary||e.button!==0||stroke)return;
+  if($('board-viewport')?.classList.contains('pan-mode'))return;
+  selected=Number(cell.dataset.index);cancelHint();
+  if(tab==='all'){render();return;}
+  e.preventDefault();errors.clear();
+  const first=cellNodes[0].getBoundingClientRect(),last=cellNodes[N*N-1].getBoundingClientRect();
+  const geometry={left:first.left+window.scrollX,top:first.top+window.scrollY,width:last.right-first.left,height:last.bottom-first.top};
+  const editor=($('board-viewport')||$('editor-panel')).getBoundingClientRect();
+  const dockTop=document.querySelector('.input-dock')?.getBoundingClientRect().top??innerHeight;
+  Object.assign(geometry,{clipLeft:Math.max(editor.left,first.left),clipRight:Math.min(editor.right,last.right),clipTop:Math.max(editor.top,first.top),clipBottom:Math.min(dockTop,editor.bottom,last.bottom)});
+  geometry.cellWidth=geometry.width/N;geometry.cellHeight=geometry.height/N;
+  $('board').querySelectorAll('.error,.hint-cell').forEach(el=>dirtyCells.add(Number(el.dataset.index)));
+  stroke={pointerId:e.pointerId,channel:tab,value:paintValue,last:[e.clientX,e.clientY],spacing:Math.min(geometry.cellWidth,geometry.cellHeight)/3,geometry,visited:new Set(),changes:[]};
+  $('board').setPointerCapture(e.pointerId);
+  $('board').classList.add('is-painting');
+  paintAt(e.clientX,e.clientY);scheduleDragRefresh();
+});
+$('board').addEventListener('pointermove',e=>{
+  if(!stroke||e.pointerId!==stroke.pointerId)return;
+  e.preventDefault();
+  const samples=e.getCoalescedEvents?.()||[];
+  for(const sample of samples)paintSegment(sample.clientX,sample.clientY);
+  if(stroke.last[0]!==e.clientX||stroke.last[1]!==e.clientY)paintSegment(e.clientX,e.clientY);
+  scheduleDragRefresh();
+});
+$('board').addEventListener('pointerup',e=>{if(stroke&&e.pointerId===stroke.pointerId){paintSegment(e.clientX,e.clientY);finishStroke();}});
+$('board').addEventListener('pointercancel',e=>{if(stroke&&e.pointerId===stroke.pointerId)finishStroke();});
+$('board').addEventListener('lostpointercapture',e=>{if(stroke&&e.pointerId===stroke.pointerId)finishStroke();});
+window.addEventListener('blur',finishStroke);
+window.addEventListener('resize',finishStroke);
+$('editor-panel').addEventListener('scroll',finishStroke,{passive:true});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)finishStroke();});
+window.addEventListener('pagehide',finishStroke);
+$('board').addEventListener('contextmenu',e=>{if(tab!=='all')e.preventDefault();});
+$('board').addEventListener('click',e=>{
+  if(e.detail!==0)return; // Pointer input is handled above; keep keyboard/screen-reader activation.
+  const cell=e.target.closest('[data-index]');if(!cell)return;
+  selected=Number(cell.dataset.index);cancelHint();
+  if(tab==='all'||paintValue==='select')render();else edit(paintValue);
+});
+document.querySelector('.tabs').addEventListener('click',e=>{const button=e.target.closest('[data-tab]');if(button)setTab(Number(button.dataset.tab));});
+document.querySelector('.tabs').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const order=CHANNELS,pos=order.indexOf(tab);setTab(e.key==='Home'?0:e.key==='End'?order.at(-1):order[(pos+(e.key==='ArrowRight'?1:order.length-1))%order.length]);document.querySelector(`[data-tab="${tab}"]`).focus();});
+$('height-picker').addEventListener('click',e=>{const button=e.target.closest('[data-value]');if(button&&!button.disabled)choosePaint(Number(button.dataset.value));});
+$('undo').onclick=undo;$('deselect').onclick=()=>choosePaint('select');$('erase').onclick=()=>choosePaint(null);if($('hint'))$('hint').onclick=hint;
+if($('check'))$('check').onclick=()=>{
+  const mistakes=findMistakes();errors=new Set(mistakes.map(e=>`${e.index}:${e.channel}`));cancelHint();
+  if(mistakes.length){const first=mistakes[0];tab=first.channel;selected=first.index;say(`정답과 다른 입력이 ${mistakes.length}개 있어요. 색상 탭의 붉은 테두리 칸을 확인해 주세요.`,true);}
+  else say(isSolved()?'모든 높이가 정확해요. 완성!':'입력한 높이는 모두 맞아요. 미정인 칸을 계속 풀어 보세요.');
+  render();checkWin();
+};
+$('help').onclick=()=>$('help-dialog').showModal();$('reset').onclick=()=>{$('help-dialog').close();$('reset-dialog').showModal();};
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
+document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}));
+$('confirm-reset').onclick=()=>{finishStroke();boardState=fresh();history=[];errors.clear();selected=null;tab=0;paintValue=0;completed=false;cancelHint();save();render();$('reset-dialog').close();say(C.noGivens?'빈 보드에서 시작해요. RGB 합계와 같은 높이 구간을 살펴보세요.':'처음부터 시작해요. ◆ 공개 높이에서 단서를 찾아보세요.');};
+document.addEventListener('keydown',e=>{
+  if(document.querySelector('dialog[open]')||e.target.closest('.tabs,#terrain-panel')||e.target.matches('input,select'))return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
+    e.preventDefault();const current=selected??0,row=Math.floor(current/N),col=current%N;
+    selected=e.key==='ArrowUp'?Math.max(0,row-1)*N+col:e.key==='ArrowDown'?Math.min(N-1,row+1)*N+col:e.key==='ArrowLeft'?row*N+Math.max(0,col-1):row*N+Math.min(N-1,col+1);
+    cancelHint();render();$('board').querySelector(`[data-index="${selected}"]`).focus({preventScroll:true});if(window.revealBoardCell)window.revealBoardCell(selected);
+  }else if(/^[0-9]$/.test(e.key)&&Number(e.key)<=MAX_STACK){e.preventDefault();choosePaint(Number(e.key));edit(paintValue);}
+  else if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();choosePaint(null);edit(null);}
+});
+render();save();
+if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. 이 창을 열어둔 채 플레이해 주세요.',true);
+</script>
+<script>/* Shared pixel geometry keeps the overview and input grid aligned. */
+(() => {
+  const context=document.createElement('canvas').getContext('2d');
+  const clues=[...C.clues.flat(),...C.combinedClues];
+  window.getStackBoardLayout=width=>{
+    const font=width<600?10:12,gap=font/2,columnGap=4,padding=6;
+    context.font=`650 ${font}px system-ui`;
+    const rowWidth=Math.max(0,...clues.filter(c=>c.axis==='row').map(c=>
+      c.groups.reduce((sum,n)=>sum+context.measureText(String(n)).width,0)+Math.max(0,c.groups.length-1)*gap));
+    const lineHeight=Math.ceil(font*1.25);
+    const rows=Math.max(1,...clues.filter(c=>c.axis==='col').map(c=>c.groups.length));
+    const left=Math.ceil(rowWidth+padding*2),top=rows*lineHeight+(rows-1)*columnGap+padding*2,end=font+padding*2;
+    const cell=(width-left-end)/N;
+    return {width,height:top+N*cell+end,left,top,end,cell,font,gap,padding,lineHeight,columnGap};
+  };
+})();
+
+/* Show accumulated heights while solving; reveal colors only after completion. */
+(() => {
+  const svg=$('overview-svg');
+  function selectLine(axis,line){const same=terrainSelection?.axis===axis&&terrainSelection.line===line;selectBoardLine(axis,line===null||same?null:line);}
+  window.selectTerrainLine=selectLine;window.clearTerrainSelection=()=>selectLine('row',null);
+  if(!svg)return;
+  let tiles=[],stackLabels=[],lastValues=[],lastWidth=0,lastSolved=null,layout;
+  function updateStatus(lines){
+    for(const l of lines){
+      const clue=C.combinedClues[l],feedback=ClueFeedback.evaluate(clue.cells.map(i=>boardState[i].includes(null)?null:C.sum(boardState[i])),clue.groups,clue.maximum);
+      svg.querySelectorAll(`[data-overview-clue="${l}"] [data-clue-token]`).forEach(el=>{const state=feedback.tokens[Number(el.dataset.clueToken)];el.classList.toggle('clue-done',state==='done');el.classList.toggle('clue-conflict',state==='conflict');});
+      svg.querySelectorAll(`.overview-maximum[data-overview-clue="${l}"] .clue-text`).forEach(el=>{el.classList.toggle('clue-done',feedback.maximum==='done');el.classList.toggle('clue-conflict',feedback.maximum==='conflict');});
+    }
+  }
+  function updateCells(indices){
+    const solved=isSolved();
+    if(solved!==lastSolved){
+      indices=Array.from({length:N*N},(_,i)=>i);lastValues=[];lastSolved=solved;
+    }
+    svg.dataset.mode=solved?'art':'totals';
+    const lines=new Set();
+    for(const i of indices){
+      const value=boardState[i],key=value.join(',');if(lastValues[i]===key)continue;
+      const empty=value.every(v=>v===null),partial=value.some(v=>v===null),tile=tiles[i];
+      tile.setAttribute('fill',solved?rgb(value):'#edf0e8');tile.setAttribute('fill-opacity','1');
+      tile.setAttribute('stroke',solved?'none':'#cbd4c4');
+      tile.dataset.state=empty?'unknown':partial?'partial':'filled';
+      const total=value.reduce((sum,v)=>sum+(v??0),0),label=stackLabels[i];
+      label.textContent=solved||empty?'':String(total);
+      label.setAttribute('fill','#536057');
+      tile.querySelector('title').textContent=`${Math.floor(i/N)+1}행 ${i%N+1}열 · ${solved?'완성된 색상':empty?'미정':'현재 누적 '+total+'스택'}`;
+      lastValues[i]=key;lines.add(Math.floor(i/N));lines.add(N+i%N);
+    }
+    updateStatus(lines);
+  }
+  function renderOverview(){
+    const width=svg.parentElement.clientWidth;
+    if(!tiles.length||width!==lastWidth){
+      lastWidth=width;layout=window.getStackBoardLayout(width);
+      const {height,left,top,cell,end,font,padding,gap,lineHeight,columnGap}=layout,extent=N*cell;
+      svg.parentElement.style.height=height+'px';
+      svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
+      const legendSize=Math.min(12,(left-8)/7);
+      let html=`<text class="overview-legend" x="${left/2}" y="${top/2-5}" text-anchor="middle" style="font-size:${legendSize}px">${C.channels===1?'명암 높이':'RGB 합산 높이'}</text><text class="overview-legend" x="${left/2}" y="${top/2+12}" text-anchor="middle" style="font-size:${legendSize}px">구간 스택 합</text>`;
+      for(let i=0;i<N*N;i++)html+=`<rect class="overview-cell" data-overview-cell="${i}" x="${left+i%N*cell}" y="${top+Math.floor(i/N)*cell}" width="${cell}" height="${cell}" stroke="#cbd4c4" stroke-width="1"><title></title></rect>`;
+      for(let i=0;i<N*N;i++)html+=`<text class="overview-stack-total" data-stack-total="${i}" x="${left+i%N*cell+cell/2}" y="${top+Math.floor(i/N)*cell+cell/2}" text-anchor="middle" dominant-baseline="central" pointer-events="none" aria-hidden="true" style="font-size:${font}px"></text>`;
+      for(const clue of C.combinedClues){
+        const {axis,line,groups,maximum}=clue,row=axis==='row',l=line+(row?0:N),label=groups.join(' ');
+        const x=row?0:left+line*cell,y=row?top+line*cell:0;
+        const text=!groups.length?'':row?`<text class="clue-text" x="${left-padding}" y="${cell/2}" text-anchor="end" dominant-baseline="central" style="font-size:${font}px">${groups.map((n,k)=>`<tspan data-clue-token="${k}" dx="${k?gap:0}">${n}</tspan>`).join('')}</text>`:groups.map((t,k)=>`<text data-clue-token="${k}" class="clue-text" x="${cell/2}" y="${top-padding-lineHeight/2-(groups.length-k-1)*(lineHeight+columnGap)}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${t}</text>`).join('');
+        html+=`<g class="overview-marker overview-run-clue" data-axis="${axis}" data-line="${line}" data-overview-clue="${l}" role="button" tabindex="0" aria-label="전체 ${line+1}${row?'행':'열'} 구간 스택 합계 ${label}" transform="translate(${x},${y})"><rect width="${row?left:cell}" height="${row?cell:top}"/>${text}</g>`;
+        html+=`<g class="overview-marker overview-maximum" data-axis="${axis}" data-line="${line}" data-overview-clue="${l}" role="button" tabindex="0" aria-label="전체 ${line+1}${row?'행':'열'} 최대 높이 ${maximum}" transform="translate(${row?left+extent:left+line*cell},${row?top+line*cell:top+extent})"><rect width="${row?end:cell}" height="${row?cell:end}"/><text class="clue-text" x="${(row?end:cell)/2}" y="${(row?cell:end)/2}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${maximum}</text></g>`;
+      }
+      html+='<rect id="overview-line-outline" fill="none" stroke="#426d51" stroke-width="1.5" pointer-events="none" visibility="hidden"/>';
+      svg.innerHTML=html;tiles=Array.from(svg.querySelectorAll('[data-overview-cell]'));stackLabels=Array.from(svg.querySelectorAll('[data-stack-total]'));lastValues=[];
+    }
+    updateCells(Array.from({length:N*N},(_,i)=>i));
+    const outline=$('overview-line-outline'),{left,top,cell}=layout,extent=N*cell;
+    outline.setAttribute('visibility',terrainSelection?'visible':'hidden');
+    if(terrainSelection){const {axis,line}=terrainSelection;outline.setAttribute('x',left+(axis==='col'?line*cell:0));outline.setAttribute('y',top+(axis==='row'?line*cell:0));outline.setAttribute('width',axis==='row'?extent:cell);outline.setAttribute('height',axis==='row'?cell:extent);}
+    svg.querySelectorAll('.overview-marker').forEach(el=>el.setAttribute('aria-pressed',terrainSelection?.axis===el.dataset.axis&&terrainSelection.line===Number(el.dataset.line)));
+  }
+  const activate=e=>{const marker=e.target.closest('.overview-marker');if(marker)selectLine(marker.dataset.axis,Number(marker.dataset.line));};
+  svg.addEventListener('click',activate);svg.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)&&e.target.closest('.overview-marker')){e.preventDefault();activate(e);}});
+  window.renderTerrain=renderOverview;window.updateTerrainCells=updateCells;
+  render();
+})();
+
+(() => {
+  const viewport=$('board-viewport'),board=$('board');
+  function fitBoard(){
+    const layout=window.getStackBoardLayout(viewport.clientWidth);
+    for(const [name,value] of Object.entries({'clue-gap':layout.gap,'clue-column-gap':layout.columnGap,'number-size':layout.font,'cell-size':layout.cell,gutter:layout.left,top:layout.top,end:layout.end,bottom:layout.end})){
+      board.style.setProperty('--'+name,value+'px');
+    }
+    board.style.setProperty('--n',N);
+    viewport.style.height=layout.height+'px';
+    window.renderTerrain?.();
+  }
+  window.syncLargeUI=()=>{
+    board.querySelectorAll('[data-clue]').forEach(el=>{el.setAttribute('role','button');el.tabIndex=0;});
+    fitBoard();
+  };
+  const selectClue=e=>{const el=e.target.closest('[data-clue]');if(!el)return;const id=Number(el.dataset.clue);window.selectTerrainLine(id<N?'row':'col',id%N);};
+  board.addEventListener('click',selectClue);
+  board.addEventListener('keydown',e=>{if(e.target.matches('[data-clue]')&&['Enter',' '].includes(e.key)){e.preventDefault();selectClue(e);}});
+  window.revealBoardCell=i=>{if(i!==null)board.querySelector(`[data-index="${i}"]`)?.scrollIntoView({block:'nearest',inline:'nearest'});};
+  window.revealBoardLine=()=>{};
+  window.addEventListener('scroll',finishStroke,{passive:true});
+  let lastWidth=0;
+  new ResizeObserver(()=>{if(viewport.clientWidth!==lastWidth){lastWidth=viewport.clientWidth;fitBoard();}}).observe(viewport);
+  window.syncLargeUI();
+})();
+</script>
+<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-0611-084b8a7b7d0420b8',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=db552d20a06e" defer></script></body>
+</html>

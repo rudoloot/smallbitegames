@@ -39,7 +39,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #548c67;outline-offset:3p
   function evaluate(line,groups,maximum){
     const key=JSON.stringify([line,groups,maximum]);if(cache.has(key))return cache.get(key);
     const tokens=groups.map(()=>''),known=line.filter(v=>v!==null);
-    let maximumState=known.some(v=>v>maximum)||known.length===line.length&&Math.max(...known)!==maximum?'conflict':known.includes(maximum)?'done':'';
+    const maximumState=known.some(v=>v>maximum)?'conflict':known.includes(maximum)?'done':'';
     const mark=(i,state)=>{if(i>=0&&i<tokens.length&&(tokens[i]!=='conflict'||state==='conflict'))tokens[i]=state;};
     function scan(values,reverse){
       let pos=0,k=0;
@@ -165,4 +165,4 @@ button:focus-visible,a:focus-visible{outline:3px solid #548c67;outline-offset:3p
   addEventListener('resize',fitBoard);
   enter();
 })();
-</script><script src="site-integration.js?v=12abbb2b30ac" defer></script></body></html>
+</script><script src="site-integration.js?v=db552d20a06e" defer></script></body></html>

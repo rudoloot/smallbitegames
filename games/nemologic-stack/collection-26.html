@@ -453,7 +453,7 @@ if(root.PUZZLE_SPEC)root.PicrossCore=createCore(root.PUZZLE_SPEC);
   function evaluate(line,groups,maximum){
     const key=JSON.stringify([line,groups,maximum]);if(cache.has(key))return cache.get(key);
     const tokens=groups.map(()=>''),known=line.filter(v=>v!==null);
-    let maximumState=known.some(v=>v>maximum)||known.length===line.length&&Math.max(...known)!==maximum?'conflict':known.includes(maximum)?'done':'';
+    const maximumState=known.some(v=>v>maximum)?'conflict':known.includes(maximum)?'done':'';
     const mark=(i,state)=>{if(i>=0&&i<tokens.length&&(tokens[i]!=='conflict'||state==='conflict'))tokens[i]=state;};
     function scan(values,reverse){
       let pos=0,k=0;
@@ -932,5 +932,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('nemologic-stack-3-status-26',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
       save=function(){originalSave();updateCollection();};
       updateCollection();
-    })();</script><script src="site-integration.js?v=12abbb2b30ac" defer></script></body>
+    })();</script><script src="site-integration.js?v=db552d20a06e" defer></script></body>
 </html>
