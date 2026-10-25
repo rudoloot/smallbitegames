@@ -161,7 +161,7 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 .stack-sum-game .shared-header{min-height:36px;margin:0 0 8px}
 .play-area{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;gap:8px;overflow:hidden}
 .stack-sum-game #editor-panel{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;overflow:hidden;padding:0}
-.stack-sum-game #game-panel,.stack-sum-game #terrain-panel{display:flex;align-items:flex-start;justify-content:center;flex:1;min-width:0;min-height:0;overflow:hidden;padding:0;border:0}
+.stack-sum-game #game-panel,.stack-sum-game #terrain-panel{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;min-height:0;overflow:hidden;padding:0;border:0}
 .stack-sum-game .tabs{flex:none;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 2px 6px;padding:3px}
 .stack-sum-game #board-viewport,.stack-sum-game .overview-stage{flex:none;min-width:0;min-height:0;margin:0;overflow:hidden;touch-action:none}
 .stack-sum-game #board{flex:none}
@@ -1200,5 +1200,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('nemologic-stack-3-status-18',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
       save=function(){originalSave();updateCollection();};
       updateCollection();
-    })();</script><script src="site-integration.js?v=d8d56e65dc7e" defer></script></body>
+    })();</script><script src="site-integration.js?v=37e4cfd531ab" defer></script></body>
 </html>
