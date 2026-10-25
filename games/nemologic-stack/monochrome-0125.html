@@ -142,16 +142,14 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
 
 /* A quiet clue background, separated only along rows and columns. */
 .individual-sums .clue.left,.individual-sums .clue.top{padding:0}
-.individual-sums .run-tokens{display:grid;width:100%;height:100%;max-width:none;max-height:none;gap:0;line-height:1;align-self:stretch}
-.individual-sums .clue.left .run-tokens{grid-template-columns:repeat(var(--row-clue-slots),minmax(0,1fr));grid-template-rows:1fr}
-.individual-sums .clue.top .run-tokens{grid-template-columns:1fr;grid-template-rows:repeat(var(--col-clue-slots),minmax(0,1fr));gap:0;align-items:stretch}
+.individual-sums .clue .run-tokens{position:relative;display:block;width:100%;height:100%;max-width:none;max-height:none;gap:0;line-height:1;align-self:stretch}
 .clue.left,.clue.top,.clue.right,.clue.bottom{background:#fff;border-radius:0}
-.clue .run-tokens .clue-slot{display:grid;place-items:center;align-self:stretch;justify-self:stretch;min-width:0;min-height:0;padding:0;background:transparent}
+.clue .run-tokens .clue-slot{position:absolute;display:block;width:max-content;height:1em;min-width:0;min-height:0;padding:0;line-height:1;transform:translate(-50%,-50%);background:transparent}
 .clue.total{margin:0;border:0}
 .clue.left,.clue.right{box-shadow:inset 0 -1px 0 #e2e6de}
 .clue.top,.clue.bottom{box-shadow:inset -1px 0 0 #e2e6de}
 .individual-sums .clue.active-line{background:#fff1c2;border-radius:0}
-.individual-sums .coordinates{display:flex;align-items:center;justify-content:center;gap:0;min-width:0;min-height:0;padding:2px;overflow:hidden;font-size:var(--coordinate-size,9px);font-weight:650;line-height:1.2;color:#34493a;white-space:nowrap;font-variant-numeric:tabular-nums}
+.individual-sums .coordinates{display:flex;align-items:flex-end;justify-content:flex-end;gap:0;min-width:0;min-height:0;padding:var(--coordinate-padding,6px);overflow:hidden;font-size:var(--coordinate-size,9px);font-weight:650;line-height:1.2;color:#34493a;white-space:nowrap;font-variant-numeric:tabular-nums}
 .overview-marker rect{fill:#fff}
 .overview-marker.active-line>rect{fill:#fff1c2}
 .overview-clue-separator{fill:none;stroke:#e2e6de;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
@@ -163,7 +161,7 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 .stack-sum-game .shared-header{min-height:36px;margin:0 0 8px}
 .play-area{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;gap:8px;overflow:hidden}
 .stack-sum-game #editor-panel{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;overflow:hidden;padding:0}
-.stack-sum-game #game-panel,.stack-sum-game #terrain-panel{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;min-height:0;overflow:hidden;padding:0;border:0}
+.stack-sum-game #game-panel,.stack-sum-game #terrain-panel{display:flex;align-items:flex-start;justify-content:center;flex:1;min-width:0;min-height:0;overflow:hidden;padding:0;border:0}
 .stack-sum-game .tabs{flex:none;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 2px 6px;padding:3px}
 .stack-sum-game #board-viewport,.stack-sum-game .overview-stage{flex:none;min-width:0;min-height:0;margin:0;overflow:hidden;touch-action:none}
 .stack-sum-game #board{flex:none}
@@ -789,12 +787,8 @@ function render(){
       const totalPlace=a===0?`grid-row:${l+2};grid-column:${N+2}`:`grid-row:${N+2};grid-column:${l+2}`;
       const classes=active?'active-line':'';
       const tokens=info.groups.map(n=>C.rule==='height-runs-max'&&!C.stackSumRuns&&n===0?'·':n);
-      const values=tokens.length||C.omitAllZeros?tokens:[0],count=a===0?CLUE_SLOTS.row:CLUE_SLOTS.col;
-      const slots=Array.from({length:count},(_,slot)=>{
-        const k=slot-(count-values.length);
-        if(k<0)return '<span class="clue-slot" aria-hidden="true"></span>';
-        const n=values[k];return `<span data-clue-token="${k}" class="clue-slot ${n==='·'?'gap-token':''} clue-${info.feedback.tokens[k]||'pending'}">${n}</span>`;
-      }).join('');
+      const values=tokens.length||C.omitAllZeros?tokens:[0];
+      const slots=values.map((n,k)=>`<span data-clue-token="${k}" class="clue-slot ${n==='·'?'gap-token':''} clue-${info.feedback.tokens[k]||'pending'}">${n}</span>`).join('');
       html+=`<div class="clue ${a===0?'left':'top'} ${classes}" data-clue="${a*N+l}" style="${place}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'동일 높이 구간':'연속 칸 수'} ${tokens.join(' ')||(C.omitAllZeros?'빈 줄':0)}"><div class="run-tokens">${slots}</div></div>`;
       html+=`<div class="clue total ${a===0?'right':'bottom'} ${classes} clue-${info.feedback.maximum||'pending'}" data-clue="${a*N+l}" style="${totalPlace}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'최대 높이':'스택 합'} ${info.total}">${info.total}</div>`;
     }
@@ -1012,48 +1006,62 @@ document.addEventListener('keydown',e=>{
 render();save();
 if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. 이 창을 열어둔 채 플레이해 주세요.',true);
 </script>
-<script>/* Shared pixel geometry keeps the overview and input grid aligned. */
+<script>/* Shared measured geometry for the input board and composite preview. */
 (() => {
   const context=document.createElement('canvas').getContext('2d');
   const clues=[...C.clues.flat(),...C.combinedClues];
-  const measurements=new Map();
-  const tokenMetrics=new Map();
-  window.getStackClueOffsets=(groups,axis,layout)=>{
-    const metrics=groups.map(number=>{
-      const key=`${layout.font}:${number}`;
-      if(!tokenMetrics.has(key)){
-        context.font=`650 ${layout.font}px system-ui`;
-        const text=context.measureText(String(number));
-        tokenMetrics.set(key,{width:text.width,height:text.actualBoundingBoxAscent+text.actualBoundingBoxDescent||layout.font});
-      }
-      return tokenMetrics.get(key);
-    });
-    const dimension=axis==='row'?'width':'height',stride=axis==='row'?layout.slotWidth:layout.lineHeight;
-    const offsets=groups.map(()=>0);
-    for(let i=groups.length-2;i>=0;i--){
-      const gap=Math.max(0,stride-(metrics[i][dimension]+metrics[i+1][dimension])/2);
-      offsets[i]=offsets[i+1]+gap/2;
+  const measurements=new Map(),viewMeasurements=new Map(),tokenMetrics=new Map();
+  function measureToken(number,font){
+    const key=`${font}:${number}`;
+    if(!tokenMetrics.has(key)){
+      context.font=`650 ${font}px system-ui`;
+      const text=context.measureText(String(number));
+      tokenMetrics.set(key,{width:text.width,height:text.actualBoundingBoxAscent+text.actualBoundingBoxDescent||font});
     }
-    return offsets;
+    return tokenMetrics.get(key);
+  }
+  function tokenSizes(groups,axis,font){return groups.map(number=>measureToken(number,font)[axis==='row'?'width':'height']);}
+  function tokenGap(a,b,stride){return Math.max(0,stride-(a+b)/2)/2;}
+  function packedExtent(groups,axis,font,stride){
+    const sizes=tokenSizes(groups,axis,font);
+    return sizes.reduce((sum,size,i)=>sum+size+(i?tokenGap(sizes[i-1],size,stride):0),0);
+  }
+  window.getStackCluePositions=(groups,axis,layout)=>{
+    const row=axis==='row',sizes=tokenSizes(groups,axis,layout.font),positions=groups.map(()=>0);
+    if(!groups.length)return positions;
+    const last=groups.length-1,stride=row?layout.slotWidth:layout.lineHeight;
+    positions[last]=(row?layout.left-layout.paddingX:layout.top-layout.paddingY)-sizes[last]/2;
+    for(let i=last-1;i>=0;i--)positions[i]=positions[i+1]-(sizes[i]+sizes[i+1])/2-tokenGap(sizes[i],sizes[i+1],stride);
+    return positions;
   };
   window.getStackBoardLayout=(maxWidth,maxHeight=Infinity)=>{
-    const gap=0,columnGap=0,padding=0;
+    const view=tab==='all'?C.combinedClues:C.clues[tab];
     for(let font=maxWidth<600?9:11;font>=1;font-=.25){
       if(!measurements.has(font)){
-        context.font=`650 ${font}px system-ui`;
-        const slotWidth=Math.ceil(Math.max(font,...clues.filter(c=>c.axis==='row').flatMap(c=>c.groups.map(n=>context.measureText(String(n)).width+2))));
-        const columns=clues.filter(c=>c.axis==='col');
-        const columnWidth=Math.max(font,...columns.flatMap(c=>c.groups.map(n=>context.measureText(String(n)).width+2)));
-        const lineHeight=Math.ceil(Math.max(font+1,font*1.1)),left=CLUE_SLOTS.row*slotWidth,top=CLUE_SLOTS.col*lineHeight,end=font+4;
-        measurements.set(font,{left,top,end,lineHeight,columnWidth,slotWidth});
+        const slotWidth=Math.ceil(Math.max(font,...clues.filter(c=>c.axis==='row').flatMap(c=>c.groups.map(n=>measureToken(n,font).width+2))));
+        const columnWidth=Math.max(font,...clues.filter(c=>c.axis==='col').flatMap(c=>c.groups.map(n=>measureToken(n,font).width+2)));
+        const lineHeight=Math.ceil(Math.max(font+1,font*1.1)),referenceLeft=CLUE_SLOTS.row*slotWidth,referenceTop=CLUE_SLOTS.col*lineHeight,end=font+4;
+        measurements.set(font,{slotWidth,columnWidth,lineHeight,referenceLeft,referenceTop,end});
       }
-      const {left,top,end,lineHeight,columnWidth,slotWidth}=measurements.get(font);
-      const cell=Math.min((maxWidth-left-end)/N,(maxHeight-top-end)/N);
-      if(cell>=columnWidth||font===1){
-        const size=Math.max(.1,cell);
-        const coordinateSize=Math.max(1,Math.min(12,(left-4)/4,(top-6)/2.4));
-        return {width:left+N*size+end,height:top+N*size+end,left,top,end,cell:size,font,gap,padding,lineHeight,columnGap,slotWidth,coordinateSize};
+      const {slotWidth,columnWidth,lineHeight,referenceLeft,referenceTop,end}=measurements.get(font);
+      // Preserve the existing font and spacing while returning unused clue space to the cells.
+      const referenceCell=Math.min((maxWidth-referenceLeft-end)/N,(maxHeight-referenceTop-end)/N);
+      if(referenceCell<columnWidth&&font>1)continue;
+      const key=`${font}:${tab}`;
+      if(!viewMeasurements.has(key)){
+        const rowExtent=Math.max(0,...view.filter(c=>c.axis==='row').map(c=>packedExtent(c.groups,'row',font,slotWidth)));
+        const colExtent=Math.max(0,...view.filter(c=>c.axis==='col').map(c=>packedExtent(c.groups,'col',font,lineHeight)));
+        const paddingX=Math.min(4,Math.max(0,(referenceLeft-rowExtent)/2)),paddingY=Math.min(4,Math.max(0,(referenceTop-colExtent)/2));
+        const labelWidth=measureToken(`${N},${N}`,font).width;
+        const left=Math.min(referenceLeft,Math.ceil(Math.max(rowExtent+2*paddingX,labelWidth+12)));
+        const top=Math.min(referenceTop,Math.ceil(Math.max(colExtent+2*paddingY,font*1.2+12)));
+        const coordinatePadding=Math.min(6,left/6,top/6);
+        const coordinateSize=Math.max(1,Math.min(12,12*(left-2*coordinatePadding)/measureToken(`${N},${N}`,12).width,(top-2*coordinatePadding)/1.2));
+        viewMeasurements.set(key,{left,top,paddingX,paddingY,coordinatePadding,coordinateSize});
       }
+      const packed=viewMeasurements.get(key),{left,top}=packed;
+      const cell=Math.max(.1,Math.min((maxWidth-left-end)/N,(maxHeight-top-end)/N));
+      return {width:left+N*cell+end,height:top+N*cell+end,...packed,end,cell,font,gap:0,padding:0,lineHeight,columnGap:0,slotWidth};
     }
   };
 })();
@@ -1097,28 +1105,24 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   function renderOverview(){
     if($('terrain-panel').hidden)return;
     const nextLayout=window.stackBoardLayout||window.getStackBoardLayout(svg.parentElement.clientWidth);
-    const key=`${nextLayout.width}:${nextLayout.height}:${nextLayout.font}`;
+    const key=`${nextLayout.width}:${nextLayout.height}:${nextLayout.font}:${nextLayout.left}:${nextLayout.top}:${nextLayout.cell}`;
     if(!tiles.length||key!==lastLayoutKey){
       lastLayoutKey=key;layout=nextLayout;
       const width=layout.width;
-      const {height,left,top,cell,end,font,lineHeight,slotWidth}=layout,extent=N*cell;
+      const {height,left,top,cell,end,font,coordinatePadding}=layout,extent=N*cell;
       svg.parentElement.style.height=height+'px';
       svg.parentElement.style.width=width+'px';
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
       const coordinateSize=layout.coordinateSize;
-      let html=`<g id="overview-coordinates" role="status" aria-live="polite" aria-atomic="true" style="font:650 ${coordinateSize}px system-ui;fill:#34493a;text-anchor:middle"><text x="${left/2}" y="${top/2}" dominant-baseline="central"><tspan data-coordinate="row">—</tspan><tspan>,</tspan><tspan data-coordinate="col">—</tspan></text></g>`;
+      let html=`<g id="overview-coordinates" role="status" aria-live="polite" aria-atomic="true" style="font:650 ${coordinateSize}px system-ui;fill:#34493a;text-anchor:end"><text x="${left-coordinatePadding}" y="${top-coordinatePadding}" dominant-baseline="text-after-edge"><tspan data-coordinate="row">—</tspan><tspan>,</tspan><tspan data-coordinate="col">—</tspan></text></g>`;
       for(let i=0;i<N*N;i++)html+=`<rect class="overview-cell" data-overview-cell="${i}" x="${left+i%N*cell}" y="${top+Math.floor(i/N)*cell}" width="${cell}" height="${cell}" stroke="#cbd4c4" stroke-width="1"><title></title></rect>`;
       for(let i=0;i<N*N;i++)html+=`<text class="overview-stack-total" data-stack-total="${i}" x="${left+i%N*cell+cell/2}" y="${top+Math.floor(i/N)*cell+cell/2}" text-anchor="middle" dominant-baseline="central" pointer-events="none" aria-hidden="true" style="font-size:${font}px"></text>`;
       for(const clue of C.combinedClues){
         const {axis,line,groups,maximum}=clue,row=axis==='row',l=line+(row?0:N),label=groups.join(' ');
         const x=row?0:left+line*cell,y=row?top+line*cell:0;
-        const count=row?CLUE_SLOTS.row:CLUE_SLOTS.col;
-        const offsets=window.getStackClueOffsets(groups,axis,layout);
-        const text=Array.from({length:count},(_,slot)=>{
-          const k=slot-(count-groups.length),width=row?slotWidth:cell,height=row?cell:lineHeight;
-          const offset=k<0?0:offsets[k];
-          const tx=row?slot*slotWidth+offset:0,ty=row?0:slot*lineHeight+offset;
-          return k<0?'':`<text data-clue-token="${k}" class="clue-text" x="${tx+width/2}" y="${ty+height/2}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${groups[k]}</text>`;
+        const positions=window.getStackCluePositions(groups,axis,layout);
+        const text=groups.map((number,k)=>{
+          return `<text data-clue-token="${k}" class="clue-text" x="${row?positions[k]:cell/2}" y="${row?cell/2:positions[k]}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${number}</text>`;
         }).join('');
         const separator=`<path class="overview-clue-separator" d="${row?`M0 ${cell}H${left}`:`M${cell} 0V${top}`}"/>`;
         html+=`<g class="overview-marker overview-run-clue" data-axis="${axis}" data-line="${line}" data-overview-clue="${l}" role="button" tabindex="0" aria-label="전체 ${line+1}${row?'행':'열'} 구간 스택 합계 ${label}" transform="translate(${x},${y})"><rect width="${row?left:cell}" height="${row?cell:top}"/>${text}${separator}</g>`;
@@ -1169,13 +1173,14 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       board.style.setProperty('--'+name,value+'px');
     }
     board.style.setProperty('--n',N);
-    board.style.setProperty('--row-clue-slots',CLUE_SLOTS.row);
-    board.style.setProperty('--col-clue-slots',CLUE_SLOTS.col);
     board.style.setProperty('--coordinate-size',layout.coordinateSize+'px');
+    board.style.setProperty('--coordinate-padding',layout.coordinatePadding+'px');
     board.querySelectorAll('.clue.left,.clue.top').forEach(clue=>{
       const row=clue.classList.contains('left'),tokens=[...clue.querySelectorAll('[data-clue-token]')];
-      const offsets=window.getStackClueOffsets(tokens.map(token=>token.textContent),row?'row':'col',layout);
-      tokens.forEach((token,i)=>token.style.transform=`translate${row?'X':'Y'}(${offsets[i]}px)`);
+      const positions=window.getStackCluePositions(tokens.map(token=>token.textContent),row?'row':'col',layout);
+      tokens.forEach((token,i)=>{
+        token.style.left=row?positions[i]+'px':'50%';token.style.top=row?'50%':positions[i]+'px';
+      });
     });
     viewport.style.width=layout.width+'px';
     viewport.style.height=layout.height+'px';
@@ -1213,5 +1218,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   });
 })();
 </script>
-<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-0125-03e8517e3380b637',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=bce5be77b600" defer></script></body>
+<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-0125-03e8517e3380b637',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=d8d56e65dc7e" defer></script></body>
 </html>
