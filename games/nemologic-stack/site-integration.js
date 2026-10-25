@@ -1,32 +1,11 @@
 (() => {
   'use strict';
-  const version='d61b938158ea',directory=new URL('.',location.href);
+  const version='98e64634819d',directory=new URL('.',location.href);
   let returnUrl=null;
   try {
     const raw=new URLSearchParams(location.search).get('returnTo');
     if(raw){const target=new URL(raw);if(target.protocol==='https:'&&target.origin===location.origin&&!target.username&&!target.password)returnUrl=target.href;}
   } catch {}
-  const exit=document.createElement('button');exit.type='button';exit.className='nav-icon site-exit';
-  function localizeExit(){const label=window.StackI18n?.language==='en'?'Exit game':'게임 나가기';exit.setAttribute('aria-label',label);exit.title=label;}
-  localizeExit();addEventListener('stack-language-change',localizeExit);
-  exit.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5H4v14h5M14 7l5 5-5 5M8 12h11"/></svg>';
-  exit.addEventListener('click',()=>{
-    try{if(typeof save==='function')save();}catch{}
-    location.replace(returnUrl||new URL('index.html?v='+version,directory).href);
-  });
-  (document.querySelector('.header-actions')||document.querySelector('main')).append(exit);
-  const back=document.getElementById('navigate-back');
-  if(back){
-    back.disabled=false;
-    back.onclick=()=>{
-      const menu=!!document.querySelector('#monochrome-games');
-      if(menu){exit.click();return;}
-      const mode=document.body.classList.contains('monochrome-game')||document.querySelector('.tutorial-app')?'monochrome':'color';
-      const target=new URL('collection.html',directory);target.hash=mode;target.searchParams.set('v',version);
-      if(returnUrl)target.searchParams.set('returnTo',returnUrl);
-      location.assign(target.href);
-    };
-  }
   function connect(link){
     const target=new URL(link.href,location.href);
     if(target.origin!==directory.origin||!target.pathname.startsWith(directory.pathname))return;

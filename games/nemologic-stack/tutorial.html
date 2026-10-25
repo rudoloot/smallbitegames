@@ -89,7 +89,7 @@ button.wordmark{cursor:pointer}
 .height-picker button,.tutorial-tools button{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .height-picker button.held,.tutorial-tools button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
 @media(max-width:360px){.wordmark-logo{width:154px;height:16px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px;padding:6px}.dpad{width:110px;height:110px}}
-</style><link rel="stylesheet" href="site-integration.css?v=b3fa45581822"></head>
+</style><link rel="stylesheet" href="site-integration.css?v=b2777e7d753c"></head>
 <body><main class="tutorial-app"><header class="header"></header>
 <div class="lesson-heading"><span>5×5 튜토리얼</span><button id="restart">다시 배우기</button></div>
 <section id="tutorial-board" class="board" aria-label="5행 5열 명암 퍼즐"></section>
@@ -548,4 +548,4 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
     apply:button=>{if(button.id==='tutorial-undo'){const cursor=selected;undoTutorial();selected=cursor;render();return;}selected??=0;$('tutorial-board').querySelector(`[data-index="${selected}"]`).click();}
   });
 })();
-</script><script src="site-integration.js?v=ff71bf2b1055" defer></script></body></html>
+</script><script src="site-integration.js?v=0d8f5ab1b427" defer></script></body></html>

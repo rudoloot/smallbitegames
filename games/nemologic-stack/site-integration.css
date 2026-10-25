@@ -1,1 +1,1 @@
-.site-exit{display:grid;place-items:center;width:36px;height:36px;padding:8px;border:1px solid #d8ded2;border-radius:10px;background:#fffef9;color:#52644f;cursor:pointer}.site-exit svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.site-exit:focus-visible{outline:3px solid #548c67;outline-offset:3px}@media(max-width:360px){.site-exit{width:32px;height:32px;padding:6px}}
+/* Nonogram Stack keeps its original UI without a site exit button. */
