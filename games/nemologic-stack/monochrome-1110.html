@@ -247,7 +247,7 @@ button.wordmark{cursor:pointer}
   </section>
   </div>
 </main>
-<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li></ul><p>양 끝에서부터 맞춰진 구간의 단서는 녹색, 현재 입력으로 성립할 수 없는 단서는 빨간색이에요. 색은 해당 줄의 단서와 입력만으로 판단해요.</p><p>왼쪽 십자키으로 선택 테두리를 움직여요. 오른쪽 버튼을 누른 채 이동하면 0.1초마다 지나가는 칸에 입력해요. 버튼을 놓으면 입력을 멈춰요. undo는 최근 입력을 되돌리고, 지우개는 미정으로 바꿔요. 칸을 직접 누르거나 드래그할 수도 있어요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
+<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li></ul><p>양 끝에서부터 맞춰진 구간의 단서는 녹색, 현재 입력으로 성립할 수 없는 단서는 빨간색이에요. 색은 해당 줄의 단서와 입력만으로 판단해요.</p><p>왼쪽 십자키로 선택 테두리를 움직여요. 오른쪽 버튼을 누른 채 이동하면 0.2초마다 지나가는 칸에 입력해요. 버튼을 놓으면 입력을 멈춰요. undo는 최근 입력을 되돌리고, 지우개는 미정으로 바꿔요. 칸을 직접 누르거나 드래그할 수도 있어요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
 <dialog id="reset-dialog"><span class="eyebrow">START AGAIN</span><h2>처음부터 다시 풀까요?</h2><p>입력한 높이를 모두 지우고 빈 보드에서 시작해요.</p><div class="dialog-actions"><button data-close="reset-dialog">계속 풀기</button><button class="primary-button" id="confirm-reset">다시 시작</button></div></dialog>
 <dialog id="win-dialog"><span class="eyebrow">PICTURE COMPLETE</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300" aria-label="완성된 흑백 그림"></canvas><p>100개의 높이를 모두 찾았어요.</p><button class="primary-button" data-close="win-dialog">완성된 그림 보기</button><a class="collection-next" href="monochrome-1111.html">다음 문제 풀기</a></dialog>
 <script>globalThis.MONO_SPEC={"id":"1110","title":"흑백 문제 050","width":10,"height":10,"channels":1,"maxStack":3,"paletteSize":4,"levels":[0,0.3333333333333333,0.6666666666666666,1],"rule":"height-runs-max","omitAllZeros":true,"noGivens":true,"cells":[[0],[0],[0],[0],[2],[2],[0],[0],[0],[0],[0],[0],[0],[0],[1],[2],[0],[0],[0],[0],[0],[0],[0],[0],[1],[2],[0],[0],[0],[0],[0],[0],[0],[0],[1],[2],[0],[0],[0],[0],[0],[0],[0],[0],[1],[2],[0],[0],[0],[0],[0],[0],[0],[0],[1],[2],[0],[0],[0],[0],[0],[0],[0],[2],[2],[2],[2],[0],[0],[0],[0],[0],[2],[2],[2],[2],[2],[2],[0],[0],[0],[3],[3],[3],[3],[3],[3],[3],[3],[0],[0],[3],[3],[3],[3],[3],[3],[3],[3],[0]],"storageKey":"nonogram-stack-approved-v1-1110-c8a958040ecd002e","adjustment":{"targetEmptyPercent":62},"source":{"kind":"human-approved-catalog","subject":"뚫어뻥","categoryId":"11","category":"청소+세탁+위생","rank":10,"versionId":"b907fbb6-27d4-4db9-bbfe-290b0c6d285b","imageSha256":"c8a958040ecd002e6b6a6cb08e321d9082ffbdfef8429e085e2345e471058eaf","folder":"11-청소+세탁+위생/10x10/10-뚫어뻥/draft-b907fbb6","approvedAt":"2026-10-24T15:46:41.560Z"},"omitOuterZeros":true};
@@ -550,7 +550,7 @@ if(root.MONO_SPEC)root.PicrossCore=createCore(root.MONO_SPEC);
   header.className='header shared-header';
   header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle"><span class="wordmark-text"><span>Nono</span><span>gram</span><span>Stack</span></span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="settings" aria-label="설정">${icon('<path d="m9 3-1 3-3 1-2 3 2 2v3l3 2 1 3h6l1-3 3-2v-3l2-2-2-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>')}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m14 5-7 7 7 7M7 12h14"/>')}</button></div>`;
   const dialog=document.createElement('dialog');dialog.id='settings-dialog';
-  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키으로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 이동 간격은 0.1초예요.</p><div class="settings-actions"></div>';
+  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 방향 버튼을 0.5초 이상 누르면 0.2초마다 반복 이동해요.</p><div class="settings-actions"></div>';
   document.body.append(dialog);
   dialog.querySelector('.nav-icon').onclick=()=>dialog.close();
   dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
@@ -594,8 +594,8 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
       repeatDelay=setTimeout(()=>{
         repeatDelay=0;
         if(!direction||directionPointer===null)return;
-        step();timer=setInterval(()=>step(),100);
-      },300);
+        step();timer=setInterval(()=>step(),200);
+      },500);
     }
   }
   function stopDirection(){setDirection('');directionPointer=null;}
@@ -1218,5 +1218,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   });
 })();
 </script>
-<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-1110-c8a958040ecd002e',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=37e4cfd531ab" defer></script></body>
+<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-1110-c8a958040ecd002e',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=44db09da74e1" defer></script></body>
 </html>

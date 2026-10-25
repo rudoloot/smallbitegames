@@ -260,7 +260,7 @@ button.wordmark{cursor:pointer}
   <p>빨강·녹색·파랑을 각각 0~3스택으로 채워 하나의 그림을 완성해요.</p>
   <div class="rule-example"><div><b>2 4 3 4 1</b><span>11 | 000 | 22 | 3 | 22 | 00 | 1</span></div><div><b>3</b><span>최대 높이</span></div></div>
   <ul><li><b>색상판 위·왼쪽:</b> 같은 높이가 연속된 구간의 스택 합계예요. 높이 2가 세 칸이면 6으로 표시해요. 칸 수와 높이를 함께 추론하세요.</li><li><b>빈 구간은 생략:</b> 빈 구간의 0은 모두 표시하지 않아요. 양 끝과 숫자 구간 사이에 빈칸이 있을 수 있어요. 서로 다른 높이는 붙어도 되고, 같은 높이의 별도 구간 사이에는 빈칸이 필요해요. 줄 전체가 비어 있으면 구간 단서는 비어 있고 최대 높이는 0이에요.</li><li><b>전체뷰 위·왼쪽:</b> 각 칸의 R+G+B 높이(0~9)를 기준으로 같은 높이 구간의 스택 합계를 표시해요. 합산 높이 3,3,5,5,0,2는 6 10 2예요.</li><li><b>우측·하단:</b> 색상판은 선택한 색상의 최대 높이(0~3), 전체뷰는 RGB 합산 높이의 최댓값(0~9)이에요.</li><li><b>공개칸 없음:</b> 모든 칸은 미정으로 시작해요. ×는 0스택, 지우개는 미정으로 돌아가요.</li><li><b>전체뷰 표시:</b> 푸는 동안에는 입력한 스택 누적값만 표시해요. 문제를 완성하면 숫자 대신 완성된 색상 그림이 나타나요.</li><li><b>행·열 선택:</b> 단서를 누르면 같은 줄을 강조해요. 탭을 바꿔도 선택한 줄은 이어서 표시돼요. 다시 누르면 해제돼요.</li></ul>
-  <p>왼쪽 십자키으로 칸을 이동해요. 오른쪽의 지우개·×·숫자 버튼을 누른 채 움직이면 지나가는 칸마다 입력해요. 버튼을 놓으면 입력을 멈춰요. 칸을 직접 누르거나 드래그할 수도 있어요. 한 번의 드래그는 되돌리기로 한꺼번에 취소할 수 있어요. ×는 회색으로 표시되는 0스택 확정, 지우개는 미정으로 되돌리기예요. 빨강·녹색·파랑 탭에서 스택을 입력해요. 입력한 높이는 전체 탭의 누적값에도 바로 반영돼요. 키보드는 방향키, 0~3, Delete, Ctrl/⌘+Z를 지원해요.</p>
+  <p>왼쪽 십자키로 칸을 이동해요. 오른쪽의 지우개·×·숫자 버튼을 누른 채 움직이면 지나가는 칸마다 입력해요. 버튼을 놓으면 입력을 멈춰요. 칸을 직접 누르거나 드래그할 수도 있어요. 한 번의 드래그는 되돌리기로 한꺼번에 취소할 수 있어요. ×는 회색으로 표시되는 0스택 확정, 지우개는 미정으로 되돌리기예요. 빨강·녹색·파랑 탭에서 스택을 입력해요. 입력한 높이는 전체 탭의 누적값에도 바로 반영돼요. 키보드는 방향키, 0~3, Delete, Ctrl/⌘+Z를 지원해요.</p>
   <p class="fine-print">양 끝에서부터 맞춰진 구간의 단서는 녹색, 현재 입력으로 성립할 수 없는 단서는 빨간색으로 표시돼요. 색은 해당 줄의 단서와 입력만으로 판단해요. 공개 높이와 대각선 없이, 색상별·전체뷰의 같은 높이 구간 스택 합계와 최대 높이만으로 모든 높이를 추측 없이 풀 수 있어요. 빨강·녹색·파랑·전체 탭으로 보기를 전환해요. 각 보드는 화면 크기에 맞춰 표시해요.</p>
   <button id="reset" class="reset-in-help">처음부터 다시 풀기</button>
   <button class="primary-button" data-close="help-dialog">시작하기</button>
@@ -527,7 +527,7 @@ if(root.PUZZLE_SPEC)root.PicrossCore=createCore(root.PUZZLE_SPEC);
   header.className='header shared-header';
   header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle"><span class="wordmark-text"><span>Nono</span><span>gram</span><span>Stack</span></span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="settings" aria-label="설정">${icon('<path d="m9 3-1 3-3 1-2 3 2 2v3l3 2 1 3h6l1-3 3-2v-3l2-2-2-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>')}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m14 5-7 7 7 7M7 12h14"/>')}</button></div>`;
   const dialog=document.createElement('dialog');dialog.id='settings-dialog';
-  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키으로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 이동 간격은 0.1초예요.</p><div class="settings-actions"></div>';
+  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 방향 버튼을 0.5초 이상 누르면 0.2초마다 반복 이동해요.</p><div class="settings-actions"></div>';
   document.body.append(dialog);
   dialog.querySelector('.nav-icon').onclick=()=>dialog.close();
   dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
@@ -571,8 +571,8 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
       repeatDelay=setTimeout(()=>{
         repeatDelay=0;
         if(!direction||directionPointer===null)return;
-        step();timer=setInterval(()=>step(),100);
-      },300);
+        step();timer=setInterval(()=>step(),200);
+      },500);
     }
   }
   function stopDirection(){setDirection('');directionPointer=null;}
@@ -1200,5 +1200,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('nemologic-stack-3-status-27',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
       save=function(){originalSave();updateCollection();};
       updateCollection();
-    })();</script><script src="site-integration.js?v=37e4cfd531ab" defer></script></body>
+    })();</script><script src="site-integration.js?v=44db09da74e1" defer></script></body>
 </html>
