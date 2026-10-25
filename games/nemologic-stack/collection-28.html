@@ -185,13 +185,15 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 
 
 .shared-header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;margin-bottom:14px;padding:0 8px;flex-shrink:0}
-.wordmark{border:0;background:none;display:flex;align-items:baseline;gap:7px;padding:6px 0;font:700 19px system-ui;letter-spacing:-.7px;color:#293e30;cursor:default;white-space:nowrap}
+.wordmark{position:relative;border:0;background:none;display:flex;align-items:center;padding:6px 0;color:#293e30;cursor:default;white-space:nowrap}
 button.wordmark{cursor:pointer}
-.wordmark-text{color:#000}
-.wordmark[data-mode="monochrome"] .wordmark-text>span:nth-child(1){color:#aaa}
-.wordmark[data-mode="monochrome"] .wordmark-text>span:nth-child(2){color:#555}
-.wordmark[data-mode="monochrome"] .wordmark-text>span:nth-child(3){color:#000}
-.wordmark[data-mode="color"] .wordmark-text{background:linear-gradient(90deg,#d64d55,#df8739,#91a83e,#409665,#398fba,#6f68bb,#b559a5);background-clip:text;-webkit-background-clip:text;color:transparent}
+.wordmark-text{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.wordmark-logo{display:block;flex:none;width:192.5px;height:20px}
+.wordmark-tone{fill:#000}
+.wordmark[data-mode="monochrome"] [data-tone="0"]{fill:#aaa}
+.wordmark[data-mode="monochrome"] [data-tone="1"]{fill:#555}
+.wordmark[data-mode="monochrome"] [data-tone="2"]{fill:#000}
+.wordmark[data-mode="color"] .wordmark-tone{fill:url(#wordmark-rainbow)}
 .shared-header .header-actions{display:flex;align-items:center;gap:6px}
 .nav-icon{display:grid;place-items:center;width:36px;height:36px;padding:8px;border:1px solid #d8ded2;border-radius:10px;background:#fffef9;color:#52644f;cursor:pointer;font:20px system-ui}
 .nav-icon svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
@@ -212,7 +214,7 @@ button.wordmark{cursor:pointer}
 .dpad:focus-visible,.dpad button:focus-visible{outline:3px solid #548c67;outline-offset:1px}
 .height-picker button,.tutorial-tools button{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .height-picker button.held,.tutorial-tools button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
-@media(max-width:360px){.wordmark{font-size:17px;gap:4px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px;padding:6px}.dpad{width:110px;height:110px}}
+@media(max-width:360px){.wordmark-logo{width:154px;height:16px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px;padding:6px}.dpad{width:110px;height:110px}}
 .collection-next{display:block;margin-top:14px;color:#42684d;font-size:13px}</style>
 <link rel="stylesheet" href="site-integration.css?v=b3fa45581822"></head>
 <body class="individual-sums stack-sum-game">
@@ -523,9 +525,32 @@ if(root.PUZZLE_SPEC)root.PicrossCore=createCore(root.PUZZLE_SPEC);
   const mode=()=>isMenu?(document.body.dataset.mode||'monochrome'):
     document.body.classList.contains('monochrome-game')||document.querySelector('.tutorial-app')?'monochrome':'color';
   const icon=path=>`<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${path}</svg>`;
+  const pixelGlyphs={
+    N:['10001','11001','10101','10011','10001','10001','10001','00000'],
+    o:['00000','00000','01110','10001','10001','10001','01110','00000'],
+    n:['00000','00000','11110','10001','10001','10001','10001','00000'],
+    g:['00000','00000','01111','10001','10001','01111','00001','01110'],
+    r:['00000','00000','10110','11001','10000','10000','10000','00000'],
+    a:['00000','00000','01110','00001','01111','10001','01111','00000'],
+    m:['00000','00000','11010','10101','10101','10101','10101','00000'],
+    S:['01111','10000','10000','01110','00001','00001','11110','00000'],
+    t:['00100','00100','11111','00100','00100','00100','00011','00000'],
+    c:['00000','00000','01111','10000','10000','10000','01111','00000'],
+    k:['10000','10000','10010','10100','11000','10100','10010','00000']
+  };
+  let pen=0;
+  const pixelLetters=['Nono','gram','Stack'].map((word,tone)=>{
+    let path='';
+    for(const letter of word){
+      pixelGlyphs[letter].forEach((row,y)=>[...row].forEach((pixel,x)=>{if(pixel==='1')path+=`M${pen+x} ${y}h1v1h-1Z`;}));
+      pen+=6;
+    }
+    return `<path class="wordmark-tone" data-tone="${tone}" d="${path}"/>`;
+  }).join('');
+  const pixelLogo=`<svg class="wordmark-logo" viewBox="0 0 77 8" width="154" height="16" shape-rendering="crispEdges" aria-hidden="true"><defs><linearGradient id="wordmark-rainbow" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="77" y2="0"><stop offset="0" stop-color="#d64d55"/><stop offset=".16" stop-color="#df8739"/><stop offset=".33" stop-color="#91a83e"/><stop offset=".5" stop-color="#409665"/><stop offset=".66" stop-color="#398fba"/><stop offset=".83" stop-color="#6f68bb"/><stop offset="1" stop-color="#b559a5"/></linearGradient></defs>${pixelLetters}</svg>`;
   const wordmarkTag=isMenu?'button':'div';
   header.className='header shared-header';
-  header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle"><span class="wordmark-text"><span>Nono</span><span>gram</span><span>Stack</span></span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="settings" aria-label="설정">${icon('<path d="m9 3-1 3-3 1-2 3 2 2v3l3 2 1 3h6l1-3 3-2v-3l2-2-2-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>')}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m14 5-7 7 7 7M7 12h14"/>')}</button></div>`;
+  header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle">${pixelLogo}<span class="wordmark-text">NonogramStack</span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="settings" aria-label="설정">${icon('<path d="m9 3-1 3-3 1-2 3 2 2v3l3 2 1 3h6l1-3 3-2v-3l2-2-2-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>')}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m14 5-7 7 7 7M7 12h14"/>')}</button></div>`;
   const dialog=document.createElement('dialog');dialog.id='settings-dialog';
   dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 방향 버튼을 0.5초 이상 누르면 0.2초마다 반복 이동해요.</p><div class="settings-actions"></div>';
   document.body.append(dialog);
@@ -998,17 +1023,19 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
     return tokenMetrics.get(key);
   }
   function tokenSizes(groups,axis,font){return groups.map(number=>measureToken(number,font)[axis==='row'?'width':'height']);}
-  function tokenGap(a,b,stride){return Math.max(0,stride-(a+b)/2)/2;}
+  function tokenGap(a,b,stride,extra=0){return Math.max(0,stride-(a+b)/2)/2+extra;}
   function packedExtent(groups,axis,font,stride){
     const sizes=tokenSizes(groups,axis,font);
-    return sizes.reduce((sum,size,i)=>sum+size+(i?tokenGap(sizes[i-1],size,stride):0),0);
+    const extra=axis==='col'?Math.min(1,font/9):0;
+    return sizes.reduce((sum,size,i)=>sum+size+(i?tokenGap(sizes[i-1],size,stride,extra):0),0);
   }
   window.getStackCluePositions=(groups,axis,layout)=>{
     const row=axis==='row',sizes=tokenSizes(groups,axis,layout.font),positions=groups.map(()=>0);
     if(!groups.length)return positions;
     const last=groups.length-1,stride=row?layout.slotWidth:layout.lineHeight;
     positions[last]=(row?layout.left-layout.paddingX:layout.top-layout.paddingY)-sizes[last]/2;
-    for(let i=last-1;i>=0;i--)positions[i]=positions[i+1]-(sizes[i]+sizes[i+1])/2-tokenGap(sizes[i],sizes[i+1],stride);
+    const extra=row?0:Math.min(1,layout.font/9);
+    for(let i=last-1;i>=0;i--)positions[i]=positions[i+1]-(sizes[i]+sizes[i+1])/2-tokenGap(sizes[i],sizes[i+1],stride,extra);
     return positions;
   };
   window.getStackBoardLayout=(maxWidth,maxHeight=Infinity)=>{
@@ -1021,7 +1048,7 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
         measurements.set(font,{slotWidth,columnWidth,lineHeight,referenceLeft,referenceTop,end});
       }
       const {slotWidth,columnWidth,lineHeight,referenceLeft,referenceTop,end}=measurements.get(font);
-      // Preserve the existing font and spacing while returning unused clue space to the cells.
+      // Keep glyph size and horizontal spacing stable while fitting the compact clue gutters.
       const referenceCell=Math.min((maxWidth-referenceLeft-end)/N,(maxHeight-referenceTop-end)/N);
       if(referenceCell<columnWidth&&font>1)continue;
       const key=`${font}:${tab}`;
@@ -1031,13 +1058,14 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
         const paddingX=Math.min(4,Math.max(0,(referenceLeft-rowExtent)/2)),paddingY=Math.min(4,Math.max(0,(referenceTop-colExtent)/2));
         const labelWidth=measureToken(`${N},${N}`,font).width;
         const left=Math.min(referenceLeft,Math.ceil(Math.max(rowExtent+2*paddingX,labelWidth+12)));
-        const top=Math.min(referenceTop,Math.ceil(Math.max(colExtent+2*paddingY,font*1.2+12)));
+        const top=Math.max(Math.ceil(colExtent+2*paddingY),Math.min(referenceTop,Math.ceil(font*1.2+12)));
         const coordinatePadding=Math.min(6,left/6,top/6);
         const coordinateSize=Math.max(1,Math.min(12,12*(left-2*coordinatePadding)/measureToken(`${N},${N}`,12).width,(top-2*coordinatePadding)/1.2));
         viewMeasurements.set(key,{left,top,paddingX,paddingY,coordinatePadding,coordinateSize});
       }
       const packed=viewMeasurements.get(key),{left,top}=packed;
       const cell=Math.max(.1,Math.min((maxWidth-left-end)/N,(maxHeight-top-end)/N));
+      if(cell<columnWidth&&font>1)continue;
       return {width:left+N*cell+end,height:top+N*cell+end,...packed,end,cell,font,gap:0,padding:0,lineHeight,columnGap:0,slotWidth};
     }
   };
@@ -1200,5 +1228,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('nemologic-stack-3-status-28',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
       save=function(){originalSave();updateCollection();};
       updateCollection();
-    })();</script><script src="site-integration.js?v=44db09da74e1" defer></script></body>
+    })();</script><script src="site-integration.js?v=02061c33f71b" defer></script></body>
 </html>
