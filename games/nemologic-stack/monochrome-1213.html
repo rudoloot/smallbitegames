@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f5f5ef">
-  <title>흑백 문제 061 · 노노그램스택</title>
+  <title>흑백 문제 120 · 노노그램스택</title>
   <style>:root{font-family:Inter,Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;color:#242e2b;background:#f5f5ef;font-synthesis:none;--accent:#c6544d;--tint:#fae8e3;--line:#cdd2cb;--gutter:39px;--end:30px;--top:58px;--bottom:34px}
 .board.is-painting .clue{transition:none}
 .height-picker #deselect{padding-inline:1px}.height-picker #deselect span{white-space:nowrap;font-size:8px}
@@ -189,7 +189,7 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 .wordmark{position:relative;border:0;background:none;display:flex;align-items:center;padding:6px 0;color:#293e30;cursor:default;white-space:nowrap}
 button.wordmark{cursor:pointer}
 .wordmark-text{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.wordmark-logo{display:block;flex:none;width:192.5px;height:20px}
+.wordmark-logo{display:block;flex:none;width:170px;height:20px}
 .wordmark-tone{fill:#000}
 .wordmark[data-mode="monochrome"] [data-tone="0"]{fill:#aaa}
 .wordmark[data-mode="monochrome"] [data-tone="1"]{fill:#555}
@@ -236,7 +236,7 @@ button.wordmark{cursor:pointer}
 .dpad:focus-visible,.dpad button:focus-visible{outline:3px solid #548c67;outline-offset:1px}
 .height-picker button,.tutorial-tools button{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .height-picker button.held,.tutorial-tools button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
-@media(max-width:360px){.wordmark-logo{width:154px;height:16px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px;padding:6px}.dpad{width:110px;height:110px}}
+@media(max-width:360px){.wordmark-logo{width:136px;height:16px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px;padding:6px}.dpad{width:110px;height:110px}}
 .monochrome-game .clue.done{color:#555}.monochrome-game .overview-marker.done .clue-text{fill:#555}.monochrome-game .cell.zero{background:#fff;color:#555}.collection-next{display:block;margin-top:14px;color:#42684d;font-size:13px}</style>
 <link rel="stylesheet" href="site-integration.css?v=b2777e7d753c"></head>
 <body class="individual-sums stack-sum-game monochrome-game">
@@ -271,7 +271,7 @@ button.wordmark{cursor:pointer}
   </section>
   </div>
 </main>
-<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li></ul><p>양 끝에서부터 맞춰진 구간의 단서는 녹색, 현재 입력으로 성립할 수 없는 단서는 빨간색이에요. 색은 해당 줄의 단서와 입력만으로 판단해요.</p><p>왼쪽 십자키로 선택 테두리를 움직여요. 오른쪽 버튼을 누른 채 이동하면 0.2초마다 지나가는 칸에 입력해요. 버튼을 놓으면 입력을 멈춰요. undo는 최근 입력을 되돌리고, 지우개는 미정으로 바꿔요. 게임판을 직접 누르면 터치 모드로 바뀌어요. 터치 모드에서는 오른쪽 버튼으로 값을 고른 뒤 칸을 누르거나 드래그해서 입력해요. 십자키를 다시 누르면 십자키 모드로 돌아가요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
+<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li></ul><p>양 끝에서부터 맞춰진 구간의 단서는 녹색, 현재 입력으로 성립할 수 없는 단서는 빨간색이에요. 색은 해당 줄의 단서와 입력만으로 판단해요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
 <dialog id="reset-dialog"><span class="eyebrow">START AGAIN</span><h2>처음부터 다시 풀까요?</h2><p>입력한 높이를 모두 지우고 빈 보드에서 시작해요.</p><div class="dialog-actions"><button data-close="reset-dialog">계속 풀기</button><button class="primary-button" id="confirm-reset">다시 시작</button></div></dialog>
 <dialog id="win-dialog"><span class="eyebrow">PICTURE COMPLETE</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300" aria-label="완성된 흑백 그림"></canvas><p>100개의 높이를 모두 찾았어요.</p><button class="primary-button" data-close="win-dialog">완성된 그림 보기</button><a class="collection-next" href="monochrome-1217.html">다음 문제 풀기</a></dialog>
 <script>globalThis.MONO_SPEC={"id":"1213","title":"흑백 문제 061","width":10,"height":10,"channels":1,"maxStack":3,"paletteSize":4,"levels":[0,0.3333333333333333,0.6666666666666666,1],"rule":"height-runs-max","omitAllZeros":true,"noGivens":true,"cells":[[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[1],[1],[0],[1],[1],[0],[0],[0],[0],[1],[1],[1],[1],[1],[1],[1],[0],[0],[0],[1],[1],[1],[1],[1],[1],[1],[0],[0],[3],[3],[3],[3],[3],[3],[3],[3],[3],[0],[2],[2],[2],[2],[2],[2],[2],[2],[2],[3],[2],[1],[1],[1],[1],[1],[1],[2],[2],[3],[2],[1],[1],[1],[1],[1],[1],[2],[3],[3],[2],[1],[1],[1],[1],[1],[1],[2],[2],[0],[2],[2],[2],[2],[2],[2],[2],[2],[2],[0]],"storageKey":"nonogram-stack-approved-v1-1213-7da4856b2f32df7d","adjustment":{"targetEmptyPercent":25},"source":{"kind":"human-approved-catalog","subject":"토스터","categoryId":"12","category":"전자+가전","rank":13,"versionId":"e73afdb1-31ae-42e4-9cf7-c5b4cef7dc1f","imageSha256":"7da4856b2f32df7da5da9045d88daf922ef5c1e942d30cf66df8ea5fda4a509a","folder":"12-전자+가전/10x10/13-토스터/draft-e73afdb1","approvedAt":"2026-10-24T15:47:48.709Z"},"omitOuterZeros":true};
@@ -569,12 +569,12 @@ if(root.MONO_SPEC)root.PicrossCore=createCore(root.MONO_SPEC);
     '언어':'Language','조작 안내 표시':'Show control guide','게임 방법':'How to play','처음부터 다시 풀기':'Restart puzzle',
     '숨은 그림 찾기':'Reveal the hidden picture','힌트 숫자 읽기':'Reading the clues','조작 방법':'Controls',
     '각 칸을 0~3의 명암으로 채워 그림을 완성해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정이에요.':'Fill each cell with a shade from 0 to 3. × means 0 (white), 1 is light gray, 2 is dark gray, and 3 is black.',
-    '빨강·녹색·파랑 탭에서 각 색상을 0~3스택으로 채워 그림을 완성해요. 세 색상의 높이를 조합해 칸의 색을 만들어요.':'Use the Red, Green, and Blue tabs to fill each channel with heights from 0 to 3. The three heights combine to make each cell’s color.',
+    '빨강·녹색·파랑 탭에서 각 색상을 0~3의 값으로 채워 그림을 완성해요. 세 색상의 값을 조합해 칸의 색을 만들어요.':'Use the Red, Green, and Blue tabs to fill each channel with values from 0 to 3. The three values combine to make each cell’s color.',
     '위·왼쪽:':'Top and left:',
-    '같은 높이가 이어진 구간의 합이에요. 높이 2가 세 칸 이어지면 2 + 2 + 2 = 6으로 표시해요. 가로줄은 왼쪽부터, 세로줄은 위부터 읽어요.':' Each clue is the sum of a run of equal heights. Three adjacent cells of height 2 give 2 + 2 + 2 = 6. Read rows from left to right and columns from top to bottom.',
-    '오른쪽·아래:':'Right and bottom:','해당 행·열에서 가장 큰 높이예요.':' The largest height in that row or column.',
-    '0인 구간은 단서에서 생략해요. 같은 높이의 두 구간 사이에는 0이 필요하고, 서로 다른 높이의 구간은 붙을 수 있어요.':'Zero runs are omitted. Separate runs of the same height need a zero between them; runs of different heights may touch.',
-    '미정과 ×:':'Unknown and ×:','빈칸은 아직 정하지 않은 칸, ×는 0으로 확정한 칸이에요. 지우개는 미정으로 되돌려요.':' A blank cell is undecided; × confirms a height of 0. The eraser makes a cell unknown again.',
+    '같은 값이 이어진 구간의 합이에요. 값이 2인 칸이 세 칸 이어지면 2 + 2 + 2 = 6으로 표시해요. 가로줄은 왼쪽부터, 세로줄은 위부터 읽어요.':' Each clue is the sum of a run of equal values. Three adjacent cells with a value of 2 give 2 + 2 + 2 = 6. Read rows from left to right and columns from top to bottom.',
+    '오른쪽·아래:':'Right and bottom:','해당 행·열에서 가장 큰 값이에요.':' The largest value in that row or column.',
+    '0인 구간은 단서에서 생략해요. 같은 값의 두 구간 사이에는 0이 필요하고, 서로 다른 값의 구간은 붙을 수 있어요.':'Zero runs are omitted. Separate runs of the same value need a zero between them; runs of different values may touch.',
+    '미정과 ×:':'Unknown and ×:','빈칸은 아직 정하지 않은 칸, ×는 0으로 확정한 칸이에요. 지우개는 미정으로 되돌려요.':' A blank cell is undecided; × confirms a value of 0. The eraser makes a cell unknown again.',
     '십자키:':'D-pad:','한 번 누르면 한 칸 이동해요. 0.5초 이상 누르고 있으면 0.2초마다 반복 이동해요.':' Tap to move one cell. Hold for 0.5 seconds to begin moving every 0.2 seconds.',
     '십자키 모드:':'D-pad mode:','오른쪽 숫자·×·지우개 버튼을 누르면 선택한 칸에 바로 적용해요. 버튼을 누른 채 십자키로 이동하면 지나가는 칸마다 입력해요.':' Number, ×, and eraser buttons immediately apply to the selected cell. Hold a button while moving with the D-pad to apply it to each cell you enter.',
     '터치 모드:':'Touch mode:','게임판을 직접 누르면 십자키가 흐려지고 선택 테두리가 사라져요. 오른쪽 버튼으로 값을 고른 뒤 칸을 누르거나 드래그해서 입력해요. 십자키를 다시 누르면 십자키 모드로 돌아가요.':' Touch the board to dim the D-pad and hide the cursor. Choose a value on the right, then tap or drag on the board to enter it. Touch the D-pad to return to D-pad mode.',
@@ -584,9 +584,9 @@ if(root.MONO_SPEC)root.PicrossCore=createCore(root.MONO_SPEC);
     '키보드: 방향키로 이동 · 0~3으로 값 선택 · Delete로 지우개 · Ctrl/⌘+Z로 되돌리기':'Keyboard: arrow keys to move · 0–3 to select a value · Delete for the eraser · Ctrl/⌘+Z to undo',
     '튜토리얼 시작하기':'Start tutorial',
     '왼쪽 십자키로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 방향 버튼을 0.5초 이상 누르면 0.2초마다 반복 이동해요. 게임판을 직접 누르면 터치 모드가 되어 오른쪽 버튼으로 값만 선택하고 칸을 터치해서 입력해요. 십자키를 다시 누르면 십자키 모드로 돌아가요.':'Move with the D-pad. Hold an action button while moving to apply it to each cell. Hold a direction for 0.5 seconds to repeat every 0.2 seconds. Touch the board to enter touch mode: choose a value, then tap cells to enter it. Touch the D-pad to switch back.',
-    '5×5 완성 예시':'Completed 5×5 example','5×5 완성된 하트와 구간 합·최대 높이 힌트':'Completed 5 by 5 heart with run-sum and maximum-height clues',
-    '튜토리얼에서 완성하는 하트예요. 칸 안의 숫자는 높이, 바깥 숫자는 힌트예요.':'This is the heart you complete in the tutorial. Numbers inside cells are heights; numbers outside are clues.',
-    '강조한 셋째 줄은 2가 다섯 칸이므로 구간 합은 10, 최대 높이는 2예요.':'In the highlighted third row, five cells of height 2 give a run sum of 10 and a maximum height of 2.',
+    '5×5 완성 예시':'Completed 5×5 example','5×5 완성된 하트와 구간 합·최댓값 힌트':'Completed 5 by 5 heart with run-sum and maximum-value clues',
+    '튜토리얼에서 완성하는 하트예요. 칸 안에는 입력한 값을, 바깥에는 힌트 숫자를 표시했어요.':'This is the heart you complete in the tutorial. Numbers inside cells are entered values; numbers outside are clues.',
+    '강조한 셋째 줄은 2가 다섯 칸이므로 구간 합은 10, 최댓값은 2예요.':'In the highlighted third row, five cells with a value of 2 give a run sum of 10 and a maximum value of 2.',
     '지우개':'Eraser','지우개 선택':'Select eraser','되돌리기':'Undo','위로 이동':'Move up','아래로 이동':'Move down','왼쪽으로 이동':'Move left','오른쪽으로 이동':'Move right',
     '칸 이동 십자키. 방향키로도 이동할 수 있어요':'D-pad. You can also use the arrow keys.','칸 이동 십자키':'D-pad','높이 입력':'Height controls','입력할 스택 선택':'Select a height',
     '빨강':'Red','녹색':'Green','파랑':'Blue','전체':'All','명암':'Grayscale','명암 입력':'Grayscale input','색상 탭':'Color tabs',
@@ -652,7 +652,7 @@ if(root.MONO_SPEC)root.PicrossCore=createCore(root.MONO_SPEC);
     if((match=text.match(/^1 × 5칸 = 5$/)))return '1 × 5 cells = 5';
     if((match=text.match(/^2 × 5칸 = 10$/)))return '2 × 5 cells = 10';
     if((match=text.match(/^3 × 3칸 = 9$/)))return '3 × 3 cells = 9';
-    if((match=text.match(/^(?:흑백 )?문제 (\d+) (시작|완료|계속하기)$/)))return `${text.startsWith('흑백')?'Grayscale puzzle':'Puzzle'} ${Number(match[1])}: ${{시작:'Start',완료:'Completed',계속하기:'Continue'}[match[2]]}`;
+    if((match=text.match(/^(?:흑백 )?문제 (\d+) (시작|완료|계속하기|준비중)$/)))return `${text.startsWith('흑백')?'Grayscale puzzle':'Puzzle'} ${Number(match[1])}: ${{시작:'Start',완료:'Completed',계속하기:'Continue',준비중:'Coming soon'}[match[2]]}`;
     if((match=text.match(/^(\d+)문제 목록으로$/)))return `Back to ${match[1]} puzzles`;
     if((match=text.match(/^(\d+)개의 높이를 모두 찾았어요\.$/)))return `All ${match[1]} heights are complete.`;
     if((match=text.match(/^완성! (\d+)개의 높이가 모두 맞아요\.$/)))return `Complete! All ${match[1]} heights are correct.`;
@@ -730,11 +730,12 @@ if(root.MONO_SPEC)root.PicrossCore=createCore(root.MONO_SPEC);
     let path='';
     for(const letter of word){
       pixelGlyphs[letter].forEach((row,y)=>[...row].forEach((pixel,x)=>{if(pixel==='1')path+=`M${pen+x} ${y}h1v1h-1Z`;}));
-      pen+=6;
+      pen+=5.5;
     }
     return `<path class="wordmark-tone" data-tone="${tone}" d="${path}"/>`;
   }).join('');
-  const pixelLogo=`<svg class="wordmark-logo" viewBox="0 0 77 8" width="154" height="16" shape-rendering="crispEdges" aria-hidden="true"><defs><linearGradient id="wordmark-rainbow" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="77" y2="0"><stop offset="0" stop-color="#d64d55"/><stop offset=".16" stop-color="#df8739"/><stop offset=".33" stop-color="#91a83e"/><stop offset=".5" stop-color="#409665"/><stop offset=".66" stop-color="#398fba"/><stop offset=".83" stop-color="#6f68bb"/><stop offset="1" stop-color="#b559a5"/></linearGradient></defs>${pixelLetters}</svg>`;
+  const logoWidth=pen-.5;
+  const pixelLogo=`<svg class="wordmark-logo" viewBox="0 0 ${logoWidth} 8" width="136" height="16" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true"><defs><linearGradient id="wordmark-rainbow" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${logoWidth}" y2="0"><stop offset="0" stop-color="#d64d55"/><stop offset=".16" stop-color="#df8739"/><stop offset=".33" stop-color="#91a83e"/><stop offset=".5" stop-color="#409665"/><stop offset=".66" stop-color="#398fba"/><stop offset=".83" stop-color="#6f68bb"/><stop offset="1" stop-color="#b559a5"/></linearGradient></defs>${pixelLetters}</svg>`;
   const wordmarkTag=isMenu?'button':'div';
   const gearPoints=Array.from({length:8},(_,tooth)=>[[7.2,-22.5],[7.2,-14],[9.5,-9],[9.5,9],[7.2,14]].map(([radius,offset])=>{
     const angle=(tooth*45+offset-90)*Math.PI/180;
@@ -758,28 +759,20 @@ if(root.MONO_SPEC)root.PicrossCore=createCore(root.MONO_SPEC);
     const runs=exampleRuns(col);
     runs.forEach((value,i)=>exampleDrawing+=`<text x="${70+line*28}" y="${48-(runs.length-1-i)*14}">${value}</text>`);
   }
-  const helpExample=`<figure class="help-example"><h3>5×5 완성 예시</h3><svg viewBox="0 0 232 232" role="img" aria-label="5×5 완성된 하트와 구간 합·최대 높이 힌트"><g font-family="system-ui" font-size="11" font-weight="650" text-anchor="middle" dominant-baseline="central" fill="#34493a">${exampleDrawing}</g><rect class="help-example-highlight" x="55" y="115" width="142" height="30" fill="none" stroke="#b18527" stroke-width="2"/></svg><figcaption>튜토리얼에서 완성하는 하트예요. 칸 안의 숫자는 높이, 바깥 숫자는 힌트예요.</figcaption><p>강조한 셋째 줄은 2가 다섯 칸이므로 구간 합은 10, 최대 높이는 2예요.</p></figure>`;
+  const helpExample=`<figure class="help-example"><h3>5×5 완성 예시</h3><svg viewBox="0 0 232 232" role="img" aria-label="5×5 완성된 하트와 구간 합·최댓값 힌트"><g font-family="system-ui" font-size="11" font-weight="650" text-anchor="middle" dominant-baseline="central" fill="#34493a">${exampleDrawing}</g><rect class="help-example-highlight" x="55" y="115" width="142" height="30" fill="none" stroke="#b18527" stroke-width="2"/></svg><figcaption>튜토리얼에서 완성하는 하트예요. 칸 안에는 입력한 값을, 바깥에는 힌트 숫자를 표시했어요.</figcaption><p>강조한 셋째 줄은 2가 다섯 칸이므로 구간 합은 10, 최댓값은 2예요.</p></figure>`;
   help.id='help-dialog';help.classList.add('game-help');help.setAttribute('aria-labelledby','help-title');
   help.innerHTML=`<div class="settings-top"><h2 id="help-title">게임 도움말</h2><button class="nav-icon" data-close="help-dialog" aria-label="도움말 닫기">×</button></div>
     <section class="help-section"><h3>숨은 그림 찾기</h3>
       <p data-help-mode="monochrome">각 칸을 0~3의 명암으로 채워 그림을 완성해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정이에요.</p>
-      <p data-help-mode="color">빨강·녹색·파랑 탭에서 각 색상을 0~3스택으로 채워 그림을 완성해요. 세 색상의 높이를 조합해 칸의 색을 만들어요.</p>
+      <p data-help-mode="color">빨강·녹색·파랑 탭에서 각 색상을 0~3의 값으로 채워 그림을 완성해요. 세 색상의 값을 조합해 칸의 색을 만들어요.</p>
     </section>
     ${helpExample}
     <section class="help-section"><h3>힌트 숫자 읽기</h3><ul>
-      <li><b>위·왼쪽:</b> 같은 높이가 이어진 구간의 합이에요. 높이 2가 세 칸 이어지면 2 + 2 + 2 = 6으로 표시해요. 가로줄은 왼쪽부터, 세로줄은 위부터 읽어요.</li>
-      <li><b>오른쪽·아래:</b> 해당 행·열에서 가장 큰 높이예요.</li>
-      <li>0인 구간은 단서에서 생략해요. 같은 높이의 두 구간 사이에는 0이 필요하고, 서로 다른 높이의 구간은 붙을 수 있어요.</li>
+      <li><b>위·왼쪽:</b> 같은 값이 이어진 구간의 합이에요. 값이 2인 칸이 세 칸 이어지면 2 + 2 + 2 = 6으로 표시해요. 가로줄은 왼쪽부터, 세로줄은 위부터 읽어요.</li>
+      <li><b>오른쪽·아래:</b> 해당 행·열에서 가장 큰 값이에요.</li>
+      <li>0인 구간은 단서에서 생략해요. 같은 값의 두 구간 사이에는 0이 필요하고, 서로 다른 값의 구간은 붙을 수 있어요.</li>
       <li><b>미정과 ×:</b> 빈칸은 아직 정하지 않은 칸, ×는 0으로 확정한 칸이에요. 지우개는 미정으로 되돌려요.</li>
     </ul></section>
-    <section class="help-section"><h3>조작 방법</h3><ul>
-      <li><b>십자키:</b> 한 번 누르면 한 칸 이동해요. 0.5초 이상 누르고 있으면 0.2초마다 반복 이동해요.</li>
-      <li><b>십자키 모드:</b> 오른쪽 숫자·×·지우개 버튼을 누르면 선택한 칸에 바로 적용해요. 버튼을 누른 채 십자키로 이동하면 지나가는 칸마다 입력해요.</li>
-      <li><b>터치 모드:</b> 게임판을 직접 누르면 십자키가 흐려지고 선택 테두리가 사라져요. 오른쪽 버튼으로 값을 고른 뒤 칸을 누르거나 드래그해서 입력해요. 십자키를 다시 누르면 십자키 모드로 돌아가요.</li>
-      <li><b>undo:</b> 최근 입력을 되돌려요. 한 번의 드래그는 한꺼번에 취소해요.</li>
-      <li>선택한 행·열의 단서는 노란색으로 강조돼요. 맞춰진 구간의 단서는 초록색, 현재 입력으로 성립할 수 없는 단서는 빨간색으로 표시돼요.</li>
-    </ul><p data-help-mode="color"><b>전체 탭:</b> RGB 합산 높이(0~9)의 단서와 현재 누적값을 확인해요. 전체 탭에서는 입력할 수 없으며, 완성하면 그림이 나타나요.</p>
-    <p class="help-keyboard">키보드: 방향키로 이동 · 0~3으로 값 선택 · Delete로 지우개 · Ctrl/⌘+Z로 되돌리기</p></section>
     <a class="tutorial-start" href="tutorial.html">튜토리얼 시작하기</a>`;
   if(reset)help.insertBefore(reset,help.querySelector('.tutorial-start'));
   if(!help.isConnected)document.body.append(help);
@@ -1491,5 +1484,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   });
 })();
 </script>
-<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-1213-7da4856b2f32df7d',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=0d8f5ab1b427" defer></script></body>
+<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-1213-7da4856b2f32df7d',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=eba67f07672a" defer></script></body>
 </html>
