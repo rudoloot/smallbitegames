@@ -1,0 +1,92 @@
+.overview-marker .clue-text{fill:#536057;font-size:6.5px}.overview-marker.done .clue-text{fill:#4a8654}.overview-marker.conflict rect{fill:#fde0da}.overview-marker.conflict .clue-text{fill:#be453d}
+#terrain-line-sums,.large-line-clue{height:auto;min-height:30px;white-space:normal;line-height:15px;overflow-wrap:anywhere;padding:3px 1px}
+.overview-stack-total{font-size:5px;font-weight:700;font-variant-numeric:tabular-nums;user-select:none}
+.stack-sum-game .clue.clue-done,.stack-sum-game .clue .clue-done{color:#398349}
+.stack-sum-game .clue.clue-conflict,.stack-sum-game .clue .clue-conflict{color:#be453d}
+.overview-marker .clue-done{fill:#398349}.overview-marker .clue-conflict{fill:#be453d}
+.stack-sum-game .cell,.stack-sum-game .cell.zero{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .78))}
+.cell-cross{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round}
+.stack-sum-game .clue.total{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .75))}
+
+/* Full-width game with the same branding as the collection. */
+body[data-loading]>.app{visibility:hidden}
+#game-loading,#game-load-error{position:fixed;z-index:30;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 40px);max-width:430px;text-align:center;font:14px/1.8 system-ui;color:#52644f}
+#game-load-error button,#game-load-error a{display:inline-block;margin:12px 8px;padding:8px 12px;border:1px solid #d6dfcf;border-radius:8px;background:#fffef9;color:#42684d}
+.monochrome-game .clue.done{color:#555}.monochrome-game .overview-marker.done .clue-text{fill:#555}.monochrome-game .cell.zero{background:#fff;color:#555}
+.collection-next{display:block;margin-top:14px;color:#42684d;font-size:13px}
+html{overflow-anchor:none}
+html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f5f5ef;color:#293e30}
+.app{width:100%;max-width:none;margin:0;border:0;border-radius:0;box-shadow:none;background:#f5f5ef}
+.header{padding:0 8px;margin-bottom:20px;gap:8px}
+.brand{gap:11px;min-width:0}
+.brand h1{font-size:20px;letter-spacing:-.7px;font-weight:700;white-space:nowrap}
+.mark{display:flex;flex-direction:column;gap:3px;flex-shrink:0;position:static;transform:none;width:28px;height:24px}
+.mark i{position:static;display:block;width:28px;height:6px;border-radius:2px;transform:none;background:#e45d58}
+.mark i:nth-child(1){background:#e45d58}.mark i:nth-child(2){background:#58a66c}.mark i:nth-child(3){background:#518bd1}
+.header-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.back-to-list{font-size:12px;white-space:nowrap;color:#42684d;text-decoration:none;padding:8px 0}
+.back-to-list:focus-visible{outline:3px solid #548c67;outline-offset:3px}
+.header .icon-button{width:30px;height:30px}
+.overview-stage,#board-viewport{aspect-ratio:auto;border:0;border-radius:0;width:100%;background:#f5f5ef}
+.individual-sums .clue{font-size:var(--number-size);line-height:1}
+.individual-sums .clue.left{padding:0 6px}
+.individual-sums .clue.top{padding:6px 0}
+.individual-sums .run-tokens{gap:var(--clue-gap,5px);font-size:var(--number-size);font-family:system-ui;line-height:1.25}
+.individual-sums .clue.top .run-tokens{gap:var(--clue-column-gap,4px)}
+.individual-sums .corner{font-size:12px;line-height:1.4;text-align:center}
+.tabs{margin:10px 0}
+.tabs button{height:32px}
+.tools{grid-template-columns:1fr;margin:6px 0 0}
+.tools button{min-height:34px}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%);white-space:nowrap;border:0}
+@media(max-width:360px){.header{gap:6px}.header-actions{gap:6px}.back-to-list{font-size:11px}}
+
+/* Keep the input area separate from both boards. */
+.input-dock{z-index:20;background:#f5f5ef}
+.input-dock .input-panel{margin:0;padding:0;border:0}
+
+.overview-stage{margin-top:16px}
+
+/* A quiet clue background, separated only along rows and columns. */
+.individual-sums .clue.left,.individual-sums .clue.top{padding:0}
+.individual-sums .clue .run-tokens{position:relative;display:block;width:100%;height:100%;max-width:none;max-height:none;gap:0;line-height:1;align-self:stretch}
+.clue.left,.clue.top,.clue.right,.clue.bottom{background:transparent;border-radius:0}
+.clue .run-tokens .clue-slot{position:absolute;display:block;width:max-content;height:1em;min-width:0;min-height:0;padding:0;line-height:1;transform:translate(-50%,-50%);background:transparent}
+.clue.total{margin:0;border:0}
+.clue.left,.clue.right{box-shadow:inset 0 -1px 0 #e2e6de}
+.clue.top,.clue.bottom{box-shadow:inset -1px 0 0 #e2e6de}
+.individual-sums .clue.active-line{background:#fff1c2;border-radius:0}
+.individual-sums .coordinates{display:flex;align-items:flex-end;justify-content:flex-end;gap:0;min-width:0;min-height:0;padding:var(--coordinate-padding,6px);overflow:hidden;font-size:var(--coordinate-size,9px);font-weight:650;line-height:1.2;color:#34493a;white-space:nowrap;font-variant-numeric:tabular-nums}
+.overview-marker rect{fill:transparent}
+.overview-marker.active-line>rect{fill:#fff1c2}
+.overview-clue-separator{fill:none;stroke:#e2e6de;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
+.individual-sums .cell.selected{z-index:4;outline:2px solid #263e30;outline-offset:-2px;box-shadow:inset 0 0 0 3px #ffffff99}
+
+/* Fit the complete game and controller inside the viewport. */
+html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
+.stack-sum-game .app{height:100dvh;min-height:0;max-height:100dvh;display:flex;flex-direction:column;gap:0;overflow:hidden;padding:8px 4px 0}
+.stack-sum-game .shared-header{min-height:36px;margin:0 0 8px}
+.play-area{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;gap:8px;overflow:hidden}
+.stack-sum-game #editor-panel{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;overflow:hidden;padding:0}
+.stack-sum-game #game-panel,.stack-sum-game #terrain-panel{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;min-height:0;overflow:hidden;padding:0;border:0}
+.stack-sum-game .tabs{flex:none;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 2px 6px;padding:3px}
+.stack-sum-game #board-viewport,.stack-sum-game .overview-stage{flex:none;min-width:0;min-height:0;margin:0;overflow:hidden;touch-action:none}
+.stack-sum-game #board{flex:none}
+.stack-sum-game .input-dock{position:static;inset:auto;flex:0 0 25dvh;height:25dvh;min-height:0;margin-top:0;padding:6px 6px max(6px,env(safe-area-inset-bottom));box-shadow:none}
+.stack-sum-game .input-panel{width:100%;height:100%;min-height:0}
+.stack-sum-game .gamepad{--control-padding:clamp(4px,1.2dvh,12px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%;height:100%;max-width:none;margin:0}
+.dpad-area{display:grid;place-items:center;min-width:0;min-height:0;padding:var(--control-padding)}
+.stack-sum-game .dpad{width:var(--dpad-size,100px);height:var(--dpad-size,100px)}
+.touch-input-mode .dpad{opacity:.4}
+.stack-sum-game .input-dock .height-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:4px;width:100%;height:100%;min-width:0;min-height:0;padding:var(--control-padding)}
+.stack-sum-game .input-dock .height-picker button{width:100%;height:100%;min-width:0;min-height:0;padding:0;gap:0;border-radius:clamp(6px,1dvh,12px)}
+.stack-sum-game .height-picker strong{font-size:clamp(16px,3dvh,30px);line-height:1}
+.stack-sum-game .height-picker span{font-size:clamp(7px,.9dvh,10px);line-height:1}
+.stack-sum-game .height-picker #erase strong{height:auto}
+.stack-sum-game .height-picker svg{width:clamp(14px,2.6dvh,28px);height:clamp(14px,2.6dvh,28px)}
+@media(max-height:650px){
+  .stack-sum-game .app{padding-top:4px}
+  .stack-sum-game .shared-header{margin-bottom:4px}
+  .stack-sum-game .tabs button{height:26px}
+}
+@media(max-height:450px){.play-area{gap:6px}.stack-sum-game .height-picker #undo strong{font-size:14px}.stack-sum-game .height-picker span{font-size:6px}}

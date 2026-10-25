@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const version='acfd5726e1fe',directory=new URL('.',location.href);
+  const version='5aff8ca07b22',directory=new URL('.',location.href);
   let returnUrl=null;
   try {
     const raw=new URLSearchParams(location.search).get('returnTo');
@@ -10,7 +10,7 @@
     const target=new URL(link.href,location.href);
     if(target.origin!==directory.origin||!target.pathname.startsWith(directory.pathname))return;
     const name=target.pathname.slice(directory.pathname.length);
-    if(!/^(?:index|tutorial|collection(?:-\d{2})?|monochrome-\d{2,4})\.html$/.test(name))return;
+    if(!/^(?:index|game|tutorial|collection(?:-\d{2})?|monochrome-\d{2,4})\.html$/.test(name))return;
     target.searchParams.set('v',version);
     if(returnUrl)target.searchParams.set('returnTo',returnUrl);else target.searchParams.delete('returnTo');
     link.href=target.href;

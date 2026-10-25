@@ -48,9 +48,9 @@ button.wordmark{cursor:pointer}
 .wordmark[data-mode="monochrome"] [data-tone="2"]{fill:#000}
 .wordmark[data-mode="color"] .wordmark-tone{fill:url(#wordmark-rainbow)}
 .shared-header .header-actions{display:flex;align-items:center;gap:6px}
-.nav-icon{display:grid;place-items:center;width:36px;height:36px;padding:8px;border:1px solid #d8ded2;border-radius:10px;background:#fffef9;color:#52644f;cursor:pointer;font:20px system-ui}
-.nav-icon svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-#help span{font-size:22px;font-weight:650;line-height:1}
+.nav-icon{box-sizing:border-box;display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid #d8ded2;border-radius:10px;background:#fffef9;color:#52644f;cursor:pointer;font:20px/1 system-ui}
+.nav-icon svg{display:block;width:20px;height:20px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#help span{display:block;font-size:22px;font-weight:650;line-height:1;transform:translate(var(--question-offset-x,0px),var(--question-offset-y,0px))}
 .nav-icon:disabled{opacity:.35;cursor:default}
 .wordmark:focus-visible,.nav-icon:focus-visible{outline:2px solid #548c67;outline-offset:2px}
 #settings-dialog{width:calc(100% - 32px);max-width:380px;max-height:85dvh;overflow:auto;padding:20px;border:1px solid #d6dfcf;border-radius:16px;background:#fafbf4;color:#293e30;box-shadow:0 20px 80px #26382e30;font:13px system-ui;letter-spacing:0}
@@ -72,13 +72,10 @@ button.wordmark{cursor:pointer}
 .game-help .help-example p{margin:8px 0 0}
 .settings-language{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
 .settings-language select{max-width:65%;padding:8px 12px;border:1px solid #cbd6c7;border-radius:8px;background:#fffef9;color:#293e30;font:13px system-ui;cursor:pointer}
-.game-help .reset-in-help{display:block;margin:16px 0;border:0;background:none;padding:0;color:#647460;font:12px system-ui;text-decoration:underline;cursor:pointer}
 .tutorial-start{box-sizing:border-box;display:block;width:100%;margin-top:20px;border-radius:10px;background:#293f30;color:#fff;padding:13px 16px;text-align:center;text-decoration:none;font-size:13px;font-weight:600;line-height:1.4}
 .tutorial-start:focus-visible{outline:3px solid #548c67;outline-offset:3px}
 .settings-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.settings-top h2{margin:0;font-size:20px}
-.settings-option{display:flex;align-items:center;gap:6px}.settings-option input{accent-color:#526d50}
 #settings-dialog p{font-size:12px;line-height:1.8;color:#6b7a62;margin:16px 0}.settings-actions{display:grid;gap:8px}.settings-actions button{border:1px solid #d6dfcf;background:#edf0e7;border-radius:8px;padding:11px;font:12px system-ui;color:#486044;cursor:pointer}
-.hide-input-guide .input-note{visibility:hidden}
 .dpad{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));width:124px;height:124px;touch-action:none;user-select:none;-webkit-user-select:none;flex-shrink:0}
 .dpad button{display:grid;place-items:center;min-width:0;min-height:0;padding:0;border:1px solid #bdcbb4;border-radius:6px;background:#edf1e6;color:#52674b;touch-action:none;-webkit-touch-callout:none;cursor:pointer}
 .dpad [data-direction="up"]{grid-area:1/2}.dpad [data-direction="left"]{grid-area:2/1}.dpad [data-direction="right"]{grid-area:2/3}.dpad [data-direction="down"]{grid-area:3/2}
@@ -88,8 +85,8 @@ button.wordmark{cursor:pointer}
 .dpad:focus-visible,.dpad button:focus-visible{outline:3px solid #548c67;outline-offset:1px}
 .height-picker button,.tutorial-tools button{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .height-picker button.held,.tutorial-tools button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
-@media(max-width:360px){.wordmark-logo{width:136px;height:16px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px;padding:6px}.dpad{width:110px;height:110px}}
-</style><link rel="stylesheet" href="site-integration.css?v=b2777e7d753c"></head>
+@media(max-width:360px){.wordmark-logo{width:136px;height:16px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px}.dpad{width:110px;height:110px}}
+</style></head>
 <body><main class="tutorial-app"><header class="header"></header>
 <div class="lesson-heading"><span>5×5 튜토리얼</span><button id="restart">다시 배우기</button></div>
 <section id="tutorial-board" class="board" aria-label="5행 5열 명암 퍼즐"></section>
@@ -100,6 +97,7 @@ button.wordmark{cursor:pointer}
 (() => {
   const messages=new Map(Object.entries({
     '게임 도움말':'Game help','도움말 닫기':'Close help','설정':'Settings','설정 닫기':'Close settings','뒤로가기':'Back',
+    '문제를 불러오는 중입니다.':'Loading puzzle…','다시 시도':'Try again','문제 목록으로':'Puzzle list',
     '언어':'Language','조작 안내 표시':'Show control guide','게임 방법':'How to play','처음부터 다시 풀기':'Restart puzzle',
     '숨은 그림 찾기':'Reveal the hidden picture','힌트 숫자 읽기':'Reading the clues','조작 방법':'Controls',
     '각 칸을 0~3의 명암으로 채워 그림을 완성해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정이에요.':'Fill each cell with a shade from 0 to 3. × means 0 (white), 1 is light gray, 2 is dark gray, and 3 is black.',
@@ -245,6 +243,24 @@ button.wordmark{cursor:pointer}
   const mode=()=>isMenu?(document.body.dataset.mode||'monochrome'):
     document.body.classList.contains('monochrome-game')||document.querySelector('.tutorial-app')?'monochrome':'color';
   const icon=path=>`<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${path}</svg>`;
+  const questionContext=document.createElement('canvas').getContext('2d'),questionOffsets=new Map();
+  window.centerStackQuestionMarks=(root=document)=>{
+    for(const element of root.querySelectorAll('#help span,.card-question')){
+      const style=getComputedStyle(element),font=`${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      if(!questionOffsets.has(font)){
+        questionContext.font=font;
+        const m=questionContext.measureText('?');
+        questionOffsets.set(font,{
+          x:(m.width-m.actualBoundingBoxRight+m.actualBoundingBoxLeft)/2,
+          y:Number.isFinite(m.fontBoundingBoxAscent)?(m.actualBoundingBoxAscent-m.actualBoundingBoxDescent-m.fontBoundingBoxAscent+m.fontBoundingBoxDescent)/2:0
+        });
+      }
+      for(const [axis,offset] of Object.entries(questionOffsets.get(font))){
+        const name='--question-offset-'+axis,value=offset+'px';
+        if(element.style.getPropertyValue(name)!==value)element.style.setProperty(name,value);
+      }
+    }
+  };
   const pixelGlyphs={
     N:['10001','11001','10101','10011','10001','10001','10001','00000'],
     o:['00000','00000','01110','10001','10001','10001','01110','00000'],
@@ -276,9 +292,9 @@ button.wordmark{cursor:pointer}
   })).flat();
   const gearIcon=icon(`<path d="M${gearPoints.join('L')}Z"/><circle cx="12" cy="12" r="3.2"/>`);
   header.className='header shared-header';
-  header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle">${pixelLogo}<span class="wordmark-text">NonogramStack</span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="help" aria-label="게임 도움말" aria-haspopup="dialog" aria-controls="help-dialog"><span aria-hidden="true">?</span></button><button class="nav-icon" id="settings" aria-label="설정" aria-haspopup="dialog" aria-controls="settings-dialog">${gearIcon}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m14 5-7 7 7 7M7 12h14"/>')}</button></div>`;
+  header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle">${pixelLogo}<span class="wordmark-text">NonogramStack</span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="help" aria-label="게임 도움말" aria-haspopup="dialog" aria-controls="help-dialog"><span aria-hidden="true">?</span></button><button class="nav-icon" id="settings" aria-label="설정" aria-haspopup="dialog" aria-controls="settings-dialog">${gearIcon}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m12 5-7 7 7 7M5 12h14"/>')}</button></div>`;
+  window.centerStackQuestionMarks();
   const help=document.getElementById('help-dialog')||document.createElement('dialog');
-  const reset=help.querySelector('#reset');
   const example=['01010','11111','22222','03330','00300'].map(row=>[...row].map(Number));
   const exampleRuns=values=>{const sums=[];for(let i=0;i<values.length;){let end=i+1;while(end<values.length&&values[end]===values[i])end++;if(values[i])sums.push(values[i]*(end-i));i=end;}return sums;};
   let exampleDrawing='';
@@ -307,7 +323,6 @@ button.wordmark{cursor:pointer}
       <li><b>미정과 ×:</b> 빈칸은 아직 정하지 않은 칸, ×는 0으로 확정한 칸이에요. 지우개는 미정으로 되돌려요.</li>
     </ul></section>
     <a class="tutorial-start" href="tutorial.html">튜토리얼 시작하기</a>`;
-  if(reset)help.insertBefore(reset,help.querySelector('.tutorial-start'));
   if(!help.isConnected)document.body.append(help);
   help.querySelector('[data-close]').onclick=()=>help.close();
   help.addEventListener('click',e=>{if(e.target===help){const r=help.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)help.close();}});
@@ -317,7 +332,7 @@ button.wordmark{cursor:pointer}
   };
   document.getElementById('help').onclick=showHelp;
   const dialog=document.createElement('dialog');dialog.id='settings-dialog';
-  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 방향 버튼을 0.5초 이상 누르면 0.2초마다 반복 이동해요. 게임판을 직접 누르면 터치 모드가 되어 오른쪽 버튼으로 값만 선택하고 칸을 터치해서 입력해요. 십자키를 다시 누르면 십자키 모드로 돌아가요.</p><div class="settings-actions"></div>';
+  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><div class="settings-actions"></div>';
   document.body.append(dialog);
   const languageRow=document.createElement('label');languageRow.className='settings-language';languageRow.htmlFor='language-select';
   languageRow.innerHTML='<span>언어</span><select id="language-select"><option value="ko" lang="ko">한국어</option><option value="en" lang="en">English</option></select>';
@@ -326,13 +341,9 @@ button.wordmark{cursor:pointer}
   languageSelect.onchange=()=>window.StackI18n?.setLanguage(languageSelect.value);
   dialog.querySelector('.nav-icon').onclick=()=>dialog.close();
   dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
-  const guide=dialog.querySelector('input');guide.checked=true;
-  try{guide.checked=localStorage.getItem('nonogram-stack-input-guide')!=='false';}catch{}
-  const updateGuide=()=>document.body.classList.toggle('hide-input-guide',!guide.checked);
-  updateGuide();guide.onchange=()=>{updateGuide();try{localStorage.setItem('nonogram-stack-input-guide',String(guide.checked));}catch{}};
-  for(const [id,label] of [['help-dialog','게임 방법'],['reset-dialog','처음부터 다시 풀기']]){
+  for(const [id,label] of [['reset-dialog','처음부터 다시 풀기']]){
     if(!document.getElementById(id))continue;
-    const button=document.createElement('button');button.textContent=label;button.onclick=()=>{dialog.close();if(id==='help-dialog')showHelp();else document.getElementById(id).showModal();};dialog.querySelector('.settings-actions').append(button);
+    const button=document.createElement('button');button.textContent=label;button.onclick=()=>{dialog.close();document.getElementById(id).showModal();};dialog.querySelector('.settings-actions').append(button);
   }
   document.getElementById('settings').onclick=()=>dialog.showModal();
   window.updateStackModeLabel=()=>{
@@ -541,4 +552,4 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
     apply:button=>{if(button.id==='tutorial-undo'){const cursor=selected;undoTutorial();selected=cursor;render();return;}selected??=0;$('tutorial-board').querySelector(`[data-index="${selected}"]`).click();}
   });
 })();
-</script><script src="site-integration.js?v=eba67f07672a" defer></script></body></html>
+</script><script src="site-integration.js?v=252f7f3518dd" defer></script></body></html>

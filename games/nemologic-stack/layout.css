@@ -1,0 +1,21 @@
+/* A persistent terrain preview above an independently scrollable editor. */
+.line-outline{border:2px solid var(--accent);z-index:2;pointer-events:none;min-width:0;min-height:0}
+.board{grid-template-columns:var(--gutter) repeat(var(--n,10),minmax(0,1fr)) var(--end);grid-template-rows:var(--top) repeat(var(--n,10),auto) var(--bottom)}
+html,body{height:100%;overflow:hidden}
+.app{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding:8px 8px max(6px,env(safe-area-inset-bottom));margin:0 auto;border-radius:0}
+.header{flex-shrink:0;padding:0 4px 5px}.brand{gap:8px}.brand h1{font-size:17px}.brand p{display:none}.mark{transform:scale(.8);transform-origin:left center;width:25px;height:28px}.icon-button{width:30px;height:30px}.puzzle-info{flex-shrink:0;padding:0 5px 4px;font-size:10px}.progress-track{flex-shrink:0;height:2px;margin:0 4px 6px}
+#terrain-panel{flex:0 0 auto;position:relative;z-index:2;padding:0 3px 7px;border-bottom:1px solid #d4decf}
+.terrain-heading{margin:0 2px 4px;min-height:16px}.terrain-heading h2{font-size:11px;letter-spacing:0;margin:0;font-weight:650;color:#61796c}.terrain-badge{font-size:8px;padding:2px 6px}
+.terrain-stage{margin:0;height:auto;aspect-ratio:550/330;border-radius:10px}#terrain-svg{height:100%;width:100%}
+#editor-panel{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;padding:0 2px 8px;position:relative}
+.tabs{grid-template-columns:repeat(3,1fr);margin:7px 2px 6px;padding:3px}.tabs button{height:31px;font-size:12px}.board-caption{font-size:9px;margin:0 0 2px}.board-caption>span:first-child{font-size:8px}.board{--top:32px;--bottom:26px}.under-board{padding-top:2px;font-size:8px}
+.input-panel{margin:6px 2px 0;padding-top:5px}.selection-info{min-height:20px;margin-bottom:4px;font-size:10px}.rgb-readout button{font-size:9px;padding:3px 5px}.height-picker button{height:43px;border-radius:7px}.height-picker strong{font-size:18px}.height-picker span{font-size:8px}.input-note{font-size:9px;margin-top:4px;min-height:12px}.tools{margin:6px 2px 0}.tools button{min-height:31px;font-size:10px}.tools button span{font-size:16px}.message{font-size:10px;line-height:1.5;margin:5px 4px 0;min-height:15px}footer{padding:2px 4px 0;font-size:7px}footer button{font-size:9px}
+@media(min-width:600px){.app{max-width:520px;border-block:0;padding:9px 12px}}
+@media(max-height:650px){.terrain-heading{display:none}.header{padding-bottom:2px}.puzzle-info{display:none}}
+@media(max-width:360px){.app{padding-inline:4px}#editor-panel{padding-inline:0}}
+
+.terrain-overlay{position:absolute;z-index:1;display:grid;place-items:center;min-height:36px;border:1px solid #d3ded5;border-radius:8px;background:#fafff7e8;color:#486c5b;box-shadow:0 2px 6px #3653430b;cursor:pointer}
+.terrain-overlay[hidden]{display:none}
+#terrain-top{right:7px;top:7px;width:36px;padding:7px}#terrain-top svg{width:21px;height:21px;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round}
+#terrain-top .iso-icon{display:none}#terrain-top[aria-pressed=true] .top-icon{display:none}#terrain-top[aria-pressed=true] .iso-icon{display:block}
+#terrain-clear{right:7px;bottom:7px;padding:5px 10px;font-size:10px}.terrain-overlay:disabled{opacity:.45;cursor:default}.terrain-overlay:focus-visible{outline:2px solid #486c5b;outline-offset:2px}

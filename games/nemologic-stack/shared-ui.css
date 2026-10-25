@@ -1,0 +1,49 @@
+.shared-header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;margin-bottom:14px;padding:0 8px;flex-shrink:0}
+.wordmark{position:relative;border:0;background:none;display:flex;align-items:center;padding:6px 0;color:#293e30;cursor:default;white-space:nowrap}
+button.wordmark{cursor:pointer}
+.wordmark-text{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.wordmark-logo{display:block;flex:none;width:170px;height:20px}
+.wordmark-tone{fill:#000}
+.wordmark[data-mode="monochrome"] [data-tone="0"]{fill:#aaa}
+.wordmark[data-mode="monochrome"] [data-tone="1"]{fill:#555}
+.wordmark[data-mode="monochrome"] [data-tone="2"]{fill:#000}
+.wordmark[data-mode="color"] .wordmark-tone{fill:url(#wordmark-rainbow)}
+.shared-header .header-actions{display:flex;align-items:center;gap:6px}
+.nav-icon{box-sizing:border-box;display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid #d8ded2;border-radius:10px;background:#fffef9;color:#52644f;cursor:pointer;font:20px/1 system-ui}
+.nav-icon svg{display:block;width:20px;height:20px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#help span{display:block;font-size:22px;font-weight:650;line-height:1;transform:translate(var(--question-offset-x,0px),var(--question-offset-y,0px))}
+.nav-icon:disabled{opacity:.35;cursor:default}
+.wordmark:focus-visible,.nav-icon:focus-visible{outline:2px solid #548c67;outline-offset:2px}
+#settings-dialog{width:calc(100% - 32px);max-width:380px;max-height:85dvh;overflow:auto;padding:20px;border:1px solid #d6dfcf;border-radius:16px;background:#fafbf4;color:#293e30;box-shadow:0 20px 80px #26382e30;font:13px system-ui;letter-spacing:0}
+#settings-dialog::backdrop{background:#15281d80}
+.game-help{box-sizing:border-box;width:calc(100% - 32px);max-width:430px;max-height:85dvh;overflow:auto;overscroll-behavior:contain;padding:20px;border:1px solid #d6dfcf;border-radius:16px;background:#fafbf4;color:#293e30;box-shadow:0 20px 80px #26382e30;font:13px system-ui;letter-spacing:0}
+.game-help::backdrop{background:#15281d80}
+.game-help .settings-top h2{margin:0;font-size:20px;letter-spacing:0;line-height:1.3}
+.game-help .help-section{margin:20px 0}
+.game-help h3{margin:0 0 8px;font-size:14px;font-weight:700}
+.game-help p,.game-help li{font-size:12px;line-height:1.8;color:#62715d}
+.game-help p{margin:8px 0}
+.game-help ul{margin:8px 0;padding-left:18px}
+.game-help li{padding:0;margin:0 0 9px}
+.game-help [hidden]{display:none!important}
+.game-help .help-keyboard{font-size:11px}
+.help-example{margin:20px 0;padding:14px 12px;border:1px solid #dce2d5;border-radius:10px;background:#f5f5ef}
+.help-example svg{display:block;width:100%;max-width:260px;height:auto;margin:0 auto 8px}
+.help-example figcaption{font-size:12px;line-height:1.8;color:#62715d}
+.game-help .help-example p{margin:8px 0 0}
+.settings-language{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+.settings-language select{max-width:65%;padding:8px 12px;border:1px solid #cbd6c7;border-radius:8px;background:#fffef9;color:#293e30;font:13px system-ui;cursor:pointer}
+.tutorial-start{box-sizing:border-box;display:block;width:100%;margin-top:20px;border-radius:10px;background:#293f30;color:#fff;padding:13px 16px;text-align:center;text-decoration:none;font-size:13px;font-weight:600;line-height:1.4}
+.tutorial-start:focus-visible{outline:3px solid #548c67;outline-offset:3px}
+.settings-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.settings-top h2{margin:0;font-size:20px}
+#settings-dialog p{font-size:12px;line-height:1.8;color:#6b7a62;margin:16px 0}.settings-actions{display:grid;gap:8px}.settings-actions button{border:1px solid #d6dfcf;background:#edf0e7;border-radius:8px;padding:11px;font:12px system-ui;color:#486044;cursor:pointer}
+.dpad{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));width:124px;height:124px;touch-action:none;user-select:none;-webkit-user-select:none;flex-shrink:0}
+.dpad button{display:grid;place-items:center;min-width:0;min-height:0;padding:0;border:1px solid #bdcbb4;border-radius:6px;background:#edf1e6;color:#52674b;touch-action:none;-webkit-touch-callout:none;cursor:pointer}
+.dpad [data-direction="up"]{grid-area:1/2}.dpad [data-direction="left"]{grid-area:2/1}.dpad [data-direction="right"]{grid-area:2/3}.dpad [data-direction="down"]{grid-area:3/2}
+.dpad-center{grid-area:2/2;background:#edf1e6;box-shadow:inset 0 0 0 1px #d6dfcf;pointer-events:none}
+.dpad button svg{width:48%;height:48%;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.dpad button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
+.dpad:focus-visible,.dpad button:focus-visible{outline:3px solid #548c67;outline-offset:1px}
+.height-picker button,.tutorial-tools button{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.height-picker button.held,.tutorial-tools button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
+@media(max-width:360px){.wordmark-logo{width:136px;height:16px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px}.dpad{width:110px;height:110px}}
