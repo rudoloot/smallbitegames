@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const version='7f7fdcd7c2b5',directory=new URL('.',location.href);
+  const version='7f9a2bdfe463',directory=new URL('.',location.href);
   let returnUrl=null;
   try {
     const raw=new URLSearchParams(location.search).get('returnTo');

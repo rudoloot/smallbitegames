@@ -170,6 +170,7 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 .stack-sum-game .gamepad{--control-padding:clamp(4px,1.2dvh,12px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%;height:100%;max-width:none;margin:0}
 .dpad-area{display:grid;place-items:center;min-width:0;min-height:0;padding:var(--control-padding)}
 .stack-sum-game .dpad{width:var(--dpad-size,100px);height:var(--dpad-size,100px)}
+.touch-input-mode .dpad{opacity:.4}
 .stack-sum-game .input-dock .height-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:4px;width:100%;height:100%;min-width:0;min-height:0;padding:var(--control-padding)}
 .stack-sum-game .input-dock .height-picker button{width:100%;height:100%;min-width:0;min-height:0;padding:0;gap:0;border-radius:clamp(6px,1dvh,12px)}
 .stack-sum-game .height-picker strong{font-size:clamp(16px,3dvh,30px);line-height:1}
@@ -262,7 +263,7 @@ button.wordmark{cursor:pointer}
   <p>빨강·녹색·파랑을 각각 0~3스택으로 채워 하나의 그림을 완성해요.</p>
   <div class="rule-example"><div><b>2 4 3 4 1</b><span>11 | 000 | 22 | 3 | 22 | 00 | 1</span></div><div><b>3</b><span>최대 높이</span></div></div>
   <ul><li><b>색상판 위·왼쪽:</b> 같은 높이가 연속된 구간의 스택 합계예요. 높이 2가 세 칸이면 6으로 표시해요. 칸 수와 높이를 함께 추론하세요.</li><li><b>빈 구간은 생략:</b> 빈 구간의 0은 모두 표시하지 않아요. 양 끝과 숫자 구간 사이에 빈칸이 있을 수 있어요. 서로 다른 높이는 붙어도 되고, 같은 높이의 별도 구간 사이에는 빈칸이 필요해요. 줄 전체가 비어 있으면 구간 단서는 비어 있고 최대 높이는 0이에요.</li><li><b>전체뷰 위·왼쪽:</b> 각 칸의 R+G+B 높이(0~9)를 기준으로 같은 높이 구간의 스택 합계를 표시해요. 합산 높이 3,3,5,5,0,2는 6 10 2예요.</li><li><b>우측·하단:</b> 색상판은 선택한 색상의 최대 높이(0~3), 전체뷰는 RGB 합산 높이의 최댓값(0~9)이에요.</li><li><b>공개칸 없음:</b> 모든 칸은 미정으로 시작해요. ×는 0스택, 지우개는 미정으로 돌아가요.</li><li><b>전체뷰 표시:</b> 푸는 동안에는 입력한 스택 누적값만 표시해요. 문제를 완성하면 숫자 대신 완성된 색상 그림이 나타나요.</li><li><b>행·열 선택:</b> 단서를 누르면 같은 줄을 강조해요. 탭을 바꿔도 선택한 줄은 이어서 표시돼요. 다시 누르면 해제돼요.</li></ul>
-  <p>왼쪽 십자키로 칸을 이동해요. 오른쪽의 지우개·×·숫자 버튼을 누른 채 움직이면 지나가는 칸마다 입력해요. 버튼을 놓으면 입력을 멈춰요. 칸을 직접 누르거나 드래그할 수도 있어요. 한 번의 드래그는 되돌리기로 한꺼번에 취소할 수 있어요. ×는 회색으로 표시되는 0스택 확정, 지우개는 미정으로 되돌리기예요. 빨강·녹색·파랑 탭에서 스택을 입력해요. 입력한 높이는 전체 탭의 누적값에도 바로 반영돼요. 키보드는 방향키, 0~3, Delete, Ctrl/⌘+Z를 지원해요.</p>
+  <p>왼쪽 십자키로 칸을 이동해요. 오른쪽의 지우개·×·숫자 버튼을 누른 채 움직이면 지나가는 칸마다 입력해요. 버튼을 놓으면 입력을 멈춰요. 게임판을 직접 누르면 터치 모드로 바뀌어요. 터치 모드에서는 오른쪽 버튼으로 값을 고른 뒤 칸을 누르거나 드래그해서 입력해요. 십자키를 다시 누르면 십자키 모드로 돌아가요. 한 번의 드래그는 되돌리기로 한꺼번에 취소할 수 있어요. ×는 회색으로 표시되는 0스택 확정, 지우개는 미정으로 되돌리기예요. 빨강·녹색·파랑 탭에서 스택을 입력해요. 입력한 높이는 전체 탭의 누적값에도 바로 반영돼요. 키보드는 방향키, 0~3, Delete, Ctrl/⌘+Z를 지원해요.</p>
   <p class="fine-print">양 끝에서부터 맞춰진 구간의 단서는 녹색, 현재 입력으로 성립할 수 없는 단서는 빨간색으로 표시돼요. 색은 해당 줄의 단서와 입력만으로 판단해요. 공개 높이와 대각선 없이, 색상별·전체뷰의 같은 높이 구간 스택 합계와 최대 높이만으로 모든 높이를 추측 없이 풀 수 있어요. 빨강·녹색·파랑·전체 탭으로 보기를 전환해요. 각 보드는 화면 크기에 맞춰 표시해요.</p>
   <button id="reset" class="reset-in-help">처음부터 다시 풀기</button>
   <button class="primary-button" data-close="help-dialog">시작하기</button>
@@ -552,7 +553,7 @@ if(root.PUZZLE_SPEC)root.PicrossCore=createCore(root.PUZZLE_SPEC);
   header.className='header shared-header';
   header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle">${pixelLogo}<span class="wordmark-text">NonogramStack</span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="settings" aria-label="설정">${icon('<path d="m9 3-1 3-3 1-2 3 2 2v3l3 2 1 3h6l1-3 3-2v-3l2-2-2-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>')}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m14 5-7 7 7 7M7 12h14"/>')}</button></div>`;
   const dialog=document.createElement('dialog');dialog.id='settings-dialog';
-  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 방향 버튼을 1초 이상 누르면 0.2초마다 반복 이동해요.</p><div class="settings-actions"></div>';
+  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 방향 버튼을 1초 이상 누르면 0.2초마다 반복 이동해요. 게임판을 직접 누르면 터치 모드가 되어 오른쪽 버튼으로 값만 선택하고 칸을 터치해서 입력해요. 십자키를 다시 누르면 십자키 모드로 돌아가요.</p><div class="settings-actions"></div>';
   document.body.append(dialog);
   dialog.querySelector('.nav-icon').onclick=()=>dialog.close();
   dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
@@ -686,6 +687,14 @@ GIVEN_DATA.forEach(g=>fixed[g.index][g.channel]=true);
 let boardState=fresh(), tab=0, selected=0, history=[], pendingHint=null, errors=new Set(), completed=false, storageOK=true;
 let paintValue=0, stroke=null;
 let terrainSelection=null;
+let inputMode='dpad';
+function setInputMode(mode){
+  if(inputMode===mode)return;
+  finishStroke();window.stopStackControls?.();
+  inputMode=mode;
+  document.body.classList.toggle('touch-input-mode',mode==='touch');
+  render();
+}
 function inTerrainLine(i){return terrainSelection!==null&&(terrainSelection.axis==='row'?Math.floor(i/N):i%N)===terrainSelection.line;}
 function activeClue(axis,line){return selected!==null?(axis==='row'?Math.floor(selected/N):selected%N)===line:terrainSelection!==null&&terrainSelection.axis===axis&&terrainSelection.line===line;}
 function selectBoardLine(axis,line){finishStroke();terrainSelection=line===null?null:{axis,line};selected=null;cancelHint();render();if(window.revealBoardLine)window.revealBoardLine(axis,line);}
@@ -725,7 +734,7 @@ function status(cells,channel,groups,total,knownClue){
 }
 function cellAppearance(i,channel){
   const row=Math.floor(i/N),col=i%N,cell=boardState[i],value=channel===null?null:cell[channel],anchor=channel===null?fixed[i].some(Boolean):fixed[i][channel];
-  const classes=['cell',col===0?'first-col':'',row===0?'first-row':'',col%5===4?'major-col':'',row%5===4?'major-row':'',selected===i?'selected':'',anchor?'fixed':'',pendingHint?.index===i?'hint-cell':'',errors.has(`${i}:${channel}`)?'error':''];
+  const classes=['cell',col===0?'first-col':'',row===0?'first-row':'',col%5===4?'major-col':'',row%5===4?'major-row':'',inputMode==='dpad'&&selected===i?'selected':'',anchor?'fixed':'',pendingHint?.index===i?'hint-cell':'',errors.has(`${i}:${channel}`)?'error':''];
   let bg='',fg='',content='';
   if(inTerrainLine(i))classes.push('line-focused');
   if((C.diagonals?.[window.overviewDiagonal]?.cells||C.diagonal?.cells)?.includes(i))classes.push('diagonal-cell');
@@ -797,7 +806,7 @@ function render(){
   }
   for(let i=0;i<N*N;i++){
     const a=cellAppearance(i,channel);
-    html+=`<button class="${a.classes}" data-index="${i}" style="grid-row:${a.row+2};grid-column:${a.col+2};${a.bg?'background:'+a.bg+';':''}${a.fg?'color:'+a.fg+';':''}" tabindex="${i===(selected??0)?0:-1}" aria-label="${a.label}" aria-pressed="${selected===i}">${a.content}</button>`;
+    html+=`<button class="${a.classes}" data-index="${i}" style="grid-row:${a.row+2};grid-column:${a.col+2};${a.bg?'background:'+a.bg+';':''}${a.fg?'color:'+a.fg+';':''}" tabindex="${i===(selected??0)?0:-1}" aria-label="${a.label}" aria-pressed="${inputMode==='dpad'&&selected===i}">${a.content}</button>`;
   }
   if(terrainSelection){
     const {axis,line}=terrainSelection;
@@ -890,7 +899,7 @@ function refreshDrag(){
     el.className=a.classes;el.style.background=a.bg;el.style.color=a.fg;
     if(el.innerHTML!==a.content)el.innerHTML=a.content;
     el.tabIndex=i===(selected??0)?0:-1;
-    el.setAttribute('aria-label',a.label);el.setAttribute('aria-pressed',i===selected);
+    el.setAttribute('aria-label',a.label);el.setAttribute('aria-pressed',inputMode==='dpad'&&i===selected);
     lines.add(Math.floor(i/N));lines.add(N+i%N);
   }
   for(const index of lines){
@@ -942,6 +951,7 @@ $('board').addEventListener('pointerdown',e=>{
   const cell=e.target.closest('[data-index]');
   if(!cell||!e.isPrimary||e.button!==0||stroke)return;
   if($('board-viewport')?.classList.contains('pan-mode'))return;
+  setInputMode('touch');
   const hadLine=terrainSelection!==null;terrainSelection=null;
   selected=Number(cell.dataset.index);cancelHint();if(hadLine)render();
   if(tab==='all'){render();return;}
@@ -978,6 +988,7 @@ $('board').addEventListener('contextmenu',e=>{if(tab!=='all')e.preventDefault();
 $('board').addEventListener('click',e=>{
   if(e.detail!==0)return; // Pointer input is handled above; keep keyboard/screen-reader activation.
   const cell=e.target.closest('[data-index]');if(!cell)return;
+  setInputMode('touch');
   terrainSelection=null;selected=Number(cell.dataset.index);cancelHint();
   if(tab==='all'||paintValue==='select')render();else edit(paintValue);
 });
@@ -999,11 +1010,12 @@ document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
+    setInputMode('dpad');
     e.preventDefault();terrainSelection=null;const current=selected??0,row=Math.floor(current/N),col=current%N;
     selected=e.key==='ArrowUp'?Math.max(0,row-1)*N+col:e.key==='ArrowDown'?Math.min(N-1,row+1)*N+col:e.key==='ArrowLeft'?row*N+Math.max(0,col-1):row*N+Math.min(N-1,col+1);
     cancelHint();render();$('board').querySelector(`[data-index="${selected}"]`).focus({preventScroll:true});if(window.revealBoardCell)window.revealBoardCell(selected);
-  }else if(/^[0-9]$/.test(e.key)&&Number(e.key)<=MAX_STACK){e.preventDefault();choosePaint(Number(e.key));edit(paintValue);}
-  else if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();choosePaint(null);edit(null);}
+  }else if(/^[0-9]$/.test(e.key)&&Number(e.key)<=MAX_STACK){e.preventDefault();choosePaint(Number(e.key));if(inputMode==='dpad')edit(paintValue);}
+  else if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();choosePaint(null);if(inputMode==='dpad')edit(null);}
 });
 render();save();
 if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. 이 창을 열어둔 채 플레이해 주세요.',true);
@@ -1141,7 +1153,7 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   function updateSelection(){
     if(!layout)return;
     const outline=$('overview-line-outline'),{left,top,cell}=layout,extent=N*cell;
-    const cursor=$('overview-cursor');cursor.setAttribute('visibility',selected===null?'hidden':'visible');
+    const cursor=$('overview-cursor');cursor.setAttribute('visibility',selected===null||inputMode==='touch'?'hidden':'visible');
     const coordinates=getSelectedCoordinates();
     svg.querySelector('#overview-coordinates [data-coordinate="row"]').textContent=coordinates.row??'—';
     svg.querySelector('#overview-coordinates [data-coordinate="col"]').textContent=coordinates.col??'—';
@@ -1205,9 +1217,12 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   frames.forEach(frame=>observer.observe(frame));
   observer.observe($('dpad-area'));
   window.syncLargeUI();
-  window.installStackDpad({
+  $('dpad').addEventListener('pointerdown',e=>{if(e.button===0&&!document.querySelector('dialog[open]'))setInputMode('dpad');},{capture:true});
+  $('terrain-panel')?.addEventListener('pointerdown',e=>{if(e.isPrimary&&e.button===0)setInputMode('touch');});
+  window.stopStackControls=window.installStackDpad({
     dpad:$('dpad'),buttons:[...$('height-picker').querySelectorAll('button')],
     move:direction=>{
+      setInputMode('dpad');
       finishStroke();terrainSelection=null;
       const i=selected??0,row=Math.floor(i/N),col=i%N;
       selected=direction==='up'?Math.max(0,row-1)*N+col:direction==='down'?Math.min(N-1,row+1)*N+col:direction==='left'?row*N+Math.max(0,col-1):row*N+Math.min(N-1,col+1);
@@ -1218,7 +1233,7 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
     choose:button=>{if(button.id!=='undo')choosePaint(button.id==='erase'?null:Number(button.dataset.value));},
     apply:button=>{
       if(button.id==='undo'){const cursor=selected;undo();selected=cursor;render();}
-      else{selected??=0;edit(button.id==='erase'?null:Number(button.dataset.value));}
+      else if(inputMode==='dpad'){selected??=0;edit(button.id==='erase'?null:Number(button.dataset.value));}
     }
   });
 })();
@@ -1228,5 +1243,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       function updateCollection(){try{const filled=boardState.reduce((n,t)=>n+t.filter(v=>v!==null).length,0);localStorage.setItem('nemologic-stack-3-status-09',JSON.stringify({filled,complete:isSolved(),updated:Date.now()}));}catch{}}
       save=function(){originalSave();updateCollection();};
       updateCollection();
-    })();</script><script src="site-integration.js?v=e68bd72df5ad" defer></script></body>
+    })();</script><script src="site-integration.js?v=c436c4dc90a2" defer></script></body>
 </html>
