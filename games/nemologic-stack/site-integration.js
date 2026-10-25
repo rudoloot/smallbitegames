@@ -1,12 +1,14 @@
 (() => {
   'use strict';
-  const version='37410f749cbe',directory=new URL('.',location.href);
+  const version='d61b938158ea',directory=new URL('.',location.href);
   let returnUrl=null;
   try {
     const raw=new URLSearchParams(location.search).get('returnTo');
     if(raw){const target=new URL(raw);if(target.protocol==='https:'&&target.origin===location.origin&&!target.username&&!target.password)returnUrl=target.href;}
   } catch {}
-  const exit=document.createElement('button');exit.type='button';exit.className='nav-icon site-exit';exit.setAttribute('aria-label','게임 나가기');exit.title='게임 나가기';
+  const exit=document.createElement('button');exit.type='button';exit.className='nav-icon site-exit';
+  function localizeExit(){const label=window.StackI18n?.language==='en'?'Exit game':'게임 나가기';exit.setAttribute('aria-label',label);exit.title=label;}
+  localizeExit();addEventListener('stack-language-change',localizeExit);
   exit.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5H4v14h5M14 7l5 5-5 5M8 12h11"/></svg>';
   exit.addEventListener('click',()=>{
     try{if(typeof save==='function')save();}catch{}
