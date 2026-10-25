@@ -576,7 +576,7 @@ if(root.MONO_SPEC)root.PicrossCore=createCore(root.MONO_SPEC);
   header.className='header shared-header';
   header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle">${pixelLogo}<span class="wordmark-text">NonogramStack</span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="settings" aria-label="설정">${icon('<path d="m9 3-1 3-3 1-2 3 2 2v3l3 2 1 3h6l1-3 3-2v-3l2-2-2-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>')}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m14 5-7 7 7 7M7 12h14"/>')}</button></div>`;
   const dialog=document.createElement('dialog');dialog.id='settings-dialog';
-  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 방향 버튼을 1초 이상 누르면 0.2초마다 반복 이동해요. 게임판을 직접 누르면 터치 모드가 되어 오른쪽 버튼으로 값만 선택하고 칸을 터치해서 입력해요. 십자키를 다시 누르면 십자키 모드로 돌아가요.</p><div class="settings-actions"></div>';
+  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 방향 버튼을 0.5초 이상 누르면 0.2초마다 반복 이동해요. 게임판을 직접 누르면 터치 모드가 되어 오른쪽 버튼으로 값만 선택하고 칸을 터치해서 입력해요. 십자키를 다시 누르면 십자키 모드로 돌아가요.</p><div class="settings-actions"></div>';
   document.body.append(dialog);
   dialog.querySelector('.nav-icon').onclick=()=>dialog.close();
   dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
@@ -609,6 +609,15 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
   const directions=[['up','위로 이동','M6 15l6-6 6 6'],['left','왼쪽으로 이동','M15 6l-6 6 6 6'],['right','오른쪽으로 이동','M9 6l6 6-6 6'],['down','아래로 이동','M6 9l6 6 6-6']];
   dpad.innerHTML=directions.map(([value,label,path])=>`<button type="button" data-direction="${value}" aria-label="${label}" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="${path}"/></svg></button>`).join('')+'<span class="dpad-center" aria-hidden="true"></span>';
   const directionButtons=[...dpad.querySelectorAll('[data-direction]')];
+  const pointerClicks=new WeakSet();
+  function keyboardClick(e,button){
+    // A pointer press was already applied on pointerdown, including zero-detail compatibility clicks.
+    if(pointerClicks.delete(button))return false;
+    return e.detail===0&&!e.pointerType&&!e.sourceCapabilities?.firesTouchEvents;
+  }
+  function prepareKeyboardClick(e){
+    if(e.key==='Enter'||e.key===' ')pointerClicks.delete(e.target.closest('button'));
+  }
   let directionPointer=null,actionPointer=null,held=null,timer=0,repeatDelay=0,direction='';
   function step(value=direction){if(!value||document.querySelector('dialog[open]'))return;const moved=move(value);if(held!==null&&moved!==false)apply(held);}
   function setDirection(value){
@@ -622,19 +631,20 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
       repeatDelay=0;
       if(directionPointer===null)return;
       step();timer=setInterval(()=>step(),200);
-    },1000);
+    },500);
   }
   function stopDirection(){clearTimeout(repeatDelay);repeatDelay=0;clearInterval(timer);timer=0;setDirection('');directionPointer=null;}
   function stopAction(){buttons.forEach(b=>b.classList.remove('held'));held=null;actionPointer=null;}
-  dpad.addEventListener('pointerdown',e=>{const button=e.target.closest('[data-direction]');if(!button||directionPointer!==null||e.button!==0||document.querySelector('dialog[open]'))return;e.preventDefault();directionPointer=e.pointerId;dpad.setPointerCapture(e.pointerId);beginDirection(button.dataset.direction);});
+  dpad.addEventListener('pointerdown',e=>{const button=e.target.closest('[data-direction]');if(!button||directionPointer!==null||e.button!==0||document.querySelector('dialog[open]'))return;e.preventDefault();pointerClicks.add(button);directionPointer=e.pointerId;dpad.setPointerCapture(e.pointerId);beginDirection(button.dataset.direction);});
   dpad.addEventListener('pointermove',e=>{if(e.pointerId!==directionPointer)return;e.preventDefault();const button=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-direction]');setDirection(button&&dpad.contains(button)?button.dataset.direction:'');});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])dpad.addEventListener(event,e=>{if(e.pointerId===directionPointer)stopDirection();});
-  dpad.addEventListener('keydown',e=>{const d={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'}[e.key];if(d){e.preventDefault();e.stopPropagation();step(d);}});
-  dpad.addEventListener('click',e=>{const button=e.target.closest('[data-direction]');if(button&&e.detail===0)step(button.dataset.direction);});
+  dpad.addEventListener('keydown',e=>{prepareKeyboardClick(e);const d={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'}[e.key];if(d){e.preventDefault();e.stopPropagation();step(d);}});
+  dpad.addEventListener('click',e=>{const button=e.target.closest('[data-direction]');if(button&&keyboardClick(e,button))step(button.dataset.direction);});
   dpad.addEventListener('contextmenu',e=>e.preventDefault());
   for(const button of buttons){
-    button.onclick=e=>{if(e.detail===0&&!button.disabled){choose(button);apply(button);}};
-    button.addEventListener('pointerdown',e=>{if(actionPointer!==null||e.button!==0||button.disabled||document.querySelector('dialog[open]'))return;e.preventDefault();actionPointer=e.pointerId;held=button;button.setPointerCapture(e.pointerId);button.classList.add('held');choose(button);apply(button);});
+    button.onclick=e=>{if(keyboardClick(e,button)&&!button.disabled){choose(button);apply(button);}};
+    button.addEventListener('keydown',prepareKeyboardClick);
+    button.addEventListener('pointerdown',e=>{if(actionPointer!==null||e.button!==0||button.disabled||document.querySelector('dialog[open]'))return;e.preventDefault();pointerClicks.add(button);actionPointer=e.pointerId;held=button;button.setPointerCapture(e.pointerId);button.classList.add('held');choose(button);apply(button);});
     for(const event of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(event,e=>{if(e.pointerId===actionPointer)stopAction();});
     button.addEventListener('contextmenu',e=>e.preventDefault());
   }
@@ -1261,5 +1271,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   });
 })();
 </script>
-<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-1412-a0cdf561fc5147f1',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=c436c4dc90a2" defer></script></body>
+<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-1412-a0cdf561fc5147f1',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=0666fcf7246b" defer></script></body>
 </html>
