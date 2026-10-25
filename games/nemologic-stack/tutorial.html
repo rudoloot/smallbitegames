@@ -140,6 +140,17 @@ button.wordmark{cursor:pointer}
     '같은 높이 구간의 스택 합계와 최대 높이를 단서로 시작해 보세요.':'Start with the equal-height run sums and the maximum height of each line.',
     '미정':'Unknown','빈 줄':'Empty line','행 미선택':'No row selected','열 미선택':'No column selected',
     '5×5 튜토리얼':'5×5 tutorial','다시 배우기':'Start over','튜토리얼 안내':'Tutorial guide','5행 5열 명암 퍼즐':'5 by 5 grayscale puzzle','이전':'Previous','다음 →':'Next →','흑백게임 시작 →':'Play grayscale puzzles →','하트':'Heart',
+    '조개':'Seashell','고래':'Whale','상어':'Shark','펭귄':'Penguin','토끼':'Rabbit','고양이':'Cat','부엉이':'Owl','오리':'Duck','문어':'Octopus','판다':'Panda','사자':'Lion','돌고래':'Dolphin','사슴':'Deer','기린':'Giraffe','거북이':'Turtle','원숭이':'Monkey','호랑이':'Tiger','공룡':'Dinosaur','앵무새':'Parrot','박쥐':'Bat',
+    '무당벌레':'Ladybug','잠자리':'Dragonfly','꿀벌':'Bee','사슴벌레':'Stag beetle','장수풍뎅이':'Rhinoceros beetle','쇠똥구리':'Dung beetle','빗방울':'Raindrop','무지개':'Rainbow','눈송이':'Snowflake','석양':'Sunset','클로버':'Clover','선인장':'Cactus','대나무':'Bamboo','민들레':'Dandelion',
+    '체리':'Cherries','수박':'Watermelon','딸기':'Strawberry','코코넛':'Coconut','아보카도':'Avocado','막대아이스크림':'Ice pop','도넛':'Donut','쿠키':'Cookie','초콜릿':'Chocolate','빙수':'Shaved ice',
+    '모자':'Hat','리본':'Ribbon','양말':'Socks','부츠':'Boots','셔츠':'Shirt','원피스':'Dress','게임패드':'Gamepad','축구공':'Soccer ball','도미노':'Dominoes','바둑판':'Go board','음표':'Musical note','악보':'Sheet music','미러볼':'Disco ball','피아노':'Piano','메트로놈':'Metronome','색소폰':'Saxophone','아코디언':'Accordion',
+    '컵':'Cup','숟가락':'Spoon','포크':'Fork','냄비':'Pot','시계':'Clock','우산':'Umbrella','주전자':'Kettle','계량컵':'Measuring cup','유모차':'Stroller','빨래집게':'Clothespin','뚫어뻥':'Plunger','쓰레기통':'Trash can','치약':'Toothpaste','면도기':'Razor','세탁기':'Washing machine','욕조':'Bathtub','세면대':'Washbasin',
+    '텔레비전':'Television','모니터':'Monitor','라디오':'Radio','헤드폰':'Headphones','계산기':'Calculator','카메라':'Camera','전기밥솥':'Rice cooker','토스터':'Toaster','냉장고':'Refrigerator','충전기':'Charger','스탠드조명':'Desk lamp','믹서기':'Blender','전기주전자':'Electric kettle','오븐':'Oven','에어컨':'Air conditioner','커피머신':'Coffee machine','데스크톱컴퓨터':'Desktop computer',
+    '자물쇠':'Padlock','연필':'Pencil','주사기':'Syringe','곡괭이':'Pickaxe','사다리':'Ladder','전동드릴':'Power drill','금고':'Safe','컴퍼스':'Drawing compass','화살표':'Arrow','신호등':'Traffic light','기차':'Train','버스':'Bus','트럭':'Truck','로켓':'Rocket','열기구':'Hot air balloon','돛단배':'Sailboat','등대':'Lighthouse','잠수함':'Submarine','소방차':'Fire engine','구급차':'Ambulance','헬리콥터':'Helicopter','자전거':'Bicycle','킥보드':'Kick scooter','트랙터':'Tractor','굴착기':'Excavator','지게차':'Forklift','우주선':'Spaceship',
+    '해골':'Skull','꼬마유령':'Little ghost','눈사람':'Snowman','로봇':'Robot','외계인':'Alien','잭오랜턴':'Jack-o’-lantern','닌자':'Ninja','산타':'Santa','허수아비':'Scarecrow','용사':'Hero','요정':'Fairy','인어':'Mermaid',
+    '강아지':'Puppy','코끼리':'Elephant','하마':'Hippopotamus','곰':'Bear','뱀':'Snake','당나귀':'Donkey','매미':'Cicada','달팽이':'Snail','번개':'Lightning','토네이도':'Tornado',
+    '푸딩':'Pudding','케이크':'Cake','와플':'Waffle','솜사탕':'Cotton candy','머핀':'Muffin','사이다':'Lemon-lime soda','가방':'Bag','바람개비':'Pinwheel','딱지':'Ddakji','탁구채':'Table tennis paddle','미니카':'Toy car','권총':'Pistol','북':'Drum','가면':'Mask',
+    '침대':'Bed','책상':'Desk','휴지':'Toilet paper','선풍기':'Fan','멀티탭':'Power strip','디스켓':'Floppy disk','망치':'Hammer','톱':'Saw','클립':'Paper clip','도끼':'Axe','호루라기':'Whistle','광대':'Clown','마녀':'Witch','마법사':'Wizard','우주비행사':'Astronaut',
     '0 흰색':'0 white','1 밝은 회색':'1 light gray','2 어두운 회색':'2 dark gray','3 검정':'3 black',
     '숨은 그림을 함께 찾아봐요':'Let’s reveal a hidden picture',
     '이 판은 가로 5칸, 세로 5칸이에요. 지금은 모두 미정이에요. 말풍선을 읽고 다음을 누르면 한 단계씩 함께 풀 수 있어요.':'This board has 5 rows and 5 columns. All cells are unknown. Read the guide and press Next to solve it one step at a time.',
@@ -552,4 +563,4 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
     apply:button=>{if(button.id==='tutorial-undo'){const cursor=selected;undoTutorial();selected=cursor;render();return;}selected??=0;$('tutorial-board').querySelector(`[data-index="${selected}"]`).click();}
   });
 })();
-</script><script src="site-integration.js?v=252f7f3518dd" defer></script></body></html>
+</script><script src="site-integration.js?v=dacbb54041b7" defer></script></body></html>

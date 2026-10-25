@@ -9,7 +9,7 @@
     return response.json();
   }
   function loadScript(file){return new Promise((resolve,reject)=>{
-    const script=document.createElement('script');script.src=file+'?v=5aff8ca07b22';script.onload=resolve;
+    const script=document.createElement('script');script.src=file+'?v=cb05b2c165e8';script.onload=resolve;
     script.onerror=()=>reject(Error(`Could not load ${file}`));document.body.append(script);
   });}
   try{
@@ -39,8 +39,9 @@
       $('terrain-panel').remove();
     }else $('overview-svg').setAttribute('aria-label',`${n}행 ${n}열 RGB 전체뷰`);
     $('win-art').setAttribute('aria-label',mono?'완성된 흑백 그림':`완성된 문제 ${String(puzzle.number).padStart(2,'0')} 그림`);
-    if(!mono)$('win-description').append('세 가지 색으로 숨은 그림을 완성했어요.',document.createElement('br'));
-    $('win-description').append(`${n*n*channels}개의 높이를 모두 찾았어요.`);
+    const answer=spec.answer||spec.source?.subject;
+    if(answer){$('win-description').textContent=answer;$('win-description').classList.add('win-answer');}
+    else $('win-description').textContent=`${n*n*channels}개의 높이를 모두 찾았어요.`;
     $('next-puzzle').href=puzzle.next;$('next-puzzle').textContent=puzzle.nextLabel;
     for(const file of ['i18n.js','shared-ui.js','clue-feedback.js','app.js','board-layout.js','overview-stack-sums.js','fruit-game-ui.js'])await loadScript(file);
     $('game-loading').hidden=true;delete document.body.dataset.loading;

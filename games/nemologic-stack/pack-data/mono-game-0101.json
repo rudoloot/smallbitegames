@@ -293,7 +293,7 @@
       2
     ],
     [
-      1
+      2
     ],
     [
       2
@@ -368,51 +368,6 @@
       2
     ],
     [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
       2
     ],
     [
@@ -425,22 +380,10 @@
       0
     ],
     [
-      0
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
       2
     ],
     [
       2
-    ],
-    [
-      1
     ],
     [
       1
@@ -456,6 +399,21 @@
     ],
     [
       1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
     ],
     [
       2
@@ -470,12 +428,6 @@
       0
     ],
     [
-      0
-    ],
-    [
-      2
-    ],
-    [
       2
     ],
     [
@@ -488,7 +440,7 @@
       1
     ],
     [
-      1
+      2
     ],
     [
       1
@@ -498,6 +450,9 @@
     ],
     [
       1
+    ],
+    [
+      2
     ],
     [
       2
@@ -518,6 +473,51 @@
       0
     ],
     [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
       0
     ],
     [
@@ -530,7 +530,7 @@
       1
     ],
     [
-      2
+      1
     ],
     [
       1
@@ -692,7 +692,7 @@
       0
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-0101-eeb6683d4a1559d2",
+  "storageKey": "nonogram-stack-approved-v1-0101-707ffc06175639ca",
   "adjustment": {
     "targetEmptyPercent": 49.333333333333336
   },
@@ -702,16 +702,16 @@
     "categoryId": "01",
     "category": "동물",
     "rank": 1,
-    "versionId": "65a19067-0e00-47a2-b548-e2becdc01a1d",
-    "imageSha256": "eeb6683d4a1559d2ab44dcb0033ce8593382f08a25a416e2e91d232a9cbaac52",
-    "folder": "art-handoff/releases/a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c/approved/0101",
-    "approvedAt": "2026-10-25T08:03:16.677Z",
+    "versionId": "7cdca8c4-fc35-4134-8ae8-af8ef3ec4620",
+    "imageSha256": "707ffc06175639caec5bb219eae3145b7cbbe9b2f3a7c8f212689a71f6c0bff9",
+    "folder": "art-handoff/releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/approved/0101",
+    "approvedAt": "2026-10-25T11:47:06.134Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c",
-      "manifest": "releases/a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c/manifest.json",
-      "manifestSha256": "9f02663e8f902b3e3ce89d25ea5c9bd8342e4632072c4cf47b4f49ca3f8cbc09"
+      "releaseId": "fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346",
+      "manifest": "releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/manifest.json",
+      "manifestSha256": "0f6a5240ac6f5cd4ce844cef567eab3430397d72b6d2153437afbeb617c1c9b5"
     }
   },
   "omitOuterZeros": true

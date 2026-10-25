@@ -1,6 +1,6 @@
 {
   "id": "0929",
-  "title": "흑백 문제 060",
+  "title": "흑백 문제 085",
   "width": 15,
   "height": 15,
   "channels": 1,
@@ -200,7 +200,52 @@
       2
     ],
     [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
       1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
     ],
     [
       3
@@ -245,55 +290,10 @@
       2
     ],
     [
-      1
+      0
     ],
     [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      1
+      0
     ],
     [
       2
@@ -323,19 +323,19 @@
       2
     ],
     [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
       1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
     ],
     [
       3
@@ -380,55 +380,10 @@
       2
     ],
     [
-      1
+      0
     ],
     [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      1
+      0
     ],
     [
       2
@@ -458,19 +413,19 @@
       2
     ],
     [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
       1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
     ],
     [
       3
@@ -515,10 +470,55 @@
       2
     ],
     [
-      1
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
     ],
     [
       1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      3
     ],
     [
       2
@@ -548,7 +548,7 @@
       2
     ],
     [
-      1
+      2
     ],
     [
       2
@@ -692,9 +692,9 @@
       0
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-0929-95981ea0bacf3dec",
+  "storageKey": "nonogram-stack-approved-v1-0929-8dfb2ad27d0bbcea",
   "adjustment": {
-    "targetEmptyPercent": 24
+    "targetEmptyPercent": 29.333333333333332
   },
   "source": {
     "kind": "human-approved-handoff",
@@ -702,16 +702,16 @@
     "categoryId": "09",
     "category": "음악+공연",
     "rank": 29,
-    "versionId": "ec533ca3-15ab-4b06-ae8e-94e668a1dfed",
-    "imageSha256": "95981ea0bacf3dec24a5e569f80ba5165fd9358fe79cdd1627cdfe9d2b7246ec",
-    "folder": "art-handoff/releases/a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c/approved/0929",
-    "approvedAt": "2026-10-25T07:58:27.664Z",
+    "versionId": "1f2aad16-5754-4525-b7b7-9f45e368f2a2",
+    "imageSha256": "8dfb2ad27d0bbceacea6b1b934b6c27ff7cca9284aac2ae356ebd788053c3c2d",
+    "folder": "art-handoff/releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/approved/0929",
+    "approvedAt": "2026-10-25T11:45:34.188Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c",
-      "manifest": "releases/a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c/manifest.json",
-      "manifestSha256": "9f02663e8f902b3e3ce89d25ea5c9bd8342e4632072c4cf47b4f49ca3f8cbc09"
+      "releaseId": "fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346",
+      "manifest": "releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/manifest.json",
+      "manifestSha256": "0f6a5240ac6f5cd4ce844cef567eab3430397d72b6d2153437afbeb617c1c9b5"
     }
   },
   "omitOuterZeros": true

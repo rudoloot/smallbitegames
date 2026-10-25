@@ -331,7 +331,18 @@ if($('check'))$('check').onclick=()=>{
   render();checkWin();
 };
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{$(b.dataset.close).close();if(b.dataset.close==='win-dialog'&&!MONO)setTab('all');});
-document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}));
+document.querySelectorAll('dialog').forEach(d=>{
+  let backdropPointer=null;
+  const outside=e=>{if(e.target!==d)return false;const r=d.getBoundingClientRect();return e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom;};
+  // Completion can open during an existing press. Only a new backdrop press may dismiss it.
+  d.addEventListener('pointerdown',e=>{backdropPointer=outside(e)?e.pointerId:null;});
+  for(const event of ['pointercancel','close'])d.addEventListener(event,()=>{backdropPointer=null;});
+  d.addEventListener('click',e=>{
+    const beganOutside=backdropPointer!==null&&(e.pointerId===undefined||e.pointerId===backdropPointer);
+    backdropPointer=null;
+    if(beganOutside&&outside(e))d.close();
+  });
+});
 $('confirm-reset').onclick=()=>{finishStroke();boardState=fresh();history=[];errors.clear();selected=null;tab=0;paintValue=0;completed=false;cancelHint();save();render();$('reset-dialog').close();say(C.noGivens?'빈 보드에서 시작해요. RGB 합계와 같은 높이 구간을 살펴보세요.':'처음부터 시작해요. ◆ 공개 높이에서 단서를 찾아보세요.');};
 document.addEventListener('keydown',e=>{
   if(document.querySelector('dialog[open]')||e.target.closest('.tabs,#terrain-panel')||e.target.matches('input,select'))return;

@@ -1,6 +1,6 @@
 {
   "id": "1211",
-  "title": "흑백 문제 083",
+  "title": "흑백 문제 112",
   "width": 10,
   "height": 10,
   "channels": 1,
@@ -329,14 +329,14 @@
     "rank": 11,
     "versionId": "58860218-6ad4-4fa8-bf5e-7c71b466cc01",
     "imageSha256": "c0ac8ad9ddee3dcddb36d3c3430f99b0a84fa237cba8c4faeadf49aef737524b",
-    "folder": "art-handoff/releases/a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c/approved/1211",
+    "folder": "art-handoff/releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/approved/1211",
     "approvedAt": "2026-10-25T08:33:34.575Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c",
-      "manifest": "releases/a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c/manifest.json",
-      "manifestSha256": "9f02663e8f902b3e3ce89d25ea5c9bd8342e4632072c4cf47b4f49ca3f8cbc09"
+      "releaseId": "fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346",
+      "manifest": "releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/manifest.json",
+      "manifestSha256": "0f6a5240ac6f5cd4ce844cef567eab3430397d72b6d2153437afbeb617c1c9b5"
     }
   },
   "omitOuterZeros": true

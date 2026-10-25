@@ -767,7 +767,7 @@
       1
     ],
     [
-      2
+      1
     ],
     [
       1
@@ -1217,7 +1217,7 @@
       0
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-0107-85fef281db608471",
+  "storageKey": "nonogram-stack-approved-v1-0107-f1eeaee4ba3bedac",
   "adjustment": {
     "targetEmptyPercent": 53.5
   },
@@ -1227,16 +1227,16 @@
     "categoryId": "01",
     "category": "동물",
     "rank": 7,
-    "versionId": "3ac8d990-574f-437a-b341-f9a8bb6ee2c8",
-    "imageSha256": "85fef281db6084710157c5462b41bd664f99712084101f92e2e22d07d23b5604",
-    "folder": "art-handoff/releases/a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c/approved/0107",
-    "approvedAt": "2026-10-24T23:50:59.307Z",
+    "versionId": "8d696bdf-dfd6-4c0d-88c8-b8fa41817d2f",
+    "imageSha256": "f1eeaee4ba3bedac8d271bcae08684152aa4014daa6a62981c62e1e811783ad9",
+    "folder": "art-handoff/releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/approved/0107",
+    "approvedAt": "2026-10-25T11:42:13.461Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c",
-      "manifest": "releases/a29d2aa1679afbd236f05bf32a0219d3dde7cf7436f8bebac298524af3d9557c/manifest.json",
-      "manifestSha256": "9f02663e8f902b3e3ce89d25ea5c9bd8342e4632072c4cf47b4f49ca3f8cbc09"
+      "releaseId": "fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346",
+      "manifest": "releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/manifest.json",
+      "manifestSha256": "0f6a5240ac6f5cd4ce844cef567eab3430397d72b6d2153437afbeb617c1c9b5"
     }
   },
   "omitOuterZeros": true
