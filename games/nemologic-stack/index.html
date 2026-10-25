@@ -98,13 +98,20 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
   const directions=[['up','위로 이동','M6 15l6-6 6 6'],['left','왼쪽으로 이동','M15 6l-6 6 6 6'],['right','오른쪽으로 이동','M9 6l6 6-6 6'],['down','아래로 이동','M6 9l6 6 6-6']];
   dpad.innerHTML=directions.map(([value,label,path])=>`<button type="button" data-direction="${value}" aria-label="${label}" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="${path}"/></svg></button>`).join('')+'<span class="dpad-center" aria-hidden="true"></span>';
   const directionButtons=[...dpad.querySelectorAll('[data-direction]')];
-  let directionPointer=null,actionPointer=null,held=null,timer=0,direction='';
+  let directionPointer=null,actionPointer=null,held=null,timer=0,repeatDelay=0,direction='';
   function step(value=direction){if(!value||document.querySelector('dialog[open]'))return;const moved=move(value);if(held!==null&&moved!==false)apply(held);}
   function setDirection(value){
     if(value===direction)return;
-    clearInterval(timer);timer=0;direction=value;
+    clearTimeout(repeatDelay);repeatDelay=0;clearInterval(timer);timer=0;direction=value;
     directionButtons.forEach(button=>{const active=button.dataset.direction===value;button.classList.toggle('held',active);button.setAttribute('aria-pressed',active);});
-    if(value){step();timer=setInterval(()=>step(),100);}
+    if(value){
+      step();
+      repeatDelay=setTimeout(()=>{
+        repeatDelay=0;
+        if(!direction||directionPointer===null)return;
+        step();timer=setInterval(()=>step(),100);
+      },300);
+    }
   }
   function stopDirection(){setDirection('');directionPointer=null;}
   function stopAction(){buttons.forEach(b=>b.classList.remove('held'));held=null;actionPointer=null;}
@@ -214,4 +221,4 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
   addEventListener('pageshow',refresh);
   addEventListener('storage',refresh);
 })();
-</script><script src="site-integration.js?v=a15fa8e570c7" defer></script></body></html>
+</script><script src="site-integration.js?v=bce5be77b600" defer></script></body></html>

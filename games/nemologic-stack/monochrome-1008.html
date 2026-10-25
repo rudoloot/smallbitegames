@@ -150,7 +150,10 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
 .clue.total{margin:0;border:0}
 .clue.left,.clue.right{box-shadow:inset 0 -1px 0 #e2e6de}
 .clue.top,.clue.bottom{box-shadow:inset -1px 0 0 #e2e6de}
+.individual-sums .clue.active-line{background:#fff1c2;border-radius:0}
+.individual-sums .coordinates{display:flex;align-items:center;justify-content:center;gap:0;min-width:0;min-height:0;padding:2px;overflow:hidden;font-size:var(--coordinate-size,9px);font-weight:650;line-height:1.2;color:#34493a;white-space:nowrap;font-variant-numeric:tabular-nums}
 .overview-marker rect{fill:#fff}
+.overview-marker.active-line>rect{fill:#fff1c2}
 .overview-clue-separator{fill:none;stroke:#e2e6de;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
 .individual-sums .cell.selected{z-index:4;outline:2px solid #263e30;outline-offset:-2px;box-shadow:inset 0 0 0 3px #ffffff99}
 
@@ -161,7 +164,7 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 .play-area{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;gap:8px;overflow:hidden}
 .stack-sum-game #editor-panel{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;overflow:hidden;padding:0}
 .stack-sum-game #game-panel,.stack-sum-game #terrain-panel{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;min-height:0;overflow:hidden;padding:0;border:0}
-.stack-sum-game .tabs{flex:none;margin:0 2px 6px;padding:3px}
+.stack-sum-game .tabs{flex:none;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 2px 6px;padding:3px}
 .stack-sum-game #board-viewport,.stack-sum-game .overview-stage{flex:none;min-width:0;min-height:0;margin:0;overflow:hidden;touch-action:none}
 .stack-sum-game #board{flex:none}
 .stack-sum-game .input-dock{position:static;inset:auto;flex:0 0 25dvh;height:25dvh;min-height:0;margin-top:0;padding:6px 6px max(6px,env(safe-area-inset-bottom));box-shadow:none}
@@ -175,7 +178,6 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 .stack-sum-game .height-picker span{font-size:clamp(7px,.9dvh,10px);line-height:1}
 .stack-sum-game .height-picker #erase strong{height:auto}
 .stack-sum-game .height-picker svg{width:clamp(14px,2.6dvh,28px);height:clamp(14px,2.6dvh,28px)}
-@media(min-width:700px){.play-area{flex-direction:row;gap:12px}}
 @media(max-height:650px){
   .stack-sum-game .app{padding-top:4px}
   .stack-sum-game .shared-header{margin-bottom:4px}
@@ -220,16 +222,16 @@ button.wordmark{cursor:pointer}
   <header class="header"></header>
   <div class="play-area">
   <section id="editor-panel" aria-label="명암 스택 입력">
-  <nav class="tabs" aria-label="명암 입력" hidden><button data-tab="0" aria-selected="true">명암</button></nav>
-  <section id="game-panel" aria-label="빨강 퍼즐">
+  <nav class="tabs" aria-label="명암 입력" hidden><button id="tab-0" data-tab="0" aria-selected="true">명암</button></nav>
+  <section id="game-panel" role="tabpanel" aria-labelledby="tab-0" aria-label="빨강 퍼즐">
 
     <div id="board-viewport" aria-label="화면에 맞춘 10×10 입력판"><div id="board" class="board" role="group" aria-label="10행 10열 피크로스"></div></div>
     <div class="under-board"><span>위·왼쪽 <b>연속 칸 수</b></span><span>아래·오른쪽 <b>최대 높이</b></span></div>
     <div id="diagonals" class="diagonals" hidden></div>
   </section>
+
   <div id="message" class="message sr-only" aria-live="polite">같은 높이 구간의 스택 합계와 최대 높이를 단서로 시작해 보세요.</div>
   </section>
-
   </div>
   <div class="input-dock">
   <section class="input-panel" aria-label="높이 입력">
@@ -583,13 +585,20 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
   const directions=[['up','위로 이동','M6 15l6-6 6 6'],['left','왼쪽으로 이동','M15 6l-6 6 6 6'],['right','오른쪽으로 이동','M9 6l6 6-6 6'],['down','아래로 이동','M6 9l6 6 6-6']];
   dpad.innerHTML=directions.map(([value,label,path])=>`<button type="button" data-direction="${value}" aria-label="${label}" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="${path}"/></svg></button>`).join('')+'<span class="dpad-center" aria-hidden="true"></span>';
   const directionButtons=[...dpad.querySelectorAll('[data-direction]')];
-  let directionPointer=null,actionPointer=null,held=null,timer=0,direction='';
+  let directionPointer=null,actionPointer=null,held=null,timer=0,repeatDelay=0,direction='';
   function step(value=direction){if(!value||document.querySelector('dialog[open]'))return;const moved=move(value);if(held!==null&&moved!==false)apply(held);}
   function setDirection(value){
     if(value===direction)return;
-    clearInterval(timer);timer=0;direction=value;
+    clearTimeout(repeatDelay);repeatDelay=0;clearInterval(timer);timer=0;direction=value;
     directionButtons.forEach(button=>{const active=button.dataset.direction===value;button.classList.toggle('held',active);button.setAttribute('aria-pressed',active);});
-    if(value){step();timer=setInterval(()=>step(),100);}
+    if(value){
+      step();
+      repeatDelay=setTimeout(()=>{
+        repeatDelay=0;
+        if(!direction||directionPointer===null)return;
+        step();timer=setInterval(()=>step(),100);
+      },300);
+    }
   }
   function stopDirection(){setDirection('');directionPointer=null;}
   function stopAction(){buttons.forEach(b=>b.classList.remove('held'));held=null;actionPointer=null;}
@@ -666,6 +675,7 @@ window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
 'use strict';
 const C=PicrossCore, N=C.N, MAX_STACK=C.maxStack, CHANNEL_COUNT=C.channels||3, CHANNELS=Array.from({length:CHANNEL_COUNT},(_,i)=>i), MONO=CHANNEL_COUNT===1, names=MONO?['명암']:['빨강','녹색','파랑'];
 const themes=MONO?[['#555555','#e5e5e5']]:[['#c6544d','#fae8e3'],['#518568','#e2f0e4'],['#547fae','#e1ebf7']];
+const TAB_ORDER=MONO?CHANNELS:[...CHANNELS,'all'];
 const key=C.storageKey||(C.rule==='height-runs-max'?'rgb-stack-picross-v2-bull-height-runs-max':globalThis.PUZZLE_SPEC?'rgb-stack-picross-v1-bull-30-adjust30':'rgb-stack-picross-v1-rocket-10');
 const $=id=>document.getElementById(id);
 const allClues=[...C.clues.flat(),...C.combinedClues];
@@ -677,7 +687,7 @@ let boardState=fresh(), tab=0, selected=0, history=[], pendingHint=null, errors=
 let paintValue=0, stroke=null;
 let terrainSelection=null;
 function inTerrainLine(i){return terrainSelection!==null&&(terrainSelection.axis==='row'?Math.floor(i/N):i%N)===terrainSelection.line;}
-function activeClue(axis,line){return terrainSelection!==null?terrainSelection.axis===axis&&terrainSelection.line===line:selected!==null&&(axis==='row'?Math.floor(selected/N):selected%N)===line;}
+function activeClue(axis,line){return selected!==null?(axis==='row'?Math.floor(selected/N):selected%N)===line:terrainSelection!==null&&terrainSelection.axis===axis&&terrainSelection.line===line;}
 function selectBoardLine(axis,line){finishStroke();terrainSelection=line===null?null:{axis,line};selected=null;cancelHint();render();if(window.revealBoardLine)window.revealBoardLine(axis,line);}
 let cellNodes=[],clueNodes=[],dragFrame=0,renderedSelection=null;
 const dirtyCells=new Set();
@@ -689,7 +699,7 @@ try{
     boardState=saved.cells;
     if(legacySave)for(const g of globalThis.LEGACY_GIVENS||[])boardState[g.index][g.channel]=null;
     GIVEN_DATA.forEach(g=>boardState[g.index][g.channel]=g.value);
-    if(CHANNELS.includes(saved.tab))tab=saved.tab;
+    if(TAB_ORDER.includes(saved.tab))tab=saved.tab;
     completed=isSolved();
   }
 }catch{storageOK=false;}
@@ -736,6 +746,18 @@ function cellAppearance(i,channel){
   const desc=channel===null?cell.map((v,c)=>`${names[c]} ${v===null?'미정':v+'스택'}`).join(', '):`${names[channel]} ${value===null?'미정':value+'스택'}${anchor?', 공개 높이':''}`;
   return {row,col,classes:classes.join(' '),bg,fg,content,label:`${row+1}행 ${col+1}열, ${desc}`};
 }
+function getSelectedCoordinates(){
+  const row=selected!==null?Math.floor(selected/N)+1:terrainSelection?.axis==='row'?terrainSelection.line+1:null;
+  const col=selected!==null?selected%N+1:terrainSelection?.axis==='col'?terrainSelection.line+1:null;
+  return {row,col};
+}
+function updateCoordinates(){
+  const output=$('selection-coordinates');if(!output)return;
+  const {row,col}=getSelectedCoordinates();
+  output.querySelector('[data-coordinate="row"]').textContent=row??'—';
+  output.querySelector('[data-coordinate="col"]').textContent=col??'—';
+  output.setAttribute('aria-label',`${row===null?'행 미선택':row+'행'}, ${col===null?'열 미선택':col+'열'}`);
+}
 function updateProgress(){
   const filled=boardState.flat().filter(v=>v!==null).length;
   if($('progress-text'))$('progress-text').textContent=`${filled} / ${N*N*CHANNEL_COUNT}`;if($('progress-fill'))$('progress-fill').style.width=`${filled/(N*N*CHANNEL_COUNT)*100}%`;
@@ -745,6 +767,9 @@ function render(){
   dragFrame=0;dirtyCells.clear();
   const focused=document.activeElement?.dataset?.index;
   const channel=tab==='all'?null:tab;
+  $('game-panel').hidden=channel===null;
+  if($('terrain-panel'))$('terrain-panel').hidden=channel!==null;
+  if(!MONO&&channel!==null)$('game-panel').setAttribute('aria-labelledby','tab-'+channel);
   const theme=channel===null?['#64804e','#e8eedf']:themes[channel];
   document.documentElement.style.setProperty('--accent',theme[0]);document.documentElement.style.setProperty('--tint',theme[1]);
   document.querySelectorAll('[data-tab]').forEach(button=>{const active=button.dataset.tab===String(tab);button.setAttribute('aria-selected',active);button.tabIndex=active?0:-1;});
@@ -756,7 +781,7 @@ function render(){
     const values=cells.map(i=>channel===null?(boardState[i].includes(null)?null:C.sum(boardState[i])):boardState[i][channel]);
     return {groups,total,feedback:ClueFeedback.evaluate(values,groups,total)};
   }));
-  let html='<div class="corner" style="grid-row:1;grid-column:1" aria-hidden="true"></div>';
+  let html='<div id="selection-coordinates" class="corner coordinates" style="grid-row:1;grid-column:1" role="status" aria-live="polite" aria-atomic="true"><span data-coordinate="row">—</span><span aria-hidden="true">,</span><span data-coordinate="col">—</span></div>';
   for(let l=0;l<N;l++){
     for(const axis of ['row','col']){
       const a=axis==='row'?0:1,info=lineInfo[a][l],active=activeClue(axis,l);
@@ -789,6 +814,7 @@ function render(){
   clueNodes=Array.from({length:2*N},()=>[]);
   $('board').querySelectorAll('[data-clue]').forEach(el=>clueNodes[Number(el.dataset.clue)].push(el));
   renderedSelection=selected;
+  updateCoordinates();
   if(focused!==undefined)$('board').querySelector(`[data-index="${focused}"]`)?.focus({preventScroll:true});
   updateProgress();
   $('diagonals').hidden=channel!==null;
@@ -807,11 +833,11 @@ function render(){
   if(typeof window.renderTerrain==='function')window.renderTerrain();
   if(window.syncLargeUI)window.syncLargeUI();
 }
-function setTab(value){if(!CHANNELS.includes(value))return;finishStroke();tab=value;cancelHint();render();save();}
+function setTab(value){if(!TAB_ORDER.includes(value))return;finishStroke();tab=value;cancelHint();render();save();}
 function edit(value){
   if(value!==null&&(!Number.isInteger(value)||value<0||value>MAX_STACK))return;
   if(tab==='all'||value==='select'||selected===null||fixed[selected][tab])return;
-  const before=boardState[selected][tab];if(before===value)return;
+  const before=boardState[selected][tab];if(before===value){render();return;}
   history.push({channel:tab,changes:[{index:selected,before,after:value}]});
   boardState[selected][tab]=value;errors.clear();cancelHint();save();render();checkWin();
 }
@@ -873,13 +899,13 @@ function refreshDrag(){
   }
   for(const index of lines){
     const clue=C.clues[channel][index],feedback=ClueFeedback.evaluate(clue.cells.map(i=>boardState[i][channel]),clue.groups,clue.maximum??clue.total);
-    const active=activeClue(index<N?'row':'col',index%N);
     for(const el of clueNodes[index]){
-      el.classList.toggle('active-line',active);
       if(el.classList.contains('total')){el.classList.toggle('clue-done',feedback.maximum==='done');el.classList.toggle('clue-conflict',feedback.maximum==='conflict');}
       else for(const token of el.querySelectorAll('[data-clue-token]')){const state=feedback.tokens[Number(token.dataset.clueToken)];token.classList.toggle('clue-done',state==='done');token.classList.toggle('clue-conflict',state==='conflict');}
     }
   }
+  clueNodes.forEach((nodes,index)=>nodes.forEach(el=>el.classList.toggle('active-line',activeClue(index<N?'row':'col',index%N))));
+  updateCoordinates();
   if(typeof window.updateTerrainCells==='function')window.updateTerrainCells(dirtyCells);
   dirtyCells.clear();renderedSelection=selected;
 updateProgress();
@@ -920,7 +946,8 @@ $('board').addEventListener('pointerdown',e=>{
   const cell=e.target.closest('[data-index]');
   if(!cell||!e.isPrimary||e.button!==0||stroke)return;
   if($('board-viewport')?.classList.contains('pan-mode'))return;
-  selected=Number(cell.dataset.index);cancelHint();
+  const hadLine=terrainSelection!==null;terrainSelection=null;
+  selected=Number(cell.dataset.index);cancelHint();if(hadLine)render();
   if(tab==='all'){render();return;}
   e.preventDefault();errors.clear();
   const first=cellNodes[0].getBoundingClientRect(),last=cellNodes[N*N-1].getBoundingClientRect();
@@ -955,11 +982,11 @@ $('board').addEventListener('contextmenu',e=>{if(tab!=='all')e.preventDefault();
 $('board').addEventListener('click',e=>{
   if(e.detail!==0)return; // Pointer input is handled above; keep keyboard/screen-reader activation.
   const cell=e.target.closest('[data-index]');if(!cell)return;
-  selected=Number(cell.dataset.index);cancelHint();
+  terrainSelection=null;selected=Number(cell.dataset.index);cancelHint();
   if(tab==='all'||paintValue==='select')render();else edit(paintValue);
 });
-document.querySelector('.tabs').addEventListener('click',e=>{const button=e.target.closest('[data-tab]');if(button)setTab(Number(button.dataset.tab));});
-document.querySelector('.tabs').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const order=CHANNELS,pos=order.indexOf(tab);setTab(e.key==='Home'?0:e.key==='End'?order.at(-1):order[(pos+(e.key==='ArrowRight'?1:order.length-1))%order.length]);document.querySelector(`[data-tab="${tab}"]`).focus();});
+document.querySelector('.tabs').addEventListener('click',e=>{const button=e.target.closest('[data-tab]');if(button)setTab(button.dataset.tab==='all'?'all':Number(button.dataset.tab));});
+document.querySelector('.tabs').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const order=TAB_ORDER,pos=order.indexOf(tab);setTab(e.key==='Home'?order[0]:e.key==='End'?order.at(-1):order[(pos+(e.key==='ArrowRight'?1:order.length-1))%order.length]);document.querySelector(`[data-tab="${tab}"]`).focus();});
 $('undo').onclick=undo;$('erase').onclick=()=>choosePaint(null);if($('hint'))$('hint').onclick=hint;
 if($('check'))$('check').onclick=()=>{
   const mistakes=findMistakes();errors=new Set(mistakes.map(e=>`${e.index}:${e.channel}`));cancelHint();
@@ -968,7 +995,7 @@ if($('check'))$('check').onclick=()=>{
   render();checkWin();
 };
 $('reset').onclick=()=>{$('help-dialog').close();$('reset-dialog').showModal();};
-document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{$(b.dataset.close).close();if(b.dataset.close==='win-dialog'&&!MONO)setTab('all');});
 document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}));
 $('confirm-reset').onclick=()=>{finishStroke();boardState=fresh();history=[];errors.clear();selected=null;tab=0;paintValue=0;completed=false;cancelHint();save();render();$('reset-dialog').close();say(C.noGivens?'빈 보드에서 시작해요. RGB 합계와 같은 높이 구간을 살펴보세요.':'처음부터 시작해요. ◆ 공개 높이에서 단서를 찾아보세요.');};
 document.addEventListener('keydown',e=>{
@@ -976,7 +1003,7 @@ document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
-    e.preventDefault();const current=selected??0,row=Math.floor(current/N),col=current%N;
+    e.preventDefault();terrainSelection=null;const current=selected??0,row=Math.floor(current/N),col=current%N;
     selected=e.key==='ArrowUp'?Math.max(0,row-1)*N+col:e.key==='ArrowDown'?Math.min(N-1,row+1)*N+col:e.key==='ArrowLeft'?row*N+Math.max(0,col-1):row*N+Math.min(N-1,col+1);
     cancelHint();render();$('board').querySelector(`[data-index="${selected}"]`).focus({preventScroll:true});if(window.revealBoardCell)window.revealBoardCell(selected);
   }else if(/^[0-9]$/.test(e.key)&&Number(e.key)<=MAX_STACK){e.preventDefault();choosePaint(Number(e.key));edit(paintValue);}
@@ -990,6 +1017,25 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   const context=document.createElement('canvas').getContext('2d');
   const clues=[...C.clues.flat(),...C.combinedClues];
   const measurements=new Map();
+  const tokenMetrics=new Map();
+  window.getStackClueOffsets=(groups,axis,layout)=>{
+    const metrics=groups.map(number=>{
+      const key=`${layout.font}:${number}`;
+      if(!tokenMetrics.has(key)){
+        context.font=`650 ${layout.font}px system-ui`;
+        const text=context.measureText(String(number));
+        tokenMetrics.set(key,{width:text.width,height:text.actualBoundingBoxAscent+text.actualBoundingBoxDescent||layout.font});
+      }
+      return tokenMetrics.get(key);
+    });
+    const dimension=axis==='row'?'width':'height',stride=axis==='row'?layout.slotWidth:layout.lineHeight;
+    const offsets=groups.map(()=>0);
+    for(let i=groups.length-2;i>=0;i--){
+      const gap=Math.max(0,stride-(metrics[i][dimension]+metrics[i+1][dimension])/2);
+      offsets[i]=offsets[i+1]+gap/2;
+    }
+    return offsets;
+  };
   window.getStackBoardLayout=(maxWidth,maxHeight=Infinity)=>{
     const gap=0,columnGap=0,padding=0;
     for(let font=maxWidth<600?9:11;font>=1;font-=.25){
@@ -1005,7 +1051,8 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       const cell=Math.min((maxWidth-left-end)/N,(maxHeight-top-end)/N);
       if(cell>=columnWidth||font===1){
         const size=Math.max(.1,cell);
-        return {width:left+N*size+end,height:top+N*size+end,left,top,end,cell:size,font,gap,padding,lineHeight,columnGap,slotWidth};
+        const coordinateSize=Math.max(1,Math.min(12,(left-4)/4,(top-6)/2.4));
+        return {width:left+N*size+end,height:top+N*size+end,left,top,end,cell:size,font,gap,padding,lineHeight,columnGap,slotWidth,coordinateSize};
       }
     }
   };
@@ -1026,6 +1073,7 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
     }
   }
   function updateCells(indices){
+    if(!tiles.length||$('terrain-panel').hidden)return;
     const solved=isSolved();
     if(solved!==lastSolved){
       indices=Array.from({length:N*N},(_,i)=>i);lastValues=[];lastSolved=solved;
@@ -1044,9 +1092,10 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       tile.querySelector('title').textContent=`${Math.floor(i/N)+1}행 ${i%N+1}열 · ${solved?'완성된 색상':empty?'미정':'현재 누적 '+total+'스택'}`;
       lastValues[i]=key;lines.add(Math.floor(i/N));lines.add(N+i%N);
     }
-    updateStatus(lines);
+    updateStatus(lines);updateSelection();
   }
   function renderOverview(){
+    if($('terrain-panel').hidden)return;
     const nextLayout=window.stackBoardLayout||window.getStackBoardLayout(svg.parentElement.clientWidth);
     const key=`${nextLayout.width}:${nextLayout.height}:${nextLayout.font}`;
     if(!tiles.length||key!==lastLayoutKey){
@@ -1056,16 +1105,19 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       svg.parentElement.style.height=height+'px';
       svg.parentElement.style.width=width+'px';
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
-      let html='';
+      const coordinateSize=layout.coordinateSize;
+      let html=`<g id="overview-coordinates" role="status" aria-live="polite" aria-atomic="true" style="font:650 ${coordinateSize}px system-ui;fill:#34493a;text-anchor:middle"><text x="${left/2}" y="${top/2}" dominant-baseline="central"><tspan data-coordinate="row">—</tspan><tspan>,</tspan><tspan data-coordinate="col">—</tspan></text></g>`;
       for(let i=0;i<N*N;i++)html+=`<rect class="overview-cell" data-overview-cell="${i}" x="${left+i%N*cell}" y="${top+Math.floor(i/N)*cell}" width="${cell}" height="${cell}" stroke="#cbd4c4" stroke-width="1"><title></title></rect>`;
       for(let i=0;i<N*N;i++)html+=`<text class="overview-stack-total" data-stack-total="${i}" x="${left+i%N*cell+cell/2}" y="${top+Math.floor(i/N)*cell+cell/2}" text-anchor="middle" dominant-baseline="central" pointer-events="none" aria-hidden="true" style="font-size:${font}px"></text>`;
       for(const clue of C.combinedClues){
         const {axis,line,groups,maximum}=clue,row=axis==='row',l=line+(row?0:N),label=groups.join(' ');
         const x=row?0:left+line*cell,y=row?top+line*cell:0;
         const count=row?CLUE_SLOTS.row:CLUE_SLOTS.col;
+        const offsets=window.getStackClueOffsets(groups,axis,layout);
         const text=Array.from({length:count},(_,slot)=>{
           const k=slot-(count-groups.length),width=row?slotWidth:cell,height=row?cell:lineHeight;
-          const tx=row?slot*slotWidth:0,ty=row?0:slot*lineHeight;
+          const offset=k<0?0:offsets[k];
+          const tx=row?slot*slotWidth+offset:0,ty=row?0:slot*lineHeight+offset;
           return k<0?'':`<text data-clue-token="${k}" class="clue-text" x="${tx+width/2}" y="${ty+height/2}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${groups[k]}</text>`;
         }).join('');
         const separator=`<path class="overview-clue-separator" d="${row?`M0 ${cell}H${left}`:`M${cell} 0V${top}`}"/>`;
@@ -1076,12 +1128,22 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
       svg.innerHTML=html;tiles=Array.from(svg.querySelectorAll('[data-overview-cell]'));stackLabels=Array.from(svg.querySelectorAll('[data-stack-total]'));lastValues=[];
     }
     updateCells(Array.from({length:N*N},(_,i)=>i));
+  }
+  function updateSelection(){
+    if(!layout)return;
     const outline=$('overview-line-outline'),{left,top,cell}=layout,extent=N*cell;
     const cursor=$('overview-cursor');cursor.setAttribute('visibility',selected===null?'hidden':'visible');
+    const coordinates=getSelectedCoordinates();
+    svg.querySelector('#overview-coordinates [data-coordinate="row"]').textContent=coordinates.row??'—';
+    svg.querySelector('#overview-coordinates [data-coordinate="col"]').textContent=coordinates.col??'—';
+    svg.querySelector('#overview-coordinates').setAttribute('aria-label',`${coordinates.row===null?'행 미선택':coordinates.row+'행'}, ${coordinates.col===null?'열 미선택':coordinates.col+'열'}`);
     if(selected!==null){cursor.setAttribute('x',left+selected%N*cell+1);cursor.setAttribute('y',top+Math.floor(selected/N)*cell+1);cursor.setAttribute('width',Math.max(0,cell-2));cursor.setAttribute('height',Math.max(0,cell-2));}
     outline.setAttribute('visibility',terrainSelection?'visible':'hidden');
     if(terrainSelection){const {axis,line}=terrainSelection;outline.setAttribute('x',left+(axis==='col'?line*cell:0));outline.setAttribute('y',top+(axis==='row'?line*cell:0));outline.setAttribute('width',axis==='row'?extent:cell);outline.setAttribute('height',axis==='row'?cell:extent);}
-    svg.querySelectorAll('.overview-marker').forEach(el=>el.setAttribute('aria-pressed',terrainSelection?.axis===el.dataset.axis&&terrainSelection.line===Number(el.dataset.line)));
+    svg.querySelectorAll('.overview-marker').forEach(el=>{
+      const active=activeClue(el.dataset.axis,Number(el.dataset.line));
+      el.classList.toggle('active-line',active);el.setAttribute('aria-pressed',active);
+    });
   }
   const activate=e=>{const marker=e.target.closest('.overview-marker');if(marker)selectLine(marker.dataset.axis,Number(marker.dataset.line));};
   svg.addEventListener('click',activate);svg.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)&&e.target.closest('.overview-marker')){e.preventDefault();activate(e);}});
@@ -1098,7 +1160,8 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
     const dpadWidth=dpadArea.clientWidth-parseFloat(padding.paddingLeft)-parseFloat(padding.paddingRight);
     const dpadHeight=dpadArea.clientHeight-parseFloat(padding.paddingTop)-parseFloat(padding.paddingBottom);
     $('dpad').style.setProperty('--dpad-size',Math.max(0,Math.min(dpadWidth,dpadHeight))+'px');
-    const width=Math.min(...frames.map(el=>el.clientWidth))-2,height=Math.min(...frames.map(el=>el.clientHeight))-2;
+    const visibleFrames=frames.filter(frame=>!frame.hidden);
+    const width=Math.min(...visibleFrames.map(el=>el.clientWidth))-2,height=Math.min(...visibleFrames.map(el=>el.clientHeight))-2;
     if(width<=0||height<=0)return;
     const layout=window.getStackBoardLayout(width,height);
     window.stackBoardLayout=layout;
@@ -1108,6 +1171,12 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
     board.style.setProperty('--n',N);
     board.style.setProperty('--row-clue-slots',CLUE_SLOTS.row);
     board.style.setProperty('--col-clue-slots',CLUE_SLOTS.col);
+    board.style.setProperty('--coordinate-size',layout.coordinateSize+'px');
+    board.querySelectorAll('.clue.left,.clue.top').forEach(clue=>{
+      const row=clue.classList.contains('left'),tokens=[...clue.querySelectorAll('[data-clue-token]')];
+      const offsets=window.getStackClueOffsets(tokens.map(token=>token.textContent),row?'row':'col',layout);
+      tokens.forEach((token,i)=>token.style.transform=`translate${row?'X':'Y'}(${offsets[i]}px)`);
+    });
     viewport.style.width=layout.width+'px';
     viewport.style.height=layout.height+'px';
     window.renderTerrain?.();
@@ -1144,5 +1213,5 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   });
 })();
 </script>
-<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-1008-6a4b00ce0fb15e86',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=a15fa8e570c7" defer></script></body>
+<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-1008-6a4b00ce0fb15e86',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=bce5be77b600" defer></script></body>
 </html>
