@@ -106,9 +106,9 @@ footer{height:22px;padding:0 2px;font-size:7px}footer button{padding:3px;font-si
 .stack-sum-game .clue.total{font-size:min(var(--number-size,10px),calc(var(--cell-size) * .75))}
 
 /* Full-width game with the same branding as the collection. */
-html{overflow-anchor:none;--input-dock-height:calc(101px + env(safe-area-inset-bottom));scroll-padding-bottom:calc(var(--input-dock-height) + 12px)}
+html{overflow-anchor:none}
 html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f5f5ef;color:#293e30}
-.app{width:100%;max-width:none;margin:0;padding:20px 4px calc(var(--input-dock-height) + 12px);border:0;border-radius:0;box-shadow:none;background:#f5f5ef}
+.app{width:100%;max-width:none;margin:0;border:0;border-radius:0;box-shadow:none;background:#f5f5ef}
 .header{padding:0 8px;margin-bottom:20px;gap:8px}
 .brand{gap:11px;min-width:0}
 .brand h1{font-size:20px;letter-spacing:-.7px;font-weight:700;white-space:nowrap}
@@ -134,23 +134,91 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
 .reset-in-help{display:block;margin-top:16px;color:#647460;font-size:12px;text-decoration:underline;text-underline-offset:3px}
 @media(max-width:360px){.header{gap:6px}.header-actions{gap:6px}.back-to-list{font-size:11px}}
 
-/* Keep input tools visible without covering the final row of the board. */
-.input-dock{position:fixed;inset:auto 0 0;z-index:20;height:var(--input-dock-height);padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:#f5f5ef;border-top:1px solid #d4dccf;box-shadow:0 -3px 14px #293e3010}
+/* Keep the input area separate from both boards. */
+.input-dock{z-index:20;background:#f5f5ef}
 .input-dock .input-panel{margin:0;padding:0;border:0}
-.input-dock .height-picker button{height:44px}
-.input-dock .tools{margin:6px 0 0}
-.input-dock .tools button{height:34px;min-height:34px}
 
 .overview-stage{margin-top:16px}
 
+/* A quiet clue background, separated only along rows and columns. */
+.individual-sums .clue.left,.individual-sums .clue.top{padding:0}
+.individual-sums .run-tokens{display:grid;width:100%;height:100%;max-width:none;max-height:none;gap:0;line-height:1;align-self:stretch}
+.individual-sums .clue.left .run-tokens{grid-template-columns:repeat(var(--row-clue-slots),minmax(0,1fr));grid-template-rows:1fr}
+.individual-sums .clue.top .run-tokens{grid-template-columns:1fr;grid-template-rows:repeat(var(--col-clue-slots),minmax(0,1fr));gap:0;align-items:stretch}
+.clue.left,.clue.top,.clue.right,.clue.bottom{background:#fff;border-radius:0}
+.clue .run-tokens .clue-slot{display:grid;place-items:center;align-self:stretch;justify-self:stretch;min-width:0;min-height:0;padding:0;background:transparent}
+.clue.total{margin:0;border:0}
+.clue.left,.clue.right{box-shadow:inset 0 -1px 0 #e2e6de}
+.clue.top,.clue.bottom{box-shadow:inset -1px 0 0 #e2e6de}
+.overview-marker rect{fill:#fff}
+.overview-clue-separator{fill:none;stroke:#e2e6de;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
+.individual-sums .cell.selected{z-index:4;outline:2px solid #263e30;outline-offset:-2px;box-shadow:inset 0 0 0 3px #ffffff99}
+
+/* Fit the complete game and controller inside the viewport. */
+html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
+.stack-sum-game .app{height:100dvh;min-height:0;max-height:100dvh;display:flex;flex-direction:column;gap:0;overflow:hidden;padding:8px 4px 0}
+.stack-sum-game .shared-header{min-height:36px;margin:0 0 8px}
+.play-area{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;gap:8px;overflow:hidden}
+.stack-sum-game #editor-panel{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;overflow:hidden;padding:0}
+.stack-sum-game #game-panel,.stack-sum-game #terrain-panel{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;min-height:0;overflow:hidden;padding:0;border:0}
+.stack-sum-game .tabs{flex:none;margin:0 2px 6px;padding:3px}
+.stack-sum-game #board-viewport,.stack-sum-game .overview-stage{flex:none;min-width:0;min-height:0;margin:0;overflow:hidden;touch-action:none}
+.stack-sum-game #board{flex:none}
+.stack-sum-game .input-dock{position:static;inset:auto;flex:0 0 25dvh;height:25dvh;min-height:0;margin-top:0;padding:6px 6px max(6px,env(safe-area-inset-bottom));box-shadow:none}
+.stack-sum-game .input-panel{width:100%;height:100%;min-height:0}
+.stack-sum-game .gamepad{--control-padding:clamp(4px,1.2dvh,12px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%;height:100%;max-width:none;margin:0}
+.dpad-area{display:grid;place-items:center;min-width:0;min-height:0;padding:var(--control-padding)}
+.stack-sum-game .dpad{width:var(--dpad-size,100px);height:var(--dpad-size,100px)}
+.stack-sum-game .input-dock .height-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:4px;width:100%;height:100%;min-width:0;min-height:0;padding:var(--control-padding)}
+.stack-sum-game .input-dock .height-picker button{width:100%;height:100%;min-width:0;min-height:0;padding:0;gap:0;border-radius:clamp(6px,1dvh,12px)}
+.stack-sum-game .height-picker strong{font-size:clamp(16px,3dvh,30px);line-height:1}
+.stack-sum-game .height-picker span{font-size:clamp(7px,.9dvh,10px);line-height:1}
+.stack-sum-game .height-picker #erase strong{height:auto}
+.stack-sum-game .height-picker svg{width:clamp(14px,2.6dvh,28px);height:clamp(14px,2.6dvh,28px)}
+@media(min-width:700px){.play-area{flex-direction:row;gap:12px}}
+@media(max-height:650px){
+  .stack-sum-game .app{padding-top:4px}
+  .stack-sum-game .shared-header{margin-bottom:4px}
+  .stack-sum-game .tabs button{height:26px}
+}
+@media(max-height:450px){.play-area{gap:6px}.stack-sum-game .height-picker #undo strong{font-size:14px}.stack-sum-game .height-picker span{font-size:6px}}
+
+
+.shared-header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;margin-bottom:14px;padding:0 8px;flex-shrink:0}
+.wordmark{border:0;background:none;display:flex;align-items:baseline;gap:7px;padding:6px 0;font:700 19px system-ui;letter-spacing:-.7px;color:#293e30;cursor:default;white-space:nowrap}
+button.wordmark{cursor:pointer}
+.wordmark-text{color:#000}
+.wordmark[data-mode="monochrome"] .wordmark-text>span:nth-child(1){color:#aaa}
+.wordmark[data-mode="monochrome"] .wordmark-text>span:nth-child(2){color:#555}
+.wordmark[data-mode="monochrome"] .wordmark-text>span:nth-child(3){color:#000}
+.wordmark[data-mode="color"] .wordmark-text{background:linear-gradient(90deg,#d64d55,#df8739,#91a83e,#409665,#398fba,#6f68bb,#b559a5);background-clip:text;-webkit-background-clip:text;color:transparent}
+.shared-header .header-actions{display:flex;align-items:center;gap:6px}
+.nav-icon{display:grid;place-items:center;width:36px;height:36px;padding:8px;border:1px solid #d8ded2;border-radius:10px;background:#fffef9;color:#52644f;cursor:pointer;font:20px system-ui}
+.nav-icon svg{width:20px;height:20px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nav-icon:disabled{opacity:.35;cursor:default}
+.wordmark:focus-visible,.nav-icon:focus-visible{outline:2px solid #548c67;outline-offset:2px}
+#settings-dialog{width:calc(100% - 32px);max-width:380px;max-height:85dvh;overflow:auto;padding:20px;border:1px solid #d6dfcf;border-radius:16px;background:#fafbf4;color:#293e30;box-shadow:0 20px 80px #26382e30;font:13px system-ui;letter-spacing:0}
+#settings-dialog::backdrop{background:#15281d80}
+.settings-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.settings-top h2{margin:0;font-size:20px}
+.settings-option{display:flex;align-items:center;gap:6px}.settings-option input{accent-color:#526d50}
+#settings-dialog p{font-size:12px;line-height:1.8;color:#6b7a62;margin:16px 0}.settings-actions{display:grid;gap:8px}.settings-actions button{border:1px solid #d6dfcf;background:#edf0e7;border-radius:8px;padding:11px;font:12px system-ui;color:#486044;cursor:pointer}
+.hide-input-guide .input-note{visibility:hidden}
+.dpad{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));width:124px;height:124px;touch-action:none;user-select:none;-webkit-user-select:none;flex-shrink:0}
+.dpad button{display:grid;place-items:center;min-width:0;min-height:0;padding:0;border:1px solid #bdcbb4;border-radius:6px;background:#edf1e6;color:#52674b;touch-action:none;-webkit-touch-callout:none;cursor:pointer}
+.dpad [data-direction="up"]{grid-area:1/2}.dpad [data-direction="left"]{grid-area:2/1}.dpad [data-direction="right"]{grid-area:2/3}.dpad [data-direction="down"]{grid-area:3/2}
+.dpad-center{grid-area:2/2;background:#edf1e6;box-shadow:inset 0 0 0 1px #d6dfcf;pointer-events:none}
+.dpad button svg{width:48%;height:48%;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.dpad button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
+.dpad:focus-visible,.dpad button:focus-visible{outline:3px solid #548c67;outline-offset:1px}
+.height-picker button,.tutorial-tools button{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.height-picker button.held,.tutorial-tools button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
+@media(max-width:360px){.wordmark{font-size:17px;gap:4px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px;padding:6px}.dpad{width:110px;height:110px}}
 .monochrome-game .clue.done{color:#555}.monochrome-game .overview-marker.done .clue-text{fill:#555}.monochrome-game .cell.zero{background:#fff;color:#555}.collection-next{display:block;margin-top:14px;color:#42684d;font-size:13px}</style>
-<link rel="stylesheet" href="site-integration.css?v=4f9e58ff7df9"></head>
+<link rel="stylesheet" href="site-integration.css?v=b3fa45581822"></head>
 <body class="individual-sums stack-sum-game monochrome-game">
 <main class="app">
-  <header class="header">
-    <div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><div><h1>노노그램스택</h1></div></div>
-    <div class="header-actions"><a class="back-to-list" href="collection.html#monochrome">← 목록으로</a><button class="icon-button" id="help" aria-label="게임 방법">?</button></div>
-  </header>
+  <header class="header"></header>
+  <div class="play-area">
   <section id="editor-panel" aria-label="명암 스택 입력">
   <nav class="tabs" aria-label="명암 입력" hidden><button data-tab="0" aria-selected="true">명암</button></nav>
   <section id="game-panel" aria-label="빨강 퍼즐">
@@ -159,27 +227,27 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
     <div class="under-board"><span>위·왼쪽 <b>연속 칸 수</b></span><span>아래·오른쪽 <b>최대 높이</b></span></div>
     <div id="diagonals" class="diagonals" hidden></div>
   </section>
+  <div id="message" class="message sr-only" aria-live="polite">같은 높이 구간의 스택 합계와 최대 높이를 단서로 시작해 보세요.</div>
+  </section>
+
+  </div>
   <div class="input-dock">
   <section class="input-panel" aria-label="높이 입력">
+    <div class="gamepad">
+    <div id="dpad-area" class="dpad-area"><div id="dpad" class="dpad" role="group" tabindex="0" aria-label="칸 이동 십자키. 방향키로도 이동할 수 있어요"></div></div>
     <div class="height-picker" id="height-picker" aria-label="입력할 스택 선택">
-      <button id="deselect" aria-label="선택 도구"><strong><svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 3 6 17 3-7 7-3L4 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></strong><span>선택</span></button>
+      <button id="undo" aria-label="되돌리기"><strong aria-hidden="true">↶</strong><span>undo</span></button>
       <button id="erase" aria-label="지우개 선택"><strong><svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 19-6-6a2 2 0 0 1 0-3l7-7a2 2 0 0 1 3 0l8 8a2 2 0 0 1 0 3l-5 5H9Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m7 6 11 11M8 19h13" stroke="currentColor" stroke-width="1.6"/></svg></strong><span>지우개</span></button>
       <button data-value="0"><strong>×</strong></button>
       <button data-value="1"><strong>1</strong></button>
       <button data-value="2"><strong>2</strong></button>
       <button data-value="3"><strong>3</strong></button>
     </div>
-    <p class="input-note" id="input-note">도구 선택 → 칸을 누르거나 드래그</p>
+    </div>
   </section>
-  <div class="tools">
-    <button id="undo"><span aria-hidden="true">↶</span>되돌리기</button>
   </div>
-  </div>
-  <div id="message" class="message sr-only" aria-live="polite">같은 높이 구간의 스택 합계와 최대 높이를 단서로 시작해 보세요.</div>
-  </section>
-
 </main>
-<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li></ul><p>양 끝에서부터 맞춰진 구간의 단서는 녹색, 현재 입력으로 성립할 수 없는 단서는 빨간색이에요. 색은 해당 줄의 단서와 입력만으로 판단해요.</p><p>숫자를 선택한 뒤 칸을 누르거나 드래그하세요. 선택 도구로는 입력값을 바꾸지 않고 칸을 살펴볼 수 있어요. 한 번의 드래그는 되돌리기 한 번으로 취소돼요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
+<dialog id="help-dialog"><div class="dialog-top"><span class="eyebrow">HOW TO PLAY</span><button class="icon-button" data-close="help-dialog" aria-label="닫기">×</button></div><h2>명암을 쌓아<br>그림을 찾아보세요.</h2><p>한 칸에 하나의 높이만 입력해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정색이에요. 지우개는 미정으로 되돌려요.</p><ul><li>위·왼쪽 숫자는 같은 높이가 이어진 구간의 스택 합계예요. 높이 2가 세 칸이면 6이에요.</li><li>아래·오른쪽 숫자는 해당 줄의 최대 높이예요.</li><li>0인 구간은 생략해요. 같은 높이의 별도 구간 사이에는 빈칸이 필요해요.</li></ul><p>양 끝에서부터 맞춰진 구간의 단서는 녹색, 현재 입력으로 성립할 수 없는 단서는 빨간색이에요. 색은 해당 줄의 단서와 입력만으로 판단해요.</p><p>왼쪽 십자키으로 선택 테두리를 움직여요. 오른쪽 버튼을 누른 채 이동하면 0.1초마다 지나가는 칸에 입력해요. 버튼을 놓으면 입력을 멈춰요. undo는 최근 입력을 되돌리고, 지우개는 미정으로 바꿔요. 칸을 직접 누르거나 드래그할 수도 있어요.</p><button id="reset" class="reset-in-help">처음부터 다시 풀기</button><button class="primary-button" data-close="help-dialog">시작하기</button></dialog>
 <dialog id="reset-dialog"><span class="eyebrow">START AGAIN</span><h2>처음부터 다시 풀까요?</h2><p>입력한 높이를 모두 지우고 빈 보드에서 시작해요.</p><div class="dialog-actions"><button data-close="reset-dialog">계속 풀기</button><button class="primary-button" id="confirm-reset">다시 시작</button></div></dialog>
 <dialog id="win-dialog"><span class="eyebrow">PICTURE COMPLETE</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300" aria-label="완성된 흑백 그림"></canvas><p>100개의 높이를 모두 찾았어요.</p><button class="primary-button" data-close="win-dialog">완성된 그림 보기</button><a class="collection-next" href="monochrome-0308.html">다음 문제 풀기</a></dialog>
 <script>globalThis.MONO_SPEC={"id":"0304","title":"흑백 문제 021","width":10,"height":10,"channels":1,"maxStack":3,"paletteSize":4,"levels":[0,0.3333333333333333,0.6666666666666666,1],"rule":"height-runs-max","omitAllZeros":true,"noGivens":true,"cells":[[0],[0],[0],[0],[2],[0],[0],[0],[0],[0],[0],[0],[0],[2],[2],[2],[0],[0],[0],[0],[0],[0],[0],[2],[2],[2],[2],[0],[0],[0],[0],[0],[2],[2],[2],[2],[2],[0],[0],[0],[0],[0],[2],[2],[2],[2],[2],[2],[0],[0],[0],[2],[2],[1],[2],[2],[2],[2],[2],[0],[0],[2],[1],[2],[2],[2],[2],[2],[2],[0],[0],[2],[1],[2],[2],[2],[2],[2],[2],[0],[0],[0],[2],[2],[2],[2],[2],[2],[0],[0],[0],[0],[0],[2],[2],[2],[2],[0],[0],[0]],"storageKey":"nonogram-stack-approved-v1-0304-b9f8e312d0656dbd","adjustment":{"targetEmptyPercent":47},"source":{"kind":"human-approved-catalog","subject":"빗방울","categoryId":"03","category":"자연","rank":4,"versionId":"8a044405-36c3-4490-a7c0-fdc820ff915f","imageSha256":"b9f8e312d0656dbd8eb3ff61d63852c54d279b4d1a9d8678395f87abcfa55700","folder":"03-자연/10x10/04-빗방울/draft-8a044405","approvedAt":"2026-10-24T15:20:53.818Z"},"omitOuterZeros":true};
@@ -470,6 +538,80 @@ if(root.MONO_SPEC)root.PicrossCore=createCore(root.MONO_SPEC);
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script>
 <script>const GIVEN_DATA=[];
+/* Shared navigation and two-pointer game controls. Inlined by the builders. */
+(() => {
+  const header=document.querySelector('main > header');
+  if(!header)return;
+  const isMenu=!!document.querySelector('#monochrome-games');
+  const mode=()=>isMenu?(document.body.dataset.mode||'monochrome'):
+    document.body.classList.contains('monochrome-game')||document.querySelector('.tutorial-app')?'monochrome':'color';
+  const icon=path=>`<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${path}</svg>`;
+  const wordmarkTag=isMenu?'button':'div';
+  header.className='header shared-header';
+  header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle"><span class="wordmark-text"><span>Nono</span><span>gram</span><span>Stack</span></span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="settings" aria-label="설정">${icon('<path d="m9 3-1 3-3 1-2 3 2 2v3l3 2 1 3h6l1-3 3-2v-3l2-2-2-3-3-1-1-3Z"/><circle cx="12" cy="12" r="3"/>')}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m14 5-7 7 7 7M7 12h14"/>')}</button></div>`;
+  const dialog=document.createElement('dialog');dialog.id='settings-dialog';
+  dialog.innerHTML='<div class="settings-top"><h2>설정</h2><button class="nav-icon" aria-label="설정 닫기">×</button></div><label class="settings-option"><input type="checkbox" id="show-input-guide"> 조작 안내 표시</label><p class="control-guide">왼쪽 십자키으로 칸을 이동해요. 오른쪽 버튼을 누른 채 이동하면 지나가는 칸마다 입력해요. 이동 간격은 0.1초예요.</p><div class="settings-actions"></div>';
+  document.body.append(dialog);
+  dialog.querySelector('.nav-icon').onclick=()=>dialog.close();
+  dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
+  const guide=dialog.querySelector('input');guide.checked=true;
+  try{guide.checked=localStorage.getItem('nonogram-stack-input-guide')!=='false';}catch{}
+  const updateGuide=()=>document.body.classList.toggle('hide-input-guide',!guide.checked);
+  updateGuide();guide.onchange=()=>{updateGuide();try{localStorage.setItem('nonogram-stack-input-guide',String(guide.checked));}catch{}};
+  for(const [id,label] of [['help-dialog','게임 방법'],['reset-dialog','처음부터 다시 풀기']]){
+    if(!document.getElementById(id))continue;
+    const button=document.createElement('button');button.textContent=label;button.onclick=()=>{dialog.close();document.getElementById(id).showModal();};dialog.querySelector('.settings-actions').append(button);
+  }
+  document.getElementById('settings').onclick=()=>dialog.showModal();
+  window.updateStackModeLabel=()=>{
+    const current=mode();document.getElementById('mode-toggle').dataset.mode=current;
+    if(isMenu)document.getElementById('mode-toggle').setAttribute('aria-label',`NonogramStack · ${current==='color'?'흑백':'컬러'} 게임으로 전환`);
+  };
+  if(isMenu)document.getElementById('mode-toggle').onclick=()=>{
+    const next=mode()==='color'?'monochrome':'color';
+    try{localStorage.setItem('nonogram-stack-mode',next);}catch{}
+    window.selectStackMode(next);
+  };
+  document.getElementById('navigate-back').onclick=()=>{
+    if(isMenu){if(history.length>1)history.back();}else location.href='collection.html#'+mode();
+  };
+  if(isMenu&&history.length<=1)document.getElementById('navigate-back').disabled=true;
+  window.updateStackModeLabel();
+})();
+
+window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
+  const directions=[['up','위로 이동','M6 15l6-6 6 6'],['left','왼쪽으로 이동','M15 6l-6 6 6 6'],['right','오른쪽으로 이동','M9 6l6 6-6 6'],['down','아래로 이동','M6 9l6 6 6-6']];
+  dpad.innerHTML=directions.map(([value,label,path])=>`<button type="button" data-direction="${value}" aria-label="${label}" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="${path}"/></svg></button>`).join('')+'<span class="dpad-center" aria-hidden="true"></span>';
+  const directionButtons=[...dpad.querySelectorAll('[data-direction]')];
+  let directionPointer=null,actionPointer=null,held=null,timer=0,direction='';
+  function step(value=direction){if(!value||document.querySelector('dialog[open]'))return;const moved=move(value);if(held!==null&&moved!==false)apply(held);}
+  function setDirection(value){
+    if(value===direction)return;
+    clearInterval(timer);timer=0;direction=value;
+    directionButtons.forEach(button=>{const active=button.dataset.direction===value;button.classList.toggle('held',active);button.setAttribute('aria-pressed',active);});
+    if(value){step();timer=setInterval(()=>step(),100);}
+  }
+  function stopDirection(){setDirection('');directionPointer=null;}
+  function stopAction(){buttons.forEach(b=>b.classList.remove('held'));held=null;actionPointer=null;}
+  dpad.addEventListener('pointerdown',e=>{const button=e.target.closest('[data-direction]');if(!button||directionPointer!==null||e.button!==0||document.querySelector('dialog[open]'))return;e.preventDefault();directionPointer=e.pointerId;dpad.setPointerCapture(e.pointerId);setDirection(button.dataset.direction);});
+  dpad.addEventListener('pointermove',e=>{if(e.pointerId!==directionPointer)return;e.preventDefault();const button=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-direction]');setDirection(button&&dpad.contains(button)?button.dataset.direction:'');});
+  for(const event of ['pointerup','pointercancel','lostpointercapture'])dpad.addEventListener(event,e=>{if(e.pointerId===directionPointer)stopDirection();});
+  dpad.addEventListener('keydown',e=>{const d={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'}[e.key];if(d){e.preventDefault();e.stopPropagation();step(d);}});
+  dpad.addEventListener('click',e=>{const button=e.target.closest('[data-direction]');if(button&&e.detail===0)step(button.dataset.direction);});
+  dpad.addEventListener('contextmenu',e=>e.preventDefault());
+  for(const button of buttons){
+    button.onclick=e=>{if(e.detail===0&&!button.disabled){choose(button);apply(button);}};
+    button.addEventListener('pointerdown',e=>{if(actionPointer!==null||e.button!==0||button.disabled||document.querySelector('dialog[open]'))return;e.preventDefault();actionPointer=e.pointerId;held=button;button.setPointerCapture(e.pointerId);button.classList.add('held');choose(button);apply(button);});
+    for(const event of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(event,e=>{if(e.pointerId===actionPointer)stopAction();});
+    button.addEventListener('contextmenu',e=>e.preventDefault());
+  }
+  const stop=()=>{stopDirection();stopAction();};
+  addEventListener('blur',stop);addEventListener('pagehide',stop);addEventListener('resize',stop);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+  new MutationObserver(()=>{if(document.querySelector('dialog[open]'))stop();}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
+  return stop;
+};
+
 (function(root){
   'use strict';
   const cache=new Map();
@@ -526,10 +668,12 @@ const C=PicrossCore, N=C.N, MAX_STACK=C.maxStack, CHANNEL_COUNT=C.channels||3, C
 const themes=MONO?[['#555555','#e5e5e5']]:[['#c6544d','#fae8e3'],['#518568','#e2f0e4'],['#547fae','#e1ebf7']];
 const key=C.storageKey||(C.rule==='height-runs-max'?'rgb-stack-picross-v2-bull-height-runs-max':globalThis.PUZZLE_SPEC?'rgb-stack-picross-v1-bull-30-adjust30':'rgb-stack-picross-v1-rocket-10');
 const $=id=>document.getElementById(id);
+const allClues=[...C.clues.flat(),...C.combinedClues];
+const CLUE_SLOTS={row:Math.max(1,...allClues.filter(c=>c.axis==='row').map(c=>c.groups.length)),col:Math.max(1,...allClues.filter(c=>c.axis==='col').map(c=>c.groups.length))};
 document.documentElement.style.setProperty('--n',N);
 const fixed=Array.from({length:N*N},()=>Array(CHANNEL_COUNT).fill(false));
 GIVEN_DATA.forEach(g=>fixed[g.index][g.channel]=true);
-let boardState=fresh(), tab=0, selected=null, history=[], pendingHint=null, errors=new Set(), completed=false, storageOK=true;
+let boardState=fresh(), tab=0, selected=0, history=[], pendingHint=null, errors=new Set(), completed=false, storageOK=true;
 let paintValue=0, stroke=null;
 let terrainSelection=null;
 function inTerrainLine(i){return terrainSelection!==null&&(terrainSelection.axis==='row'?Math.floor(i/N):i%N)===terrainSelection.line;}
@@ -612,7 +756,7 @@ function render(){
     const values=cells.map(i=>channel===null?(boardState[i].includes(null)?null:C.sum(boardState[i])):boardState[i][channel]);
     return {groups,total,feedback:ClueFeedback.evaluate(values,groups,total)};
   }));
-  let html=`<div class="corner" style="grid-row:1;grid-column:1">${C.stackSumRuns?'동일 높이<br>구간 스택 합':C.channelTotals?'같은 높이<br>연속 칸 수':'칸 수'}</div>`;
+  let html='<div class="corner" style="grid-row:1;grid-column:1" aria-hidden="true"></div>';
   for(let l=0;l<N;l++){
     for(const axis of ['row','col']){
       const a=axis==='row'?0:1,info=lineInfo[a][l],active=activeClue(axis,l);
@@ -620,7 +764,13 @@ function render(){
       const totalPlace=a===0?`grid-row:${l+2};grid-column:${N+2}`:`grid-row:${N+2};grid-column:${l+2}`;
       const classes=active?'active-line':'';
       const tokens=info.groups.map(n=>C.rule==='height-runs-max'&&!C.stackSumRuns&&n===0?'·':n);
-      html+=`<div class="clue ${a===0?'left':'top'} ${classes}" data-clue="${a*N+l}" style="${place}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'동일 높이 구간':'연속 칸 수'} ${tokens.join(' ')||(C.omitAllZeros?'빈 줄':0)}"><div class="run-tokens">${(tokens.length||C.omitAllZeros?tokens:[0]).map((n,k)=>`<span data-clue-token="${k}" class="${n==='·'?'gap-token':''} clue-${info.feedback.tokens[k]||'pending'}">${n}</span>`).join('')}</div></div>`;
+      const values=tokens.length||C.omitAllZeros?tokens:[0],count=a===0?CLUE_SLOTS.row:CLUE_SLOTS.col;
+      const slots=Array.from({length:count},(_,slot)=>{
+        const k=slot-(count-values.length);
+        if(k<0)return '<span class="clue-slot" aria-hidden="true"></span>';
+        const n=values[k];return `<span data-clue-token="${k}" class="clue-slot ${n==='·'?'gap-token':''} clue-${info.feedback.tokens[k]||'pending'}">${n}</span>`;
+      }).join('');
+      html+=`<div class="clue ${a===0?'left':'top'} ${classes}" data-clue="${a*N+l}" style="${place}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'동일 높이 구간':'연속 칸 수'} ${tokens.join(' ')||(C.omitAllZeros?'빈 줄':0)}"><div class="run-tokens">${slots}</div></div>`;
       html+=`<div class="clue total ${a===0?'right':'bottom'} ${classes} clue-${info.feedback.maximum||'pending'}" data-clue="${a*N+l}" style="${totalPlace}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'최대 높이':'스택 합'} ${info.total}">${info.total}</div>`;
     }
   }
@@ -633,7 +783,7 @@ function render(){
     const place=axis==='row'?`grid-row:${line+2};grid-column:2 / ${N+2}`:`grid-row:2 / ${N+2};grid-column:${line+2}`;
     html+=`<div class="line-outline" style="${place}" aria-hidden="true"></div>`;
   }
-  html+=`<div class="corner" style="grid-row:${N+2};grid-column:1;align-items:center;padding:0">${C.rule==='height-runs-max'?'최대':'합계'}</div>`;
+  html+=`<div class="corner" style="grid-row:${N+2};grid-column:1" aria-hidden="true"></div>`;
   $('board').innerHTML=html;
   cellNodes=Array.from($('board').querySelectorAll('[data-index]'));
   clueNodes=Array.from({length:2*N},()=>[]);
@@ -650,10 +800,6 @@ function render(){
   }).join('');
 
   document.querySelectorAll('[data-value]').forEach(b=>{b.disabled=channel===null;const active=channel!==null&&paintValue===Number(b.dataset.value);b.classList.toggle('current',active);b.setAttribute('aria-pressed',active);});
-  $('input-note').textContent=channel===null?'전체는 미리보기 · R / G / B를 눌러 색상별로 입력':paintValue==='select'?'선택 · 값을 바꾸지 않고 칸을 살펴볼 수 있어요':`${paintValue===null?'지우개':paintValue===0?'× · 0스택':paintValue+'스택'} 선택 중 · 칸을 누르거나 드래그하세요`;
-  $('deselect').disabled=channel===null;
-  $('deselect').classList.toggle('current',channel!==null&&paintValue==='select');
-  $('deselect').setAttribute('aria-pressed',channel!==null&&paintValue==='select');
   $('erase').disabled=channel===null;
   $('erase').classList.toggle('current',channel!==null&&paintValue===null);
   $('erase').setAttribute('aria-pressed',channel!==null&&paintValue===null);
@@ -671,7 +817,7 @@ function edit(value){
 }
 function checkWin(){
   if(!isSolved())return;
-  cancelHint();if(typeof window.clearTerrainSelection==='function')window.clearTerrainSelection();render();save();say(`완성! ${N*N*CHANNEL_COUNT}개의 높이가 모두 맞아요.`);
+  cancelHint();terrainSelection=null;render();save();say(`완성! ${N*N*CHANNEL_COUNT}개의 높이가 모두 맞아요.`);
   if(completed)return;completed=true;
   const ctx=$('win-art').getContext('2d');
   ctx.fillStyle=MONO?'#fff':'#172128';ctx.fillRect(0,0,300,300);
@@ -814,15 +960,14 @@ $('board').addEventListener('click',e=>{
 });
 document.querySelector('.tabs').addEventListener('click',e=>{const button=e.target.closest('[data-tab]');if(button)setTab(Number(button.dataset.tab));});
 document.querySelector('.tabs').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const order=CHANNELS,pos=order.indexOf(tab);setTab(e.key==='Home'?0:e.key==='End'?order.at(-1):order[(pos+(e.key==='ArrowRight'?1:order.length-1))%order.length]);document.querySelector(`[data-tab="${tab}"]`).focus();});
-$('height-picker').addEventListener('click',e=>{const button=e.target.closest('[data-value]');if(button&&!button.disabled)choosePaint(Number(button.dataset.value));});
-$('undo').onclick=undo;$('deselect').onclick=()=>choosePaint('select');$('erase').onclick=()=>choosePaint(null);if($('hint'))$('hint').onclick=hint;
+$('undo').onclick=undo;$('erase').onclick=()=>choosePaint(null);if($('hint'))$('hint').onclick=hint;
 if($('check'))$('check').onclick=()=>{
   const mistakes=findMistakes();errors=new Set(mistakes.map(e=>`${e.index}:${e.channel}`));cancelHint();
   if(mistakes.length){const first=mistakes[0];tab=first.channel;selected=first.index;say(`정답과 다른 입력이 ${mistakes.length}개 있어요. 색상 탭의 붉은 테두리 칸을 확인해 주세요.`,true);}
   else say(isSolved()?'모든 높이가 정확해요. 완성!':'입력한 높이는 모두 맞아요. 미정인 칸을 계속 풀어 보세요.');
   render();checkWin();
 };
-$('help').onclick=()=>$('help-dialog').showModal();$('reset').onclick=()=>{$('help-dialog').close();$('reset-dialog').showModal();};
+$('reset').onclick=()=>{$('help-dialog').close();$('reset-dialog').showModal();};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
 document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}));
 $('confirm-reset').onclick=()=>{finishStroke();boardState=fresh();history=[];errors.clear();selected=null;tab=0;paintValue=0;completed=false;cancelHint();save();render();$('reset-dialog').close();say(C.noGivens?'빈 보드에서 시작해요. RGB 합계와 같은 높이 구간을 살펴보세요.':'처음부터 시작해요. ◆ 공개 높이에서 단서를 찾아보세요.');};
@@ -844,16 +989,25 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
 (() => {
   const context=document.createElement('canvas').getContext('2d');
   const clues=[...C.clues.flat(),...C.combinedClues];
-  window.getStackBoardLayout=width=>{
-    const font=width<600?10:12,gap=font/2,columnGap=4,padding=6;
-    context.font=`650 ${font}px system-ui`;
-    const rowWidth=Math.max(0,...clues.filter(c=>c.axis==='row').map(c=>
-      c.groups.reduce((sum,n)=>sum+context.measureText(String(n)).width,0)+Math.max(0,c.groups.length-1)*gap));
-    const lineHeight=Math.ceil(font*1.25);
-    const rows=Math.max(1,...clues.filter(c=>c.axis==='col').map(c=>c.groups.length));
-    const left=Math.ceil(rowWidth+padding*2),top=rows*lineHeight+(rows-1)*columnGap+padding*2,end=font+padding*2;
-    const cell=(width-left-end)/N;
-    return {width,height:top+N*cell+end,left,top,end,cell,font,gap,padding,lineHeight,columnGap};
+  const measurements=new Map();
+  window.getStackBoardLayout=(maxWidth,maxHeight=Infinity)=>{
+    const gap=0,columnGap=0,padding=0;
+    for(let font=maxWidth<600?9:11;font>=1;font-=.25){
+      if(!measurements.has(font)){
+        context.font=`650 ${font}px system-ui`;
+        const slotWidth=Math.ceil(Math.max(font,...clues.filter(c=>c.axis==='row').flatMap(c=>c.groups.map(n=>context.measureText(String(n)).width+2))));
+        const columns=clues.filter(c=>c.axis==='col');
+        const columnWidth=Math.max(font,...columns.flatMap(c=>c.groups.map(n=>context.measureText(String(n)).width+2)));
+        const lineHeight=Math.ceil(Math.max(font+1,font*1.1)),left=CLUE_SLOTS.row*slotWidth,top=CLUE_SLOTS.col*lineHeight,end=font+4;
+        measurements.set(font,{left,top,end,lineHeight,columnWidth,slotWidth});
+      }
+      const {left,top,end,lineHeight,columnWidth,slotWidth}=measurements.get(font);
+      const cell=Math.min((maxWidth-left-end)/N,(maxHeight-top-end)/N);
+      if(cell>=columnWidth||font===1){
+        const size=Math.max(.1,cell);
+        return {width:left+N*size+end,height:top+N*size+end,left,top,end,cell:size,font,gap,padding,lineHeight,columnGap,slotWidth};
+      }
+    }
   };
 })();
 
@@ -863,7 +1017,7 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   function selectLine(axis,line){const same=terrainSelection?.axis===axis&&terrainSelection.line===line;selectBoardLine(axis,line===null||same?null:line);}
   window.selectTerrainLine=selectLine;window.clearTerrainSelection=()=>selectLine('row',null);
   if(!svg)return;
-  let tiles=[],stackLabels=[],lastValues=[],lastWidth=0,lastSolved=null,layout;
+  let tiles=[],stackLabels=[],lastValues=[],lastLayoutKey='',lastSolved=null,layout;
   function updateStatus(lines){
     for(const l of lines){
       const clue=C.combinedClues[l],feedback=ClueFeedback.evaluate(clue.cells.map(i=>boardState[i].includes(null)?null:C.sum(boardState[i])),clue.groups,clue.maximum);
@@ -893,28 +1047,38 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
     updateStatus(lines);
   }
   function renderOverview(){
-    const width=svg.parentElement.clientWidth;
-    if(!tiles.length||width!==lastWidth){
-      lastWidth=width;layout=window.getStackBoardLayout(width);
-      const {height,left,top,cell,end,font,padding,gap,lineHeight,columnGap}=layout,extent=N*cell;
+    const nextLayout=window.stackBoardLayout||window.getStackBoardLayout(svg.parentElement.clientWidth);
+    const key=`${nextLayout.width}:${nextLayout.height}:${nextLayout.font}`;
+    if(!tiles.length||key!==lastLayoutKey){
+      lastLayoutKey=key;layout=nextLayout;
+      const width=layout.width;
+      const {height,left,top,cell,end,font,lineHeight,slotWidth}=layout,extent=N*cell;
       svg.parentElement.style.height=height+'px';
+      svg.parentElement.style.width=width+'px';
       svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
-      const legendSize=Math.min(12,(left-8)/7);
-      let html=`<text class="overview-legend" x="${left/2}" y="${top/2-5}" text-anchor="middle" style="font-size:${legendSize}px">${C.channels===1?'명암 높이':'RGB 합산 높이'}</text><text class="overview-legend" x="${left/2}" y="${top/2+12}" text-anchor="middle" style="font-size:${legendSize}px">구간 스택 합</text>`;
+      let html='';
       for(let i=0;i<N*N;i++)html+=`<rect class="overview-cell" data-overview-cell="${i}" x="${left+i%N*cell}" y="${top+Math.floor(i/N)*cell}" width="${cell}" height="${cell}" stroke="#cbd4c4" stroke-width="1"><title></title></rect>`;
       for(let i=0;i<N*N;i++)html+=`<text class="overview-stack-total" data-stack-total="${i}" x="${left+i%N*cell+cell/2}" y="${top+Math.floor(i/N)*cell+cell/2}" text-anchor="middle" dominant-baseline="central" pointer-events="none" aria-hidden="true" style="font-size:${font}px"></text>`;
       for(const clue of C.combinedClues){
         const {axis,line,groups,maximum}=clue,row=axis==='row',l=line+(row?0:N),label=groups.join(' ');
         const x=row?0:left+line*cell,y=row?top+line*cell:0;
-        const text=!groups.length?'':row?`<text class="clue-text" x="${left-padding}" y="${cell/2}" text-anchor="end" dominant-baseline="central" style="font-size:${font}px">${groups.map((n,k)=>`<tspan data-clue-token="${k}" dx="${k?gap:0}">${n}</tspan>`).join('')}</text>`:groups.map((t,k)=>`<text data-clue-token="${k}" class="clue-text" x="${cell/2}" y="${top-padding-lineHeight/2-(groups.length-k-1)*(lineHeight+columnGap)}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${t}</text>`).join('');
-        html+=`<g class="overview-marker overview-run-clue" data-axis="${axis}" data-line="${line}" data-overview-clue="${l}" role="button" tabindex="0" aria-label="전체 ${line+1}${row?'행':'열'} 구간 스택 합계 ${label}" transform="translate(${x},${y})"><rect width="${row?left:cell}" height="${row?cell:top}"/>${text}</g>`;
-        html+=`<g class="overview-marker overview-maximum" data-axis="${axis}" data-line="${line}" data-overview-clue="${l}" role="button" tabindex="0" aria-label="전체 ${line+1}${row?'행':'열'} 최대 높이 ${maximum}" transform="translate(${row?left+extent:left+line*cell},${row?top+line*cell:top+extent})"><rect width="${row?end:cell}" height="${row?cell:end}"/><text class="clue-text" x="${(row?end:cell)/2}" y="${(row?cell:end)/2}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${maximum}</text></g>`;
+        const count=row?CLUE_SLOTS.row:CLUE_SLOTS.col;
+        const text=Array.from({length:count},(_,slot)=>{
+          const k=slot-(count-groups.length),width=row?slotWidth:cell,height=row?cell:lineHeight;
+          const tx=row?slot*slotWidth:0,ty=row?0:slot*lineHeight;
+          return k<0?'':`<text data-clue-token="${k}" class="clue-text" x="${tx+width/2}" y="${ty+height/2}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${groups[k]}</text>`;
+        }).join('');
+        const separator=`<path class="overview-clue-separator" d="${row?`M0 ${cell}H${left}`:`M${cell} 0V${top}`}"/>`;
+        html+=`<g class="overview-marker overview-run-clue" data-axis="${axis}" data-line="${line}" data-overview-clue="${l}" role="button" tabindex="0" aria-label="전체 ${line+1}${row?'행':'열'} 구간 스택 합계 ${label}" transform="translate(${x},${y})"><rect width="${row?left:cell}" height="${row?cell:top}"/>${text}${separator}</g>`;
+        html+=`<g class="overview-marker overview-maximum" data-axis="${axis}" data-line="${line}" data-overview-clue="${l}" role="button" tabindex="0" aria-label="전체 ${line+1}${row?'행':'열'} 최대 높이 ${maximum}" transform="translate(${row?left+extent:left+line*cell},${row?top+line*cell:top+extent})"><rect width="${row?end:cell}" height="${row?cell:end}"/><text class="clue-text" x="${(row?end:cell)/2}" y="${(row?cell:end)/2}" text-anchor="middle" dominant-baseline="central" style="font-size:${font}px">${maximum}</text><path class="overview-clue-separator" d="${row?`M0 ${cell}H${end}`:`M${cell} 0V${end}`}"/></g>`;
       }
-      html+='<rect id="overview-line-outline" fill="none" stroke="#426d51" stroke-width="1.5" pointer-events="none" visibility="hidden"/>';
+      html+='<rect id="overview-line-outline" fill="none" stroke="#426d51" stroke-width="1.5" pointer-events="none" visibility="hidden"/><rect id="overview-cursor" fill="none" stroke="#263e30" stroke-width="2" pointer-events="none"/>';
       svg.innerHTML=html;tiles=Array.from(svg.querySelectorAll('[data-overview-cell]'));stackLabels=Array.from(svg.querySelectorAll('[data-stack-total]'));lastValues=[];
     }
     updateCells(Array.from({length:N*N},(_,i)=>i));
     const outline=$('overview-line-outline'),{left,top,cell}=layout,extent=N*cell;
+    const cursor=$('overview-cursor');cursor.setAttribute('visibility',selected===null?'hidden':'visible');
+    if(selected!==null){cursor.setAttribute('x',left+selected%N*cell+1);cursor.setAttribute('y',top+Math.floor(selected/N)*cell+1);cursor.setAttribute('width',Math.max(0,cell-2));cursor.setAttribute('height',Math.max(0,cell-2));}
     outline.setAttribute('visibility',terrainSelection?'visible':'hidden');
     if(terrainSelection){const {axis,line}=terrainSelection;outline.setAttribute('x',left+(axis==='col'?line*cell:0));outline.setAttribute('y',top+(axis==='row'?line*cell:0));outline.setAttribute('width',axis==='row'?extent:cell);outline.setAttribute('height',axis==='row'?cell:extent);}
     svg.querySelectorAll('.overview-marker').forEach(el=>el.setAttribute('aria-pressed',terrainSelection?.axis===el.dataset.axis&&terrainSelection.line===Number(el.dataset.line)));
@@ -927,12 +1091,24 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
 
 (() => {
   const viewport=$('board-viewport'),board=$('board');
+  const frames=[$('game-panel'),$('terrain-panel')].filter(Boolean);
   function fitBoard(){
-    const layout=window.getStackBoardLayout(viewport.clientWidth);
+    const dpadArea=$('dpad-area');
+    const padding=getComputedStyle(dpadArea);
+    const dpadWidth=dpadArea.clientWidth-parseFloat(padding.paddingLeft)-parseFloat(padding.paddingRight);
+    const dpadHeight=dpadArea.clientHeight-parseFloat(padding.paddingTop)-parseFloat(padding.paddingBottom);
+    $('dpad').style.setProperty('--dpad-size',Math.max(0,Math.min(dpadWidth,dpadHeight))+'px');
+    const width=Math.min(...frames.map(el=>el.clientWidth))-2,height=Math.min(...frames.map(el=>el.clientHeight))-2;
+    if(width<=0||height<=0)return;
+    const layout=window.getStackBoardLayout(width,height);
+    window.stackBoardLayout=layout;
     for(const [name,value] of Object.entries({'clue-gap':layout.gap,'clue-column-gap':layout.columnGap,'number-size':layout.font,'cell-size':layout.cell,gutter:layout.left,top:layout.top,end:layout.end,bottom:layout.end})){
       board.style.setProperty('--'+name,value+'px');
     }
     board.style.setProperty('--n',N);
+    board.style.setProperty('--row-clue-slots',CLUE_SLOTS.row);
+    board.style.setProperty('--col-clue-slots',CLUE_SLOTS.col);
+    viewport.style.width=layout.width+'px';
     viewport.style.height=layout.height+'px';
     window.renderTerrain?.();
   }
@@ -943,13 +1119,30 @@ if(!storageOK)say('현재 브라우저에서는 자동 저장이 제한돼요. �
   const selectClue=e=>{const el=e.target.closest('[data-clue]');if(!el)return;const id=Number(el.dataset.clue);window.selectTerrainLine(id<N?'row':'col',id%N);};
   board.addEventListener('click',selectClue);
   board.addEventListener('keydown',e=>{if(e.target.matches('[data-clue]')&&['Enter',' '].includes(e.key)){e.preventDefault();selectClue(e);}});
-  window.revealBoardCell=i=>{if(i!==null)board.querySelector(`[data-index="${i}"]`)?.scrollIntoView({block:'nearest',inline:'nearest'});};
+  window.revealBoardCell=()=>{};
   window.revealBoardLine=()=>{};
-  window.addEventListener('scroll',finishStroke,{passive:true});
-  let lastWidth=0;
-  new ResizeObserver(()=>{if(viewport.clientWidth!==lastWidth){lastWidth=viewport.clientWidth;fitBoard();}}).observe(viewport);
+  let fitFrame=0;
+  const observer=new ResizeObserver(()=>{if(!fitFrame)fitFrame=requestAnimationFrame(()=>{fitFrame=0;fitBoard();});});
+  frames.forEach(frame=>observer.observe(frame));
+  observer.observe($('dpad-area'));
   window.syncLargeUI();
+  window.installStackDpad({
+    dpad:$('dpad'),buttons:[...$('height-picker').querySelectorAll('button')],
+    move:direction=>{
+      finishStroke();terrainSelection=null;
+      const i=selected??0,row=Math.floor(i/N),col=i%N;
+      selected=direction==='up'?Math.max(0,row-1)*N+col:direction==='down'?Math.min(N-1,row+1)*N+col:direction==='left'?row*N+Math.max(0,col-1):row*N+Math.min(N-1,col+1);
+      if(selected===i)return false;
+      cancelHint();render();window.revealBoardCell(selected);
+      return true;
+    },
+    choose:button=>{if(button.id!=='undo')choosePaint(button.id==='erase'?null:Number(button.dataset.value));},
+    apply:button=>{
+      if(button.id==='undo'){const cursor=selected;undo();selected=cursor;render();}
+      else{selected??=0;edit(button.id==='erase'?null:Number(button.dataset.value));}
+    }
+  });
 })();
 </script>
-<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-0304-b9f8e312d0656dbd',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=e93d2f4f120e" defer></script></body>
+<script>(()=>{const originalSave=save;function updateCollection(){try{localStorage.setItem('nonogram-stack-approved-status-0304-b9f8e312d0656dbd',JSON.stringify({filled:boardState.filter(cell=>cell[0]!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}}save=function(){originalSave();updateCollection();};updateCollection();})();</script><script src="site-integration.js?v=a15fa8e570c7" defer></script></body>
 </html>
