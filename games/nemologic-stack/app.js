@@ -122,16 +122,9 @@ function render(){
   if(MONO)names[0]=displayMode()==='color'?'색상':'명암';
   $('game-panel').hidden=channel===null;
   if($('terrain-panel'))$('terrain-panel').hidden=channel!==null;
-  if(!MONO&&channel!==null)$('game-panel').setAttribute('aria-labelledby','tab-'+channel);
   const theme=channel===null?['#64804e','#e8eedf']:themes[channel];
   document.documentElement.style.setProperty('--accent',theme[0]);document.documentElement.style.setProperty('--tint',theme[1]);
-  document.querySelectorAll('[data-tab]').forEach(button=>{const active=button.dataset.tab===String(tab);button.setAttribute('aria-selected',active);button.tabIndex=active?0:-1;});
   $('game-panel').setAttribute('aria-label',`${displayMode()==='color'?'컬러':'명암'} 퍼즐`);
-  document.querySelectorAll('[data-presentation]').forEach(button=>{
-    if(!button.matches('button'))return;
-    const active=button.dataset.presentation===displayMode();button.setAttribute('aria-selected',active);button.tabIndex=active?0:-1;
-  });
-  $('game-panel').setAttribute('aria-labelledby',displayMode()==='color'?'palette-color':'tab-0');
   const palette=displayPalette();
   document.querySelectorAll('#height-picker [data-value]').forEach(button=>{
     const value=Number(button.dataset.value);button.style.backgroundColor=palette[value];button.style.color=StackPalette.foreground(palette[value]);
@@ -345,12 +338,6 @@ $('board').addEventListener('click',e=>{
   setInputMode('touch');
   terrainSelection=null;selected=Number(cell.dataset.index);cancelHint();
   if(tab==='all'||paintValue==='select')render();else edit(paintValue);
-});
-document.querySelector('.tabs').addEventListener('click',e=>{const button=e.target.closest('button[data-presentation]');if(button)window.selectStackPalette(button.dataset.presentation);});
-document.querySelector('.tabs').addEventListener('keydown',e=>{
-  if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();
-  const mode=e.key==='Home'?'monochrome':e.key==='End'?'color':displayMode()==='color'?'monochrome':'color';
-  window.selectStackPalette(mode);document.querySelector(`button[data-presentation="${mode}"]`).focus();
 });
 $('undo').onclick=undo;$('erase').onclick=()=>choosePaint(null);if($('hint'))$('hint').onclick=hint;
 if($('check'))$('check').onclick=()=>{

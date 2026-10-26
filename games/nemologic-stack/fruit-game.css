@@ -35,8 +35,6 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
 .individual-sums .run-tokens{gap:var(--clue-gap,5px);font-size:var(--number-size);font-family:system-ui;line-height:1.25}
 .individual-sums .clue.top .run-tokens{gap:var(--clue-column-gap,4px)}
 .individual-sums .corner{font-size:12px;line-height:1.4;text-align:center}
-.tabs{margin:10px 0}
-.tabs button{height:32px}
 .tools{grid-template-columns:1fr;margin:6px 0 0}
 .tools button{min-height:34px}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip-path:inset(50%);white-space:nowrap;border:0}
@@ -70,8 +68,6 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 .play-area{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;gap:8px;overflow:hidden}
 .stack-sum-game #editor-panel{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;overflow:hidden;padding:0}
 .stack-sum-game #game-panel,.stack-sum-game #terrain-panel{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;min-height:0;overflow:hidden;padding:0;border:0}
-.stack-sum-game .tabs{flex:none;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 2px 6px;padding:3px}
-.stack-sum-game .palette-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
 .stack-sum-game #height-picker [data-value].current{outline:3px solid #b17b2e;outline-offset:-3px;box-shadow:inset 0 0 0 5px #ffffff80}
 .stack-sum-game #height-picker [data-value].held{filter:brightness(.9)}
 .stack-sum-game #board-viewport,.stack-sum-game .overview-stage{flex:none;min-width:0;min-height:0;margin:0;overflow:hidden;touch-action:none}
@@ -91,6 +87,5 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 @media(max-height:650px){
   .stack-sum-game .app{padding-top:4px}
   .stack-sum-game .shared-header{margin-bottom:4px}
-  .stack-sum-game .tabs button{height:26px}
 }
 @media(max-height:450px){.play-area{gap:6px}.stack-sum-game .height-picker #undo strong{font-size:14px}.stack-sum-game .height-picker span{font-size:6px}}

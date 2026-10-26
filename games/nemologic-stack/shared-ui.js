@@ -54,9 +54,8 @@
     return `${(12+radius*Math.cos(angle)).toFixed(3)} ${(12+radius*Math.sin(angle)).toFixed(3)}`;
   })).flat();
   const gearIcon=icon(`<path d="M${gearPoints.join('L')}Z"/><circle cx="12" cy="12" r="3.2"/>`);
-  const paletteControl=window.StackPuzzle?`<button class="nav-icon palette-toggle" id="palette-toggle" aria-label="컬러로 전환" aria-controls="board height-picker" aria-pressed="false">${icon('<rect data-palette-swatch="0" x="3" y="3" width="8" height="8" rx="2"/><rect data-palette-swatch="1" x="13" y="3" width="8" height="8" rx="2"/><rect data-palette-swatch="2" x="3" y="13" width="8" height="8" rx="2"/><rect data-palette-swatch="3" x="13" y="13" width="8" height="8" rx="2"/>')}<span>컬러</span></button>`:'';
   header.className='header shared-header';
-  header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle">${pixelLogo}<span class="wordmark-text">NonogramStack</span></${wordmarkTag}><div class="header-actions">${paletteControl}<button class="nav-icon" id="help" aria-label="게임 도움말" aria-haspopup="dialog" aria-controls="help-dialog"><span aria-hidden="true">?</span></button><button class="nav-icon" id="settings" aria-label="설정" aria-haspopup="dialog" aria-controls="settings-dialog">${gearIcon}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m12 5-7 7 7 7M5 12h14"/>')}</button></div>`;
+  header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle">${pixelLogo}<span class="wordmark-text">NonogramStack</span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="help" aria-label="게임 도움말" aria-haspopup="dialog" aria-controls="help-dialog"><span aria-hidden="true">?</span></button><button class="nav-icon" id="settings" aria-label="설정" aria-haspopup="dialog" aria-controls="settings-dialog">${gearIcon}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m12 5-7 7 7 7M5 12h14"/>')}</button></div>`;
   window.centerStackQuestionMarks();
   const help=document.getElementById('help-dialog')||document.createElement('dialog');
   const example=['01010','11111','22222','03330','00300'].map(row=>[...row].map(Number));
@@ -117,19 +116,12 @@
   document.getElementById('settings').onclick=()=>dialog.showModal();
   window.updateStackModeLabel=()=>{
     const current=mode();document.getElementById('mode-toggle').dataset.mode=current;
-    if(canToggle)document.getElementById('mode-toggle').setAttribute('aria-label',`NonogramStack · ${current==='color'?'흑백':'컬러'} 게임으로 전환`);
-    const toggle=document.getElementById('palette-toggle');
-    if(toggle){
-      const next=current==='color'?'monochrome':'color',label=next==='color'?'컬러로 전환':'명암으로 전환';
+    if(canToggle){
+      const toggle=document.getElementById('mode-toggle'),label=`NonogramStack · ${current==='color'?'흑백':'컬러'} 게임으로 전환`;
       toggle.setAttribute('aria-label',label);toggle.title=label;toggle.setAttribute('aria-pressed',String(current==='color'));
-      const caption=toggle.querySelector('span');caption.setAttribute('translate','no');
-      caption.textContent=window.StackI18n?.language==='en'?(next==='color'?'Color':'Gray'):(next==='color'?'컬러':'명암');
-      const colors=StackPalette.colors(window.StackPuzzle,next);
-      toggle.querySelectorAll('[data-palette-swatch]').forEach(swatch=>swatch.setAttribute('fill',colors[Number(swatch.dataset.paletteSwatch)]));
+      if(!isMenu)toggle.setAttribute('aria-controls','board height-picker');
     }
   };
-  const paletteToggle=document.getElementById('palette-toggle');
-  if(paletteToggle)paletteToggle.onclick=()=>window.selectStackPalette?.(mode()==='color'?'monochrome':'color');
   addEventListener('stack-language-change',()=>window.updateStackModeLabel());
   if(canToggle)document.getElementById('mode-toggle').onclick=()=>{
     const next=mode()==='color'?'monochrome':'color';

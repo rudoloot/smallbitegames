@@ -8,10 +8,7 @@
     const dpadHeight=dpadArea.clientHeight-parseFloat(padding.paddingTop)-parseFloat(padding.paddingBottom);
     $('dpad').style.setProperty('--dpad-size',Math.max(0,Math.min(dpadWidth,dpadHeight))+'px');
     const visibleFrames=frames.filter(frame=>!frame.hidden);
-    const tabsStyle=getComputedStyle(document.querySelector('.tabs')),buttonStyle=getComputedStyle($('tab-0'));
-    const tabSpace=parseFloat(buttonStyle.height)+parseFloat(tabsStyle.paddingTop)+parseFloat(tabsStyle.paddingBottom)+parseFloat(tabsStyle.marginTop)+parseFloat(tabsStyle.marginBottom);
-    const commonHeight=$('editor-panel').clientHeight-tabSpace;
-    const width=Math.min(...visibleFrames.map(el=>el.clientWidth))-2,height=Math.min(commonHeight,...visibleFrames.map(el=>el.clientHeight))-2;
+    const width=Math.min(...visibleFrames.map(el=>el.clientWidth))-2,height=Math.min(...visibleFrames.map(el=>el.clientHeight))-2;
     if(width<=0||height<=0)return;
     const layout=window.getStackBoardLayout(width,height);
     window.stackBoardLayout=layout;
