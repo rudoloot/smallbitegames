@@ -44,7 +44,21 @@ function save(){
 }
 function say(message,warning=false){$('message').textContent=message;$('message').classList.toggle('warning',warning);}
 function isSolved(){return boardState.every((cell,i)=>cell.every((v,c)=>v===C.solution[i][c]));}
-function rgb(values){const levels=MONO?Array(3).fill(255-Math.round((values[0]??0)*255/MAX_STACK)):values.map(v=>Math.round((v??0)*255/MAX_STACK));return 'rgb('+levels.join(',')+')';}
+function displayMode(){return document.body.dataset.presentation||'monochrome';}
+function displayPalette(){return StackPalette.colors(globalThis.StackPuzzle||{},displayMode());}
+function rgb(values){if(MONO)return displayPalette()[values[0]??0];const levels=values.map(v=>Math.round((v??0)*255/MAX_STACK));return 'rgb('+levels.join(',')+')';}
+function drawCompletedPicture(){
+  const ctx=$('win-art').getContext('2d');
+  ctx.fillStyle=displayPalette()[0];ctx.fillRect(0,0,300,300);
+  C.solution.forEach((cell,i)=>{ctx.fillStyle=rgb(cell);ctx.fillRect((i%N)*(260/N)+20,Math.floor(i/N)*(260/N)+20,260/N,260/N);});
+}
+window.selectStackPalette=mode=>{
+  finishStroke();window.stopStackControls?.();
+  document.body.dataset.presentation=mode==='color'?'color':'monochrome';
+  StackPalette.writeMode(displayMode());
+  const url=new URL(location.href);url.searchParams.set('mode',displayMode());window.history.replaceState(null,'',url);
+  render();if(completed)drawCompletedPicture();window.updateStackModeLabel?.();
+};
 function cancelHint(){pendingHint=null;if(!$('hint'))return;$('hint').classList.remove('pending');$('hint').innerHTML='<span aria-hidden="true">✦</span>논리 힌트';}
 function status(cells,channel,groups,total,knownClue){
   const data=cells.map(i=>channel==='all'?(boardState[i].every(v=>v!==null)?C.sum(boardState[i]):null):boardState[i][channel]);
@@ -73,8 +87,8 @@ function cellAppearance(i,channel){
     else if(cell.every(v=>v===0)){classes.push('zero');content='×';}
     else{bg=rgb(cell);fg='#ffffff';content=cell.some(v=>v===null)?'<span class="unknown-rgb">?</span>':'';}
   }else if(value===null){classes.push('unknown');}
-  else if(value===0){classes.push('zero');content='×';if(MONO)bg='#fff';}
-  else if(MONO){bg=rgb(cell);fg=value>=2?'#fff':'#333';content=String(value);}
+  else if(value===0){classes.push('zero');content='×';if(MONO){bg=rgb(cell);fg=StackPalette.foreground(bg);}}
+  else if(MONO){bg=rgb(cell);fg=StackPalette.foreground(bg);content=String(value);}
   else{
     const opacity=[0,.18,.36,.58,.84][Math.round(value*4/MAX_STACK)],colors=[[213,91,80],[73,143,92],[69,125,185]][channel];
     bg=`rgba(${colors.join(',')},${opacity})`;fg=value>=3?'#fff':themes[channel][0];
@@ -105,13 +119,26 @@ function render(){
   dragFrame=0;dirtyCells.clear();
   const focused=document.activeElement?.dataset?.index;
   const channel=tab==='all'?null:tab;
+  if(MONO)names[0]=displayMode()==='color'?'색상':'명암';
   $('game-panel').hidden=channel===null;
   if($('terrain-panel'))$('terrain-panel').hidden=channel!==null;
   if(!MONO&&channel!==null)$('game-panel').setAttribute('aria-labelledby','tab-'+channel);
   const theme=channel===null?['#64804e','#e8eedf']:themes[channel];
   document.documentElement.style.setProperty('--accent',theme[0]);document.documentElement.style.setProperty('--tint',theme[1]);
   document.querySelectorAll('[data-tab]').forEach(button=>{const active=button.dataset.tab===String(tab);button.setAttribute('aria-selected',active);button.tabIndex=active?0:-1;});
-  $('game-panel').setAttribute('aria-label',`${channel===null?'전체':names[channel]} 퍼즐`);
+  $('game-panel').setAttribute('aria-label',`${displayMode()==='color'?'컬러':'명암'} 퍼즐`);
+  document.querySelectorAll('[data-presentation]').forEach(button=>{
+    if(!button.matches('button'))return;
+    const active=button.dataset.presentation===displayMode();button.setAttribute('aria-selected',active);button.tabIndex=active?0:-1;
+  });
+  $('game-panel').setAttribute('aria-labelledby',displayMode()==='color'?'palette-color':'tab-0');
+  const palette=displayPalette();
+  document.querySelectorAll('#height-picker [data-value]').forEach(button=>{
+    const value=Number(button.dataset.value);button.style.backgroundColor=palette[value];button.style.color=StackPalette.foreground(palette[value]);
+    button.setAttribute('aria-label',`${value}스택`);
+  });
+  const next=new URL(StackPuzzle.next,location.href);if(next.pathname.endsWith('/game.html'))next.searchParams.set('mode',displayMode());else next.hash=displayMode();
+  $('next-puzzle').setAttribute('href',next.pathname.split('/').pop()+next.search+next.hash);
   if($('board-title'))$('board-title').textContent=channel===null?'COLOR COMPOSITE':['RED CHANNEL','GREEN CHANNEL','BLUE CHANNEL'][channel];
   if($('anchor-count'))$('anchor-count').textContent=channel===null?GIVEN_DATA.length:GIVEN_DATA.filter(g=>g.channel===channel).length;
   const lineInfo=['row','col'].map(axis=>Array.from({length:N},(_,line)=>{
@@ -179,9 +206,7 @@ function checkWin(){
   if(!isSolved())return;
   cancelHint();terrainSelection=null;render();save();say(`완성! ${N*N*CHANNEL_COUNT}개의 높이가 모두 맞아요.`);
   if(completed)return;completed=true;
-  const ctx=$('win-art').getContext('2d');
-  ctx.fillStyle=MONO?'#fff':'#172128';ctx.fillRect(0,0,300,300);
-  C.solution.forEach((cell,i)=>{if(C.sum(cell)===0)return;ctx.fillStyle=rgb(cell);ctx.fillRect((i%N)*(260/N)+20,Math.floor(i/N)*(260/N)+20,260/N,260/N);});
+  drawCompletedPicture();
   $('win-dialog').showModal();
 }
 function undo(){finishStroke();const action=history.pop();if(!action)return;for(const change of action.changes)boardState[change.index][action.channel]=change.before;selected=action.changes[0].index;tab=action.channel;completed=false;errors.clear();cancelHint();save();render();say(`${action.changes.length}칸의 입력을 되돌렸어요.`);}
@@ -321,8 +346,12 @@ $('board').addEventListener('click',e=>{
   terrainSelection=null;selected=Number(cell.dataset.index);cancelHint();
   if(tab==='all'||paintValue==='select')render();else edit(paintValue);
 });
-document.querySelector('.tabs').addEventListener('click',e=>{const button=e.target.closest('[data-tab]');if(button)setTab(button.dataset.tab==='all'?'all':Number(button.dataset.tab));});
-document.querySelector('.tabs').addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const order=TAB_ORDER,pos=order.indexOf(tab);setTab(e.key==='Home'?order[0]:e.key==='End'?order.at(-1):order[(pos+(e.key==='ArrowRight'?1:order.length-1))%order.length]);document.querySelector(`[data-tab="${tab}"]`).focus();});
+document.querySelector('.tabs').addEventListener('click',e=>{const button=e.target.closest('button[data-presentation]');if(button)window.selectStackPalette(button.dataset.presentation);});
+document.querySelector('.tabs').addEventListener('keydown',e=>{
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();
+  const mode=e.key==='Home'?'monochrome':e.key==='End'?'color':displayMode()==='color'?'monochrome':'color';
+  window.selectStackPalette(mode);document.querySelector(`button[data-presentation="${mode}"]`).focus();
+});
 $('undo').onclick=undo;$('erase').onclick=()=>choosePaint(null);if($('hint'))$('hint').onclick=hint;
 if($('check'))$('check').onclick=()=>{
   const mistakes=findMistakes();errors=new Set(mistakes.map(e=>`${e.index}:${e.channel}`));cancelHint();
@@ -343,7 +372,7 @@ document.querySelectorAll('dialog').forEach(d=>{
     if(beganOutside&&outside(e))d.close();
   });
 });
-$('confirm-reset').onclick=()=>{finishStroke();boardState=fresh();history=[];errors.clear();selected=null;tab=0;paintValue=0;completed=false;cancelHint();save();render();$('reset-dialog').close();say(C.noGivens?'빈 보드에서 시작해요. RGB 합계와 같은 높이 구간을 살펴보세요.':'처음부터 시작해요. ◆ 공개 높이에서 단서를 찾아보세요.');};
+$('confirm-reset').onclick=()=>{finishStroke();boardState=fresh();history=[];errors.clear();selected=null;tab=0;paintValue=0;completed=false;cancelHint();save();render();$('reset-dialog').close();say('빈 보드에서 시작해요. 같은 값의 구간 합과 최대 높이를 살펴보세요.');};
 document.addEventListener('keydown',e=>{
   if(document.querySelector('dialog[open]')||e.target.closest('.tabs,#terrain-panel')||e.target.matches('input,select'))return;
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}

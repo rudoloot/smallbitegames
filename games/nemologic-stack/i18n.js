@@ -1,6 +1,10 @@
 /* Shared Korean/English UI. Original text is retained when a rendered node is translated. */
 (() => {
   const messages=new Map(Object.entries({
+    '4단계 명암':'Grayscale','4색 컬러':'4 colors','도안 표현':'Picture colors','스택 입력':'Height input','완성된 그림':'Completed picture','색상':'Color',
+    '컬러':'Color','컬러로 전환':'Switch to color','명암으로 전환':'Switch to grayscale',
+    '0~3의 값마다 정해진 색으로 그림을 완성해요. ×는 0이에요. 4색 컬러와 4단계 명암은 같은 문제이며, 전환해도 단서와 입력은 그대로예요.':'Each value from 0 to 3 has its own color. × means 0. Color and grayscale show the same puzzle; switching preserves the clues and your entries.',
+    '빈 보드에서 시작해요. 같은 값의 구간 합과 최대 높이를 살펴보세요.':'Start with an empty board. Check equal-value run sums and the maximum height.',
     '게임 도움말':'Game help','도움말 닫기':'Close help','설정':'Settings','설정 닫기':'Close settings','뒤로가기':'Back',
     '문제를 불러오는 중입니다.':'Loading puzzle…','다시 시도':'Try again','문제 목록으로':'Puzzle list',
     '언어':'Language','조작 안내 표시':'Show control guide','게임 방법':'How to play','처음부터 다시 풀기':'Restart puzzle',
@@ -109,11 +113,12 @@
     if((match=text.match(/^(\d+)행 (\d+)열 피크로스$/)))return `${match[1]} by ${match[2]} nonogram`;
     if((match=text.match(/^(?:전체 )?(\d+)(행|열) (동일 높이 구간|연속 칸 수|구간 스택 합계|구간 합|최대 높이|최대|스택 합) (.*)$/)))return `${text.startsWith('전체')?'Combined ':''}${axis(match[2])} ${match[1]}, ${match[3].startsWith('최대')?'maximum height':'run sums'} ${match[4].replace('빈 줄','empty')||'empty'}`;
     if((match=text.match(/^(\d+)행 (\d+)열(.*)$/))){
-      const detail=match[3].replace(/RGB 전체뷰/g,'Combined RGB view').replace(/명암/g,'Grayscale').replace(/빨강/g,'Red').replace(/녹색/g,'Green').replace(/파랑/g,'Blue').replace(/미정/g,'unknown').replace(/(\d+)스택/g,'height $1').replace(/공개 높이/g,'given').replace(/안내 칸/g,'guided cell').replace(/현재 누적 /g,'current total ').replace(/완성된 색상/g,'finished color');
+      const detail=match[3].replace(/RGB 전체뷰/g,'Combined RGB view').replace(/명암/g,'Grayscale').replace(/색상/g,'Color').replace(/빨강/g,'Red').replace(/녹색/g,'Green').replace(/파랑/g,'Blue').replace(/미정/g,'unknown').replace(/(\d+)스택/g,'height $1').replace(/공개 높이/g,'given').replace(/안내 칸/g,'guided cell').replace(/현재 누적 /g,'current total ').replace(/완성된 색상/g,'finished color');
       return `Row ${match[1]}, column ${match[2]}${detail}`;
     }
     if(/^(행 미선택|\d+행), (열 미선택|\d+열)$/.test(text))return text.replace('행 미선택','No row selected').replace('열 미선택','No column selected').replace(/(\d+)행/,'Row $1').replace(/(\d+)열/,'column $1');
-    if((match=text.match(/^(명암|빨강|녹색|파랑|전체) 퍼즐$/)))return `${messages.get(match[1])} puzzle`;
+    if((match=text.match(/^(명암|컬러|빨강|녹색|파랑|전체) 퍼즐$/)))return `${match[1]==='컬러'?'Color':messages.get(match[1])} puzzle`;
+    if((match=text.match(/^(\d+)스택$/)))return `Height ${match[1]}`;
     if((match=text.match(/^NonogramStack · (흑백|컬러) 게임으로 전환$/)))return `NonogramStack · Switch to ${match[1]==='흑백'?'grayscale':'color'} puzzles`;
     if((match=text.match(/^완성된 문제 (\d+) 그림$/)))return `Completed picture for puzzle ${Number(match[1])}`;
     if((match=text.match(/^정답과 다른 입력이 (\d+)개 있어요\. 색상 탭의 붉은 테두리 칸을 확인해 주세요\.$/)))return `${match[1]} entries differ from the solution. Check the cells outlined in red in the color tabs.`;

@@ -9,7 +9,7 @@
     return response.json();
   }
   function loadScript(file){return new Promise((resolve,reject)=>{
-    const script=document.createElement('script');script.src=file+'?v=04798dd3c947';script.onload=resolve;
+    const script=document.createElement('script');script.src=file+'?v=744f3c8bfa68';script.onload=resolve;
     script.onerror=()=>reject(Error(`Could not load ${file}`));document.body.append(script);
   });}
   try{
@@ -18,32 +18,29 @@
     const puzzle=catalog.puzzles.find(entry=>entry.id===id);
     if(!puzzle)throw Error('Unknown puzzle');
     if(!/^pack-data\/(?:mono-)?game-\d+\.json$/.test(puzzle.data))throw Error('Invalid puzzle data path');
-    const [spec,layoutProfile]=await Promise.all([readJSON(puzzle.data),readJSON(`pack-data/layout-profile-${puzzle.size}.json`)]),channels=puzzle.mode==='monochrome'?1:3;
+    const [spec,layoutProfile]=await Promise.all([readJSON(puzzle.data),readJSON(`pack-data/layout-profile-${puzzle.size}.json`)]),channels=1;
     if(!Number.isInteger(puzzle.size)||puzzle.size<1||spec.width!==puzzle.size||spec.height!==puzzle.size||
-      spec.storageKey!==puzzle.storageKey||spec.maxStack!==3||(spec.channels||3)!==channels||
+      spec.storageKey!==puzzle.storageKey||spec.maxStack!==3||spec.channels!==channels||
       !Array.isArray(spec.cells)||spec.cells.length!==puzzle.size*puzzle.size||
       !spec.cells.every(cell=>Array.isArray(cell)&&cell.length===channels&&cell.every(value=>Number.isInteger(value)&&value>=0&&value<=3)))throw Error('Invalid puzzle data');
     if(layoutProfile.size!==puzzle.size||!['rows','columns'].every(axis=>Array.isArray(layoutProfile[axis])&&layoutProfile[axis].length&&layoutProfile[axis].every(groups=>Array.isArray(groups)&&groups.length<=puzzle.size&&groups.every(value=>Number.isInteger(value)&&value>=0&&value<=puzzle.size*9))))throw Error('Invalid layout profile');
-    const mono=channels===1,n=puzzle.size;
+    const n=puzzle.size,requestedMode=new URLSearchParams(location.search).get('mode');
+    document.body.dataset.presentation=requestedMode==='color'||requestedMode==='monochrome'?requestedMode:StackPalette.readMode();
+    StackPalette.writeMode(document.body.dataset.presentation);
     globalThis.StackPuzzle=puzzle;globalThis.StackLayoutProfile=layoutProfile;globalThis.GIVEN_DATA=[];
-    if(mono)globalThis.MONO_SPEC=spec;else globalThis.PUZZLE_SPEC=spec;
-    globalThis.PicrossCore=(mono?MonochromeCore:StackSumCore).createCore(spec);
-    document.body.classList.toggle('monochrome-game',mono);
-    document.title=mono?`흑백 문제 ${puzzle.number} · 노노그램스택`:`문제 ${String(puzzle.number).padStart(2,'0')} · 노노그램스택 · ${n}×${n} 스택 피크로스`;
+    globalThis.MONO_SPEC=spec;
+    globalThis.PicrossCore=MonochromeCore.createCore(spec);
+    document.body.classList.add('monochrome-game');
+    document.title=`문제 ${puzzle.number} · 노노그램스택`;
     $('board').setAttribute('aria-label',`${n}행 ${n}열 피크로스`);
     $('board-viewport').setAttribute('aria-label',`화면에 맞춘 ${n}×${n} 입력판`);
-    $('editor-panel').setAttribute('aria-label',mono?'명암 스택 입력':'색상별 스택 입력');
-    if(mono){
-      document.querySelector('.tabs').outerHTML='<nav class="tabs" aria-label="명암 입력" hidden><button id="tab-0" data-tab="0" aria-selected="true">명암</button></nav>';
-      $('game-panel').setAttribute('aria-label','명암 퍼즐');
-      $('terrain-panel').remove();
-    }else $('overview-svg').setAttribute('aria-label',`${n}행 ${n}열 RGB 전체뷰`);
-    $('win-art').setAttribute('aria-label',mono?'완성된 흑백 그림':`완성된 문제 ${String(puzzle.number).padStart(2,'0')} 그림`);
+    $('editor-panel').setAttribute('aria-label','스택 입력');
+    $('win-art').setAttribute('aria-label','완성된 그림');
     const answer=spec.answer||spec.source?.subject;
     if(answer){$('win-description').textContent=answer;$('win-description').classList.add('win-answer');}
     else $('win-description').textContent=`${n*n*channels}개의 높이를 모두 찾았어요.`;
     $('next-puzzle').href=puzzle.next;$('next-puzzle').textContent=puzzle.nextLabel;
-    for(const file of ['i18n.js','shared-ui.js','clue-feedback.js','app.js','board-layout.js','overview-stack-sums.js','fruit-game-ui.js'])await loadScript(file);
+    for(const file of ['i18n.js','shared-ui.js','clue-feedback.js','app.js','board-layout.js','fruit-game-ui.js'])await loadScript(file);
     $('game-loading').hidden=true;delete document.body.dataset.loading;
     globalThis.stackGameReady=true;dispatchEvent(new Event('stack-game-ready'));
   }catch(error){

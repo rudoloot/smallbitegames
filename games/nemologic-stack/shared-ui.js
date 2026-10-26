@@ -3,8 +3,7 @@
   const header=document.querySelector('main > header');
   if(!header)return;
   const isMenu=!!document.querySelector('#monochrome-games');
-  const mode=()=>isMenu?(document.body.dataset.mode||'monochrome'):
-    document.body.classList.contains('monochrome-game')||document.querySelector('.tutorial-app')?'monochrome':'color';
+  const mode=()=>isMenu?(document.body.dataset.mode||'monochrome'):(document.body.dataset.presentation||'monochrome');
   const icon=path=>`<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${path}</svg>`;
   const questionContext=document.createElement('canvas').getContext('2d'),questionOffsets=new Map();
   window.centerStackQuestionMarks=(root=document)=>{
@@ -48,14 +47,16 @@
   }).join('');
   const logoWidth=pen-.5;
   const pixelLogo=`<svg class="wordmark-logo" viewBox="0 0 ${logoWidth} 8" width="136" height="16" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true"><defs><linearGradient id="wordmark-rainbow" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${logoWidth}" y2="0"><stop offset="0" stop-color="#d64d55"/><stop offset=".16" stop-color="#df8739"/><stop offset=".33" stop-color="#91a83e"/><stop offset=".5" stop-color="#409665"/><stop offset=".66" stop-color="#398fba"/><stop offset=".83" stop-color="#6f68bb"/><stop offset="1" stop-color="#b559a5"/></linearGradient></defs>${pixelLetters}</svg>`;
-  const wordmarkTag=isMenu?'button':'div';
+  const canToggle=isMenu||!!window.StackPuzzle;
+  const wordmarkTag=canToggle?'button':'div';
   const gearPoints=Array.from({length:8},(_,tooth)=>[[7.2,-22.5],[7.2,-14],[9.5,-9],[9.5,9],[7.2,14]].map(([radius,offset])=>{
     const angle=(tooth*45+offset-90)*Math.PI/180;
     return `${(12+radius*Math.cos(angle)).toFixed(3)} ${(12+radius*Math.sin(angle)).toFixed(3)}`;
   })).flat();
   const gearIcon=icon(`<path d="M${gearPoints.join('L')}Z"/><circle cx="12" cy="12" r="3.2"/>`);
+  const paletteControl=window.StackPuzzle?`<button class="nav-icon palette-toggle" id="palette-toggle" aria-label="컬러로 전환" aria-controls="board height-picker" aria-pressed="false">${icon('<rect data-palette-swatch="0" x="3" y="3" width="8" height="8" rx="2"/><rect data-palette-swatch="1" x="13" y="3" width="8" height="8" rx="2"/><rect data-palette-swatch="2" x="3" y="13" width="8" height="8" rx="2"/><rect data-palette-swatch="3" x="13" y="13" width="8" height="8" rx="2"/>')}<span>컬러</span></button>`:'';
   header.className='header shared-header';
-  header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle">${pixelLogo}<span class="wordmark-text">NonogramStack</span></${wordmarkTag}><div class="header-actions"><button class="nav-icon" id="help" aria-label="게임 도움말" aria-haspopup="dialog" aria-controls="help-dialog"><span aria-hidden="true">?</span></button><button class="nav-icon" id="settings" aria-label="설정" aria-haspopup="dialog" aria-controls="settings-dialog">${gearIcon}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m12 5-7 7 7 7M5 12h14"/>')}</button></div>`;
+  header.innerHTML=`<${wordmarkTag} class="wordmark" id="mode-toggle">${pixelLogo}<span class="wordmark-text">NonogramStack</span></${wordmarkTag}><div class="header-actions">${paletteControl}<button class="nav-icon" id="help" aria-label="게임 도움말" aria-haspopup="dialog" aria-controls="help-dialog"><span aria-hidden="true">?</span></button><button class="nav-icon" id="settings" aria-label="설정" aria-haspopup="dialog" aria-controls="settings-dialog">${gearIcon}</button><button class="nav-icon" id="navigate-back" aria-label="뒤로가기">${icon('<path d="m12 5-7 7 7 7M5 12h14"/>')}</button></div>`;
   window.centerStackQuestionMarks();
   const help=document.getElementById('help-dialog')||document.createElement('dialog');
   const example=['01010','11111','22222','03330','00300'].map(row=>[...row].map(Number));
@@ -76,7 +77,7 @@
   help.innerHTML=`<div class="settings-top"><h2 id="help-title">게임 도움말</h2><button class="nav-icon" data-close="help-dialog" aria-label="도움말 닫기">×</button></div>
     <section class="help-section"><h3>숨은 그림 찾기</h3>
       <p data-help-mode="monochrome">각 칸을 0~3의 명암으로 채워 그림을 완성해요. ×는 0(흰색), 1은 밝은 회색, 2는 어두운 회색, 3은 검정이에요.</p>
-      <p data-help-mode="color">빨강·녹색·파랑 탭에서 각 색상을 0~3의 값으로 채워 그림을 완성해요. 세 색상의 값을 조합해 칸의 색을 만들어요.</p>
+      <p data-help-mode="color">0~3의 값마다 정해진 색으로 그림을 완성해요. ×는 0이에요. 4색 컬러와 4단계 명암은 같은 문제이며, 전환해도 단서와 입력은 그대로예요.</p>
     </section>
     ${helpExample}
     <section class="help-section"><h3>힌트 숫자 읽기</h3><ul>
@@ -91,6 +92,11 @@
   help.addEventListener('click',e=>{if(e.target===help){const r=help.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)help.close();}});
   const showHelp=()=>{
     help.querySelectorAll('[data-help-mode]').forEach(el=>el.hidden=el.dataset.helpMode!==mode());
+    const palette=window.StackPalette?.colors(window.StackPuzzle||{},mode());
+    if(palette)help.querySelectorAll('[data-help-cell]').forEach(cell=>{
+      cell.setAttribute('fill',palette[Number(cell.dataset.height)]);
+      cell.nextElementSibling?.setAttribute('fill',StackPalette.foreground(palette[Number(cell.dataset.height)]));
+    });
     if(!help.open)help.showModal();
   };
   document.getElementById('help').onclick=showHelp;
@@ -111,12 +117,24 @@
   document.getElementById('settings').onclick=()=>dialog.showModal();
   window.updateStackModeLabel=()=>{
     const current=mode();document.getElementById('mode-toggle').dataset.mode=current;
-    if(isMenu)document.getElementById('mode-toggle').setAttribute('aria-label',`NonogramStack · ${current==='color'?'흑백':'컬러'} 게임으로 전환`);
+    if(canToggle)document.getElementById('mode-toggle').setAttribute('aria-label',`NonogramStack · ${current==='color'?'흑백':'컬러'} 게임으로 전환`);
+    const toggle=document.getElementById('palette-toggle');
+    if(toggle){
+      const next=current==='color'?'monochrome':'color',label=next==='color'?'컬러로 전환':'명암으로 전환';
+      toggle.setAttribute('aria-label',label);toggle.title=label;toggle.setAttribute('aria-pressed',String(current==='color'));
+      const caption=toggle.querySelector('span');caption.setAttribute('translate','no');
+      caption.textContent=window.StackI18n?.language==='en'?(next==='color'?'Color':'Gray'):(next==='color'?'컬러':'명암');
+      const colors=StackPalette.colors(window.StackPuzzle,next);
+      toggle.querySelectorAll('[data-palette-swatch]').forEach(swatch=>swatch.setAttribute('fill',colors[Number(swatch.dataset.paletteSwatch)]));
+    }
   };
-  if(isMenu)document.getElementById('mode-toggle').onclick=()=>{
+  const paletteToggle=document.getElementById('palette-toggle');
+  if(paletteToggle)paletteToggle.onclick=()=>window.selectStackPalette?.(mode()==='color'?'monochrome':'color');
+  addEventListener('stack-language-change',()=>window.updateStackModeLabel());
+  if(canToggle)document.getElementById('mode-toggle').onclick=()=>{
     const next=mode()==='color'?'monochrome':'color';
     try{localStorage.setItem('nonogram-stack-mode',next);}catch{}
-    window.selectStackMode(next);
+    if(isMenu)window.selectStackMode(next);else window.selectStackPalette?.(next);
   };
   document.getElementById('navigate-back').onclick=()=>{
     if(isMenu){if(history.length>1)history.back();}else location.href='collection.html#'+mode();

@@ -71,6 +71,9 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 .stack-sum-game #editor-panel{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;overflow:hidden;padding:0}
 .stack-sum-game #game-panel,.stack-sum-game #terrain-panel{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;min-height:0;overflow:hidden;padding:0;border:0}
 .stack-sum-game .tabs{flex:none;grid-template-columns:repeat(4,minmax(0,1fr));margin:0 2px 6px;padding:3px}
+.stack-sum-game .palette-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.stack-sum-game #height-picker [data-value].current{outline:3px solid #b17b2e;outline-offset:-3px;box-shadow:inset 0 0 0 5px #ffffff80}
+.stack-sum-game #height-picker [data-value].held{filter:brightness(.9)}
 .stack-sum-game #board-viewport,.stack-sum-game .overview-stage{flex:none;min-width:0;min-height:0;margin:0;overflow:hidden;touch-action:none}
 .stack-sum-game #board{flex:none}
 .stack-sum-game .input-dock{position:static;inset:auto;flex:0 0 25dvh;height:25dvh;min-height:0;margin-top:0;padding:6px 6px max(6px,env(safe-area-inset-bottom));box-shadow:none}

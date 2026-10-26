@@ -11,6 +11,9 @@ button.wordmark{cursor:pointer}
 .shared-header .header-actions{display:flex;align-items:center;gap:6px}
 .nav-icon{box-sizing:border-box;display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid #d8ded2;border-radius:10px;background:#fffef9;color:#52644f;cursor:pointer;font:20px/1 system-ui}
 .nav-icon svg{display:block;width:20px;height:20px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.palette-toggle{grid-template-rows:17px 10px;gap:1px;align-content:center}
+.palette-toggle svg{width:17px;height:17px;stroke-width:1}
+.palette-toggle span{font-size:9px;font-weight:650;line-height:10px;white-space:nowrap}
 #help span{display:block;font-size:22px;font-weight:650;line-height:1;transform:translate(var(--question-offset-x,0px),var(--question-offset-y,0px))}
 .nav-icon:disabled{opacity:.35;cursor:default}
 .wordmark:focus-visible,.nav-icon:focus-visible{outline:2px solid #548c67;outline-offset:2px}

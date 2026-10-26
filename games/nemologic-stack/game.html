@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f5f5ef">
   <title>NonogramStack</title>
-    <link rel="stylesheet" href="style.css?v=04798dd3c947">
-  <link rel="stylesheet" href="terrain.css?v=04798dd3c947">
-  <link rel="stylesheet" href="layout.css?v=04798dd3c947">
-  <link rel="stylesheet" href="bull-game.css?v=04798dd3c947">
-  <link rel="stylesheet" href="fruit-game.css?v=04798dd3c947">
-  <link rel="stylesheet" href="shared-ui.css?v=04798dd3c947">
+    <link rel="stylesheet" href="style.css?v=744f3c8bfa68">
+  <link rel="stylesheet" href="terrain.css?v=744f3c8bfa68">
+  <link rel="stylesheet" href="layout.css?v=744f3c8bfa68">
+  <link rel="stylesheet" href="bull-game.css?v=744f3c8bfa68">
+  <link rel="stylesheet" href="fruit-game.css?v=744f3c8bfa68">
+  <link rel="stylesheet" href="shared-ui.css?v=744f3c8bfa68">
 </head>
 <body class="individual-sums stack-sum-game" data-loading>
 <p id="game-loading" role="status">문제를 불러오는 중입니다.</p>
@@ -18,21 +18,16 @@
 <main class="app">
   <header class="header"></header>
   <div class="play-area">
-  <section id="editor-panel" aria-label="색상별 스택 입력">
-  <nav class="tabs" aria-label="색상 탭" role="tablist">
-    <button id="tab-0" role="tab" data-tab="0" aria-controls="game-panel" aria-selected="true"><span class="dot red"></span>빨강</button>
-    <button id="tab-1" role="tab" data-tab="1" aria-controls="game-panel" aria-selected="false"><span class="dot green"></span>녹색</button>
-    <button id="tab-2" role="tab" data-tab="2" aria-controls="game-panel" aria-selected="false"><span class="dot blue"></span>파랑</button>
-    <button id="tab-all" role="tab" data-tab="all" aria-controls="terrain-panel" aria-selected="false"><span class="all-dot"></span>전체</button>
+  <section id="editor-panel" aria-label="스택 입력">
+  <nav class="tabs palette-tabs" aria-label="도안 표현" role="tablist">
+    <button id="tab-0" role="tab" data-presentation="monochrome" aria-controls="game-panel" aria-selected="true">4단계 명암</button>
+    <button id="palette-color" role="tab" data-presentation="color" aria-controls="game-panel" aria-selected="false">4색 컬러</button>
   </nav>
-  <section id="game-panel" role="tabpanel" aria-labelledby="tab-0" aria-label="빨강 퍼즐">
+  <section id="game-panel" role="tabpanel" aria-labelledby="tab-0" aria-label="명암 퍼즐">
 
     <div id="board-viewport"><div id="board" class="board" role="group" aria-label="10행 10열 피크로스"></div></div>
     <div class="under-board"><span>위·왼쪽 <b>연속 칸 수</b></span><span>아래·오른쪽 <b>최대 높이</b></span></div>
     <div id="diagonals" class="diagonals" hidden></div>
-  </section>
-  <section id="terrain-panel" role="tabpanel" aria-labelledby="tab-all" aria-label="RGB 전체뷰" hidden>
-    <div class="overview-stage"><svg id="overview-svg" role="group"></svg></div>
   </section>
   <div id="message" class="message sr-only" aria-live="polite">같은 높이 구간의 스택 합계와 최대 높이를 단서로 시작해 보세요.</div>
   </section>
@@ -56,9 +51,10 @@
 <dialog id="help-dialog"></dialog>
 <dialog id="reset-dialog"><span class="eyebrow">START AGAIN</span><h2>처음부터 다시 풀까요?</h2><p>입력한 높이를 모두 지우고 빈 보드에서 시작해요.</p><div class="dialog-actions"><button data-close="reset-dialog">계속 풀기</button><button class="primary-button" id="confirm-reset">다시 시작</button></div></dialog>
 <dialog id="win-dialog"><span class="eyebrow">PICTURE COMPLETE</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300"></canvas><p id="win-description"></p><button class="primary-button" data-close="win-dialog">완성된 그림 보기</button><a id="next-puzzle" class="collection-next"></a></dialog>
-<script src="puzzle-core-height-runs.js?v=04798dd3c947" defer></script>
-<script src="puzzle-core-stack-sums.js?v=04798dd3c947" defer></script>
-<script src="puzzle-core-monochrome.js?v=04798dd3c947" defer></script>
-<script src="game-loader.js?v=04798dd3c947" defer></script>
-<script src="site-integration.js?v=e39563aba173" defer></script></body>
+<script src="puzzle-core-height-runs.js?v=744f3c8bfa68" defer></script>
+<script src="puzzle-core-stack-sums.js?v=744f3c8bfa68" defer></script>
+<script src="puzzle-core-monochrome.js?v=744f3c8bfa68" defer></script>
+<script src="puzzle-palette.js?v=744f3c8bfa68" defer></script>
+<script src="game-loader.js?v=744f3c8bfa68" defer></script>
+<script src="site-integration.js?v=333cbfd26d0c" defer></script></body>
 </html>
