@@ -1,0 +1,352 @@
+{
+  "id": "4912",
+  "title": "흑백 문제 812",
+  "width": 10,
+  "height": 10,
+  "channels": 1,
+  "maxStack": 3,
+  "paletteSize": 4,
+  "levels": [
+    0,
+    0.3333333333333333,
+    0.6666666666666666,
+    1
+  ],
+  "rule": "height-runs-max",
+  "omitAllZeros": true,
+  "noGivens": true,
+  "givens": [],
+  "cells": [
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ]
+  ],
+  "storageKey": "nonogram-stack-approved-v1-4912-c1797dbe488b2e6a",
+  "clueCountLimit": 12,
+  "adjustment": {
+    "targetEmptyPercent": 54
+  },
+  "source": {
+    "kind": "human-approved-handoff",
+    "subject": "향수분무기",
+    "categoryId": "49",
+    "category": "미용과 돌봄 도구",
+    "rank": 12,
+    "versionId": "cbe4510d-43b9-4785-a0ed-07abd190cfbd",
+    "imageSha256": "c1797dbe488b2e6aaf78d809aa47f164091504ea19de25e9769281ac9c930198",
+    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/4912",
+    "approvedAt": "2026-10-26T09:46:54.341Z",
+    "artHandoff": {
+      "root": "art-handoff",
+      "schemaVersion": 1,
+      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
+      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
+      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+    },
+    "colorPalette": [
+      "#f8f4fb",
+      "#cdafdf",
+      "#8e49b6",
+      "#3f2050"
+    ],
+    "colorFamily": "purple"
+  },
+  "omitOuterZeros": true
+}

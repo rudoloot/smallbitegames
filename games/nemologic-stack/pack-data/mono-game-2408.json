@@ -1,0 +1,352 @@
+{
+  "id": "2408",
+  "title": "흑백 문제 262",
+  "width": 10,
+  "height": 10,
+  "channels": 1,
+  "maxStack": 3,
+  "paletteSize": 4,
+  "levels": [
+    0,
+    0.3333333333333333,
+    0.6666666666666666,
+    1
+  ],
+  "rule": "height-runs-max",
+  "omitAllZeros": true,
+  "noGivens": true,
+  "givens": [],
+  "cells": [
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ]
+  ],
+  "storageKey": "nonogram-stack-approved-v1-2408-f0e585e1f48dbb57",
+  "clueCountLimit": 12,
+  "adjustment": {
+    "targetEmptyPercent": 62
+  },
+  "source": {
+    "kind": "human-approved-handoff",
+    "subject": "양궁활",
+    "categoryId": "24",
+    "category": "야외와 개인 스포츠",
+    "rank": 8,
+    "versionId": "63fbb980-71f8-41a8-9b32-bca006653e70",
+    "imageSha256": "f0e585e1f48dbb571b13a6fd889229d35e01529c7323ecd1f3dea4bf3c3eb460",
+    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/2408",
+    "approvedAt": "2026-10-28T12:49:19.715Z",
+    "artHandoff": {
+      "root": "art-handoff",
+      "schemaVersion": 1,
+      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
+      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
+      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+    },
+    "colorPalette": [
+      "#fbf8f4",
+      "#e2caac",
+      "#bd8842",
+      "#533c1d"
+    ],
+    "colorFamily": "wood"
+  },
+  "omitOuterZeros": true
+}

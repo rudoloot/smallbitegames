@@ -1,0 +1,352 @@
+{
+  "id": "2601",
+  "title": "흑백 문제 661",
+  "width": 10,
+  "height": 10,
+  "channels": 1,
+  "maxStack": 3,
+  "paletteSize": 4,
+  "levels": [
+    0,
+    0.3333333333333333,
+    0.6666666666666666,
+    1
+  ],
+  "rule": "height-runs-max",
+  "omitAllZeros": true,
+  "noGivens": true,
+  "givens": [],
+  "cells": [
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ]
+  ],
+  "storageKey": "nonogram-stack-approved-v1-2601-94fc056c4cd90d34",
+  "clueCountLimit": 12,
+  "adjustment": {
+    "targetEmptyPercent": 52
+  },
+  "source": {
+    "kind": "human-approved-handoff",
+    "subject": "우체통",
+    "categoryId": "26",
+    "category": "도시 시설",
+    "rank": 1,
+    "versionId": "088c7794-40d5-4f3d-b08a-d981ca6634b8",
+    "imageSha256": "94fc056c4cd90d345a8c931e327f415b2292027f7bf1b97842dc7c141c0ab109",
+    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/2601",
+    "approvedAt": "2026-10-26T08:36:45.505Z",
+    "artHandoff": {
+      "root": "art-handoff",
+      "schemaVersion": 1,
+      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
+      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
+      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+    },
+    "colorPalette": [
+      "#fcf3f3",
+      "#eaa6a4",
+      "#d0352f",
+      "#5b1715"
+    ],
+    "colorFamily": "red"
+  },
+  "omitOuterZeros": true
+}

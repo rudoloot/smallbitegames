@@ -1,0 +1,352 @@
+{
+  "id": "2118",
+  "title": "흑백 문제 404",
+  "width": 10,
+  "height": 10,
+  "channels": 1,
+  "maxStack": 3,
+  "paletteSize": 4,
+  "levels": [
+    0,
+    0.3333333333333333,
+    0.6666666666666666,
+    1
+  ],
+  "rule": "height-runs-max",
+  "omitAllZeros": true,
+  "noGivens": true,
+  "givens": [],
+  "cells": [
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ]
+  ],
+  "storageKey": "nonogram-stack-approved-v1-2118-39c7496eda7ffa61",
+  "clueCountLimit": 12,
+  "adjustment": {
+    "targetEmptyPercent": 53
+  },
+  "source": {
+    "kind": "human-approved-handoff",
+    "subject": "줄자",
+    "categoryId": "21",
+    "category": "공작과 수공구",
+    "rank": 18,
+    "versionId": "b7e6ad83-deab-4a35-a26b-b38e85b64541",
+    "imageSha256": "39c7496eda7ffa6100ebf527473b555d8b5b2137e7c3f02954583f12117f0c4c",
+    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/2118",
+    "approvedAt": "2026-10-26T05:49:33.752Z",
+    "artHandoff": {
+      "root": "art-handoff",
+      "schemaVersion": 1,
+      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
+      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
+      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+    },
+    "colorPalette": [
+      "#fdfbf1",
+      "#f4e29a",
+      "#e6bd19",
+      "#65530b"
+    ],
+    "colorFamily": "yellow"
+  },
+  "omitOuterZeros": true
+}

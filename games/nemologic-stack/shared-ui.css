@@ -37,13 +37,17 @@ button.wordmark{cursor:pointer}
 .tutorial-start:focus-visible{outline:3px solid #548c67;outline-offset:3px}
 .settings-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.settings-top h2{margin:0;font-size:20px}
 #settings-dialog p{font-size:12px;line-height:1.8;color:#6b7a62;margin:16px 0}.settings-actions{display:grid;gap:8px}.settings-actions button{border:1px solid #d6dfcf;background:#edf0e7;border-radius:8px;padding:11px;font:12px system-ui;color:#486044;cursor:pointer}
-.dpad{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));width:124px;height:124px;touch-action:none;user-select:none;-webkit-user-select:none;flex-shrink:0}
-.dpad button{display:grid;place-items:center;min-width:0;min-height:0;padding:0;border:1px solid #bdcbb4;border-radius:6px;background:#edf1e6;color:#52674b;touch-action:none;-webkit-touch-callout:none;cursor:pointer}
-.dpad [data-direction="up"]{grid-area:1/2}.dpad [data-direction="left"]{grid-area:2/1}.dpad [data-direction="right"]{grid-area:2/3}.dpad [data-direction="down"]{grid-area:3/2}
-.dpad-center{grid-area:2/2;background:#edf1e6;box-shadow:inset 0 0 0 1px #d6dfcf;pointer-events:none}
-.dpad button svg{width:48%;height:48%;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
-.dpad button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
-.dpad:focus-visible,.dpad button:focus-visible{outline:3px solid #548c67;outline-offset:1px}
+.dpad{box-sizing:border-box;position:relative;display:block;width:124px;height:124px;border:1px solid #bdcbb4;border-radius:50%;background:#edf1e6;touch-action:none;user-select:none;-webkit-user-select:none;flex-shrink:0}
+.dpad button{box-sizing:border-box;position:absolute;inset:0;width:100%;height:100%;min-width:0;min-height:0;padding:0;border:0;border-radius:50%;background:#edf1e6;color:#52674b;touch-action:none;-webkit-touch-callout:none;cursor:pointer}
+.dpad [data-direction="up"]{clip-path:polygon(0 0,100% 0,50% 50%)}
+.dpad [data-direction="left"]{clip-path:polygon(0 0,50% 50%,0 100%)}
+.dpad [data-direction="right"]{clip-path:polygon(100% 0,100% 100%,50% 50%)}
+.dpad [data-direction="down"]{clip-path:polygon(0 100%,50% 50%,100% 100%)}
+.dpad::after{content:'';position:absolute;inset:0;border-radius:50%;background:linear-gradient(45deg,transparent calc(50% - .6px),#bdcbb4 calc(50% - .6px),#bdcbb4 calc(50% + .6px),transparent calc(50% + .6px)),linear-gradient(-45deg,transparent calc(50% - .6px),#bdcbb4 calc(50% - .6px),#bdcbb4 calc(50% + .6px),transparent calc(50% + .6px));pointer-events:none}
+.dpad button svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22%;height:22%;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.dpad [data-direction="up"] svg{top:22%}.dpad [data-direction="left"] svg{left:22%}.dpad [data-direction="right"] svg{left:78%}.dpad [data-direction="down"] svg{top:78%}
+.dpad button.held,.dpad button:focus-visible{background:#d2dfcb;box-shadow:none;outline:none}
+.dpad:focus-visible,.dpad:has(button:focus-visible){outline:3px solid #548c67;outline-offset:2px}
 .height-picker button,.tutorial-tools button{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .height-picker button.held,.tutorial-tools button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
 @media(max-width:360px){.wordmark-logo{width:136px;height:16px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px}.dpad{width:110px;height:110px}}

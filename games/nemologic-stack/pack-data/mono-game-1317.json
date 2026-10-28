@@ -1,6 +1,6 @@
 {
   "id": "1317",
-  "title": "흑백 문제 133",
+  "title": "흑백 문제 164",
   "width": 10,
   "height": 10,
   "channels": 1,
@@ -14,6 +14,7 @@
   ],
   "rule": "height-runs-max",
   "omitAllZeros": true,
+  "noGivens": true,
   "givens": [],
   "cells": [
     [
@@ -50,7 +51,7 @@
       0
     ],
     [
-      2
+      1
     ],
     [
       2
@@ -317,7 +318,8 @@
       0
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-1317-d4a70095697746cc",
+  "storageKey": "nonogram-stack-approved-v1-1317-9be96de6f80cf6dc",
+  "clueCountLimit": 12,
   "adjustment": {
     "targetEmptyPercent": 66
   },
@@ -327,17 +329,24 @@
     "categoryId": "13",
     "category": "도구+문구+보안",
     "rank": 17,
-    "versionId": "26590b99-7536-480a-baa8-6c881c970ce2",
-    "imageSha256": "d4a70095697746ccb8345eae69d86aff199e5e10dfd260bc64a55e1412ca4a3b",
-    "folder": "art-handoff/releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/approved/1317",
-    "approvedAt": "2026-10-25T08:17:49.541Z",
+    "versionId": "0cb6bd7d-df1e-4205-b0fe-da0daa80eb4b",
+    "imageSha256": "9be96de6f80cf6dcb8cba0f76ecd809e6ff562f0505385eddb171fe4d8c40828",
+    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/1317",
+    "approvedAt": "2026-10-28T12:49:11.812Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346",
-      "manifest": "releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/manifest.json",
-      "manifestSha256": "0f6a5240ac6f5cd4ce844cef567eab3430397d72b6d2153437afbeb617c1c9b5"
-    }
+      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
+      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
+      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+    },
+    "colorPalette": [
+      "#f6f7f8",
+      "#c0c7ce",
+      "#70808f",
+      "#31383f"
+    ],
+    "colorFamily": "steel"
   },
   "omitOuterZeros": true
 }

@@ -12,7 +12,8 @@ GIVEN_DATA.forEach(g=>fixed[g.index][g.channel]=true);
 let boardState=fresh(), tab=0, selected=0, history=[], pendingHint=null, errors=new Set(), completed=false, storageOK=true;
 let paintValue=0, stroke=null;
 let terrainSelection=null;
-let inputMode='dpad';
+let inputMode='touch';
+document.body.classList.add('touch-input-mode');
 function setInputMode(mode){
   if(inputMode===mode)return;
   finishStroke();window.stopStackControls?.();
@@ -44,7 +45,7 @@ function save(){
 }
 function say(message,warning=false){$('message').textContent=message;$('message').classList.toggle('warning',warning);}
 function isSolved(){return boardState.every((cell,i)=>cell.every((v,c)=>v===C.solution[i][c]));}
-function displayMode(){return document.body.dataset.presentation||'monochrome';}
+function displayMode(){return document.body.dataset.presentation||'color';}
 function displayPalette(){return StackPalette.colors(globalThis.StackPuzzle||{},displayMode());}
 function rgb(values){if(MONO)return displayPalette()[values[0]??0];const levels=values.map(v=>Math.round((v??0)*255/MAX_STACK));return 'rgb('+levels.join(',')+')';}
 function drawCompletedPicture(){
@@ -114,6 +115,23 @@ function updateProgress(){
   const filled=boardState.flat().filter(v=>v!==null).length;
   if($('progress-text'))$('progress-text').textContent=`${filled} / ${N*N*CHANNEL_COUNT}`;if($('progress-fill'))$('progress-fill').style.width=`${filled/(N*N*CHANNEL_COUNT)*100}%`;
 }
+function updateNextPuzzle(){
+  const puzzle=window.getNextStackPuzzle();
+  const button=$('next-puzzle');
+  if(puzzle){
+    const next=new URL('game.html',location.href);
+    next.searchParams.set('puzzle',puzzle.id);next.searchParams.set('mode',displayMode());
+    button.setAttribute('href',next.pathname.split('/').pop()+next.search);
+    button.removeAttribute('aria-disabled');button.removeAttribute('tabindex');
+  }else{
+    button.removeAttribute('href');button.setAttribute('aria-disabled','true');button.setAttribute('tabindex','-1');
+  }
+  button.textContent='다음문제';
+  $('win-puzzle-list').setAttribute('href','collection.html#'+displayMode());
+}
+$('next-puzzle').addEventListener('click',event=>{updateNextPuzzle();if(!event.currentTarget.hasAttribute('href'))event.preventDefault();});
+window.addEventListener('storage',updateNextPuzzle);
+window.addEventListener('pageshow',updateNextPuzzle);
 function render(){
   if(dragFrame)cancelAnimationFrame(dragFrame);
   dragFrame=0;dirtyCells.clear();
@@ -130,8 +148,7 @@ function render(){
     const value=Number(button.dataset.value);button.style.backgroundColor=palette[value];button.style.color=StackPalette.foreground(palette[value]);
     button.setAttribute('aria-label',`${value}스택`);
   });
-  const next=new URL(StackPuzzle.next,location.href);if(next.pathname.endsWith('/game.html'))next.searchParams.set('mode',displayMode());else next.hash=displayMode();
-  $('next-puzzle').setAttribute('href',next.pathname.split('/').pop()+next.search+next.hash);
+  updateNextPuzzle();
   if($('board-title'))$('board-title').textContent=channel===null?'COLOR COMPOSITE':['RED CHANNEL','GREEN CHANNEL','BLUE CHANNEL'][channel];
   if($('anchor-count'))$('anchor-count').textContent=channel===null?GIVEN_DATA.length:GIVEN_DATA.filter(g=>g.channel===channel).length;
   const lineInfo=['row','col'].map(axis=>Array.from({length:N},(_,line)=>{
@@ -193,9 +210,18 @@ function edit(value){
   if(tab==='all'||value==='select'||selected===null||fixed[selected][tab])return;
   const before=boardState[selected][tab];if(before===value){render();return;}
   history.push({channel:tab,changes:[{index:selected,before,after:value}]});
-  boardState[selected][tab]=value;errors.clear();cancelHint();save();render();checkWin();
+  boardState[selected][tab]=value;errors.clear();cancelHint();save();render();checkWin(history.at(-1));
 }
-function checkWin(){
+function checkWin(action=null){
+  // Only unanswered zero cells may remain; every entered height must be correct.
+  if(MONO&&boardState.every((cell,i)=>cell[0]===C.solution[i][0]||(cell[0]===null&&C.solution[i][0]===0))){
+    const changes=[];
+    boardState.forEach((cell,index)=>{if(cell[0]===null){changes.push({index,before:null,after:0});cell[0]=0;}});
+    if(changes.length){
+      if(action?.channel===0)action.changes.push(...changes);
+      else history.push({channel:0,changes});
+    }
+  }
   if(!isSolved())return;
   cancelHint();terrainSelection=null;render();save();say(`완성! ${N*N*CHANNEL_COUNT}개의 높이가 모두 맞아요.`);
   if(completed)return;completed=true;
@@ -292,7 +318,7 @@ function finishStroke(){
   $('board').classList.remove('is-painting');
   if($('board').hasPointerCapture(finished.pointerId))$('board').releasePointerCapture(finished.pointerId);
   if(finished.changes.length){history.push({channel:finished.channel,changes:finished.changes});save();}
-  render();if(finished.changes.length)checkWin();
+  render();if(finished.changes.length)checkWin(history.at(-1));
 }
 $('board').addEventListener('pointerdown',e=>{
   const cell=e.target.closest('[data-index]');

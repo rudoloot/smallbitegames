@@ -1,6 +1,6 @@
 {
   "id": "1005",
-  "title": "흑백 문제 089",
+  "title": "흑백 문제 402",
   "width": 10,
   "height": 10,
   "channels": 1,
@@ -14,6 +14,7 @@
   ],
   "rule": "height-runs-max",
   "omitAllZeros": true,
+  "noGivens": true,
   "givens": [],
   "cells": [
     [
@@ -318,6 +319,7 @@
     ]
   ],
   "storageKey": "nonogram-stack-approved-v1-1005-1e277d0e098bd0cc",
+  "clueCountLimit": 12,
   "adjustment": {
     "targetEmptyPercent": 46
   },
@@ -329,15 +331,22 @@
     "rank": 5,
     "versionId": "3930d5f1-10e3-44a5-bc60-0788f6d0efe6",
     "imageSha256": "1e277d0e098bd0ccf64a889851ff2d6501dc2f1465dab9aff6c15a5d707a36d7",
-    "folder": "art-handoff/releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/approved/1005",
+    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/1005",
     "approvedAt": "2026-10-24T15:45:35.652Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346",
-      "manifest": "releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/manifest.json",
-      "manifestSha256": "0f6a5240ac6f5cd4ce844cef567eab3430397d72b6d2153437afbeb617c1c9b5"
-    }
+      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
+      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
+      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+    },
+    "colorPalette": [
+      "#f7f7f8",
+      "#c4c6ca",
+      "#797d86",
+      "#35373b"
+    ],
+    "colorFamily": "silver"
   },
   "omitOuterZeros": true
 }

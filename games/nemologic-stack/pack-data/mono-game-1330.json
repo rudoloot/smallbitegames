@@ -1,6 +1,6 @@
 {
   "id": "1330",
-  "title": "흑백 문제 138",
+  "title": "흑백 문제 705",
   "width": 10,
   "height": 10,
   "channels": 1,
@@ -14,6 +14,7 @@
   ],
   "rule": "height-runs-max",
   "omitAllZeros": true,
+  "noGivens": true,
   "givens": [],
   "cells": [
     [
@@ -152,7 +153,7 @@
       1
     ],
     [
-      1
+      3
     ],
     [
       2
@@ -206,7 +207,7 @@
       2
     ],
     [
-      1
+      3
     ],
     [
       0
@@ -317,7 +318,8 @@
       0
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-1330-894b18c1b9b0a5de",
+  "storageKey": "nonogram-stack-approved-v1-1330-e84ae51d36e48757",
+  "clueCountLimit": 12,
   "adjustment": {
     "targetEmptyPercent": 72
   },
@@ -327,17 +329,24 @@
     "categoryId": "13",
     "category": "도구+문구+보안",
     "rank": 30,
-    "versionId": "2228dd8a-5fa0-443b-81ea-10c65587f3f1",
-    "imageSha256": "894b18c1b9b0a5dea0aec6d60d825295d690289c4ebdc22f00b1fc4b601e04c1",
-    "folder": "art-handoff/releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/approved/1330",
-    "approvedAt": "2026-10-25T08:41:24.240Z",
+    "versionId": "ad238779-0158-4a2f-b53a-aa034f976377",
+    "imageSha256": "e84ae51d36e48757f63c0d90cbd67a967e037474ae87d8ca08e31811b15f5712",
+    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/1330",
+    "approvedAt": "2026-10-28T12:49:12.353Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346",
-      "manifest": "releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/manifest.json",
-      "manifestSha256": "0f6a5240ac6f5cd4ce844cef567eab3430397d72b6d2153437afbeb617c1c9b5"
-    }
+      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
+      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
+      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+    },
+    "colorPalette": [
+      "#f7f7f8",
+      "#c4c6ca",
+      "#797d86",
+      "#35373b"
+    ],
+    "colorFamily": "silver"
   },
   "omitOuterZeros": true
 }

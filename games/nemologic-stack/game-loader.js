@@ -9,7 +9,7 @@
     return response.json();
   }
   function loadScript(file){return new Promise((resolve,reject)=>{
-    const script=document.createElement('script');script.src=file+'?v=1a6027320bb5';script.onload=resolve;
+    const script=document.createElement('script');script.src=file+'?v=d41fb8c500b2';script.onload=resolve;
     script.onerror=()=>reject(Error(`Could not load ${file}`));document.body.append(script);
   });}
   try{
@@ -17,6 +17,13 @@
     const id=new URLSearchParams(location.search).get('puzzle');
     const puzzle=catalog.puzzles.find(entry=>entry.id===id);
     if(!puzzle)throw Error('Unknown puzzle');
+    const following=catalog.puzzles.filter(entry=>entry.number>puzzle.number).sort((a,b)=>a.number-b.number);
+    globalThis.getNextStackPuzzle=()=>following.find(entry=>{
+      try{
+        const status=JSON.parse(localStorage.getItem(entry.statusKey)||'null');
+        return status?.complete!==true||status.filled!==entry.size*entry.size;
+      }catch{return true;}
+    })||null;
     if(!/^pack-data\/(?:mono-)?game-\d+\.json$/.test(puzzle.data))throw Error('Invalid puzzle data path');
     const [spec,layoutProfile]=await Promise.all([readJSON(puzzle.data),readJSON(`pack-data/layout-profile-${puzzle.size}.json`)]),channels=1;
     if(!Number.isInteger(puzzle.size)||puzzle.size<1||spec.width!==puzzle.size||spec.height!==puzzle.size||
@@ -39,7 +46,6 @@
     const answer=spec.answer||spec.source?.subject;
     if(answer){$('win-description').textContent=answer;$('win-description').classList.add('win-answer');}
     else $('win-description').textContent=`${n*n*channels}개의 높이를 모두 찾았어요.`;
-    $('next-puzzle').href=puzzle.next;$('next-puzzle').textContent=puzzle.nextLabel;
     for(const file of ['i18n.js','shared-ui.js','clue-feedback.js','app.js','board-layout.js','fruit-game-ui.js'])await loadScript(file);
     $('game-loading').hidden=true;delete document.body.dataset.loading;
     globalThis.stackGameReady=true;dispatchEvent(new Event('stack-game-ready'));

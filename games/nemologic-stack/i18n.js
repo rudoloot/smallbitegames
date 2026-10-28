@@ -35,7 +35,7 @@
     '명암 스택 입력':'Grayscale height input','색상별 스택 입력':'Color height input','명암 전체뷰':'Grayscale overview','RGB 전체뷰':'Combined RGB view',
     '처음부터 다시 풀까요?':'Restart this puzzle?','입력한 높이를 모두 지우고 빈 보드에서 시작해요.':'Clear your entries and start with an empty board.',
     '계속 풀기':'Keep playing','다시 시작':'Restart','숨은 그림을 찾았어요!':'You found the hidden picture!','숨은 그림을 완성했어요.':'You completed the hidden picture.',
-    '완성된 그림 보기':'View finished picture','완성된 흑백 그림':'Completed grayscale picture','다음 문제 풀기':'Next puzzle','흑백게임 목록으로':'Grayscale puzzles',
+    '완성된 그림 보기':'View finished picture','완성된 흑백 그림':'Completed grayscale picture','다음 문제 풀기':'Next puzzle','다음문제':'Next puzzle','목록으로':'Puzzle list','흑백게임 목록으로':'Grayscale puzzles',
     '위·왼쪽':'Top and left','아래·오른쪽':'Bottom and right','연속 칸 수':'Run lengths','최대 높이':'Maximum height',
     '↘ 대각선':'↘ Diagonal','↙ 대각선':'↙ Diagonal',
     '세 가지 색으로 숨은 그림을 완성했어요.':'You combined three colors to reveal the hidden picture.',

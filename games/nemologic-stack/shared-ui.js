@@ -3,7 +3,7 @@
   const header=document.querySelector('main > header');
   if(!header)return;
   const isMenu=!!document.querySelector('#monochrome-games');
-  const mode=()=>isMenu?(document.body.dataset.mode||'monochrome'):(document.body.dataset.presentation||'monochrome');
+  const mode=()=>isMenu?(document.body.dataset.mode||'color'):(document.body.dataset.presentation||(document.querySelector('.tutorial-app')?'monochrome':'color'));
   const icon=path=>`<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">${path}</svg>`;
   const questionContext=document.createElement('canvas').getContext('2d'),questionOffsets=new Map();
   window.centerStackQuestionMarks=(root=document)=>{
@@ -137,7 +137,7 @@
 
 window.installStackDpad=({dpad,buttons,move,apply,choose=()=>{}})=>{
   const directions=[['up','위로 이동','M6 15l6-6 6 6'],['left','왼쪽으로 이동','M15 6l-6 6 6 6'],['right','오른쪽으로 이동','M9 6l6 6-6 6'],['down','아래로 이동','M6 9l6 6 6-6']];
-  dpad.innerHTML=directions.map(([value,label,path])=>`<button type="button" data-direction="${value}" aria-label="${label}" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="${path}"/></svg></button>`).join('')+'<span class="dpad-center" aria-hidden="true"></span>';
+  dpad.innerHTML=directions.map(([value,label,path])=>`<button type="button" data-direction="${value}" aria-label="${label}" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="${path}"/></svg></button>`).join('');
   const directionButtons=[...dpad.querySelectorAll('[data-direction]')];
   const pointerClicks=new WeakSet();
   function keyboardClick(e,button){

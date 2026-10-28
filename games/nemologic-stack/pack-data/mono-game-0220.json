@@ -1,6 +1,6 @@
 {
   "id": "0220",
-  "title": "흑백 문제 032",
+  "title": "흑백 문제 277",
   "width": 15,
   "height": 15,
   "channels": 1,
@@ -14,6 +14,7 @@
   ],
   "rule": "height-runs-max",
   "omitAllZeros": true,
+  "noGivens": true,
   "givens": [],
   "cells": [
     [
@@ -122,7 +123,7 @@
       0
     ],
     [
-      3
+      2
     ],
     [
       3
@@ -692,7 +693,8 @@
       0
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-0220-0f3400ec6154484b",
+  "storageKey": "nonogram-stack-approved-v1-0220-9dd40d0debc8cf71",
+  "clueCountLimit": 12,
   "adjustment": {
     "targetEmptyPercent": 58.22222222222222
   },
@@ -702,17 +704,24 @@
     "categoryId": "02",
     "category": "곤충",
     "rank": 20,
-    "versionId": "f7e74f82-1985-41fd-aab8-92ae678e109f",
-    "imageSha256": "0f3400ec6154484bf21e909db48583380faf90fcece94284e5e39c642a570477",
-    "folder": "art-handoff/releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/approved/0220",
-    "approvedAt": "2026-10-25T09:09:31.244Z",
+    "versionId": "e6ad2b5c-8cb7-4f87-b0c9-74f3457058cf",
+    "imageSha256": "9dd40d0debc8cf71188dce07c65be1516e175b031efc4ea7d9b473ebfb224c51",
+    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/0220",
+    "approvedAt": "2026-10-28T12:49:02.520Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346",
-      "manifest": "releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/manifest.json",
-      "manifestSha256": "0f6a5240ac6f5cd4ce844cef567eab3430397d72b6d2153437afbeb617c1c9b5"
-    }
+      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
+      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
+      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+    },
+    "colorPalette": [
+      "#faf7f5",
+      "#dbc6b3",
+      "#ac7d53",
+      "#4c3724"
+    ],
+    "colorFamily": "brown"
   },
   "omitOuterZeros": true
 }

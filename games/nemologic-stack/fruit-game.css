@@ -13,7 +13,11 @@ body[data-loading]>.app{visibility:hidden}
 #game-loading,#game-load-error{position:fixed;z-index:30;top:50%;left:50%;transform:translate(-50%,-50%);width:calc(100% - 40px);max-width:430px;text-align:center;font:14px/1.8 system-ui;color:#52644f}
 #game-load-error button,#game-load-error a{display:inline-block;margin:12px 8px;padding:8px 12px;border:1px solid #d6dfcf;border-radius:8px;background:#fffef9;color:#42684d}
 .monochrome-game .clue.done{color:#555}.monochrome-game .overview-marker.done .clue-text{fill:#555}.monochrome-game .cell.zero{background:#fff;color:#555}
-.collection-next{display:block;margin-top:14px;color:#42684d;font-size:13px}
+.completion-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px}
+.completion-actions a{display:flex;align-items:center;justify-content:center;min-height:48px;box-sizing:border-box;padding:12px 8px;border:1px solid #cdd8c7;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;color:#42684d;background:#f1f4e9}
+.completion-actions .primary-button{background:#293f30;color:#fff;border-color:#293f30}
+.completion-actions a:focus-visible{outline:3px solid #548c67;outline-offset:3px}
+.completion-actions [aria-disabled="true"]{opacity:.4;cursor:default}
 #win-description.win-answer{font-size:18px;font-weight:700;color:#293e30}
 html{overflow-anchor:none}
 html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#f5f5ef;color:#293e30}

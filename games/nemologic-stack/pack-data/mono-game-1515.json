@@ -1,6 +1,6 @@
 {
   "id": "1515",
-  "title": "흑백 문제 168",
+  "title": "흑백 문제 567",
   "width": 15,
   "height": 15,
   "channels": 1,
@@ -14,6 +14,7 @@
   ],
   "rule": "height-runs-max",
   "omitAllZeros": true,
+  "noGivens": true,
   "givens": [],
   "cells": [
     [
@@ -185,7 +186,7 @@
       0
     ],
     [
-      2
+      1
     ],
     [
       0
@@ -692,7 +693,8 @@
       0
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-1515-6daee998949100da",
+  "storageKey": "nonogram-stack-approved-v1-1515-d7b82e4c65c1d29f",
+  "clueCountLimit": 12,
   "adjustment": {
     "targetEmptyPercent": 48.888888888888886
   },
@@ -702,17 +704,24 @@
     "categoryId": "15",
     "category": "캐릭터",
     "rank": 15,
-    "versionId": "6e8f3d52-5586-4ccf-a9d7-8a8cd04c1e51",
-    "imageSha256": "6daee998949100dab548688f65fca189785e0a87f13b23521210c426ce652933",
-    "folder": "art-handoff/releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/approved/1515",
-    "approvedAt": "2026-10-25T12:43:13.138Z",
+    "versionId": "1c1a9ec7-4dfd-4b14-9409-8809d6ebe281",
+    "imageSha256": "d7b82e4c65c1d29ff7424e97276ff1087728f80f418e9a756476767920157c48",
+    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/1515",
+    "approvedAt": "2026-10-28T12:49:14.230Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346",
-      "manifest": "releases/fa3aeed22cd086836f78ec9c2267f80b706eeecc3a50669c2fd26fabba4c1346/manifest.json",
-      "manifestSha256": "0f6a5240ac6f5cd4ce844cef567eab3430397d72b6d2153437afbeb617c1c9b5"
-    }
+      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
+      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
+      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+    },
+    "colorPalette": [
+      "#f8f4fb",
+      "#cdafdf",
+      "#8e49b6",
+      "#3f2050"
+    ],
+    "colorFamily": "purple"
   },
   "omitOuterZeros": true
 }
