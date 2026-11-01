@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var state = { build: 'production-1', stage: 'HTML', code: 'FS-HTML', frames: 0, ready: false, failed: false, detail: '' };
+  var state = { build: 'base-build-1', stage: 'HTML', code: 'FS-HTML', frames: 0, ready: false, failed: false, detail: '' };
   var diagnostic = /(?:\?|&)diag=1(?:&|$)/.test(location.search);
   var dismissed = false;
   function element(id) { return document.getElementById(id); }
