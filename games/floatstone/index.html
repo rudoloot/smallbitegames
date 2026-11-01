@@ -8,7 +8,7 @@
     <title>FloatStone · 바람결 섬</title>
     <style>html,body{color:#f8f4dd;background:#183d3c;margin:0;font-family:system-ui,sans-serif}#boot-panel{z-index:1000;box-sizing:border-box;color:#fff2d2;background:#173d3cf5;border:1px solid #c6ab74;border-radius:10px;width:min(430px,100% - 32px);max-height:calc(100dvh - 32px);padding:22px;position:fixed;top:50%;left:50%;overflow:auto;transform:translate(-50%,-50%);box-shadow:0 12px 60px #102d3d66}#boot-panel[hidden],#boot-panel [hidden]{display:none!important}#boot-title{margin:0 0 12px;font-size:18px}#boot-message{font-size:12px;line-height:1.7}#boot-code{color:#ebc98c;margin:12px 0;font-size:13px;display:block}#boot-detail{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;line-height:1.7}#boot-panel button{color:#fff2d2;background:#284f48;border:1px solid #c6ab74;border-radius:5px;margin:10px 8px 0 0;padding:10px 14px;font:12px system-ui}</style>
     <script src="./boot-guard.js"></script>
-    <script type="module" crossorigin src="./assets/index-D4burfCH.js"></script>
+    <script type="module" crossorigin src="./assets/index-elonBXbN.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/halfFloat-CXxwV7oo.js">
     <link rel="modulepreload" crossorigin href="./assets/logger-CuBYPcDK.js">
     <link rel="modulepreload" crossorigin href="./assets/shaderStore-D-XQlhUT.js">
@@ -16,11 +16,11 @@
     <link rel="modulepreload" crossorigin href="./assets/math.scalar.functions-BUpXP_7j.js">
     <link rel="modulepreload" crossorigin href="./assets/math.color.pure-Cy1Hsh3h.js">
     <link rel="modulepreload" crossorigin href="./assets/baseTexture.pure-DVhIAinG.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-0f7_Y911.css">
+    <link rel="stylesheet" crossorigin href="./assets/index--jIKGNO3.css">
   </head>
   <body>
-    <section id="boot-panel" role="status" aria-live="polite"><h2 id="boot-title">FloatStone을 준비하고 있어요</h2><p id="boot-message">이 안내가 계속 남으면 아래 코드와 단계를 알려 주세요.</p><strong id="boot-code">FS-HTML · HTML</strong><pre id="boot-detail">버전: free-dive-1</pre><button id="boot-reload">다시 불러오기</button><button id="boot-dismiss" hidden>안내 닫기</button></section>
-    <main id="game" data-build-version="free-dive-1" data-base-version="free-dive-1" data-placement-version="free-pad-1" data-crew-mode="walking" data-minimap="hidden" aria-label="FloatStone 개인 하늘 항해와 로컬 섬 탐험 시제품">
+    <section id="boot-panel" role="status" aria-live="polite"><h2 id="boot-title">FloatStone을 준비하고 있어요</h2><p id="boot-message">이 안내가 계속 남으면 아래 코드와 단계를 알려 주세요.</p><strong id="boot-code">FS-HTML · HTML</strong><pre id="boot-detail">버전: production-1</pre><button id="boot-reload">다시 불러오기</button><button id="boot-dismiss" hidden>안내 닫기</button></section>
+    <main id="game" data-build-version="production-1" data-base-version="production-1" data-placement-version="free-pad-1" data-production-version="workbench-1" data-crew-mode="walking" data-minimap="hidden" aria-label="FloatStone 개인 하늘 항해와 로컬 섬 탐험 시제품">
       <canvas id="world" tabindex="0" aria-label="3D 게임. 선내와 섬에서 WASD 이동, Space 점프. 조종석에서 E로 기체 조종. 마우스 드래그 시점 회전"></canvas>
       <header class="hud topbar">
         <div class="brand"><span class="brand-mark" aria-hidden="true">◇</span><div>FLOATSTONE<small>EXPLORATION PROTOTYPE</small></div></div>
@@ -41,7 +41,7 @@
         </svg>
         <span id="minimap-legend"></span>
       </aside>
-      <div class="hud bottom-note bag-hud"><span class="note-line"></span><b id="bag-count">가방 목재 0 / 목표 6</b><span id="trip-count">탐험 대기</span><b id="warehouse-count">기지 창고 —</b></div>
+      <div class="hud bottom-note bag-hud"><span class="note-line"></span><b id="bag-count">가방 목재 0 / 목표 6</b><span id="trip-count">탐험 대기</span><b id="warehouse-count">기지 창고 —</b><b id="plank-count">판재 —</b></div>
       <aside id="warehouse-notice" aria-live="polite"><span id="warehouse-message">창고 저장 확인 중</span><button id="warehouse-retry" hidden>저장 다시 시도</button></aside>
       <div class="desktop-hint hud"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>이동</span><b>·</b><kbd>SPACE</kbd><span>점프</span><b>·</b><span>마우스 드래그로 둘러보기</span></div>
       <div id="move-pad" aria-label="가상 스틱: 드래그하여 이동"><div class="stick-rim"><span id="stick"></span><i></i></div><span class="control-label">이동</span></div>
@@ -58,8 +58,15 @@
         <p>목재6개를 채집하고 바라보는 약2.6m 앞 지면의 작은 사각형을 확인하세요. 초록은 설치 가능, 빨강은 불가입니다. 지형·장애물·재료 안내를 확인하고 '여기에 발사대 설치'를 누르면 성공 때만 목재4개를 씁니다. 고정 건설지 없이 섬당 한 개를 설치합니다. 발사대에서 귀환하면 내 기지의 안전 선내 지점에 도착해 잔여2개를 창고에 반입합니다. 다음 출항은 조종석에서 E, 충분히 멀어지면 새 섬 후보가 나타납니다.</p>
         <p>섬 미니맵은 착륙 후에만 보입니다. 북쪽(+Z)은 위, ▲는 내 위치·시점, ◆는 실제 설치한 귀환 발사대입니다. 설치 전 고정 건설 마커는 없습니다. 선내에서는 숨깁니다. PC: 마우스 드래그 시점, Space 점프, E 상황별 상호작용, R 탐험 초기화.</p>
         <p>창고는 이 브라우저·사이트에만 저장됩니다. LAN과 공개 사이트는 공유하지 않습니다. 새로고침은 선내 안전 지점에서 시작하고 확정 창고만 유지합니다. 가방·귀환 중·미확정 반입은 복원하지 않습니다. R은 창고와 이 탭의 반입 대기를 지우지 않습니다.</p>
-        <p>열린 갑판과 추락 방지 경계, 조종 종료 시 호버링은 임시 시제품 정책입니다. 섬 이탈 시 안전 기지로 복구하며 가방은 잃고 창고 보상은 지급하지 않습니다. 부유석으로 뜨는 기지이며 정식 내부·생산설비·승무원·자동항해·온라인은 아직 없습니다.</p>
+        <p>열린 갑판과 추락 방지 경계, 조종 종료 시 호버링은 임시 시제품 정책입니다. 섬 이탈 시 안전 기지로 복구하며 가방은 잃고 창고 보상은 지급하지 않습니다. 부유석으로 뜨는 기지이며 왼쪽 뒤 작은 작업대 가까이에서 E로 기지 창고 목재2→판재1을 즉시 가공합니다. 생산창은 닫기/Escape로 닫습니다. 판재 사용처·대기열·생산시간·승무원·정식 내부·자동항해·온라인은 후속입니다.</p>
         <button id="help-close">계속 탐험하기</button>
+      </section>
+      <section id="production-panel" hidden role="dialog" aria-modal="true" aria-labelledby="production-title">
+        <h2 id="production-title">목재 가공 작업대</h2>
+        <p>기지 창고 목재 <b id="recipe-wood">2</b> → 판재 <b id="recipe-planks">1</b></p>
+        <p id="production-stock"></p><p id="production-message" role="status" aria-live="polite"></p>
+        <button id="production-craft">판재 1개 가공</button><button id="production-close">닫기</button>
+        <small>수동 즉시 가공 · 판재 사용처는 후속입니다.<br/>이 브라우저·사이트에 저장되며 계정 동기화는 아닙니다.<br/>닫아도 이미 시작한 저장 확인은 계속합니다.</small>
       </section>
       <div id="rotate-note" class="hud rotate-note">↔ 가로 화면에서 더 넓게 탐험할 수 있어요</div>
       <div id="status" role="status" aria-live="polite">섬을 준비하고 있어요…</div>
