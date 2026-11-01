@@ -8,7 +8,7 @@
     <title>FloatStone · 바람결 섬</title>
     <style>html,body{color:#f8f4dd;background:#183d3c;margin:0;font-family:system-ui,sans-serif}#boot-panel{z-index:1000;box-sizing:border-box;color:#fff2d2;background:#173d3cf5;border:1px solid #c6ab74;border-radius:10px;width:min(430px,100% - 32px);max-height:calc(100dvh - 32px);padding:22px;position:fixed;top:50%;left:50%;overflow:auto;transform:translate(-50%,-50%);box-shadow:0 12px 60px #102d3d66}#boot-panel[hidden],#boot-panel [hidden]{display:none!important}#boot-title{margin:0 0 12px;font-size:18px}#boot-message{font-size:12px;line-height:1.7}#boot-code{color:#ebc98c;margin:12px 0;font-size:13px;display:block}#boot-detail{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;line-height:1.7}#boot-panel button{color:#fff2d2;background:#284f48;border:1px solid #c6ab74;border-radius:5px;margin:10px 8px 0 0;padding:10px 14px;font:12px system-ui}</style>
     <script src="./boot-guard.js"></script>
-    <script type="module" crossorigin src="./assets/index-DYzR7hKC.js"></script>
+    <script type="module" crossorigin src="./assets/index-Cn5SEyeG.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/halfFloat-CXxwV7oo.js">
     <link rel="modulepreload" crossorigin href="./assets/logger-CuBYPcDK.js">
     <link rel="modulepreload" crossorigin href="./assets/shaderStore-D-XQlhUT.js">
@@ -19,9 +19,9 @@
     <link rel="stylesheet" crossorigin href="./assets/index-0f7_Y911.css">
   </head>
   <body>
-    <section id="boot-panel" role="status" aria-live="polite"><h2 id="boot-title">FloatStone을 준비하고 있어요</h2><p id="boot-message">이 안내가 계속 남으면 아래 코드와 단계를 알려 주세요.</p><strong id="boot-code">FS-HTML · HTML</strong><pre id="boot-detail">버전: warehouse-1</pre><button id="boot-reload">다시 불러오기</button><button id="boot-dismiss" hidden>안내 닫기</button></section>
-    <main id="game" data-build-version="warehouse-1" data-minimap="hidden" aria-label="FloatStone 개인 하늘 항해와 로컬 섬 탐험 시제품">
-      <canvas id="world" tabindex="0" aria-label="3D 게임. WASD 이동, Space 점프, 마우스 드래그 시점 회전"></canvas>
+    <section id="boot-panel" role="status" aria-live="polite"><h2 id="boot-title">FloatStone을 준비하고 있어요</h2><p id="boot-message">이 안내가 계속 남으면 아래 코드와 단계를 알려 주세요.</p><strong id="boot-code">FS-HTML · HTML</strong><pre id="boot-detail">버전: base-1</pre><button id="boot-reload">다시 불러오기</button><button id="boot-dismiss" hidden>안내 닫기</button></section>
+    <main id="game" data-build-version="base-1" data-base-version="base-1" data-crew-mode="walking" data-minimap="hidden" aria-label="FloatStone 개인 하늘 항해와 로컬 섬 탐험 시제품">
+      <canvas id="world" tabindex="0" aria-label="3D 게임. 선내와 섬에서 WASD 이동, Space 점프. 조종석에서 E로 기체 조종. 마우스 드래그 시점 회전"></canvas>
       <header class="hud topbar">
         <div class="brand"><span class="brand-mark" aria-hidden="true">◇</span><div>FLOATSTONE<small>EXPLORATION PROTOTYPE</small></div></div>
         <div class="location"><span class="eyebrow">PRIVATE SKY / LOCAL PROTOTYPE</span><h1 id="destination-title">개인 하늘</h1><span class="location-line">SOLO <i></i> LOCAL ONLY</span></div>
@@ -29,7 +29,7 @@
       </header>
       <aside class="hud field-note"><span class="eyebrow">FIRST DIVE</span><p id="phase-title">비행선에서,<br />첫 다이브.</p><span id="phase-detail">섬 위로 내려가면 낙하산이 자동 전개됩니다.</span></aside>
       <div id="dive-readout" class="hud"><span id="phase-status" role="status">출발 준비</span><i></i><span id="agl-status">착지 지면 확인 중</span></div>
-      <button id="dive-action" aria-label="비행선에서 다이브 시작"><span id="action-label">다이브 시작</span><kbd class="dive-key">E</kbd></button>
+      <button id="dive-action" hidden aria-label="주변 시설 상호작용"><span id="action-label">다이브 시작</span><kbd class="dive-key">E</kbd></button>
       <div class="hud compass" aria-hidden="true"><span>W</span><i></i><b id="heading">N</b><i></i><span>E</span></div>
       <aside id="island-minimap" role="img" aria-label="착륙 후 현재 섬 미니맵" hidden>
         <div class="minimap-title"><span id="minimap-name"></span><b aria-hidden="true">N ↑</b></div>
@@ -50,8 +50,17 @@
         <div id="look-pad" aria-label="시점 스틱: 손가락을 움직인 만큼 회전"><div class="stick-rim"><span id="look-stick"></span><i></i></div><span class="control-label">시점</span></div>
         <button id="jump" aria-label="점프"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 17 16 10 23 17M16 11v13M9 26h14" /></svg><span>점프</span></button>
       </div>
-      <button id="reset" class="hud reset-button" aria-label="테스트 전체 초기화: 새 개인 하늘 시작">↺ <span>하늘 재시작</span></button>
-      <section id="help" class="help-panel" hidden aria-label="조작 도움말"><span class="eyebrow">HOW TO EXPLORE</span><h2>개인 하늘에서 섬으로</h2><p>이동 스틱/WASD로 보이는 섬을 향해 수평 비행하세요. 상승·하강 버튼 또는 Q/Z로 32~38m 안에서 조금 높이를 조절합니다. 가까워지면 정박/E로 로컬 섬을 활성화하고, 다이브/E로 내려갑니다. 자동 낙하산 높이는 <span id="deploy-height">14</span>m입니다.</p><p>착지 후 목재 6개를 모아 청록 표식 옆에 비용 4개의 발사대를 설치하고 귀환하면 남은 2개를 기지 창고에 반입합니다. 귀환한 섬에서는 출항/E 후 멀리 떠나야 그 섬이 개인 하늘에서 사라지고 새 후보가 보입니다. 다른 섬을 정박할 때 이전 가방·자원·발사대는 초기화됩니다.</p><p>착륙 후 왼쪽 위에 현재 섬 미니맵이 보입니다. 북쪽(+Z)이 항상 위이며 ▲는 내 위치·시점 방향, ◇는 건설 예정지, ◆는 설치한 귀환 발사대입니다. 자원과 다른 섬은 표시하지 않습니다. 점프 중에도 유지되고 귀환을 시작하면 숨습니다.</p><p>왼쪽 이동 / 오른쪽 delta-only 시점 / 오른쪽 스틱 위 점프는 그대로입니다. 점프는 보행에만 사용합니다. PC: 마우스 드래그 시점, Space 점프, E 상황별 상호작용, R 하늘 전체 초기화.</p><p>부유석 특성상 비행선은 높은 층에, 큰 지형 하중을 가진 섬은 낮은 층에 떠 있습니다. 하중 물리는 아직 구현하지 않았습니다. 현재는 싱글플레이 로컬 활성화이며 온라인 채널 연결은 없습니다.</p><p>창고는 이 브라우저·사이트에만 저장됩니다. LAN과 공개 사이트는 서로 공유하지 않습니다. 새로고침하면 안전한 기지에서 다시 시작하고 저장 완료된 창고만 유지합니다. 탐험 가방·귀환 중·미확정 반입은 저장하지 않습니다. R은 탐험만 초기화하며 창고와 현재 탭의 반입 대기는 지우지 않습니다. 여러 탭의 안전한 저장을 지원하지 않는 주소에서는 반입을 미확정으로 안내합니다.</p><button id="help-close">계속 탐험하기</button></section>
+      <button id="reset" class="hud reset-button" aria-label="창고를 보존하고 탐험 초기화: 선내에서 새 하늘 시작">↺ <span>하늘 재시작</span></button>
+      <section id="help" class="help-panel" hidden aria-label="조작 도움말">
+        <span class="eyebrow">MOBILE SKY BASE</span><h2>기지 안에서, 다음 섬으로</h2>
+        <p>선내 보행으로 시작합니다. 왼쪽 이동 / 오른쪽 시점 / 오른쪽 스틱 위 점프를 사용하세요. 왼쪽 앞 청록 조종석 가까이에서 버튼/E로 조종을 시작합니다. 조종 중에만 이동 스틱/WASD가 기체를 움직이고 ↑↓ 또는 Q/Z로 32~38m 고도를 조절합니다.</p>
+        <p>버튼/E로 조종을 종료하면 그 자리에서 기체가 정지·호버링하고 선내 보행으로 돌아옵니다. 섬에 가까워진 뒤 조종을 종료하고, 조종석에서 다시 E를 눌러 안전 정박하세요. 정박 후 앞쪽 청록 다이브 출구에서 E로 내려갑니다. 자동 낙하산은 지면 <span id="deploy-height">14</span>m 위에서 전개됩니다.</p>
+        <p>섬에서 목재6개를 채집하고 비용4의 발사대를 설치하세요. 귀환하면 선내 안전 지점에 도착하고 잔여2개를 기지 창고에 반입합니다. 창고 시설은 오른쪽 뒤 목재 상자입니다. 다음 출항은 다시 조종석에서 E로 시작합니다. 방문 섬에서 충분히 멀어지면 새 후보가 나타납니다.</p>
+        <p>섬 미니맵은 착륙 후에만 보입니다. 북쪽(+Z)은 위, ▲는 내 위치·시점, ◇는 건설지, ◆는 귀환 발사대입니다. 선내에서는 숨깁니다. PC: 마우스 드래그 시점, Space 점프, E 상황별 상호작용, R 탐험 초기화.</p>
+        <p>창고는 이 브라우저·사이트에만 저장됩니다. LAN과 공개 사이트는 공유하지 않습니다. 새로고침은 선내 안전 지점에서 시작하고 확정 창고만 유지합니다. 가방·귀환 중·미확정 반입은 복원하지 않습니다. R은 창고와 이 탭의 반입 대기를 지우지 않습니다.</p>
+        <p>열린 갑판과 추락 방지 경계, 조종 종료 시 호버링은 임시 시제품 정책입니다. 부유석으로 뜨는 기지이며 정식 내부·생산설비·승무원·자동항해·온라인은 아직 없습니다.</p>
+        <button id="help-close">계속 탐험하기</button>
+      </section>
       <div id="rotate-note" class="hud rotate-note">↔ 가로 화면에서 더 넓게 탐험할 수 있어요</div>
       <div id="status" role="status" aria-live="polite">섬을 준비하고 있어요…</div>
       <output id="diagnostics" hidden></output>
