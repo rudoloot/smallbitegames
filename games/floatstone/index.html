@@ -8,20 +8,36 @@
     <title>FloatStone · 바람결 섬</title>
     <style>html,body{color:#f8f4dd;background:#183d3c;margin:0;font-family:system-ui,sans-serif}#boot-panel{z-index:1000;box-sizing:border-box;color:#fff2d2;background:#173d3cf5;border:1px solid #c6ab74;border-radius:10px;width:min(430px,100% - 32px);max-height:calc(100dvh - 32px);padding:22px;position:fixed;top:50%;left:50%;overflow:auto;transform:translate(-50%,-50%);box-shadow:0 12px 60px #102d3d66}#boot-panel[hidden],#boot-panel [hidden]{display:none!important}#boot-title{margin:0 0 12px;font-size:18px}#boot-message{font-size:12px;line-height:1.7}#boot-code{color:#ebc98c;margin:12px 0;font-size:13px;display:block}#boot-detail{white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;line-height:1.7}#boot-panel button{color:#fff2d2;background:#284f48;border:1px solid #c6ab74;border-radius:5px;margin:10px 8px 0 0;padding:10px 14px;font:12px system-ui}</style>
     <script src="./boot-guard.js"></script>
-    <script type="module" crossorigin src="./assets/index-BR-bNBK2.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/halfFloat-CXxwV7oo.js">
+    <script type="module" crossorigin src="./assets/index-DWyQrp1E.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/engineStore-Bn2tApal.js">
     <link rel="modulepreload" crossorigin href="./assets/logger-CuBYPcDK.js">
     <link rel="modulepreload" crossorigin href="./assets/shaderStore-D-XQlhUT.js">
-    <link rel="modulepreload" crossorigin href="./assets/bufferUtils-TL_AcG6e.js">
-    <link rel="modulepreload" crossorigin href="./assets/math.scalar.functions-BUpXP_7j.js">
-    <link rel="modulepreload" crossorigin href="./assets/math.color.pure-Cy1Hsh3h.js">
-    <link rel="modulepreload" crossorigin href="./assets/baseTexture.pure-DVhIAinG.js">
-    <link rel="stylesheet" crossorigin href="./assets/index-CyW4Ev49.css">
+    <link rel="modulepreload" crossorigin href="./assets/precisionDate-DgO8bWsc.js">
+    <link rel="modulepreload" crossorigin href="./assets/performanceConfigurator-UtxC_Odd.js">
+    <link rel="modulepreload" crossorigin href="./assets/internalTexture-B3djGrls.js">
+    <link rel="modulepreload" crossorigin href="./assets/thinEngine.pure-BeUJyydP.js">
+    <link rel="modulepreload" crossorigin href="./assets/halfFloat-Cfx5m4ll.js">
+    <link rel="modulepreload" crossorigin href="./assets/tools.pure-MBWY90yX.js">
+    <link rel="modulepreload" crossorigin href="./assets/buffer.pure-DzEij9lM.js">
+    <link rel="modulepreload" crossorigin href="./assets/math.scalar.functions-lnL7TJ7T.js">
+    <link rel="modulepreload" crossorigin href="./assets/math.color.pure-BTk1mVkY.js">
+    <link rel="modulepreload" crossorigin href="./assets/decorators-XvDQxIAV.js">
+    <link rel="modulepreload" crossorigin href="./assets/decorators.serialization-PmzZmBl_.js">
+    <link rel="modulepreload" crossorigin href="./assets/drawWrapper-DGaeyngX.js">
+    <link rel="modulepreload" crossorigin href="./assets/smartArray-BRfcgNbX.js">
+    <link rel="modulepreload" crossorigin href="./assets/lightConstants-Cr1AExpm.js">
+    <link rel="modulepreload" crossorigin href="./assets/sceneComponent-B6Ab4fOb.js">
+    <link rel="modulepreload" crossorigin href="./assets/math.plane-BKGfMalO.js">
+    <link rel="modulepreload" crossorigin href="./assets/scene.pure-iaNxJ0wi.js">
+    <link rel="modulepreload" crossorigin href="./assets/material.pure-BJNcuctW.js">
+    <link rel="modulepreload" crossorigin href="./assets/imageProcessing-BfidEQFY.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-BrHgTt5O.css">
   </head>
   <body>
-    <section id="boot-panel" role="status" aria-live="polite"><h2 id="boot-title">FloatStone을 준비하고 있어요</h2><p id="boot-message">이 안내가 계속 남으면 아래 코드와 단계를 알려 주세요.</p><strong id="boot-code">FS-HTML · HTML</strong><pre id="boot-detail">버전: base-build-1</pre><button id="boot-reload">다시 불러오기</button><button id="boot-dismiss" hidden>안내 닫기</button></section>
-    <main id="game" data-build-version="base-build-1" data-base-version="base-build-1" data-placement-version="free-pad-1" data-production-version="workbench-1" data-construction-version="floor-grid-1" data-crew-mode="walking" data-minimap="hidden" aria-label="FloatStone 개인 하늘 항해와 로컬 섬 탐험 시제품">
-      <canvas id="world" tabindex="0" aria-label="3D 게임. 선내와 섬에서 WASD 이동, Space 점프. 조종석에서 E로 기체 조종. 마우스 드래그 시점 회전"></canvas>
+    <section id="boot-panel" role="status" aria-live="polite"><h2 id="boot-title">FloatStone을 준비하고 있어요</h2><p id="boot-message">이 안내가 계속 남으면 아래 코드와 단계를 알려 주세요.</p><strong id="boot-code">FS-HTML · HTML</strong><pre id="boot-detail">버전: modules-1</pre><button id="boot-reload">다시 불러오기</button><button id="boot-dismiss" hidden>안내 닫기</button></section>
+    <main id="game" data-build-version="modules-1" data-base-version="modules-1" data-placement-version="free-pad-1" data-production-version="workbench-1" data-construction-version="core-modules-1" data-crew-mode="walking" data-minimap="hidden" aria-label="FloatStone 개인 하늘 항해와 로컬 섬 탐험 시제품">
+      <canvas id="world" tabindex="0" aria-label="3D 게임. 선내와 섬에서 WASD 이동, Space 점프. 조종석에서 E로 기체 조종. 게임 화면 클릭 후 마우스로 시점 회전, Esc 커서 해제"></canvas>
+      <div id="crosshair" aria-hidden="true" hidden>+</div><span id="mouse-look-hint" class="hud" hidden></span>
       <header class="hud topbar">
         <div class="brand"><span class="brand-mark" aria-hidden="true">◇</span><div>FLOATSTONE<small>EXPLORATION PROTOTYPE</small></div></div>
         <div class="location"><span class="eyebrow">PRIVATE SKY / LOCAL PROTOTYPE</span><h1 id="destination-title">개인 하늘</h1><span class="location-line">SOLO <i></i> LOCAL ONLY</span></div>
@@ -54,21 +70,22 @@
       <section id="help" class="help-panel" hidden aria-label="조작 도움말">
         <span class="eyebrow">MOBILE SKY BASE</span><h2>기지 안에서, 다음 섬으로</h2>
         <p>선내 보행으로 시작합니다. 왼쪽 이동 / 오른쪽 시점 / 오른쪽 스틱 위 점프를 사용하세요. 왼쪽 앞 청록 조종석 가까이에서 버튼/E로 조종을 시작합니다. 조종 중에만 이동 스틱/WASD가 기체를 움직이고 ↑↓ 또는 Q/Z로 40~46m 고도를 조절합니다.</p>
-        <p>원하는 진입 위치로 비행하고 '출구 아래 땅 있음' 안내를 확인하세요. 버튼/E로 조종을 종료하면 그 자리·고도로 호버링하고 선내 보행으로 돌아옵니다. 추가 정박 버튼이나 중앙 맞추기는 없습니다. 앞쪽 청록 다이브 출구로 걸어가 E로 내려갑니다. 땅 없음·장애물·가장자리 안내 때는 위치를 바꾸세요. 낙하 중에도 왼쪽 스틱/이동키로 위치를 조절합니다. 자동 낙하산은 발밑 유효 지면 <span id="deploy-height">14</span>m 위에서 전개됩니다.</p>
+        <p>원하는 섬 위로 비행하고 E/상황 버튼으로 조종을 종료하세요. 기지의 원하는 가장자리에서 이동하며 점프하면 현재 위치와 속도로 낙하합니다. 전용 출구나 다이브 버튼은 없습니다. 발밑 땅 안내는 정보이며 허공 이탈도 가능하니 주의하세요. 갑판 위 일반 점프는 기지에 착지합니다. 낙하 중에도 이동키/왼쪽 스틱으로 조절하고 유효 지면 <span id="deploy-height">14</span>m에서 자동 낙하산을 폅니다.</p>
         <p>목재6개를 채집하고 바라보는 약2.6m 앞 지면의 작은 사각형을 확인하세요. 초록은 설치 가능, 빨강은 불가입니다. 지형·장애물·재료 안내를 확인하고 '여기에 발사대 설치'를 누르면 성공 때만 목재4개를 씁니다. 고정 건설지 없이 섬당 한 개를 설치합니다. 발사대에서 귀환하면 내 기지의 안전 선내 지점에 도착해 잔여2개를 창고에 반입합니다. 다음 출항은 조종석에서 E, 충분히 멀어지면 새 섬 후보가 나타납니다.</p>
         <p>섬 미니맵은 착륙 후에만 보입니다. 북쪽(+Z)은 위, ▲는 내 위치·시점, ◆는 실제 설치한 귀환 발사대입니다. 설치 전 고정 건설 마커는 없습니다. 선내에서는 숨깁니다. PC: 마우스 드래그 시점, Space 점프, E 상황별 상호작용, R 탐험 초기화.</p>
         <p>창고는 이 브라우저·사이트에만 저장됩니다. LAN과 공개 사이트는 공유하지 않습니다. 새로고침은 선내 안전 지점에서 시작하고 확정 창고만 유지합니다. 가방·귀환 중·미확정 반입은 복원하지 않습니다. R은 창고와 이 탭의 반입 대기를 지우지 않습니다.</p>
-        <p>열린 갑판과 추락 방지 경계, 조종 종료 시 호버링은 임시 시제품 정책입니다. 섬 이탈 시 안전 기지로 복구하며 가방은 잃고 창고 보상은 지급하지 않습니다. 부유석으로 뜨는 기지이며 왼쪽 뒤 작은 작업대 가까이에서 E로 기지 창고 목재2→판재1을 즉시 가공합니다. 생산창은 닫기/Escape로 닫습니다. 선내 바닥 건설/B에서 가까운 격자를 선택하고 판재1로 바닥 한 칸을 설치합니다. 기존 바닥과 변 연결, 최대8칸입니다. 건설창 취소/Escape는 닫기이며 이미 시작한 저장 확인은 계속합니다. 벽·계단·설비 이동·철거환급·대기열·승무원·정식 내부·자동항해·온라인은 후속입니다.</p>
+        <p>열린 갑판과 추락 방지 경계, 조종 종료 시 호버링은 임시 시제품 정책입니다. 섬 이탈 시 안전 기지로 복구하며 가방은 잃고 창고 보상은 지급하지 않습니다. 부유석으로 뜨는 기지이며 왼쪽 뒤 작은 작업대 가까이에서 E로 기지 창고 목재2→판재1을 즉시 가공합니다. 생산창은 닫기/Escape로 닫습니다. 모듈 건설/B에서 종류·회전·호환 변 후보를 선택하고 설치합니다. 새 모듈 최대12개, 1m/삼각/벽은 판재1, 2m 바닥은 판재2입니다. 건설창 취소/Escape는 닫기이며 이미 시작한 저장 확인은 계속합니다. 계단·설비 이동·철거환급·대기열·승무원·정식 내부·자동항해·온라인은 후속입니다.</p>
         <button id="help-close">계속 탐험하기</button>
       </section>
-      <button id="build-toggle" class="hud" aria-label="선내 바닥 건설 모드">바닥 건설 <kbd>B</kbd></button>
+      <button id="build-toggle" class="hud" aria-label="선내 바닥 건설 모드">모듈 건설 <kbd>B</kbd></button>
       <section id="construction-panel" hidden role="dialog" aria-modal="true" aria-labelledby="construction-title">
-        <h2 id="construction-title">기지 바닥 확장</h2><p id="construction-info"></p>
-        <svg id="construction-map" viewBox="0 0 80 80" role="img" aria-label="기지 로컬 건설 격자. 북쪽+Z는 위, 칸을 눌러 선택하세요" focusable="false"></svg>
-        <div class="construction-arrows"><button id="build-west" aria-label="서쪽 칸">←</button><button id="build-north" aria-label="북쪽 칸">↑</button><button id="build-south" aria-label="남쪽 칸">↓</button><button id="build-east" aria-label="동쪽 칸">→</button></div>
+        <h2 id="construction-title">코어 연결 모듈 건설</h2><p id="construction-info"></p>
+        <label>모듈 <select id="module-kind"><option value="floor1">1×1m 바닥</option><option value="floor2">2×2m 바닥</option><option value="triangle">직각삼각 바닥</option><option value="wall">폭1m 벽</option></select></label>
+        <label>호환 변 스냅 <select id="module-snap"></select></label>
+        <div class="construction-arrows"><button id="build-west">이전</button><button id="build-north">↻90°</button><button id="build-south">↺90°</button><button id="build-east">다음</button></div>
         <p id="construction-message" role="status" aria-live="polite"></p>
         <button id="build-confirm">설치 확인</button><button id="build-cancel">취소·닫기</button>
-        <small>노랑=선택 · 밝은 칸=바닥 · 초록=연결 후보<br/>판재1 / 한 칸 · 최대8칸 · 변 연결만 가능<br/>닫아도 이미 시작한 저장 확인은 계속합니다.</small>
+        <small>코어 연결 호환 변 후보를 고르고 90° 회전하세요.<br/>1m·삼각·벽: 판재1 / 2m 바닥: 판재2 · 새 모듈 최대12개<br/>닫아도 이미 시작한 저장 확인은 계속합니다.</small>
       </section>
       <section id="production-panel" hidden role="dialog" aria-modal="true" aria-labelledby="production-title">
         <h2 id="production-title">목재 가공 작업대</h2>
