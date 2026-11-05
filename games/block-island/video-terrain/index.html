@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Block Island · 영상 지형 실험</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,'Malgun Gothic',sans-serif;color:#e6eee9;background:#101c20}*{box-sizing:border-box}body{margin:0}main{max-width:1440px;margin:auto;padding:30px}header{display:flex;justify-content:space-between;gap:24px;align-items:start}h1{font-size:28px;letter-spacing:-1px;margin:4px 0 12px}h2{font-size:17px;margin:0 0 12px}.eyebrow{font-size:12px;letter-spacing:2px;color:#91c3b0}.intro{color:#b3c7c5;margin:0 0 22px;max-width:850px;line-height:1.7}a{color:#a2dbc5}.badge{white-space:nowrap;color:#b8e2c9;border:1px solid #41665a;padding:7px 12px;border-radius:20px;font-size:12px}.toolbar{display:flex;flex-wrap:wrap;gap:14px;align-items:end;background:#1a2a30;border:1px solid #31464c;border-radius:12px;padding:18px;margin-bottom:18px}label{display:grid;gap:6px;font-size:12px;color:#bacdcb}input,select,button{font:inherit;color:#ecf1ed;border:1px solid #506167;border-radius:6px;padding:9px 11px;background:#243a40}button{background:#b5dbb8;color:#18332c;cursor:pointer;font-weight:600}input{width:185px}input[type=range]{padding:0;width:200px;height:38px;accent-color:#add9b8}select{min-width:200px}.formula{background:#0e191d;border-left:3px solid #b5dbb8;padding:14px 18px;font:14px/1.65 ui-monospace,Consolas,monospace;white-space:pre-wrap;margin:0 0 12px;min-height:72px}.stage-note{font-size:13px;color:#acc5c4;line-height:1.6;min-height:42px}.grid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px}.card{border:1px solid #31464c;background:#19292f;border-radius:12px;padding:18px;min-width:0}.card p{font-size:12px;line-height:1.7;color:#adc1bf;margin:8px 0 0}canvas{width:100%;display:block;border-radius:6px;background:#122329}#iso{aspect-ratio:1.5}#map{aspect-ratio:1.72;cursor:crosshair;image-rendering:pixelated}#section{aspect-ratio:3.35;image-rendering:pixelated}#stats{font-size:13px;color:#cae1d2;font-variant-numeric:tabular-nums;margin:14px 0;line-height:1.7}.legend{display:flex;gap:16px;font-size:12px;color:#b7cbca;margin-top:10px}.dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}.lower{margin-top:18px}.limits{display:grid;grid-template-columns:1fr 1fr;gap:24px;color:#b6cac7;font-size:13px;line-height:1.8}.limits h2{color:#e7eee8}.limits ul{padding-left:18px;margin:0}code{color:#d1e8c5}footer{font-size:12px;color:#8da9a5;margin:22px 0 4px}#probe{min-height:20px;color:#d1e8c5}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(max-width:850px){main{padding:18px}.grid,.limits{grid-template-columns:1fr}header{display:block}.badge{display:inline-block;margin-bottom:18px}h1{font-size:24px}.toolbar{gap:10px}input{width:155px}.formula{font-size:12px}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">BLOCK ISLAND / TERRAIN STUDY 01</div><h1>영상 속 지형 함수, 단계별로 보기</h1><p class="intro">같은 시드와 좌표에서 평지·언덕·절벽이 어떻게 달라지는지 비교합니다.<br>영상 나레이션의 수식과 설명을 재구성한 실험입니다. 화면 코드 전체를 그대로 옮긴 것은 아닙니다.</p></div><span class="badge">독립 실험 · 게임 저장 접근 없음</span></header>
+<form class="toolbar" id="controls">
+<label>생성 단계<select id="stage"><option value="flat">1. 평지</option><option value="perlin" selected>2. 2D Perlin + 물</option><option value="octaves">3. 4옥타브 + 물</option><option value="spline">4. 절벽 높이 곡선 + 물</option></select></label>
+<label>시드<input id="seed" value="block-island-video" maxlength="80"></label>
+<label>좌표 배율 · 구현 가정<select id="scale"><option value="0.005">0.005 · 넓은 지형</option><option value="0.01" selected>0.01 · 기본</option><option value="0.02">0.02 · 촘촘한 지형</option></select></label>
+<label>단면 z = <span id="slice-value">0</span><input id="slice" type="range" min="-128" max="127" value="0"></label>
+<button type="submit">같은 조건으로 다시 생성</button>
+</form>
+<pre class="formula" id="formula"></pre><p id="stage-note" class="stage-note"></p>
+<div id="stats" role="status" aria-live="polite"></div>
+<div class="grid">
+<section class="card"><h2>블록 지형 조망</h2><canvas id="iso" width="960" height="640" role="img" aria-label="선택한 단계의 돌 지형과 물을 비스듬히 내려다본 조망"></canvas><p>4칸 간격으로 표본을 뽑은 조망입니다. 높이는 1칸 단위이며, 아래쪽 y &lt; 50은 표시를 생략합니다. 노란 선은 선택한 단면입니다.</p></section>
+<div><section class="card"><h2>위에서 본 높이</h2><canvas id="map" width="512" height="298" role="img" aria-label="전체 256 곱하기 256 좌표의 높이 지도. 클릭하거나 단면 슬라이더로 단면을 선택할 수 있습니다."></canvas><div class="legend"><span><i class="dot" style="background:#527584"></i>낮은 돌</span><span><i class="dot" style="background:#dfdec6"></i>높은 돌</span><span><i class="dot" style="background:#287aad"></i>물</span></div><p id="probe">지도에 마우스를 올리면 좌표와 높이를 확인할 수 있습니다.</p></section><section class="card lower"><h2>옆에서 본 블록 단면</h2><canvas id="section" width="768" height="230" role="img" aria-label="선택한 z 좌표의 돌, 물, 공기 단면. y 50부터 160까지 표시합니다."></canvas><p>가로 x = −128…127 / 세로 y = 50…160 · 돌 우선, 남은 곳은 y &lt; 102에서 물</p></section></div>
+</div>
+<section class="card lower limits"><div><h2>자막에서 확인된 내용</h2><ul><li><code>y &lt; 100</code> → 돌, 나머지 공기</li><li><code>h = 100 + 20 × Perlin2D(x,z)</code></li><li>높이 아래는 돌, 나머지 <code>y &lt; 102</code>는 물</li><li>4회 샘플: 주파수 두 배, 진폭 절반</li><li>절벽 점: (−1,50), (0.3,100), (0.4,150), 이후 150</li></ul></div><div><h2>이번 구현의 가정과 한계</h2><ul><li>시드 셔플 기반 2D Perlin과 기본 좌표 배율 0.01은 보완 구현입니다.</li><li>4옥타브는 정규화 없이 더합니다. 이론 높이 범위는 62.5…137.5입니다.</li><li>절벽은 단일 Perlin에 점 사이 선형 보간을 적용합니다. 실제 스플라인 방식은 미확인입니다.</li><li>3D 밀도·높이 편향의 전체 수식과 동굴 코드는 자막에 없어 미구현입니다.</li><li>단위는 실험용 블록 좌표입니다. 게임의 0.5m 셀이나 기존 지형에 연결하지 않았습니다.</li></ul></div></section>
+<footer>외부 요청·추가 설치 없이 실행됩니다. 자세한 근거와 실행법: 같은 폴더의 README.md</footer>
+</main><script>(() => {
+  // D:/MyVault/BlockIsland_Work/island-prototype/experiments/video-terrain/terrain.mjs
+  var BLOCK = Object.freeze({ AIR: "air", STONE: "stone", WATER: "water" });
+  var BASE_HEIGHT = 100;
+  var HEIGHT_AMPLITUDE = 20;
+  var SEA_LEVEL = 102;
+  var STAGES = Object.freeze(["flat", "perlin", "octaves", "spline"]);
+  var CLIFF_POINTS = Object.freeze([[-1, 50], [0.3, 100], [0.4, 150]].map(Object.freeze));
+  var finite = (value, name) => {
+    if (!Number.isFinite(value)) throw new TypeError(`${name} must be finite`);
+  };
+  var lerp = (a, b, t) => a + (b - a) * t;
+  var fade = (t) => t * t * t * (t * (t * 6 - 15) + 10);
+  function seedHash(seed) {
+    let hash = 2166136261;
+    for (const c of String(seed)) hash = Math.imul(hash ^ c.codePointAt(0), 16777619);
+    return hash >>> 0;
+  }
+  function createPerlin2D(seed = "block-island-video") {
+    let state = seedHash(seed);
+    const random = () => {
+      state = state + 1831565813 >>> 0;
+      let t = state;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+    const p = Array.from({ length: 256 }, (_, i) => i);
+    for (let i = 255; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [p[i], p[j]] = [p[j], p[i]];
+    }
+    const permutation = [...p, ...p];
+    const d = Math.SQRT1_2;
+    const gradients = [[1, 0], [-1, 0], [0, 1], [0, -1], [d, d], [-d, d], [d, -d], [-d, -d]];
+    return (x, z) => {
+      finite(x, "x");
+      finite(z, "z");
+      const ix = Math.floor(x), iz = Math.floor(z);
+      const fx = x - ix, fz = z - iz;
+      const X = ix & 255, Z = iz & 255;
+      const dot = (dx, dz) => {
+        const g = gradients[permutation[permutation[X + dx] + Z + dz] & 7];
+        return g[0] * (fx - dx) + g[1] * (fz - dz);
+      };
+      const value = Math.SQRT2 * lerp(
+        lerp(dot(0, 0), dot(1, 0), fade(fx)),
+        lerp(dot(0, 1), dot(1, 1), fade(fx)),
+        fade(fz)
+      );
+      return Math.max(-1, Math.min(1, value));
+    };
+  }
+  function fourOctaves(noise2D, x, z) {
+    let value = 0, frequency = 1, amplitude = 1;
+    for (let i = 0; i < 4; i++) {
+      value += amplitude * noise2D(x * frequency, z * frequency);
+      frequency *= 2;
+      amplitude *= 0.5;
+    }
+    return value;
+  }
+  function cliffHeight(value) {
+    finite(value, "noise");
+    if (value <= -1) return 50;
+    if (value <= 0.3) return lerp(50, 100, (value + 1) / 1.3);
+    if (value < 0.4) return lerp(100, 150, (value - 0.3) / 0.1);
+    return 150;
+  }
+  function blockBelowHeight(y, height, withWater = true) {
+    finite(y, "y");
+    finite(height, "height");
+    if (y < height) return BLOCK.STONE;
+    if (withWater && y < SEA_LEVEL) return BLOCK.WATER;
+    return BLOCK.AIR;
+  }
+  function createVideoTerrain({ seed = "block-island-video", stage = "perlin", scale = 0.01, noise2D } = {}) {
+    if (!STAGES.includes(stage)) throw new RangeError(`Unknown stage: ${stage}`);
+    finite(scale, "scale");
+    if (scale <= 0) throw new RangeError("scale must be positive");
+    const noise = noise2D ?? createPerlin2D(seed);
+    if (typeof noise !== "function") throw new TypeError("noise2D must be a function");
+    function getHeight(x, z) {
+      finite(x, "x");
+      finite(z, "z");
+      if (stage === "flat") return BASE_HEIGHT;
+      const n = stage === "octaves" ? fourOctaves(noise, x * scale, z * scale) : noise(x * scale, z * scale);
+      finite(n, "noise result");
+      return stage === "spline" ? cliffHeight(n) : BASE_HEIGHT + HEIGHT_AMPLITUDE * n;
+    }
+    function getBlock(x, y, z) {
+      return blockBelowHeight(y, getHeight(x, z), stage !== "flat");
+    }
+    return Object.freeze({ seed: String(seed), stage, scale, getHeight, getBlock });
+  }
+
+  // D:/MyVault/BlockIsland_Work/island-prototype/experiments/video-terrain/lab.mjs
+  var $ = (id) => document.getElementById(id);
+  var ctx = (id) => $(id).getContext("2d");
+  var N = 256;
+  var MIN = -128;
+  var terrain;
+  var heights;
+  var minHeight;
+  var maxHeight;
+  var descriptions = {
+    flat: ["if (y < 100) return stone;\nreturn air;", "\uC2DC\uC791 \uB2E8\uACC4\uC785\uB2C8\uB2E4. \uB192\uC774 100 \uBBF8\uB9CC\uC740 \uC804\uBD80 \uB3CC\uC774\uBA70 \uBB3C\uC740 \uC544\uC9C1 \uCD94\uAC00\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."],
+    perlin: ["height = 100 + 20 * Perlin2D(x, z);\nif (y < height) return stone; if (y < 102) return water; return air;", "\uB2E8\uC77C 2D \uB178\uC774\uC988\uB85C \uB192\uC774\uB97C \uC815\uD569\uB2C8\uB2E4. Perlin2D \uB0B4\uBD80\uC5D0\uC11C \uC120\uD0DD\uD55C \uC88C\uD45C \uBC30\uC728\uC744 \uC801\uC6A9\uD569\uB2C8\uB2E4."],
+    octaves: ["n = P(x,z) + 0.5*P(2*x,2*z) + 0.25*P(4*x,4*z) + 0.125*P(8*x,8*z);\nheight = 100 + 20*n; // \uB3CC \u2192 \uBB3C \u2192 \uACF5\uAE30 \uC21C\uC11C", "\uC138\uBD80 \uAD74\uACE1\uC744 \uB354\uD569\uB2C8\uB2E4. \uC790\uB9C9\uC5D0 \uC815\uADDC\uD654 \uC5EC\uBD80\uAC00 \uC5C6\uC5B4 \uC5EC\uAE30\uC11C\uB294 \uB124 \uC0D8\uD50C\uC744 \uADF8\uB300\uB85C \uD569\uC0B0\uD569\uB2C8\uB2E4."],
+    spline: ["n = Perlin2D(x, z);\nheight = linearCurve(n, [[-1,50], [0.3,100], [0.4,150]]); // \uC774\uD6C4 150", "0.3\uC5D0\uC11C 0.4\uB85C \uC870\uAE08 \uC99D\uAC00\uD558\uB294 \uAD6C\uAC04\uC5D0 \uB192\uC774\uAC00 100\uC5D0\uC11C 150\uC73C\uB85C \uAE09\uC0C1\uC2B9\uD569\uB2C8\uB2E4. \uC120\uD615 \uBCF4\uAC04\uACFC \uB2E8\uC77C \uB178\uC774\uC988 \uC785\uB825\uC740 \uAD6C\uD604 \uAC00\uC815\uC785\uB2C8\uB2E4."]
+  };
+  function color(height, water = false, shade = 1) {
+    if (water) return `rgb(${Math.round(40 * shade)},${Math.round(122 * shade)},${Math.round(173 * shade)})`;
+    const t = Math.max(0, Math.min(1, (height - 50) / 100));
+    return `rgb(${Math.round((82 + 141 * t) * shade)},${Math.round((117 + 105 * t) * shade)},${Math.round((132 + 66 * t) * shade)})`;
+  }
+  var hasWater = (h) => terrain.stage !== "flat" && Math.ceil(h) < 102;
+  var heightAt = (x, z) => heights[z * N + x];
+  function generate() {
+    terrain = createVideoTerrain({ stage: $("stage").value, seed: $("seed").value, scale: Number($("scale").value) });
+    heights = new Float64Array(N * N);
+    minHeight = Infinity;
+    maxHeight = -Infinity;
+    let wet = 0;
+    for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+      const h = terrain.getHeight(x + MIN, z + MIN);
+      heights[z * N + x] = h;
+      minHeight = Math.min(minHeight, h);
+      maxHeight = Math.max(maxHeight, h);
+      if (hasWater(h)) wet++;
+    }
+    $("formula").textContent = descriptions[terrain.stage][0];
+    $("stage-note").textContent = descriptions[terrain.stage][1];
+    $("stats").textContent = `256 \xD7 256 \uC88C\uD45C / \uB192\uC774 ${minHeight.toFixed(2)}\u2026${maxHeight.toFixed(2)} / \uBB3C\uC774 \uC788\uB294 \uAE30\uB465 ${(wet / (N * N) * 100).toFixed(1)}% / \uD574\uC218\uBA74 \uACBD\uACC4 y = 102`;
+    render();
+  }
+  function renderMap() {
+    const c = ctx("map"), { width: w, height: h } = c.canvas;
+    c.clearRect(0, 0, w, h);
+    for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+      const v = heightAt(x, z);
+      c.fillStyle = color(v, hasWater(v));
+      c.fillRect(x * w / N, z * h / N, Math.ceil(w / N), Math.ceil(h / N));
+    }
+    c.strokeStyle = "#f4d17e";
+    c.lineWidth = 2;
+    const y = (Number($("slice").value) - MIN + 0.5) * h / N;
+    c.beginPath();
+    c.moveTo(0, y);
+    c.lineTo(w, y);
+    c.stroke();
+  }
+  function renderSection() {
+    const c = ctx("section"), { width: w, height: h } = c.canvas;
+    const z = Number($("slice").value), yMin = 50, yMax = 160;
+    c.fillStyle = "#122329";
+    c.fillRect(0, 0, w, h);
+    for (let x = MIN; x < MIN + N; x++) for (let y = yMin; y < yMax; y++) {
+      const block = terrain.getBlock(x, y, z);
+      if (block === BLOCK.AIR) continue;
+      c.fillStyle = color(y, block === BLOCK.WATER);
+      c.fillRect((x - MIN) * w / N, (yMax - y - 1) * h / (yMax - yMin), Math.ceil(w / N), Math.ceil(h / (yMax - yMin)));
+    }
+    c.font = "12px system-ui";
+    for (const y of [60, 100, 102, 150]) {
+      const py = (yMax - y) * h / (yMax - yMin);
+      c.strokeStyle = y === 102 ? "#6cc0ec" : "#ffffff35";
+      c.setLineDash(y === 102 ? [5, 4] : [2, 5]);
+      c.beginPath();
+      c.moveTo(0, py);
+      c.lineTo(w, py);
+      c.stroke();
+      c.fillStyle = "#102025dd";
+      c.fillRect(2, py - 13, 38, 14);
+      c.fillStyle = "#e5f0ea";
+      c.fillText(String(y), 6, py - 2);
+    }
+    c.setLineDash([]);
+  }
+  function renderIso() {
+    const c = ctx("iso"), { width: w, height: h } = c.canvas;
+    c.fillStyle = "#122329";
+    c.fillRect(0, 0, w, h);
+    const count = 64, step = 4, sx = 6.6, sz = 2.65, sy = 2.35;
+    const project = (x, z, y) => [w / 2 + (x - z) * sx, 260 + (x + z) * sz - (y - 50) * sy];
+    function face(points, fill) {
+      c.fillStyle = fill;
+      c.beginPath();
+      c.moveTo(...points[0]);
+      for (const p of points.slice(1)) c.lineTo(...p);
+      c.closePath();
+      c.fill();
+    }
+    for (let z = 0; z < count; z++) for (let x = 0; x < count; x++) {
+      const raw = heightAt(x * step, z * step), stoneTop = Math.ceil(raw);
+      const water = hasWater(raw), top = water ? 102 : stoneTop;
+      const a = project(x, z, top), b = project(x + 1, z, top), d = project(x, z + 1, top), e = project(x + 1, z + 1, top);
+      const bottomA = project(x + 1, z, 50), bottomB = project(x + 1, z + 1, 50), bottomC = project(x, z + 1, 50);
+      face([b, e, bottomB, bottomA], color(raw, false, 0.65));
+      face([d, e, bottomB, bottomC], color(raw, false, 0.8));
+      if (water) {
+        face([b, e, project(x + 1, z + 1, stoneTop), project(x + 1, z, stoneTop)], color(raw, true, 0.65));
+        face([d, e, project(x + 1, z + 1, stoneTop), project(x, z + 1, stoneTop)], color(raw, true, 0.8));
+      }
+      face([a, b, e, d], color(raw, water));
+      if (z === Math.floor((Number($("slice").value) - MIN) / step)) {
+        c.strokeStyle = "#f4d17e";
+        c.lineWidth = 1.4;
+        c.beginPath();
+        c.moveTo(...d);
+        c.lineTo(...e);
+        c.stroke();
+      }
+    }
+    c.fillStyle = "#adc1bf";
+    c.font = "14px system-ui";
+    c.fillText("x \u2192     \u2199 z     \uB192\uC774 1\uCE78 \uB2E8\uC704", 24, h - 24);
+  }
+  function render() {
+    $("slice-value").textContent = $("slice").value;
+    renderMap();
+    renderSection();
+    renderIso();
+  }
+  $("controls").addEventListener("submit", (event) => {
+    event.preventDefault();
+    generate();
+  });
+  for (const id of ["stage", "scale"]) $(id).addEventListener("change", generate);
+  $("slice").addEventListener("input", render);
+  $("map").addEventListener("mousemove", (event) => {
+    const r = $("map").getBoundingClientRect();
+    const x = Math.max(0, Math.min(N - 1, Math.floor((event.clientX - r.left) / r.width * N)));
+    const z = Math.max(0, Math.min(N - 1, Math.floor((event.clientY - r.top) / r.height * N)));
+    const v = heightAt(x, z);
+    $("probe").textContent = `x=${x + MIN}, z=${z + MIN} / \uB192\uC774 ${v.toFixed(3)} / \uCD5C\uC0C1\uB2E8 \uB3CC y=${Math.ceil(v) - 1}${hasWater(v) ? " / \uADF8 \uC704\uB294 \uBB3C" : ""}`;
+  });
+  $("map").addEventListener("click", (event) => {
+    const r = $("map").getBoundingClientRect();
+    $("slice").value = Math.max(MIN, Math.min(127, Math.floor((event.clientY - r.top) / r.height * N) + MIN));
+    render();
+  });
+  window.videoTerrainLab = () => ({ stage: terrain.stage, seed: terrain.seed, scale: terrain.scale, minHeight, maxHeight, slice: Number($("slice").value), getHeight: terrain.getHeight, getBlock: terrain.getBlock });
+  generate();
+})();
+</script></body></html>
