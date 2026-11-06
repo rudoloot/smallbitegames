@@ -53,7 +53,7 @@
         const top=Math.max(Math.ceil(colExtent+2*paddingY),Math.min(referenceTop,Math.ceil(font*1.2+12)));
         const coordinatePadding=Math.min(6,left/6,top/6);
         const coordinateSize=Math.max(1,Math.min(12,12*(left-2*coordinatePadding)/measureToken(`${N},${N}`,12).width,(top-2*coordinatePadding)/1.2));
-        viewMeasurements.set(key,{left,top,paddingX,paddingY,coordinatePadding,coordinateSize});
+        viewMeasurements.set(key,{left,top,paddingX,paddingY,coordinatePadding,coordinateSize,previewSize:Math.max(0,Math.min(left,top)-4)});
       }
       const packed=viewMeasurements.get(key),{left,top}=packed;
       const cell=Math.max(.1,Math.min((maxWidth-left-end)/N,(maxHeight-top-end)/N));

@@ -16,8 +16,7 @@
       board.style.setProperty('--'+name,value+'px');
     }
     board.style.setProperty('--n',N);
-    board.style.setProperty('--coordinate-size',layout.coordinateSize+'px');
-    board.style.setProperty('--coordinate-padding',layout.coordinatePadding+'px');
+    board.style.setProperty('--progress-preview-size',layout.previewSize+'px');
     board.querySelectorAll('.clue.left,.clue.top').forEach(clue=>{
       const row=clue.classList.contains('left'),tokens=[...clue.querySelectorAll('[data-clue-token]')];
       const positions=window.getStackCluePositions(tokens.map(token=>token.textContent),row?'row':'col',layout);
@@ -33,7 +32,7 @@
     board.querySelectorAll('[data-clue]').forEach(el=>{el.setAttribute('role','button');el.tabIndex=0;});
     fitBoard();
   };
-  const selectClue=e=>{const el=e.target.closest('[data-clue]');if(!el)return;const id=Number(el.dataset.clue);window.selectTerrainLine(id<N?'row':'col',id%N);};
+  const selectClue=e=>{if(window.stackHintSelecting)return;const el=e.target.closest('[data-clue]');if(!el)return;const id=Number(el.dataset.clue);window.selectTerrainLine(id<N?'row':'col',id%N);};
   board.addEventListener('click',selectClue);
   board.addEventListener('keydown',e=>{if(e.target.matches('[data-clue]')&&['Enter',' '].includes(e.key)){e.preventDefault();selectClue(e);}});
   window.revealBoardCell=()=>{};

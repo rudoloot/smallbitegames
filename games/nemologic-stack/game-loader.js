@@ -1,6 +1,6 @@
 /* A single game document loads one catalog entry and its unchanged puzzle data. */
 (async()=>{
-  const english=(()=>{try{return localStorage.getItem('nonogram-stack-language')==='en';}catch{return false;}})();
+  const english=(()=>{try{return (globalThis.StackStorage||localStorage).getItem('nonogram-stack-language')==='en';}catch{return false;}})();
   const $=id=>document.getElementById(id);
   if(english)$('game-loading').textContent='Loading puzzle…';
   async function readJSON(file){
@@ -9,10 +9,11 @@
     return response.json();
   }
   function loadScript(file){return new Promise((resolve,reject)=>{
-    const script=document.createElement('script');script.src=file+'?v=d41fb8c500b2';script.onload=resolve;
+    const script=document.createElement('script');script.src=file+'?v=321fa71ab15f';script.onload=resolve;
     script.onerror=()=>reject(Error(`Could not load ${file}`));document.body.append(script);
   });}
   try{
+    await (window.StackRuntime?.ready||Promise.resolve());
     const catalog=await readJSON('pack-data/game-catalog.json');
     const id=new URLSearchParams(location.search).get('puzzle');
     const puzzle=catalog.puzzles.find(entry=>entry.id===id);
@@ -20,7 +21,7 @@
     const following=catalog.puzzles.filter(entry=>entry.number>puzzle.number).sort((a,b)=>a.number-b.number);
     globalThis.getNextStackPuzzle=()=>following.find(entry=>{
       try{
-        const status=JSON.parse(localStorage.getItem(entry.statusKey)||'null');
+        const status=JSON.parse((globalThis.StackStorage||localStorage).getItem(entry.statusKey)||'null');
         return status?.complete!==true||status.filled!==entry.size*entry.size;
       }catch{return true;}
     })||null;
@@ -46,8 +47,15 @@
     const answer=spec.answer||spec.source?.subject;
     if(answer){$('win-description').textContent=answer;$('win-description').classList.add('win-answer');}
     else $('win-description').textContent=`${n*n*channels}개의 높이를 모두 찾았어요.`;
-    for(const file of ['i18n.js','shared-ui.js','clue-feedback.js','app.js','board-layout.js','fruit-game-ui.js'])await loadScript(file);
+    for(const file of ['i18n.js','input-sounds.js','shared-ui.js','clue-feedback.js','hint-wallet.js','progress-preview.js','app.js','board-layout.js','fruit-game-ui.js','hint-panel.js']){
+      await loadScript(file);
+      if(file==='hint-wallet.js')await window.StackRuntime?.recoverRewards();
+    }
     $('game-loading').hidden=true;delete document.body.dataset.loading;
+    try{
+      (globalThis.StackStorage||localStorage).setItem('nonogram-stack-last-played-v1',JSON.stringify({puzzleId:puzzle.id}));
+      await window.StackRuntime?.flush();
+    }catch{/* A failed location save must not prevent playing the loaded puzzle. */}
     globalThis.stackGameReady=true;dispatchEvent(new Event('stack-game-ready'));
   }catch(error){
     globalThis.stackGameError=error.message;

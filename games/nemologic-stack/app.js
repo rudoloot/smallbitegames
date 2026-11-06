@@ -10,6 +10,8 @@ document.documentElement.style.setProperty('--n',N);
 const fixed=Array.from({length:N*N},()=>Array(CHANNEL_COUNT).fill(false));
 GIVEN_DATA.forEach(g=>fixed[g.index][g.channel]=true);
 let boardState=fresh(), tab=0, selected=0, history=[], pendingHint=null, errors=new Set(), completed=false, storageOK=true;
+let hintWallet=null;
+try{if(MONO&&window.StackHintWallet){hintWallet=StackHintWallet.create(globalThis.StackStorage||localStorage);hintWallet.recover();}}catch{storageOK=false;}
 let paintValue=0, stroke=null;
 let terrainSelection=null;
 let inputMode='touch';
@@ -28,7 +30,7 @@ let cellNodes=[],clueNodes=[],dragFrame=0,renderedSelection=null;
 const dirtyCells=new Set();
 function fresh(){const a=Array.from({length:N*N},()=>Array(CHANNEL_COUNT).fill(null));GIVEN_DATA.forEach(g=>a[g.index][g.channel]=g.value);return a;}
 try{
-  const ownSave=localStorage.getItem(key),legacySave=!C.noGivens&&!ownSave&&C.rule==='height-runs-max'?localStorage.getItem('rgb-stack-picross-v1-bull-30-adjust30'):null;
+  const ownSave=hintWallet?.pendingGame(key)||(globalThis.StackStorage||localStorage).getItem(key),legacySave=!C.noGivens&&!ownSave&&C.rule==='height-runs-max'?(globalThis.StackStorage||localStorage).getItem('rgb-stack-picross-v1-bull-30-adjust30'):null;
   const saved=JSON.parse(ownSave||legacySave||'null');
   if(saved && Array.isArray(saved.cells) && saved.cells.length===N*N && saved.cells.every(a=>Array.isArray(a)&&a.length===CHANNEL_COUNT&&a.every(v=>v===null||Number.isInteger(v)&&v>=0&&v<=MAX_STACK))){
     boardState=saved.cells;
@@ -39,8 +41,9 @@ try{
   }
 }catch{storageOK=false;}
 function save(){
-  try{localStorage.setItem(key,JSON.stringify({cells:boardState,tab}));}catch{storageOK=false;}
-  try{if(globalThis.StackPuzzle?.statusKey)localStorage.setItem(StackPuzzle.statusKey,JSON.stringify({filled:boardState.flat().filter(v=>v!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}
+  try{hintWallet?.recover();}catch{storageOK=false;say('이 브라우저에서는 자동 저장할 수 없어요.',true);return false;}
+  try{(globalThis.StackStorage||localStorage).setItem(key,JSON.stringify({cells:boardState,tab}));}catch{storageOK=false;}
+  try{if(globalThis.StackPuzzle?.statusKey)(globalThis.StackStorage||localStorage).setItem(StackPuzzle.statusKey,JSON.stringify({filled:boardState.flat().filter(v=>v!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}
   if(!storageOK)say('이 브라우저에서는 자동 저장할 수 없어요.',true);
 }
 function say(message,warning=false){$('message').textContent=message;$('message').classList.toggle('warning',warning);}
@@ -104,12 +107,8 @@ function getSelectedCoordinates(){
   const col=selected!==null?selected%N+1:terrainSelection?.axis==='col'?terrainSelection.line+1:null;
   return {row,col};
 }
-function updateCoordinates(){
-  const output=$('selection-coordinates');if(!output)return;
-  const {row,col}=getSelectedCoordinates();
-  output.querySelector('[data-coordinate="row"]').textContent=row??'—';
-  output.querySelector('[data-coordinate="col"]').textContent=col??'—';
-  output.setAttribute('aria-label',`${row===null?'행 미선택':row+'행'}, ${col===null?'열 미선택':col+'열'}`);
+function updateProgressPreview(indices=null){
+  if(MONO)StackProgressPreview.draw($('progress-preview'),boardState.map(cell=>cell[0]),StackPalette.colors(StackPuzzle,displayMode()),indices);
 }
 function updateProgress(){
   const filled=boardState.flat().filter(v=>v!==null).length;
@@ -127,7 +126,7 @@ function updateNextPuzzle(){
     button.removeAttribute('href');button.setAttribute('aria-disabled','true');button.setAttribute('tabindex','-1');
   }
   button.textContent='다음문제';
-  $('win-puzzle-list').setAttribute('href','collection.html#'+displayMode());
+  $('win-puzzle-list').setAttribute('href',StackRuntime.collectionUrl());
 }
 $('next-puzzle').addEventListener('click',event=>{updateNextPuzzle();if(!event.currentTarget.hasAttribute('href'))event.preventDefault();});
 window.addEventListener('storage',updateNextPuzzle);
@@ -156,7 +155,7 @@ function render(){
     const values=cells.map(i=>channel===null?(boardState[i].includes(null)?null:C.sum(boardState[i])):boardState[i][channel]);
     return {groups,total,feedback:ClueFeedback.evaluate(values,groups,total)};
   }));
-  let html='<div id="selection-coordinates" class="corner coordinates" style="grid-row:1;grid-column:1" role="status" aria-live="polite" aria-atomic="true"><span data-coordinate="row">—</span><span aria-hidden="true">,</span><span data-coordinate="col">—</span></div>';
+  let html=`<div class="corner picture-preview" style="grid-row:1;grid-column:1"><canvas id="progress-preview" width="${N}" height="${N}" role="img" aria-label="현재 입력한 그림"></canvas></div>`;
   for(let l=0;l<N;l++){
     for(const axis of ['row','col']){
       const a=axis==='row'?0:1,info=lineInfo[a][l],active=activeClue(axis,l);
@@ -167,7 +166,7 @@ function render(){
       const values=tokens.length||C.omitAllZeros?tokens:[0];
       const slots=values.map((n,k)=>`<span data-clue-token="${k}" class="clue-slot ${n==='·'?'gap-token':''} clue-${info.feedback.tokens[k]||'pending'}">${n}</span>`).join('');
       html+=`<div class="clue ${a===0?'left':'top'} ${classes}" data-clue="${a*N+l}" style="${place}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'동일 높이 구간':'연속 칸 수'} ${tokens.join(' ')||(C.omitAllZeros?'빈 줄':0)}"><div class="run-tokens">${slots}</div></div>`;
-      html+=`<div class="clue total ${a===0?'right':'bottom'} ${classes} clue-${info.feedback.maximum||'pending'}" data-clue="${a*N+l}" style="${totalPlace}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'최대 높이':'스택 합'} ${info.total}">${info.total}</div>`;
+      html+=`<div class="clue total ${a===0?'right':'bottom'} clue-${info.feedback.maximum||'pending'}" data-clue="${a*N+l}" style="${totalPlace}" aria-label="${l+1}${a===0?'행':'열'} ${C.rule==='height-runs-max'?'최대 높이':'스택 합'} ${info.total}">${info.total}</div>`;
     }
   }
   for(let i=0;i<N*N;i++){
@@ -185,7 +184,7 @@ function render(){
   clueNodes=Array.from({length:2*N},()=>[]);
   $('board').querySelectorAll('[data-clue]').forEach(el=>clueNodes[Number(el.dataset.clue)].push(el));
   renderedSelection=selected;
-  updateCoordinates();
+  updateProgressPreview();
   if(focused!==undefined)$('board').querySelector(`[data-index="${focused}"]`)?.focus({preventScroll:true});
   updateProgress();
   $('diagonals').hidden=channel!==null;
@@ -210,7 +209,7 @@ function edit(value){
   if(tab==='all'||value==='select'||selected===null||fixed[selected][tab])return;
   const before=boardState[selected][tab];if(before===value){render();return;}
   history.push({channel:tab,changes:[{index:selected,before,after:value}]});
-  boardState[selected][tab]=value;errors.clear();cancelHint();save();render();checkWin(history.at(-1));
+  boardState[selected][tab]=value;window.StackInputSound?.play(value);errors.clear();cancelHint();save();render();checkWin(history.at(-1));
 }
 function checkWin(action=null){
   // Only unanswered zero cells may remain; every entered height must be correct.
@@ -225,11 +224,25 @@ function checkWin(action=null){
   if(!isSolved())return;
   cancelHint();terrainSelection=null;render();save();say(`완성! ${N*N*CHANNEL_COUNT}개의 높이가 모두 맞아요.`);
   if(completed)return;completed=true;
+  if(window.StackRuntime)StackRuntime.completion=StackRuntime.ads.recordCompletion().catch(()=>{});
   drawCompletedPicture();
   $('win-dialog').showModal();
 }
 function undo(){finishStroke();const action=history.pop();if(!action)return;for(const change of action.changes)boardState[change.index][action.channel]=change.before;selected=action.changes[0].index;tab=action.channel;completed=false;errors.clear();cancelHint();save();render();say(`${action.changes.length}칸의 입력을 되돌렸어요.`);}
 function findMistakes(){const result=[];boardState.forEach((cell,i)=>cell.forEach((v,c)=>{if(v!==null&&v!==C.solution[i][c])result.push({index:i,channel:c});}));return result;}
+window.getStackHintBalance=()=>{if(!hintWallet)throw Error('Hint storage unavailable');return hintWallet.balance();};
+window.getStackHintChoices=()=>MONO?StackHintWallet.clueHints(boardState,C.solution,N):[];
+window.getStackHintPlan=()=>window.getStackHintChoices()[0]||null;
+window.useStackHint=clue=>{
+  finishStroke();window.stopStackControls?.();
+  if(!hintWallet||!globalThis.StackPuzzle||!clue)return false;
+  const result=hintWallet.spend({storageKey:key,statusKey:StackPuzzle.statusKey,cells:boardState,solution:C.solution,size:N,clue});
+  if(!result)return false;
+  const h=result.hint,action={channel:0,changes:h.changes.map(change=>({index:change.index,before:change.before,after:change.value}))};
+  boardState=result.cells;selected=h.changes[0].index;tab=0;history.push(action);completed=false;errors.clear();cancelHint();
+  render();save();checkWin(action);if(window.revealBoardCell)window.revealBoardCell(selected);
+  return true;
+};
 function hint(){
   if(pendingHint){const h=pendingHint;selected=h.index;tab=h.channel;edit(h.value);if(!isSolved())say(`${names[h.channel]} ${Math.floor(h.index/N)+1}행 ${h.index%N+1}열을 ${h.value}스택으로 적용했어요.`);return;}
   if(isSolved()){say('이미 모든 높이를 찾았어요!');return;}
@@ -282,8 +295,8 @@ function refreshDrag(){
       else for(const token of el.querySelectorAll('[data-clue-token]')){const state=feedback.tokens[Number(token.dataset.clueToken)];token.classList.toggle('clue-done',state==='done');token.classList.toggle('clue-conflict',state==='conflict');}
     }
   }
-  clueNodes.forEach((nodes,index)=>nodes.forEach(el=>el.classList.toggle('active-line',activeClue(index<N?'row':'col',index%N))));
-  updateCoordinates();
+  clueNodes.forEach((nodes,index)=>nodes.forEach(el=>el.classList.toggle('active-line',!el.classList.contains('total')&&activeClue(index<N?'row':'col',index%N))));
+  updateProgressPreview(dirtyCells);
   if(typeof window.updateTerrainCells==='function')window.updateTerrainCells(dirtyCells);
   dirtyCells.clear();renderedSelection=selected;
 updateProgress();
@@ -304,6 +317,7 @@ function paintAt(x,y){
   if(before===stroke.value)return;
   stroke.changes.push({index,before,after:stroke.value});
   boardState[index][stroke.channel]=stroke.value;
+  window.StackInputSound?.play(stroke.value);
   dirtyCells.add(index);
 }
 function paintSegment(x,y){
@@ -324,7 +338,7 @@ $('board').addEventListener('pointerdown',e=>{
   const cell=e.target.closest('[data-index]');
   if(!cell||!e.isPrimary||e.button!==0||stroke)return;
   if($('board-viewport')?.classList.contains('pan-mode'))return;
-  setInputMode('touch');
+  if(inputMode==='dpad'){e.preventDefault();setInputMode('touch');return;}
   const hadLine=terrainSelection!==null;terrainSelection=null;
   selected=Number(cell.dataset.index);cancelHint();if(hadLine)render();
   if(tab==='all'){render();return;}
@@ -361,7 +375,7 @@ $('board').addEventListener('contextmenu',e=>{if(tab!=='all')e.preventDefault();
 $('board').addEventListener('click',e=>{
   if(e.detail!==0)return; // Pointer input is handled above; keep keyboard/screen-reader activation.
   const cell=e.target.closest('[data-index]');if(!cell)return;
-  setInputMode('touch');
+  if(inputMode==='dpad'){e.preventDefault();setInputMode('touch');return;}
   terrainSelection=null;selected=Number(cell.dataset.index);cancelHint();
   if(tab==='all'||paintValue==='select')render();else edit(paintValue);
 });

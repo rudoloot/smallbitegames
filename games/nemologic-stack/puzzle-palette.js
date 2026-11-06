@@ -26,8 +26,8 @@
     const [r,g,b]=hex.slice(1).match(/../g).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);
     return .2126*r+.7152*g+.0722*b>.179?'#202522':'#ffffff';
   }
-  function readMode(){try{return localStorage.getItem('nonogram-stack-mode')==='monochrome'?'monochrome':'color';}catch{return 'color';}}
-  function writeMode(mode){try{localStorage.setItem('nonogram-stack-mode',mode);}catch{}}
+  function readMode(){try{return (globalThis.StackStorage||localStorage).getItem('nonogram-stack-mode')==='monochrome'?'monochrome':'color';}catch{return 'color';}}
+  function writeMode(mode){try{(globalThis.StackStorage||localStorage).setItem('nonogram-stack-mode',mode);}catch{}}
   const api={grayscale,palettes,paletteFor,colors,foreground,readMode,writeMode};
   if(typeof module!=='undefined')module.exports=api;
   root.StackPalette=api;

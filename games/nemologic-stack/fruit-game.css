@@ -59,7 +59,6 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
 .clue.left,.clue.right{box-shadow:inset 0 -1px 0 #e2e6de}
 .clue.top,.clue.bottom{box-shadow:inset -1px 0 0 #e2e6de}
 .individual-sums .clue.active-line{background:#fff1c2;border-radius:0}
-.individual-sums .coordinates{display:flex;align-items:flex-end;justify-content:flex-end;gap:0;min-width:0;min-height:0;padding:var(--coordinate-padding,6px);overflow:hidden;font-size:var(--coordinate-size,9px);font-weight:650;line-height:1.2;color:#34493a;white-space:nowrap;font-variant-numeric:tabular-nums}
 .overview-marker rect{fill:transparent}
 .overview-marker.active-line>rect{fill:#fff1c2}
 .overview-clue-separator{fill:none;stroke:#e2e6de;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
@@ -67,7 +66,7 @@ html,body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:#
 
 /* Fit the complete game and controller inside the viewport. */
 html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
-.stack-sum-game .app{height:100dvh;min-height:0;max-height:100dvh;display:flex;flex-direction:column;gap:0;overflow:hidden;padding:8px 4px 0}
+.stack-sum-game .app{--control-lift:clamp(48px,10dvh,96px);height:100dvh;min-height:0;max-height:100dvh;display:flex;flex-direction:column;gap:0;overflow:hidden;padding:8px 4px 0}
 .stack-sum-game .shared-header{min-height:36px;margin:0 0 8px}
 .play-area{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;gap:8px;overflow:hidden}
 .stack-sum-game #editor-panel{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0;overflow:hidden;padding:0}
@@ -76,7 +75,8 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 .stack-sum-game #height-picker [data-value].held{filter:brightness(.9)}
 .stack-sum-game #board-viewport,.stack-sum-game .overview-stage{flex:none;min-width:0;min-height:0;margin:0;overflow:hidden;touch-action:none}
 .stack-sum-game #board{flex:none}
-.stack-sum-game .input-dock{position:static;inset:auto;flex:0 0 25dvh;height:25dvh;min-height:0;margin-top:0;padding:6px 6px max(6px,env(safe-area-inset-bottom));box-shadow:none}
+/* Lift the three control rows into thumb reach; flex recenters the board above them. */
+.stack-sum-game .input-dock{position:static;inset:auto;flex:0 0 25dvh;height:25dvh;min-height:0;margin-top:0;margin-bottom:max(var(--control-lift),env(safe-area-inset-bottom));padding:6px 6px max(6px,env(safe-area-inset-bottom));box-shadow:none}
 .stack-sum-game .input-panel{width:100%;height:100%;min-height:0}
 .stack-sum-game .gamepad{--control-padding:clamp(4px,1.2dvh,12px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%;height:100%;max-width:none;margin:0}
 .dpad-area{display:grid;place-items:center;min-width:0;min-height:0;padding:var(--control-padding)}
@@ -93,3 +93,4 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
   .stack-sum-game .shared-header{margin-bottom:4px}
 }
 @media(max-height:450px){.play-area{gap:6px}.stack-sum-game .height-picker #undo strong{font-size:14px}.stack-sum-game .height-picker span{font-size:6px}}
+@media(orientation:landscape) and (max-height:450px){.stack-sum-game .app{--control-lift:clamp(12px,4dvh,24px)}}

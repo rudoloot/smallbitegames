@@ -1,16 +1,18 @@
-.shared-header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;margin-bottom:14px;padding:0 8px;flex-shrink:0}
+.shared-header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;margin-bottom:10px;padding:0;flex-shrink:0}
 .wordmark{position:relative;border:0;background:none;display:flex;align-items:center;padding:6px 0;color:#293e30;cursor:default;white-space:nowrap}
 button.wordmark{cursor:pointer}
 .wordmark-text{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-.wordmark-logo{display:block;flex:none;width:170px;height:20px}
+.wordmark-logo{display:block;flex:none;width:clamp(116px,42vw,170px);height:auto}
 .wordmark-tone{fill:#000}
 .wordmark[data-mode="monochrome"] [data-tone="0"]{fill:#aaa}
 .wordmark[data-mode="monochrome"] [data-tone="1"]{fill:#555}
 .wordmark[data-mode="monochrome"] [data-tone="2"]{fill:#000}
 .wordmark[data-mode="color"] .wordmark-tone{fill:url(#wordmark-rainbow)}
-.shared-header .header-actions{display:flex;align-items:center;gap:6px}
+.shared-header .header-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .nav-icon{box-sizing:border-box;display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid #d8ded2;border-radius:10px;background:#fffef9;color:#52644f;cursor:pointer;font:20px/1 system-ui}
 .nav-icon svg{display:block;width:20px;height:20px;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.header-slot{display:block;width:36px;height:36px}
+.collection-app>.shared-header,.stack-sum-game .app>.shared-header{box-sizing:border-box;width:100%;max-width:756px;min-height:44px;padding:0;margin:0 auto 10px}
 #help span{display:block;font-size:22px;font-weight:650;line-height:1;transform:translate(var(--question-offset-x,0px),var(--question-offset-y,0px))}
 .nav-icon:disabled{opacity:.35;cursor:default}
 .wordmark:focus-visible,.nav-icon:focus-visible{outline:2px solid #548c67;outline-offset:2px}
@@ -18,6 +20,23 @@ button.wordmark{cursor:pointer}
 #settings-dialog::backdrop{background:#15281d80}
 .game-help{box-sizing:border-box;width:calc(100% - 32px);max-width:430px;max-height:85dvh;overflow:auto;overscroll-behavior:contain;padding:20px;border:1px solid #d6dfcf;border-radius:16px;background:#fafbf4;color:#293e30;box-shadow:0 20px 80px #26382e30;font:13px system-ui;letter-spacing:0}
 .game-help::backdrop{background:#15281d80}
+.hint-dialog{box-sizing:border-box;width:calc(100% - 32px);max-width:340px;max-height:85dvh;overflow:auto;padding:20px;border:1px solid #d6dfcf;border-radius:16px;background:#fafbf4;color:#293e30;font:14px/1.6 system-ui;box-shadow:0 20px 80px #26382e30}
+.hint-dialog::backdrop{background:#15281d80}
+.hint-dialog .settings-top h2{margin:0;font-size:20px}
+.hint-balance{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:20px 0 12px;padding:12px 16px;border:1px solid #dce2d5;border-radius:10px;background:#f5f5ef}
+.hint-balance output{font-size:28px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
+.hint-description,.hint-reward-note,#hint-feedback{font-size:13px;color:#62715d}
+.hint-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.hint-actions button{box-sizing:border-box;min-height:44px;min-width:0;padding:10px 8px;border:1px solid #cbd6c7;border-radius:9px;background:#fffef9;color:#293e30;font:600 14px/1.3 system-ui;cursor:pointer}
+.hint-actions button.primary-button{background:#526d50;color:#fff;border-color:#526d50}
+.hint-actions button:disabled{opacity:.4;cursor:default}
+.hint-actions button:focus-visible{outline:2px solid #548c67;outline-offset:2px}
+.hint-reward-note{text-align:end;margin:8px 0}
+#hint-feedback:empty{display:none}
+.storage-notice{position:fixed;z-index:10000;bottom:env(safe-area-inset-bottom,0px);left:8px;right:8px;margin:8px auto;max-width:480px;padding:12px;border:1px solid #b47c34;border-radius:8px;background:#fff4df;color:#543b1a;font:13px/1.5 system-ui}
+.stack-sum-game .app{padding-top:calc(10px + env(safe-area-inset-top));padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+.collection-app{padding-top:calc(10px + env(safe-area-inset-top));padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+.tutorial-app{padding-top:calc(20px + env(safe-area-inset-top));padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
 .game-help .settings-top h2{margin:0;font-size:20px;letter-spacing:0;line-height:1.3}
 .game-help .help-section{margin:20px 0}
 .game-help h3{margin:0 0 8px;font-size:14px;font-weight:700}
@@ -50,4 +69,20 @@ button.wordmark{cursor:pointer}
 .dpad:focus-visible,.dpad:has(button:focus-visible){outline:3px solid #548c67;outline-offset:2px}
 .height-picker button,.tutorial-tools button{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .height-picker button.held,.tutorial-tools button.held{background:#d2dfcb;box-shadow:inset 0 0 0 2px #526d50}
-@media(max-width:360px){.wordmark-logo{width:136px;height:16px}.shared-header{padding-inline:4px}.nav-icon{width:32px;height:32px}.dpad{width:110px;height:110px}}
+@media(max-width:360px){.nav-icon,.header-slot{width:32px;height:32px}.dpad{width:110px;height:110px}}
+#hint-selection{padding:10px 16px;min-height:110px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff1d2;border:1px solid #c2a057;border-radius:12px}
+#hint-selection[hidden]{display:none}#hint-selection p{font-size:13px;line-height:1.6;margin:0}#hint-cancel{padding:12px 16px;flex-shrink:0;border:1px solid #b29b6d;border-radius:8px;background:#fffdf7;font:inherit}
+.hint-selecting .clue:not(.total)[data-hint-line]{background:#ffe295!important;box-shadow:inset 0 0 0 1px #ad7e23;cursor:pointer}
+.hint-selecting [data-hint-line]:focus-visible{outline:3px solid #885800;outline-offset:-2px}.hint-selecting .cell{cursor:default}
+.hint-line-numbers{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}.hint-line-numbers.vertical{flex-direction:column;align-items:center}
+.hint-line-numbers button{flex:0 0 auto;min-width:56px;min-height:56px;padding:10px;border:1px solid #bc9b48;border-radius:10px;background:#fff1c2;color:#60440c;font:700 26px/1 system-ui;cursor:pointer}
+.hint-line-numbers button:disabled{opacity:.28;cursor:default}.hint-line-numbers button:focus-visible{outline:3px solid #885800;outline-offset:3px}
+#hint-line-back{width:100%;min-height:44px;padding:10px;border:1px solid #cbd6c7;border-radius:9px;background:#edf0e7;color:#293e30;font:14px system-ui;cursor:pointer}
+.settings-language input[type=checkbox]{width:24px;height:24px;accent-color:#526d50;cursor:pointer}
+
+/* Each rule has a hidden image slot until an illustration is supplied. */
+.game-help #help-rule>li{margin-bottom:16px}
+.game-help #help-rule>li>p{margin:0}
+.game-help .help-rule-image{margin:10px 0 0}
+.game-help .help-rule-image img{display:block;max-width:100%;height:auto;margin:0 auto}
+.game-help .help-rule-image figcaption{margin-top:6px;font-size:12px;line-height:1.6;color:#62715d}
