@@ -1,0 +1,15 @@
+.game-help.manual-help{width:calc(100% - 32px);max-width:520px;max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));padding:22px 26px 18px;border-radius:22px}
+.manual-help .settings-top{margin:0;padding-bottom:16px;border-bottom:1px solid #e0e5d9}
+.manual-help .settings-top h2{font-size:17px}
+.manual-help .manual-slide{padding-top:18px}
+.manual-help #manual-copy{display:flex;align-items:center;min-height:104px;margin:0 4px 18px;color:#293e30;font-size:23px;font-weight:620;line-height:1.65;letter-spacing:-.035em;word-break:keep-all;overflow-wrap:break-word}
+.manual-help .manual-image{width:100%;max-width:420px;aspect-ratio:1;margin:0 auto;overflow:hidden;border:1px solid #e0e5d9;border-radius:16px;background:#fffefb;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.manual-help .manual-image img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
+.manual-help .manual-navigation{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;margin-top:20px;padding-top:16px;border-top:1px solid #e0e5d9}
+.manual-help .manual-navigation button{min-height:44px;min-width:0;padding:8px 10px;border:1px solid #526d50;border-radius:10px;background:#526d50;color:#fff;font:600 14px/1.4 system-ui;cursor:pointer}
+.manual-help .manual-navigation button:disabled{color:#9ba594;border-color:#e1e6db;background:#f2f4eb;cursor:default}
+.manual-help .manual-navigation button:focus-visible{outline:3px solid #548c67;outline-offset:3px}
+.manual-help #manual-count{font:700 14px system-ui;font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(max-width:540px){.game-help.manual-help{padding:18px 18px 16px}.manual-help #manual-copy{font-size:21px;min-height:108px;margin-bottom:16px}}
+@media(max-width:350px){.game-help.manual-help{width:calc(100% - 20px);padding-inline:14px}.manual-help #manual-copy{font-size:19px;min-height:114px}.manual-help .manual-navigation{gap:10px}.manual-help .manual-navigation button{padding-inline:6px;font-size:13px}}
+@media(max-height:650px) and (orientation:portrait){.game-help.manual-help{max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));padding-top:12px;padding-bottom:12px}.manual-help .settings-top{padding-bottom:10px}.manual-help .manual-slide{padding-top:10px}.manual-help #manual-copy{min-height:96px;margin-bottom:12px}.manual-help .manual-navigation{margin-top:12px;padding-top:10px}}

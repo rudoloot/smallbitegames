@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f5f5ef">
   <title>NonogramStack</title>
-    <link rel="stylesheet" href="style.css?v=321fa71ab15f">
-  <link rel="stylesheet" href="terrain.css?v=321fa71ab15f">
-  <link rel="stylesheet" href="layout.css?v=321fa71ab15f">
-  <link rel="stylesheet" href="bull-game.css?v=321fa71ab15f">
-  <link rel="stylesheet" href="fruit-game.css?v=321fa71ab15f">
-  <link rel="stylesheet" href="board-surface.css?v=321fa71ab15f">
-  <link rel="stylesheet" href="shared-ui.css?v=321fa71ab15f">
+    <link rel="stylesheet" href="style.css?v=4dcc118525cf">
+  <link rel="stylesheet" href="terrain.css?v=4dcc118525cf">
+  <link rel="stylesheet" href="layout.css?v=4dcc118525cf">
+  <link rel="stylesheet" href="bull-game.css?v=4dcc118525cf">
+  <link rel="stylesheet" href="fruit-game.css?v=4dcc118525cf">
+  <link rel="stylesheet" href="board-surface.css?v=4dcc118525cf">
+  <link rel="stylesheet" href="shared-ui.css?v=4dcc118525cf">
+  <link rel="stylesheet" href="manual/game-manual.css?v=4dcc118525cf">
 </head>
 <body class="individual-sums stack-sum-game" data-loading>
 <p id="game-loading" role="status">문제를 불러오는 중입니다.</p>
@@ -48,13 +49,14 @@
 <dialog id="help-dialog"></dialog>
 <dialog id="reset-dialog"><span class="eyebrow">START AGAIN</span><h2>처음부터 다시 풀까요?</h2><p>입력한 높이를 모두 지우고 빈 보드에서 시작해요.</p><div class="dialog-actions"><button data-close="reset-dialog">계속 풀기</button><button class="primary-button" id="confirm-reset">다시 시작</button></div></dialog>
 <dialog id="win-dialog"><span class="eyebrow">PICTURE COMPLETE</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300"></canvas><p id="win-description"></p><div class="completion-actions"><a id="next-puzzle" class="primary-button">다음문제</a><a id="win-puzzle-list" href="collection.html">목록으로</a></div></dialog>
-<script src="capacitor-core.js?v=321fa71ab15f"></script>
-<script src="native-runtime.js?v=321fa71ab15f"></script>
-<script src="subject-names-en.js?v=321fa71ab15f"></script>
-<script src="puzzle-core-height-runs.js?v=321fa71ab15f" defer></script>
-<script src="puzzle-core-stack-sums.js?v=321fa71ab15f" defer></script>
-<script src="puzzle-core-monochrome.js?v=321fa71ab15f" defer></script>
-<script src="puzzle-palette.js?v=321fa71ab15f" defer></script>
-<script src="game-loader.js?v=321fa71ab15f" defer></script>
-<script src="site-integration.js?v=76262ad1addf" defer></script></body>
+<script src="capacitor-core.js?v=4dcc118525cf"></script>
+<script src="native-runtime.js?v=4dcc118525cf"></script>
+<script src="subject-names-en.js?v=4dcc118525cf"></script>
+<script src="manual/game-manual.js?v=4dcc118525cf"></script>
+<script src="puzzle-core-height-runs.js?v=4dcc118525cf" defer></script>
+<script src="puzzle-core-stack-sums.js?v=4dcc118525cf" defer></script>
+<script src="puzzle-core-monochrome.js?v=4dcc118525cf" defer></script>
+<script src="puzzle-palette.js?v=4dcc118525cf" defer></script>
+<script src="game-loader.js?v=4dcc118525cf" defer></script>
+<script src="site-integration.js?v=d5b8623ad81e" defer></script></body>
 </html>

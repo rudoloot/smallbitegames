@@ -59,77 +59,12 @@
   header.innerHTML=`<button class="wordmark" id="home" aria-label="메인 화면">${pixelLogo}<span class="wordmark-text">NonogramStack</span></button><div class="header-actions">${hintEntry}<button class="nav-icon" id="help" aria-label="게임 도움말" aria-haspopup="dialog" aria-controls="help-dialog"><span aria-hidden="true">?</span></button><button class="nav-icon" id="settings" aria-label="설정" aria-haspopup="dialog" aria-controls="settings-dialog">${gearIcon}</button><button class="nav-icon" id="navigate-back" aria-label="${isMenu?'나가기':'뒤로가기'}">${backIcon}</button></div>`;
   window.centerStackQuestionMarks();
   const help=document.getElementById('help-dialog')||document.createElement('dialog');
-  // This temporary rectangular example is explanatory UI, separate from approved puzzles.
-  const example=[[1,1,0,1,1],[3,3,2,2,2]];
-  const exampleRuns=values=>{const sums=[];for(let i=0;i<values.length;){let end=i+1;while(end<values.length&&values[end]===values[i])end++;if(values[i])sums.push(values[i]*(end-i));i=end;}return sums;};
-  let drawing='';
-  for(let row=0;row<2;row++)for(let col=0;col<5;col++){
-    const value=example[row][col];
-    drawing+=`<rect data-help-cell data-row="${row}" data-col="${col}" data-height="${value}" x="${64+col*36}" y="${62+row*36}" width="36" height="36" fill="${heartPalette[value]}" stroke="#d8b7c6"/><text x="${82+col*36}" y="${80+row*36}" fill="${value>=2?'#fff':'#60354a'}">${value||'×'}</text>`;
-  }
-  for(let row=0;row<2;row++)drawing+=`<text data-help-row-clue="${row}" x="56" y="${80+row*36}" text-anchor="end">${exampleRuns(example[row]).join(' ')}</text><text x="261" y="${80+row*36}">${Math.max(...example[row])}</text>`;
-  for(let col=0;col<5;col++){
-    const values=example.map(row=>row[col]),runs=exampleRuns(values);
-    runs.forEach((value,i)=>drawing+=`<text x="${82+col*36}" y="${48-(runs.length-1-i)*16}">${value}</text>`);
-    drawing+=`<text x="${82+col*36}" y="151">${Math.max(...values)}</text>`;
-  }
   help.id='help-dialog';help.classList.add('game-help');help.setAttribute('aria-labelledby','help-title');
-  // Stable IDs keep future illustrations attached to the right explanation.
-  const rules=[
-    {
-      "id": "picture",
-      "text": "노노그램 스택은 빈칸에 숫자를 넣어 숨은 그림을 완성하는 퍼즐이에요."
-    },
-    {
-      "id": "values",
-      "text": "각 칸에는 0, 1, 2, 3 중 하나가 들어가요. 흑백 모드에서는 숫자가 클수록 어둡고, 작을수록 밝아요. 컬러 모드에서는 각 숫자에 정해진 색을 사용해요."
-    },
-    {
-      "id": "outside-clues",
-      "text": "게임판 밖의 단서 숫자를 보고, 각 칸에 어떤 숫자가 들어갈지 찾아보세요."
-    },
-    {
-      "id": "directions",
-      "text": "왼쪽 단서는 가로줄을 왼쪽에서 오른쪽으로, 위쪽 단서는 세로줄을 위에서 아래로 읽어요."
-    },
-    {
-      "id": "run-sums",
-      "text": "같은 숫자가 끊기지 않고 이어진 칸들을 하나의 구간이라고 해요. 단서 하나는 그 구간의 숫자를 모두 더한 값이에요."
-    },
-    {
-      "id": "five-example",
-      "text": "예를 들어 단서가 5라면, 1이 다섯 칸 이어진 구간이에요. 1+1+1+1+1=5이기 때문이에요."
-    },
-    {
-      "id": "run-count",
-      "text": "한 줄에 단서가 두 개라면, 0이 아닌 숫자의 구간도 두 개예요. 각 구간의 숫자는 서로 같을 수도, 다를 수도 있어요. 단서가 나온 순서대로 구간을 찾아보세요."
-    },
-    {
-      "id": "unknown-zero",
-      "text": "빈칸은 미정이고, ×는 0이에요."
-    },
-    {
-      "id": "maximum",
-      "text": "오른쪽·아래 숫자는 그 줄의 가장 큰 값이에요."
-    },
-    {
-      "id": "same-value-gap",
-      "text": "같은 값의 두 구간 사이에는 ×가 필요해요."
-    },
-    {
-      "id": "different-values",
-      "text": "다른 값의 구간은 붙어도 돼요."
-    },
-    {
-      "id": "zero-omitted",
-      "text": "× 구간은 위·왼쪽 단서에서 생략해요."
-    }
-  ];
-  help.innerHTML=`<div class="settings-top"><h2 id="help-title">게임 규칙</h2><button class="nav-icon" data-close="help-dialog" aria-label="도움말 닫기">×</button></div><ul id="help-rule">${rules.map(({id,text})=>`<li data-help-rule="${id}"><p>${text}</p><figure class="help-rule-image" data-help-image="${id}" hidden><!-- Add the illustration and descriptive alt text here, then remove hidden. --></figure></li>`).join('')}</ul><figure class="help-example"><svg viewBox="0 0 284 166" role="img" aria-label="2행 5열 규칙 예시"><g font-family="system-ui" font-size="13" font-weight="650" text-anchor="middle" dominant-baseline="central" fill="#60354a">${drawing}</g></svg><figcaption><p>첫 6은 3+3이에요.</p><p>다음 6은 2+2+2예요.</p></figcaption></figure><a class="tutorial-start" href="tutorial.html">튜토리얼 시작하기</a>`;
+  const manual=window.installStackManual(help);
   if(!help.isConnected)document.body.append(help);
   help.querySelector('[data-close]').onclick=()=>help.close();
   help.addEventListener('click',e=>{if(e.target===help){const r=help.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)help.close();}});
-  const showHelp=()=>{window.stopStackControls?.();window.finishStroke?.();if(!help.open)help.showModal();};
+  const showHelp=()=>{window.stopStackControls?.();window.finishStroke?.();if(!help.open){manual.start();help.showModal();}};
   document.getElementById('help').onclick=showHelp;
   const seenKey='nonogram-stack-help-seen-v1';
   setTimeout(()=>{try{const storage=globalThis.StackStorage||localStorage;if(storage.getItem(seenKey)!=='1'){showHelp();storage.setItem(seenKey,'1');}}catch{/* A storage failure leaves manual help available. */}},0);
