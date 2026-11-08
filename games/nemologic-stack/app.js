@@ -41,10 +41,12 @@ try{
   }
 }catch{storageOK=false;}
 function save(){
-  try{hintWallet?.recover();}catch{storageOK=false;say('이 브라우저에서는 자동 저장할 수 없어요.',true);return false;}
+  storageOK=true;
+  try{hintWallet?.recover();}catch{storageOK=false;say('이 브라우저에서는 자동 저장할 수 없어요.',true);window.StackRuntime?.reportStorageFailure();return false;}
   try{(globalThis.StackStorage||localStorage).setItem(key,JSON.stringify({cells:boardState,tab}));}catch{storageOK=false;}
-  try{if(globalThis.StackPuzzle?.statusKey)(globalThis.StackStorage||localStorage).setItem(StackPuzzle.statusKey,JSON.stringify({filled:boardState.flat().filter(v=>v!==null).length,complete:isSolved(),updated:Date.now()}));}catch{}
-  if(!storageOK)say('이 브라우저에서는 자동 저장할 수 없어요.',true);
+  try{if(globalThis.StackPuzzle?.statusKey)(globalThis.StackStorage||localStorage).setItem(StackPuzzle.statusKey,JSON.stringify({filled:boardState.flat().filter(v=>v!==null).length,complete:isSolved(),updated:Date.now()}));}catch{storageOK=false;}
+  if(!storageOK){say('이 브라우저에서는 자동 저장할 수 없어요.',true);window.StackRuntime?.reportStorageFailure();}
+  return storageOK;
 }
 function say(message,warning=false){$('message').textContent=message;$('message').classList.toggle('warning',warning);}
 function isSolved(){return boardState.every((cell,i)=>cell.every((v,c)=>v===C.solution[i][c]));}
@@ -130,6 +132,7 @@ function updateNextPuzzle(){
 }
 $('next-puzzle').addEventListener('click',event=>{updateNextPuzzle();if(!event.currentTarget.hasAttribute('href'))event.preventDefault();});
 window.addEventListener('storage',updateNextPuzzle);
+window.addEventListener('stack-storage-change',updateNextPuzzle);
 window.addEventListener('pageshow',updateNextPuzzle);
 function render(){
   if(dragFrame)cancelAnimationFrame(dragFrame);
@@ -227,6 +230,7 @@ function checkWin(action=null){
   if(window.StackRuntime)StackRuntime.completion=StackRuntime.ads.recordCompletion().catch(()=>{});
   drawCompletedPicture();
   $('win-dialog').showModal();
+  if(!storageOK)window.StackRuntime?.reportStorageFailure();
 }
 function undo(){finishStroke();const action=history.pop();if(!action)return;for(const change of action.changes)boardState[change.index][action.channel]=change.before;selected=action.changes[0].index;tab=action.channel;completed=false;errors.clear();cancelHint();save();render();say(`${action.changes.length}칸의 입력을 되돌렸어요.`);}
 function findMistakes(){const result=[];boardState.forEach((cell,i)=>cell.forEach((v,c)=>{if(v!==null&&v!==C.solution[i][c])result.push({index:i,channel:c});}));return result;}

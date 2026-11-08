@@ -34,6 +34,7 @@ button.wordmark{cursor:pointer}
 .hint-reward-note{text-align:end;margin:8px 0}
 #hint-feedback:empty{display:none}
 .storage-notice{position:fixed;z-index:10000;bottom:env(safe-area-inset-bottom,0px);left:8px;right:8px;margin:8px auto;max-width:480px;padding:12px;border:1px solid #b47c34;border-radius:8px;background:#fff4df;color:#543b1a;font:13px/1.5 system-ui}
+.storage-notice[hidden]{display:none!important}dialog .storage-notice{position:static;margin:12px 0;max-width:none}
 .stack-sum-game .app{padding-top:calc(10px + env(safe-area-inset-top));padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
 .collection-app{padding-top:calc(10px + env(safe-area-inset-top));padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
 .tutorial-app{padding-top:calc(20px + env(safe-area-inset-top));padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
