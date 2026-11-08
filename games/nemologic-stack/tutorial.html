@@ -144,14 +144,14 @@ button.wordmark{cursor:pointer}
 .game-help .help-rule-image{margin:10px 0 0}
 .game-help .help-rule-image img{display:block;max-width:100%;height:auto;margin:0 auto}
 .game-help .help-rule-image figcaption{margin-top:6px;font-size:12px;line-height:1.6;color:#62715d}
-</style><link rel="stylesheet" href="manual/game-manual.css?v=b9f15645b4af"></head>
+</style><link rel="stylesheet" href="manual/game-manual.css?v=b48d5780dcc7"></head>
 <body data-presentation="color"><main class="tutorial-app"><header class="header"></header>
 <div class="lesson-heading"><span>5×5 튜토리얼</span><button id="restart">다시 배우기</button></div>
 <section id="tutorial-board" class="board stack-board" aria-label="5행 5열 분홍 하트 퍼즐"></section>
 <p id="picture-name" class="picture-name" aria-live="polite" hidden></p>
 <div class="lesson-dock"><div class="tutorial-gamepad"><div id="tutorial-dpad" class="dpad" role="group" tabindex="0" aria-label="칸 이동 십자키"></div><div class="tutorial-tools" aria-label="높이 입력"><button id="tutorial-undo" aria-label="되돌리기">↶ undo</button><button data-tool="erase" aria-label="지우개">지우개</button><button data-tool="0" aria-label="0 흰색"><strong>×</strong></button><button data-tool="1" aria-label="1 연한 분홍"><strong>1</strong></button><button data-tool="2" aria-label="2 분홍"><strong>2</strong></button><button data-tool="3" aria-label="3 진한 분홍"><strong>3</strong></button></div></div>
 <aside class="speech-bubble" aria-label="튜토리얼 안내"><div class="speech-copy" aria-live="polite" aria-atomic="true"><span id="step-count"></span><h2 id="step-title"></h2><p id="step-text"></p><div id="step-example" class="step-example" hidden></div><p id="step-note"></p></div><div class="step-actions"><button id="previous">이전</button><button id="next">다음 →</button></div></aside></div>
-</main><script src="capacitor-core.js?v=b9f15645b4af"></script><script src="native-runtime.js?v=b9f15645b4af"></script><script src="puzzle-palette.js?v=b9f15645b4af"></script><script src="progress-preview.js?v=b9f15645b4af"></script><script src="manual/game-manual.js?v=b9f15645b4af"></script><script src="subject-names-en.js?v=b9f15645b4af"></script><script>StackRuntime.ready.catch(()=>{}).then(()=>{/* Shared Korean/English UI. Original text is retained when a rendered node is translated. */
+</main><script src="capacitor-core.js?v=b48d5780dcc7"></script><script src="native-runtime.js?v=b48d5780dcc7"></script><script src="puzzle-palette.js?v=b48d5780dcc7"></script><script src="progress-preview.js?v=b48d5780dcc7"></script><script src="manual/game-manual.js?v=b48d5780dcc7"></script><script src="subject-names-en.js?v=b48d5780dcc7"></script><script>StackRuntime.ready.catch(()=>{}).then(()=>{/* Shared Korean/English UI. Original text is retained when a rendered node is translated. */
 (() => {
   const messages=new Map(Object.entries({
     "노노그램 스택은 빈칸에 숫자를 넣어 숨은 그림을 완성하는 퍼즐이에요.":"Nonogram Stack is a puzzle where you fill blank cells with numbers to reveal a hidden picture.",
@@ -742,4 +742,4 @@ const TUTORIAL={"cells":[0,1,0,1,0,1,1,1,1,1,2,2,2,2,2,0,3,3,3,0,0,0,3,0,0],"ste
     apply:button=>{if(button.id==='tutorial-undo'){const cursor=selected;undoTutorial();selected=cursor;render();return;}selected??=0;$('tutorial-board').querySelector(`[data-index="${selected}"]`).click();}
   });
 })();
-});</script><script src="site-integration.js?v=b9f15645b4af" defer></script></body></html>
+});</script><script src="site-integration.js?v=b48d5780dcc7" defer></script></body></html>

@@ -9,7 +9,7 @@
     return response.json();
   }
   function loadScript(file){return new Promise((resolve,reject)=>{
-    const script=document.createElement('script');script.src=file+'?v=b9f15645b4af';script.onload=resolve;
+    const script=document.createElement('script');script.src=file+'?v=b48d5780dcc7';script.onload=resolve;
     script.onerror=()=>reject(Error(`Could not load ${file}`));document.body.append(script);
   });}
   try{
