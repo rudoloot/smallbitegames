@@ -4,7 +4,7 @@
   // Only visible line clues and entered values are accepted; no answer data.
   function evaluate(line,groups,maximum){
     const key=JSON.stringify([line,groups,maximum]);if(cache.has(key))return cache.get(key);
-    const tokens=groups.map(()=>''),known=line.filter(v=>v!==null);
+    const tokens=groups.map(()=>''),known=line.filter(v=>v!==null),claimedRuns=new Map();
     const maximumState=known.some(v=>v>maximum)?'conflict':known.includes(maximum)?'done':'';
     const mark=(i,state)=>{if(i>=0&&i<tokens.length&&(tokens[i]!=='conflict'||state==='conflict'))tokens[i]=state;};
     function scan(values,reverse){
@@ -14,10 +14,17 @@
         if(pos===values.length||values[pos]===null)return;
         const index=reverse?groups.length-1-k:k,target=groups[index],value=values[pos];
         if(target===undefined){mark(reverse?0:groups.length-1,'conflict');return;}
+        const runStart=pos;
         let sum=0;while(pos<values.length&&values[pos]===value){sum+=value;pos++;}
         const closed=pos===values.length||values[pos]!==null;
         if(value>maximum||target%value!==0||sum>target||closed&&sum!==target){mark(index,'conflict');return;}
-        if(sum===target)mark(index,'done');
+        if(sum===target){
+          const run=reverse?[values.length-pos,values.length-runStart]:[runStart,pos],id=run.join(':'),owner=claimedRuns.get(id);
+          mark(index,'done');
+          // The same physical run cannot satisfy different clues from the two ends.
+          if(owner!==undefined&&owner!==index){mark(owner,'conflict');mark(index,'conflict');}
+          else claimedRuns.set(id,index);
+        }
         if(!closed)return;
         k++;
       }
