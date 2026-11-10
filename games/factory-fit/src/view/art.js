@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { EQUIPMENT, TYPES } from '../game/config.js';
+import { buildEquipment } from './equipment-models.js';
 
 // The approved concept image is the visual reference. Geometry stays in tile units.
 export function createArtKit(renderer) {
@@ -30,14 +31,36 @@ export function createArtKit(renderer) {
     return texture;
   }
   const textures = { clay: surfaceTexture(), wood: surfaceTexture(true) };
+  function concreteTexture() {
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 256;
+    const ctx = canvas.getContext('2d'), pixels = ctx.createImageData(256, 256);
+    for (let i = 0; i < pixels.data.length; i += 4) {
+      const shade = Math.round(211 + random() * 34);
+      pixels.data.set([shade, shade, shade, 255], i);
+    }
+    ctx.putImageData(pixels, 0, 0);
+    // Fine aggregate flecks distinguish the exterior from the smooth interior tiles.
+    for (let i = 0; i < 900; i++) {
+      ctx.fillStyle = i % 3 ? '#858b8b38' : '#ffffff50';
+      ctx.fillRect(random() * 256, random() * 256, 1 + random() * 2, 1 + random() * 2);
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(50, 50);
+    texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+    return texture;
+  }
+  textures.concrete = concreteTexture();
+  const concreteBump = textures.concrete.clone(); concreteBump.colorSpace = THREE.NoColorSpace; concreteBump.needsUpdate = true;
   const woodBump = textures.wood.clone(); woodBump.colorSpace = THREE.NoColorSpace; woodBump.needsUpdate = true;
   function material(color, kind = 'clay') {
     const key = `${color}/${kind}`;
     if (!materials.has(key)) materials.set(key, new THREE.MeshStandardMaterial({
       color, map: kind === 'metal' ? null : textures[kind] ?? textures.clay,
-      roughness: kind === 'wood' ? 0.72 : kind === 'cloth' ? 0.95 : kind === 'metal' ? 0.44 : 0.61,
+      roughness: kind === 'concrete' ? .98 : kind === 'wood' ? 0.72 : kind === 'cloth' ? 0.95 : kind === 'metal' ? 0.44 : 0.61,
       metalness: kind === 'metal' ? 0.22 : 0,
-      bumpMap: kind === 'wood' ? woodBump : null, bumpScale: kind === 'wood' ? 0.008 : 0,
+      bumpMap: kind === 'concrete' ? concreteBump : kind === 'wood' ? woodBump : null, bumpScale: kind === 'concrete' ? .025 : kind === 'wood' ? 0.008 : 0,
     }));
     return materials.get(key);
   }
@@ -146,6 +169,19 @@ export function createArtKit(renderer) {
     for (let i = 0; i < 4; i++) wood(group, w - .12, .23, (d - .13) / 4 - .012, 0, .92, (i - 1.5) * (d - .13) / 4, i % 2 ? shade(color, .045) : color);
   }
   function machine(item) {
+    if (EQUIPMENT[item.type]?.mask) {
+      const spec = EQUIPMENT[item.type], group = new THREE.Group();
+      const model = buildEquipment(item.type, { box, wood, cylinder, sphere, material, cached });
+      const output = model.userData.outputAnchor.clone(), process = model.userData.processAnchor.clone();
+      group.add(model); group.position.set(item.x + (item.rotation % 2 ? spec.height : spec.width)/2, .07, item.y + (item.rotation % 2 ? spec.width : spec.height)/2);
+      model.rotation.y = -item.rotation * Math.PI / 2;
+      // Merge local-space geometry before applying the machine rotation.
+      model.rotation.y = 0; compact(model, `reference/${item.type}`); model.rotation.y = -item.rotation * Math.PI / 2;
+      const processingItem = goods(model, spec.inputStage ?? 0, process.x, process.y, process.z, .45); processingItem.visible = false;
+      const outputItems = [0].map(i => { const g=goods(model,spec.outputStage ?? 4,output.x,output.y+i*.35,output.z,.45);g.visible=false;return g; });
+      group.userData.inventory = { processingItem, outputItems };
+      group.traverse(obj=>{if(obj.isMesh)obj.userData.machineId=item.id;}); return group;
+    }
     const spec = EQUIPMENT[item.type], group = new THREE.Group(), model = new THREE.Group(); group.add(model);
     const w = spec.width, d = spec.height;
     group.position.set(item.x + (item.rotation % 2 ? d : w) / 2, .07, item.y + (item.rotation % 2 ? w : d) / 2);
@@ -194,36 +230,69 @@ export function createArtKit(renderer) {
     group.userData.inventory = { processingItem, outputItems };
     group.traverse(obj => { if (obj.isMesh) obj.userData.machineId = item.id; }); return group;
   }
-  function worker(color, index = 0) {
+  function faceMaterial(index = 0, skin = '#edc5a1') {
+    const key = `painted-face/${index}/${skin}`;
+    if (!materials.has(key)) {
+      const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 256;
+      const ctx = canvas.getContext('2d'); ctx.fillStyle = skin; ctx.fillRect(0, 0, 512, 256);
+      const spacing = 22 + (index % 3) * 3, eyeY = 123;
+      ctx.fillStyle = '#3b302c'; ctx.strokeStyle = '#3b302c';ctx.lineWidth=3;ctx.lineCap='round';
+      for (const x of [128-spacing,128+spacing]) {
+        ctx.beginPath();
+        if(index%5===1){ctx.moveTo(x-5,eyeY+1);ctx.quadraticCurveTo(x,eyeY-7,x+5,eyeY+1);ctx.stroke();}
+        else {ctx.ellipse(x,eyeY,4+(index%2),5+(index%3),0,0,Math.PI*2);ctx.fill();}
+        ctx.beginPath();ctx.moveTo(x-7,eyeY-15+(index%3));ctx.lineTo(x+6,eyeY-16-(index%3));ctx.stroke();
+      }
+      ctx.strokeStyle='#805441';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(128,134);ctx.lineTo(125,140);ctx.lineTo(129,140);ctx.stroke();
+      ctx.strokeStyle='#714338';ctx.lineWidth=3;ctx.beginPath();
+      ctx.moveTo(117,151);ctx.quadraticCurveTo(128,151+(index%4)*4,140,149);ctx.stroke();
+      if(index%5===2){ctx.strokeStyle='#354952';ctx.lineWidth=3;for(const x of [128-spacing,128+spacing]){ctx.beginPath();ctx.ellipse(x,124,12,10,0,0,Math.PI*2);ctx.stroke();}ctx.beginPath();ctx.moveTo(116,123);ctx.lineTo(140,123);ctx.stroke();}
+      if(index%4===0){ctx.fillStyle='#b47552';for(const x of [90,96,102,154,160,166]){ctx.beginPath();ctx.arc(x,139+(x%3)*2,1.6,0,Math.PI*2);ctx.fill();}}
+      if(index%5===3){ctx.fillStyle='#634632';ctx.beginPath();ctx.ellipse(128,145,11,3,0,0,Math.PI*2);ctx.fill();}
+      ctx.fillStyle='rgba(218,132,116,.32)';for(const x of [87,169]){ctx.beginPath();ctx.ellipse(x,141,9,4,0,0,Math.PI*2);ctx.fill();}
+      const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace;
+      materials.set(key,new THREE.MeshStandardMaterial({map,roughness:.8}));
+    }
+    return materials.get(key);
+  }
+  function worker(color, index = 0, appearance = {}) {
+    const hairstyle = appearance.hairstyle ?? (appearance.gender === 'female' ? 'ponytail' : 'short');
     const group = new THREE.Group(), body = new THREE.Group(); group.add(body);
     group.scale.setScalar(1.1);
     contactShadow(group, .85, .68, 0, .003, 0);
     const head = new THREE.Group(); head.position.y = 1.08; body.add(head);
-    sphere(head, .31, 0, 0, 0, '#edc5a1', [1.02, 1.02, .96]);
-    sphere(head, .29, 0, -.045, -.075, '#795337', [1, .92, .8]);
+    const face = sphere(head, .31, 0, 0, 0, '#edc5a1', [1.02, 1.02, .96]); face.material = faceMaterial(appearance.faceStyle ?? index, appearance.skin ?? '#edc5a1');
+    const hair = appearance.hairColor ?? (hairstyle === 'bob' ? '#59402f' : '#795337');
+    sphere(head, .29, 0, -.045, -.075, hair, [1, .92, .8]);
     for (const sign of [-1, 1]) {
-      sphere(head, .065, sign * .29, -.015, 0, '#e5b58d', [.7, 1, .8]);
-      sphere(head, .034, sign * .108, .015, .281, '#3d392f', [.82, 1.1, .55]);
-      sphere(head, .043, sign * .211, -.07, .214, '#eab393', [1.15, .7, .5]);
-      box(head, .11, .15, .12, sign * .245, .005, -.12, '#795337');
+      sphere(head, .065, sign * .29, -.015, 0, appearance.skin ?? '#e5b58d', [.7, 1, .8]);
+      if (hairstyle === 'bob') sphere(head, .16, sign * .255, -.13, -.07, hair, [.65, 1.35, 1.2]);
+      else box(head, .11, .15, .12, sign * .245, .005, -.12, hair);
     }
-    sphere(head, .055, 0, -.055, .298, '#e4b58d', [.85, .8, .8]);
-    const hat = index % 2 ? '#7199c9' : '#efbd4c';
+    if (hairstyle === 'ponytail') {
+      sphere(head, .14, 0, -.025, -.34, hair, [.8, .8, 1]);
+      sphere(head, .17, 0, -.14, -.47, hair, [.7, 1.6, .9]);
+      sphere(head, .09, 0, -.025, -.37, color, [1, .65, .65]);
+    } else if (hairstyle === 'bob') sphere(head, .28, 0, -.11, -.14, hair, [1.03, 1, .7]);
+    const hat = color;
     const dome = mesh(head, cached('helmet-dome', () => new THREE.SphereGeometry(.355, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2)), hat, 0, .16, -.015); dome.scale.z = 1.04;
     cylinder(head, .374, .374, .048, 0, .17, 0, hat, 32);
     box(head, .48, .05, .25, 0, .17, .265, hat);
     box(head, .055, .048, .47, 0, .5, -.015, shade(hat, .12));
     box(head, .11, .04, .018, 0, .215, .35, color);
-    compact(head, `head/${color}/${index % 2}`);
+    compact(head, `head/${color}/${index}/${hairstyle}/${appearance.skin}/${hair}`);
     box(body, .4, .4, .32, 0, .62, 0, '#e2dfcf', true, 'cloth');
     box(body, .32, .3, .065, 0, .57, .173, '#7297b1', true, 'cloth');
     box(body, .15, .12, .035, 0, .57, .219, '#6489a5', true, 'cloth');
     for (const sign of [-1, 1]) { box(body, .055, .3, .045, sign * .115, .73, .18, '#7297b1'); box(body, .055, .35, .045, sign * .115, .65, -.17, '#7297b1'); sphere(body, .018, sign * .115, .66, .211, '#ebcf8a'); }
     const legs = [-.115, .115].map(x => { const leg = new THREE.Group(); leg.position.set(x, .38, 0); body.add(leg); box(leg, .17, .27, .18, 0, -.12, 0, '#668ba4', true, 'cloth'); box(leg, .2, .14, .29, 0, -.31, .045, '#627375'); return leg; });
-    const arms = [-1, 1].map(sign => { const arm = new THREE.Group(); arm.position.set(sign * .235, .75, 0); body.add(arm); sphere(arm, .105, 0, -.08, 0, '#e0ddcd', [.85, 1.35, 1]); sphere(arm, .085, 0, -.28, .045, '#edc39a', [.9, 1.1, 1]); return arm; });
+    const arms = [-1, 1].map(sign => { const arm = new THREE.Group(); arm.position.set(sign * .235, .75, 0); body.add(arm); sphere(arm, .105, 0, -.08, 0, '#e0ddcd', [.85, 1.35, 1]); sphere(arm, .085, 0, -.28, .045, appearance.skin ?? '#edc39a', [.9, 1.1, 1]); return arm; });
     const cargo = Array.from({ length: 5 }, (_, stage) => { const item = goods(body, stage, 0, .4, .4, .43); item.visible = false; return item; });
     const marker = sphere(group, .09, 0, 1.85, 0, '#f1c366'); marker.visible = false;
-    return { group, body, head, arms, legs, cargo, marker };
+    const extraCargo = [1, 2].map(i => {
+      const item = goods(body, 4, 0, .4 + i * .24, .4, .43); item.visible = false; return item;
+    });
+    return { group, body, head, arms, legs, cargo, extraCargo, marker };
   }
   function plant(group, x, z) {
     cylinder(group, .27, .2, .4, x, .18, z, '#d59a71');
@@ -238,7 +307,15 @@ export function createArtKit(renderer) {
       const p = geometry.getAttribute('position'); for (const value of p.array) if (!Number.isFinite(value)) invalid++;
       triangles += (geometry.index ? geometry.index.count : p.count) / 3;
     }
-    return { geometries: geometries.size, materials: materials.size, cachedTriangles: Math.round(triangles), invalidValues: invalid, proceduralTextures: 3 };
+    return { geometries: geometries.size, materials: materials.size, cachedTriangles: Math.round(triangles), invalidValues: invalid, proceduralTextures: 3 + [...materials.keys()].filter(k=>k.startsWith('painted-face/')).length };
   }
-  return { box, wood, sphere, cylinder, ring, crate, goods, material, contactShadow, compact, machine, worker, plant, audit };
+  function dispose() {
+    shadowMaterial.dispose(); shadowMap.dispose();
+    const maps = new Set([...Object.values(textures), woodBump, concreteBump]);
+    for (const mat of materials.values()) { for (const value of Object.values(mat)) if (value?.isTexture) maps.add(value); mat.dispose(); }
+    for (const map of maps) map.dispose();
+    for (const geometry of geometries.values()) geometry.dispose();
+  }
+  function setEquipmentColor(color) { if (!/^#[0-9a-f]{6}$/i.test(color)) return; material('#788665').color.set(color); }
+  return { box, wood, sphere, cylinder, ring, crate, goods, material, contactShadow, compact, machine, worker, plant, audit, dispose, setEquipmentColor };
 }

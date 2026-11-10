@@ -1,4 +1,4 @@
-import { STAGE, createAssignments, EQUIPMENT } from './config.js';
+import { STAGE, createAssignments, EQUIPMENT, suppliedEquipment } from './config.js';
 import { validateLayout } from './layout.js';
 export function createSession(stage = STAGE) { return { version: 5, stageId: stage.id, layout: [], assignments: createAssignments([], stage) }; }
 export function validSession(state, stage = STAGE) {
@@ -8,8 +8,8 @@ export function transact(state, action, stage = STAGE) {
   if (!validSession(state, stage)) return { ok: false, error: '저장 상태를 확인해 주세요.' };
   const next = structuredClone(state);
   if (action.type === 'place') {
-    const given = stage.inventory.find(item => item.id === action.id); if (!given) return { ok: false, error: '지급된 설비가 아닙니다.' };
-    const item = { ...given, x: action.x, y: action.y, rotation: action.rotation }, index = next.layout.findIndex(item => item.id === action.id); if (index < 0) next.layout.push(item); else next.layout[index] = item;
+    const given = suppliedEquipment(action.id, stage); if (!given) return { ok: false, error: '지급된 설비가 아닙니다.' };
+    const item = { ...given, id: action.id, x: action.x, y: action.y, rotation: action.rotation }, index = next.layout.findIndex(item => item.id === action.id); if (index < 0) next.layout.push(item); else next.layout[index] = item;
   } else if (action.type === 'remove') {
     if (!next.layout.some(item => item.id === action.id)) return { ok: false, error: '배치된 설비를 선택해 주세요.' };
     next.layout = next.layout.filter(item => item.id !== action.id); for (const key of Object.keys(next.assignments)) if (next.assignments[key] === action.id) next.assignments[key] = null;
@@ -21,6 +21,6 @@ export function transact(state, action, stage = STAGE) {
   const result = validateLayout(next.layout, { stage }); return result.valid ? { ok: true, state: next } : { ok: false, error: result.errors[0] };
 }
 export function validateStaffing(state, stage = STAGE) {
-  const errors = state.layout.filter(item => !EQUIPMENT[item.type].belt && !Object.values(state.assignments).includes(item.id)).map(item => `${EQUIPMENT[item.type].name}에 작업자를 배치해 주세요.`);
+  const errors = state.layout.filter(item => !stage.unlimitedEquipment && !EQUIPMENT[item.type].belt && !Object.values(state.assignments).includes(item.id)).map(item => `${EQUIPMENT[item.type].name}에 작업자를 배치해 주세요.`);
   if (!Object.values(state.assignments).includes('outbound')) errors.push('창고 직원을 배치해 주세요.'); return { valid: errors.length === 0, errors };
 }
