@@ -1,23 +1,7 @@
+import { STAGE } from '../game/config.js';
 import { validSession } from '../game/session.js';
-import { createAssignments, WAREHOUSE } from '../game/config.js';
-const KEY = 'factory-fit.session.v4';
-export function loadSession() {
-  try {
-    const stored = localStorage.getItem(KEY);
-    if (stored !== null) { const state = JSON.parse(stored); return validSession(state) ? state : null; }
-    for (const version of [3, 2]) {
-      const previous = JSON.parse(localStorage.getItem(`factory-fit.session.v${version}`));
-      if (!previous || previous.version !== version || !Array.isArray(previous.layout)) continue;
-      const assignments = version === 3 ? { ...previous.assignments, w5: WAREHOUSE.id } : createAssignments(previous.layout);
-      const migrated = { ...previous, version: 4, assignments };
-      if (validSession(migrated)) return migrated;
-    }
-    return null;
-  }
-  catch { return null; }
-}
-export function saveSession(state) {
-  if (!validSession(state)) return false;
-  try { localStorage.setItem(KEY, JSON.stringify(state)); return true; }
-  catch { return false; }
-}
+const KEY = 'factory-fit.puzzle.v5';
+export function loadSession(stage = STAGE) { try { const state = JSON.parse(localStorage.getItem(`${KEY}.${stage.id}`)); return validSession(state, stage) ? state : null; } catch { return null; } }
+export function saveSession(state, stage = STAGE) { if (!validSession(state, stage)) return false; try { localStorage.setItem(`${KEY}.${stage.id}`, JSON.stringify(state)); return true; } catch { return false; } }
+export function loadProgress() { try { const p = JSON.parse(localStorage.getItem(`${KEY}.progress`)); return p?.cleared?.filter(id => typeof id === 'string') ?? []; } catch { return []; } }
+export function saveProgress(cleared) { try { localStorage.setItem(`${KEY}.progress`, JSON.stringify({ cleared: [...new Set(cleared)] })); return true; } catch { return false; } }

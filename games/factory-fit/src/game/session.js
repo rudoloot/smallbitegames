@@ -1,55 +1,26 @@
-import { STAGE, EQUIPMENT, WORKERS, TYPES, WAREHOUSE, createDefaultLayout, createAssignments } from './config.js';
+import { STAGE, createAssignments, EQUIPMENT } from './config.js';
 import { validateLayout } from './layout.js';
-export const TOTAL_CAPITAL = STAGE.budget + createDefaultLayout().reduce((sum, item) => sum + item.paid, 0);
-export function createSession() { const layout = createDefaultLayout(); return { version: 4, stageId: STAGE.id, budget: STAGE.budget, nextId: 5, layout, assignments: createAssignments(layout) }; }
-export function validAssignments(assignments, layout) {
-  return assignments && typeof assignments === 'object' && !Array.isArray(assignments) &&
-    Object.keys(assignments).length === WORKERS.length && WORKERS.every(worker => Object.hasOwn(assignments, worker.key) && (assignments[worker.key] === null || assignments[worker.key] === WAREHOUSE.id || layout.some(item => item.id === assignments[worker.key]))) &&
-    new Set(Object.values(assignments).filter(Boolean)).size === Object.values(assignments).filter(Boolean).length;
+export function createSession(stage = STAGE) { return { version: 5, stageId: stage.id, layout: [], assignments: createAssignments([], stage) }; }
+export function validSession(state, stage = STAGE) {
+  try { return state?.version === 5 && state.stageId === stage.id && validateLayout(state.layout, { stage }).valid && Object.keys(state.assignments).length === stage.workers.length && stage.workers.every(worker => Object.hasOwn(state.assignments, worker.key) && (state.assignments[worker.key] === null || state.assignments[worker.key] === 'outbound' || state.layout.some(item => item.id === state.assignments[worker.key] && !EQUIPMENT[item.type].belt))) && new Set(Object.values(state.assignments).filter(Boolean)).size === Object.values(state.assignments).filter(Boolean).length; } catch { return false; }
 }
-export function validateStaffing(state) {
-  const errors = TYPES.filter(type => !state.layout.some(machine => machine.type === type && Object.values(state.assignments).includes(machine.id))).map(type => `${EQUIPMENT[type].name}의 한 칸 자리에 작업자를 배치해 주세요.`);
-  if (!Object.values(state.assignments).includes(WAREHOUSE.id)) errors.push('완제품을 가져와 보관할 창고 직원을 한 칸 자리에 배치해 주세요.');
-  return { valid: !errors.length, errors };
-}
-export function validSession(state) {
-  try {
-    return state?.version === 4 && state.stageId === STAGE.id && Number.isSafeInteger(state.budget) && state.budget >= 0 &&
-      Number.isSafeInteger(state.nextId) && state.nextId >= 5 && state.nextId < 1000000 &&
-      validateLayout(state.layout, { requireAll: false }).valid &&
-      state.layout.every(item => /^m\d+$/.test(item.id) && Number(item.id.slice(1)) < state.nextId && item.paid === EQUIPMENT[item.type].price) &&
-      new Set(state.layout.map(item => item.id)).size === state.layout.length && validAssignments(state.assignments, state.layout) &&
-      state.budget + state.layout.reduce((sum, item) => sum + item.paid, 0) === TOTAL_CAPITAL;
-  } catch { return false; }
-}
-export function transact(state, action) {
-  if (!validSession(state)) return { ok: false, error: '저장 상태가 올바르지 않습니다.' };
+export function transact(state, action, stage = STAGE) {
+  if (!validSession(state, stage)) return { ok: false, error: '저장 상태를 확인해 주세요.' };
   const next = structuredClone(state);
-  if (action.type === 'assign') {
-    if (!WORKERS.some(worker => worker.key === action.workerId) || (action.machineId !== null && action.machineId !== WAREHOUSE.id && !state.layout.some(item => item.id === action.machineId))) return { ok: false, error: '작업자와 작업대·창고를 확인해 주세요.' };
-    const previous = next.assignments[action.workerId];
-    const occupant = action.machineId === null ? null : WORKERS.find(worker => worker.key !== action.workerId && next.assignments[worker.key] === action.machineId);
-    if (occupant) next.assignments[occupant.key] = previous;
-    next.assignments[action.workerId] = action.machineId;
-  } else if (action.type === 'buy') {
-    const spec = EQUIPMENT[action.equipment];
-    if (!Object.hasOwn(EQUIPMENT, action.equipment)) return { ok: false, error: '구매할 설비를 선택해 주세요.' };
-    if (state.budget < spec.price) return { ok: false, error: '예산이 부족합니다. 기존 설비를 판매하면 100% 환급됩니다.' };
-    if (state.nextId >= 999999) return { ok: false, error: '이 의뢰의 거래 횟수 한도에 도달했습니다.' };
-    next.layout.push({ id: `m${next.nextId++}`, type: action.equipment, x: action.x, y: action.y, rotation: action.rotation, paid: spec.price });
-    next.budget -= spec.price;
-  } else {
-    const index = next.layout.findIndex(item => item.id === action.id);
-    if (index < 0) return { ok: false, error: '해당 설비를 찾을 수 없습니다. 고정 시설은 이동·판매할 수 없습니다.' };
-    if (action.type === 'sell') {
-      next.budget += next.layout[index].paid;
-      next.layout.splice(index, 1);
-      for (const worker of WORKERS) if (next.assignments[worker.key] === action.id) next.assignments[worker.key] = null;
-    } else if (action.type === 'move') {
-      next.layout[index] = { ...next.layout[index], x: action.x, y: action.y, rotation: action.rotation };
-    } else return { ok: false, error: '지원하지 않는 조작입니다.' };
-  }
-  const result = validateLayout(next.layout, { requireAll: false });
-  if (!result.valid) return { ok: false, error: result.errors[0] };
-  return { ok: true, state: next };
+  if (action.type === 'place') {
+    const given = stage.inventory.find(item => item.id === action.id); if (!given) return { ok: false, error: '지급된 설비가 아닙니다.' };
+    const item = { ...given, x: action.x, y: action.y, rotation: action.rotation }, index = next.layout.findIndex(item => item.id === action.id); if (index < 0) next.layout.push(item); else next.layout[index] = item;
+  } else if (action.type === 'remove') {
+    if (!next.layout.some(item => item.id === action.id)) return { ok: false, error: '배치된 설비를 선택해 주세요.' };
+    next.layout = next.layout.filter(item => item.id !== action.id); for (const key of Object.keys(next.assignments)) if (next.assignments[key] === action.id) next.assignments[key] = null;
+  } else if (action.type === 'assign') {
+    if (!stage.workers.some(worker => worker.key === action.workerId) || (action.machineId !== null && action.machineId !== 'outbound' && !next.layout.some(item => item.id === action.machineId && !EQUIPMENT[item.type].belt))) return { ok: false, error: '작업자와 작업대 자리를 선택해 주세요.' };
+    const previous = next.assignments[action.workerId], other = stage.workers.find(worker => worker.key !== action.workerId && next.assignments[worker.key] === action.machineId);
+    if (action.machineId && other) next.assignments[other.key] = previous; next.assignments[action.workerId] = action.machineId;
+  } else return { ok: false, error: '지원하지 않는 조작입니다.' };
+  const result = validateLayout(next.layout, { stage }); return result.valid ? { ok: true, state: next } : { ok: false, error: result.errors[0] };
+}
+export function validateStaffing(state, stage = STAGE) {
+  const errors = state.layout.filter(item => !EQUIPMENT[item.type].belt && !Object.values(state.assignments).includes(item.id)).map(item => `${EQUIPMENT[item.type].name}에 작업자를 배치해 주세요.`);
+  if (!Object.values(state.assignments).includes('outbound')) errors.push('창고 직원을 배치해 주세요.'); return { valid: errors.length === 0, errors };
 }

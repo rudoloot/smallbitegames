@@ -1,46 +1,33 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#ede8da">
-  <meta name="description" content="작업자를 배치하고 공장 동선을 개선하는 미니멀 3D 퍼즐 게임">
-  <title>Factory Fit · 첫 번째 의뢰</title>
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="./src/styles.css?v=ae6cda5fbbae">
-  <script type="importmap">{"imports":{"three":"./vendor/three/three.module.js?v=104f56145899","three/addons/":"./vendor/three/addons/","three/addons/geometries/RoundedBoxGeometry.js":"./vendor/three/addons/geometries/RoundedBoxGeometry.js?v=c5feab961238","./src/game/config.js":"./src/game/config.js?v=6125f849b462","./src/game/layout.js":"./src/game/layout.js?v=a90fcc902e01","./src/game/session.js":"./src/game/session.js?v=063793ca3aa0","./src/game/simulation.js":"./src/game/simulation.js?v=a87af52ec4cc","./src/main.js?v=0588c5994cf3":"./src/main.js?v=0588c5994cf3","./src/platform/storage.js":"./src/platform/storage.js?v=4d5b94dfa2ee","./src/view/art.js":"./src/view/art.js?v=9c09d796244d","./src/view/factory.js":"./src/view/factory.js?v=8e95f742a0ac","./vendor/three/addons/geometries/RoundedBoxGeometry.js":"./vendor/three/addons/geometries/RoundedBoxGeometry.js?v=c5feab961238","./vendor/three/three.core.js":"./vendor/three/three.core.js?v=613e370f7663","./vendor/three/three.module.js":"./vendor/three/three.module.js?v=104f56145899","./site-integration.js":"./site-integration.js?v=0cb47dc929b2"}}</script>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f1dbc4"><meta name="description" content="작은 공장에 세 작업대와 직원을 배치해 첫 제품을 완성하는 3D 퍼즐">
+  <title>Factory Fit · 첫 번째 나무상자</title><link rel="icon" href="data:,"><link rel="stylesheet" href="./src/styles.css?v=261349398f1b">
+  <script type="importmap">{"imports":{"three":"./vendor/three/three.module.js?v=104f56145899","three/addons/":"./vendor/three/addons/","three/addons/geometries/RoundedBoxGeometry.js":"./vendor/three/addons/geometries/RoundedBoxGeometry.js?v=c5feab961238","./src/game/config.js":"./src/game/config.js?v=1e8b67dd96cc","./src/game/layout.js":"./src/game/layout.js?v=3b1f60ee4747","./src/game/session.js":"./src/game/session.js?v=6208b6c5624b","./src/game/simulation.js":"./src/game/simulation.js?v=7bcca570ac9a","./src/main.js":"./src/main.js?v=6d55e5f175f7","./src/platform/storage.js":"./src/platform/storage.js?v=edd9d70b9222","./src/view/art.js":"./src/view/art.js?v=23a112c871e3","./src/view/factory.js":"./src/view/factory.js?v=276ed7190222","./vendor/three/addons/geometries/RoundedBoxGeometry.js":"./vendor/three/addons/geometries/RoundedBoxGeometry.js?v=c5feab961238","./vendor/three/three.core.js":"./vendor/three/three.core.js?v=613e370f7663","./vendor/three/three.module.js":"./vendor/three/three.module.js?v=104f56145899","./site-integration.js":"./site-integration.js?v=0cb47dc929b2"}}</script>
 </head>
 <body>
-  <main class="game" aria-label="Factory Fit 공장 개선 게임">
-    <div id="scene" class="scene"><div id="loading" class="loading">공장 문을 열고 있어요…</div></div>
-    <header class="hud">
-      <button id="mission-open" class="stage-button" aria-label="의뢰 정보 열기" aria-controls="drawer" aria-expanded="false"><span class="stage-number">01</span><span>나무상자 공장<small id="mode-label">공장 둘러보기</small></span></button>
-      <div class="hud-stats"><div class="hud-stat goal-stat"><span>창고</span><strong><b id="shipped">0</b><small> / <span id="goal">9</span></small></strong><div class="progress-track"><i id="progress"></i></div></div><div class="hud-stat"><span>남은 시간</span><strong id="time">60<small>초</small></strong></div><div class="hud-stat budget-stat"><span>예산</span><strong id="budget">400 <small>G</small></strong></div></div>
-    </header>
-    <div class="view-tools"><button id="fit-view" title="공장 전체 보기" aria-label="공장 전체 보기">⊡</button></div>
-    <section id="context-menu" class="context-menu" aria-label="선택한 설비" hidden>
-      <div class="context-heading"><strong id="selected-name">설비 선택</strong><small id="selected-badge"></small><button id="deselect" class="icon-button" aria-label="선택 취소">×</button></div>
-      <label class="operator-picker"><span>작업자</span><select id="operator-select" aria-label="이 작업대의 작업자"></select></label>
-      <p id="selection-info" class="selection-info"></p>
-      <div class="selection-actions"><button id="move" disabled>↗ 옮기기</button><button id="rotate" disabled>↻ 회전</button><button id="sell" disabled>판매</button></div>
-      <form id="placement-form" hidden><div class="coordinate-fields"><label>열 <input id="place-x" type="number" min="1" max="16" value="4" required></label><label>행 <input id="place-y" type="number" min="1" max="12" value="5" required></label><span id="rotation-value">0°</span></div><div class="placement-buttons"><button type="submit" class="primary">여기에 배치</button><button type="button" id="cancel" class="secondary">취소</button></div></form>
-    </section>
-    <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
-    <nav class="dock" aria-label="게임 조작"><button id="equipment-open" class="dock-tool" aria-controls="drawer" aria-expanded="false"><span aria-hidden="true">▥</span>설비</button><button id="workers-open" class="dock-tool" aria-controls="drawer" aria-expanded="false"><span aria-hidden="true">♙</span>작업자</button><i class="dock-divider"></i><button id="run" class="primary"><span>▶</span> 시험 가동</button><button id="edit" class="dock-tool" hidden>↩ 배치</button><button id="speed-cycle" class="dock-tool" aria-label="가동 속도 1배">1×</button></nav>
-    <aside id="drawer" class="drawer" aria-label="공장 관리" hidden>
-      <div class="drawer-heading"><div class="tab-bar"><button id="equipment-tab" class="tab active" aria-pressed="true">설비</button><button id="workers-tab" class="tab" aria-pressed="false">작업자</button><button id="mission-tab" class="tab" aria-pressed="false">의뢰</button></div><button id="drawer-close" class="icon-button" aria-label="관리 패널 닫기">×</button></div>
-      <div class="drawer-content">
-        <div id="equipment-panel"><div class="section-title"><h2>설비 구매</h2><span>판매 시 전액 환급</span></div><div id="shop" class="shop"></div><div class="machine-list"><label for="machine-select">배치된 설비</label><select id="machine-select"><option value="">설비 선택</option></select></div><p class="small-note">설비 앞의 초록색 한 칸이 작업자 자리입니다.<br>설비를 눌러 이동·회전·작업자 배치를 바꿔 보세요.</p></div>
-        <div id="workers-panel" hidden><div class="section-title"><h2>작업자 배치</h2><span>5명</span></div><p class="small-note">작업대와 창고 앞 한 칸에 직원을 배치하세요. 후공정 직원이 이전 작업대의 물건을 가져가며, 창고 직원은 완제품을 수거합니다.</p><div id="workers"></div></div>
-        <div id="mission-panel" hidden><p class="eyebrow">FACTORY FIT · 의뢰 01</p><h2>느릿느릿 나무상자 공장</h2><p class="owner-quote">“완제품을 창고에 모아 주세요.”</p><p class="mission-copy">60초 안에 나무상자 <strong id="mission-goal">9개</strong>를 창고에 보관하세요. 작업대 네 곳과 창고에 각각 직원이 필요합니다.</p><div class="baseline"><span>개선 전 창고 보관량</span><strong><b id="baseline">—</b>개 / 60초</strong></div><p class="small-note">부지·입고장·창고·화장실은 고정입니다.<br>결과물은 수거 전까지 작업대 위에 남습니다.<br>지우는 가끔 화장실에 다녀옵니다.</p><div id="process" class="process-strip" aria-label="공정 상태"></div><div class="mission-actions"><button id="heat" class="secondary" aria-pressed="false">혼잡 표시</button><button id="hint" class="secondary">개선 힌트</button><button id="help" class="secondary">조작 방법</button><button id="site-exit" class="secondary" type="button" hidden>게임 종료하기</button><button id="reset" class="secondary">처음 의뢰로</button></div><p id="save-status" class="save-status" role="status">배치와 예산이 자동 저장됩니다.</p></div>
-      </div>
-    </aside>
-  </main>
-  <dialog id="result-dialog" class="modal"><form method="dialog"><button class="modal-close" aria-label="결과 닫기">×</button></form><p class="eyebrow">FACTORY REPORT</p><div id="result-icon" class="result-icon">✦</div><h2 id="result-title">가동 결과</h2><p id="result-copy"></p><div class="report-grid" id="report"></div><p class="report-note">같은 초기 재고 · 같은 작업자 · 같은 60초 기준</p><button id="retry" class="primary">배치를 개선하기</button></dialog>
-  <dialog id="help-dialog" class="modal help-modal"><form method="dialog"><button class="modal-close" aria-label="도움말 닫기">×</button></form><h2>공장을 개선하는 방법</h2><ol><li>설비를 누르면 이동·회전·판매를 할 수 있습니다.</li><li>각 작업대와 창고 앞 <strong>한 칸</strong>에 직원을 배치하세요.</li><li>작업 결과물은 작업대 위에 남고, 다음 공정 직원이 가져와 자기 작업대에서 가공합니다.</li><li>창고 직원이 포장대의 완제품을 가져와 보관해야 목표에 포함됩니다.</li><li>설비는 구매가 전액으로 판매할 수 있습니다. 가동 중에는 편집할 수 없습니다.</li></ol><p class="small-note">드래그로 화면 이동 · 휠/두 손가락으로 확대<br>Space 가동/정지 · R 회전 · Esc 취소</p><button id="help-close" class="primary">알겠어요</button></dialog>
-  <dialog id="reset-dialog" class="modal"><h2>처음 의뢰로 돌아갈까요?</h2><p>설비·작업자 배치와 예산을 초기화합니다.</p><div class="placement-buttons"><button id="confirm-reset" class="primary">처음부터 시작</button><button id="cancel-reset" class="secondary">계속 개선하기</button></div></dialog>
-  <noscript>이 게임을 실행하려면 JavaScript를 켜 주세요.</noscript>
-  <script type="module" src="./src/main.js"></script>
+<main class="game" aria-label="Factory Fit 배치 퍼즐">
+  <div id="scene" class="scene"><div id="loading" class="loading">작은 공장을 준비하고 있어요…</div></div>
+  <header class="hud"><button id="help" class="stage-button" aria-label="스테이지와 조작 안내"><b>01</b><span>첫 번째 나무상자<small id="mode-label">빈 부지에서 시작해요</small></span></button><div class="run-controls"><button id="edit" hidden>배치로</button><button id="run" class="primary" disabled>▶ 공장 가동</button></div></header>
+  <div id="onboarding" class="onboarding"><strong>세 작업대, 하나의 흐름</strong><span>절단 → 조립 → 포장 → 창고</span><p>아래 설비를 부지로 끌어다 놓으세요.<br>작업자도 각 작업대와 창고에 직접 배치해요.</p></div>
+  <div class="view-tools"><button id="fit-view" aria-label="공장 전체 보기">⊡</button></div>
+  <section id="context" class="context" aria-label="선택한 설비" hidden>
+    <div class="context-title"><strong id="selected-name"></strong><small id="placement-status"></small></div>
+    <div id="machine-actions" class="actions"><button id="rotate">↻ 회전</button><button id="remove">목록으로</button><button id="cancel">취소</button><button id="confirm" class="primary">배치 완료</button></div>
+    <div id="worker-actions" class="actions" hidden><span>초록색 한 칸을 누르세요</span><button id="unassign">배치 해제</button><button id="worker-cancel">취소</button></div>
+  </section>
+  <p id="notice" class="notice" role="status" aria-live="polite" hidden></p>
+  <section class="tray" aria-label="지급 목록">
+    <div class="tray-heading"><div class="tabs" role="tablist" aria-label="지급 목록 종류"><button id="equipment-tab" role="tab" aria-selected="true" aria-controls="equipment-list">설비 <small id="equipment-count">0/3</small></button><button id="workers-tab" role="tab" aria-selected="false" aria-controls="workers-list">작업자 <small id="workers-count">0/4</small></button></div><div class="carousel-tools"><span id="tray-hint">위로 끌어 배치</span><button id="previous" aria-label="이전 항목">‹</button><button id="next" aria-label="다음 항목">›</button></div></div>
+    <div id="equipment-list" class="carousel" role="tabpanel" aria-labelledby="equipment-tab"></div>
+    <div id="workers-list" class="carousel" role="tabpanel" aria-labelledby="workers-tab" hidden></div>
+    <p class="tray-note" id="save-status">설비 3대와 직원 4명이 지급됩니다 · 자리에 직접 배치해요</p>
+  </section>
+</main>
+<dialog id="result-dialog" class="modal"><div id="result-icon" class="result-icon">✦</div><h2 id="result-title"></h2><p id="result-copy"></p><button id="retry" class="primary">배치로 돌아가기</button><small id="result-note"></small></dialog>
+<dialog id="help-dialog" class="modal help"><p class="eyebrow">STAGE 01 · 첫 번째 나무상자</p><h2>작은 공장에 흐름을 만들어요</h2><ol><li>아래 목록을 좌우로 넘겨 설비를 고릅니다.</li><li>설비를 위로 끌거나 선택 후 바닥을 눌러 배치합니다.</li><li>회전 후 <b>배치 완료</b>를 누릅니다. 취소하면 편집 전으로 돌아갑니다.</li><li><b>작업자</b> 탭에서 직원을 골라 각 작업대와 창고 앞 한 칸에 배치합니다.</li><li><b>공장 가동</b>을 눌러 완제품 한 개를 창고에 넣으면 성공입니다.</li></ol><p>직원은 서로 통과할 수 없어요. 설비 사이에 걸을 길을 남겨 주세요.</p><div class="actions"><button id="site-exit" class="secondary" type="button" hidden>게임 종료하기</button><button id="reset">빈 부지로 초기화</button><button id="help-close" class="primary">알겠어요</button></div><small>드래그로 화면 이동 · 휠/두 손가락으로 확대<br>R 회전 · Esc 취소 · Space 가동/일시정지</small></dialog>
+<dialog id="reset-dialog" class="modal"><h2>빈 부지로 돌아갈까요?</h2><p>설비와 직원을 모두 지급 목록으로 돌려놓습니다.</p><div class="actions"><button id="reset-cancel">유지하기</button><button id="reset-confirm" class="primary">초기화</button></div></dialog>
+<noscript>JavaScript를 켜 주세요.</noscript><script type="module" src="./src/main.js?v=6d55e5f175f7"></script>
   <script src="./site-integration.js?v=0cb47dc929b2" defer></script>
-</body>
-</html>
+</body></html>

@@ -187,10 +187,10 @@ export function createArtKit(renderer) {
       }
     }
     compact(model, `machine/${item.type}`);
-    const stage = TYPES.indexOf(item.type), top = item.type === 'paint' ? 1.02 : 1.065;
+    const stage = spec.inputStage, top = item.type === 'paint' ? 1.02 : 1.065;
     const processingItem = goods(model, stage, item.type === 'cutter' ? -.65 : 0, top, item.type === 'assembly' || item.type === 'packing' ? -.35 : 0, .7); processingItem.visible = false;
     const positions = item.type === 'cutter' ? [[-.85, .6], [.85, .6]] : item.type === 'assembly' ? [[-.85, .85], [.85, .85]] : item.type === 'paint' ? [[-.4, 1], [.4, 1]] : [[-.43, .55], [.43, .55]];
-    const outputItems = positions.map(([x, z]) => { const output = goods(model, stage + 1, x, top, z, .54); output.visible = false; return output; });
+    const outputItems = positions.map(([x, z]) => { const output = goods(model, spec.outputStage, x, top, z, .54); output.visible = false; return output; });
     group.userData.inventory = { processingItem, outputItems };
     group.traverse(obj => { if (obj.isMesh) obj.userData.machineId = item.id; }); return group;
   }
@@ -232,25 +232,6 @@ export function createArtKit(renderer) {
     for (let i = 0; i < 5; i++) { const angle = i * Math.PI * 2 / 5; const leaf = sphere(group, .25, x + Math.cos(angle) * .15, .65 + i % 2 * .05, z + Math.sin(angle) * .15, i % 2 ? '#a6bb79' : '#8ba967', [.55, 1.3, .65]); leaf.rotation.z = -Math.cos(angle) * .4; leaf.rotation.x = Math.sin(angle) * .4; }
     contactShadow(group, .85, .75, x, .069, z);
   }
-  function pets(scene) {
-    const cat = new THREE.Group(); cat.position.set(14.8, .075, 10.65); cat.rotation.y = .95; scene.add(cat);
-    contactShadow(cat, 1.2, .85, 0, 0, 0);
-    wood(cat, 1.05, .1, .7, 0, .05, 0, '#d7b383');
-    sphere(cat, .34, 0, .26, 0, '#dfa65e', [1.3, .7, .8]); sphere(cat, .23, .28, .31, .16, '#e7b875');
-    for (const x of [.14, .4]) cylinder(cat, 0, .095, .2, x, .52, .12, '#dca66a', 3);
-    sphere(cat, .13, .28, .25, .32, '#fff0d2', [1.1, .75, .5]);
-    for (const x of [.2, .36]) { const eye = box(cat, .065, .018, .025, x, .32, .358, '#6d5844'); eye.rotation.z = x < .3 ? -.15 : .15; }
-    sphere(cat, .026, .28, .27, .386, '#c78b7c');
-    const tail = ring(cat, .22, .075, -.29, .23, .07, '#bd854c'); tail.rotation.x = Math.PI / 2;
-    const dog = new THREE.Group(); dog.position.set(12.9, .07, 11.1); dog.rotation.y = 1.3; scene.add(dog); contactShadow(dog, .9, 1.0, 0, 0, 0);
-    sphere(dog, .28, 0, .35, 0, '#f0dfbd', [.85, .9, 1.25]);
-    for (const x of [-.14, .14]) for (const z of [-.18, .19]) { sphere(dog, .085, x, .1, z, '#f5e8ce', [1, 1.2, 1.1]); }
-    sphere(dog, .25, 0, .62, .25, '#f5e7ca');
-    for (const sign of [-1, 1]) { sphere(dog, .14, sign * .22, .6, .2, '#a97a50', [.7, 1.3, .8]); sphere(dog, .029, sign * .102, .66, .469, '#423d31'); }
-    sphere(dog, .13, 0, .54, .46, '#fff1d7', [1, .7, .7]); sphere(dog, .047, 0, .59, .536, '#4b4437');
-    const wag = sphere(dog, .13, 0, .57, -.31, '#e6c99c', [.4, 1.7, .5]); wag.rotation.x = -.6;
-    return { cat, dog, wag };
-  }
   function audit() {
     let invalid = 0, triangles = 0;
     for (const geometry of geometries.values()) {
@@ -259,5 +240,5 @@ export function createArtKit(renderer) {
     }
     return { geometries: geometries.size, materials: materials.size, cachedTriangles: Math.round(triangles), invalidValues: invalid, proceduralTextures: 3 };
   }
-  return { box, wood, sphere, cylinder, ring, crate, goods, material, contactShadow, compact, machine, worker, plant, pets, audit };
+  return { box, wood, sphere, cylinder, ring, crate, goods, material, contactShadow, compact, machine, worker, plant, audit };
 }

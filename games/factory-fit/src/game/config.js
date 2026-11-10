@@ -1,43 +1,35 @@
-// SAMPLE 01: 밸런스 검증을 위한 시험값. 부지·입고장은 저장 데이터로 변경할 수 없다.
-export const MAP = Object.freeze({ width: 16, height: 12, tileMeters: 0.5 });
-export const STAGE = Object.freeze({ id: 'woodworks-01', name: '느릿느릿 나무상자 공장', budget: 400, duration: 60, goal: 9, maxMachines: 10 });
-export const FIXED = Object.freeze([
-  Object.freeze({ id: 'inbound', label: '목재 입고장', x: 0, y: 1, width: 2, height: 3, access: Object.freeze({ x: 2, y: 2 }), color: '#b98950' }),
-  Object.freeze({ id: 'outbound', label: '완제품 창고', x: 0, y: 8, width: 2, height: 3, access: Object.freeze({ x: 2, y: 9 }), color: '#579087' }),
-  Object.freeze({ id: 'toilet', label: '화장실', x: 14, y: 4, width: 2, height: 2, access: Object.freeze({ x: 14, y: 6 }), color: '#a6c5ba' }),
-]);
-export const PORTS = FIXED.slice(0, 2);
-export const WAREHOUSE = FIXED[1]; // 이전 저장과 호환하도록 내부 ID outbound 유지
-export const TYPES = Object.freeze(['cutter', 'assembly', 'paint', 'packing']);
-export const WORKERS = Object.freeze([
-  Object.freeze({ key: 'w1', name: '민수', color: '#e7b348', trait: '꼼꼼한 작업', toilet: false }),
-  Object.freeze({ key: 'w2', name: '지우', color: '#739dc8', trait: '화장실 단골', toilet: true }),
-  Object.freeze({ key: 'w3', name: '수진', color: '#d99a8e', trait: '성실한 작업', toilet: false }),
-  Object.freeze({ key: 'w4', name: '준호', color: '#93aa6e', trait: '꾸준한 작업', toilet: false }),
-  Object.freeze({ key: 'w5', name: '다솔', color: '#b69dcc', trait: '창고 담당', toilet: false }),
-]);
-export function createAssignments(layout) { return Object.fromEntries(WORKERS.map((worker, i) => [worker.key, i === 4 ? WAREHOUSE.id : layout.find(item => item.type === TYPES[i])?.id ?? null])); }
 export const EQUIPMENT = Object.freeze({
-  cutter: Object.freeze({ name: '절단기', short: '절단', width: 3, height: 2, color: '#5c9d8c', price: 240, seconds: 1.4, output: '상자 부재' }),
-  assembly: Object.freeze({ name: '조립대', short: '조립', width: 3, height: 3, color: '#c4914d', price: 320, seconds: 2.2, output: '나무상자' }),
-  paint: Object.freeze({ name: '도색대', short: '도색', width: 2, height: 3, color: '#799fc8', price: 280, seconds: 3.2, output: '도색 상자' }),
-  packing: Object.freeze({ name: '포장대', short: '포장', width: 2, height: 2, color: '#dbb55b', price: 180, seconds: 1.6, output: '완제품' }),
+  cutter: { name: '절단기', short: '절단', width: 3, height: 2, color: '#629b82', seconds: 1.4, input: 'timber', output: 'parts', inputStage: 0, outputStage: 1 },
+  assembly: { name: '조립대', short: '조립', width: 3, height: 3, color: '#ca9659', seconds: 2.2, input: 'parts', output: 'crate', inputStage: 1, outputStage: 2 },
+  packing: { name: '포장대', short: '포장', width: 2, height: 2, color: '#d1a05f', seconds: 1.6, input: 'crate', output: 'finished', inputStage: 2, outputStage: 4 },
+  press: { name: '성형 작업대', short: '성형', width: 2, height: 1, color: '#8ba6bc', seconds: 1.8, input: 'timber', output: 'finished', inputStage: 0, outputStage: 4 },
+  conveyor: { name: '컨베이어', short: '벨트', width: 1, height: 1, color: '#829b93', belt: true },
 });
-export function createDefaultLayout() {
-  return [
-    { id: 'm1', type: 'cutter', x: 3, y: 0, rotation: 0, paid: 240 },
-    { id: 'm2', type: 'assembly', x: 10, y: 0, rotation: 0, paid: 320 },
-    { id: 'm3', type: 'paint', x: 11, y: 7, rotation: 0, paid: 280 },
-    { id: 'm4', type: 'packing', x: 3, y: 8, rotation: 0, paid: 180 },
-  ];
-}
-
-// 실행 결과를 만들어 내지 않는다. 아래 배치도 동일한 엔진으로 시험한다.
-export function createSuggestedLayout() {
-  return createDefaultLayout().map(item => ({ ...item, ...({
-    cutter: { x: 3, y: 1, rotation: 0 },
-    assembly: { x: 7, y: 1, rotation: 0 },
-    paint: { x: 7, y: 6, rotation: 2 },
-    packing: { x: 3, y: 6, rotation: 2 },
-  }[item.type]) }));
-}
+export const PRODUCTS = Object.freeze({ timber: '목재', parts: '상자 부재', crate: '나무상자', finished: '완제품' });
+export const WORKERS = Object.freeze([
+  { key: 'w1', name: '민수', color: '#e7b348', trait: '차분한 작업', strength: 1 },
+  { key: 'w2', name: '지우', color: '#739dc8', trait: '꼼꼼한 작업', strength: 1 },
+  { key: 'w3', name: '수진', color: '#d99a8e', trait: '성실한 작업', strength: 1 },
+  { key: 'w4', name: '준호', color: '#93aa6e', trait: '꾸준한 작업', strength: 1 },
+]);
+export const STAGE = Object.freeze({
+  id: 'first-workflow-01', name: '첫 번째 나무상자', number: 1,
+  width: 10, height: 8, tileMeters: 0.5, holes: [],
+  inventory: [{ id: 'm1', type: 'cutter' }, { id: 'm2', type: 'assembly' }, { id: 'm3', type: 'packing' }],
+  workers: WORKERS, input: 'timber', product: 'finished', batch: 3, goal: 1,
+  fixtures: [
+    { id: 'inbound', label: '목재 입고', x: 0, y: 0, width: 1, height: 2, access: { x: 1, y: 1 }, color: '#b98950' },
+    { id: 'outbound', label: '완제품 창고', x: 0, y: 6, width: 1, height: 2, access: { x: 1, y: 6 }, color: '#579087' },
+  ],
+  hint: '절단 → 조립 → 포장. 작업대 앞 한 칸을 비우고, 각 공정 담당자와 창고 직원을 배치하세요.',
+});
+export const STAGES = [STAGE];
+export const MAP = { width: STAGE.width, height: STAGE.height, tileMeters: STAGE.tileMeters };
+export const FIXED = STAGE.fixtures;
+export const WAREHOUSE = FIXED.find(item => item.id === 'outbound');
+export const TYPES = ['cutter', 'assembly', 'packing'];
+export const DIRECTIONS = [{ x: 0, y: 1 }, { x: -1, y: 0 }, { x: 0, y: -1 }, { x: 1, y: 0 }];
+export function createDefaultLayout() { return []; }
+// Authoring/QA solution. The game never applies it automatically.
+export function createSuggestedLayout() { return [{ id: 'm1', type: 'cutter', x: 2, y: 0, rotation: 0 }, { id: 'm2', type: 'assembly', x: 6, y: 1, rotation: 0 }, { id: 'm3', type: 'packing', x: 3, y: 5, rotation: 0 }]; }
+export function createAssignments(layout, stage = STAGE) { return Object.fromEntries(stage.workers.map(worker => [worker.key, null])); }

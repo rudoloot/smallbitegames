@@ -1,9 +1,10 @@
 import * as THREE from 'three';
-import { MAP, EQUIPMENT, FIXED, WORKERS, WAREHOUSE } from '../game/config.js';
+import { EQUIPMENT, STAGE } from '../game/config.js';
 import { createArtKit } from './art.js';
 import { footprint, cellKey } from '../game/layout.js';
 
-export function createFactoryView(host, callbacks) {
+export function createFactoryView(host, callbacks, stage = STAGE) {
+  const MAP = { width: stage.width, height: stage.height }, FIXED = stage.fixtures, WORKERS = stage.workers, WAREHOUSE = FIXED.find(f => f.id === 'outbound');
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#f1dbc4');
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -18,11 +19,12 @@ export function createFactoryView(host, callbacks) {
   renderer.domElement.tabIndex = 0;
   // A narrow field of view gives the toy factory a little depth without wide-angle distortion.
   const camera = new THREE.PerspectiveCamera(24, 1, 0.1, 300);
-  const cameraDirection = new THREE.Vector3(24, 36, 1.2).normalize();
+  // A level three-quarter view: show the tops and sides without sideways yaw or roll.
+  const cameraDirection = new THREE.Vector3(1, 1, 0).normalize();
   let cameraDistance = 60;
   scene.add(new THREE.HemisphereLight('#fff5e9', '#c8b7aa', 1.4));
   const sun = new THREE.DirectionalLight('#fff3e4', 2.6);
-  sun.position.set(0, 22, 14); sun.target.position.set(8, 0, 6); sun.castShadow = true;
+  sun.position.set(MAP.width / 2 - 8, 22, MAP.height / 2 + 8); sun.target.position.set(MAP.width / 2, 0, MAP.height / 2); sun.castShadow = true;
   Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, near: 1, far: 60 });
   sun.shadow.mapSize.set(1024, 1024); sun.shadow.normalBias = 0.035; sun.shadow.bias = -0.00015;
   sun.shadow.radius = 4; sun.shadow.intensity = 0.62;
@@ -47,60 +49,39 @@ export function createFactoryView(host, callbacks) {
   const environment = new THREE.Group(); scene.add(environment);
   const labels = [], warehouseBoxes = [];
   let warehouseLabel;
-  box(environment, 200, 0.15, 200, 8, -0.52, 6, '#f1dbc4');
-  box(environment, 16.55, 0.42, 12.55, 8, -0.25, 6, '#d0b5a0');
-  box(environment, 16.1, 0.08, 12.1, 8, -0.005, 6, '#e7d4c0');
-  // 타일은 하나의 인스턴스 묶음으로 그린다.
-  const tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(0.99, 0.025, 0.99), colorMaterial('#ffffff'), MAP.width * MAP.height);
-  const matrix = new THREE.Matrix4();
-  for (let y = 0; y < MAP.height; y++) for (let x = 0; x < MAP.width; x++) {
-    const id = y * MAP.width + x; matrix.makeTranslation(x + 0.5, 0.045, y + 0.5); tiles.setMatrixAt(id, matrix);
-    tiles.setColorAt(id, new THREE.Color((x + y) % 2 ? '#efddcb' : '#f1dfcd'));
-  }
+  const cx = MAP.width / 2, cz = MAP.height / 2;
+  box(environment, 200, .15, 200, cx, -.52, cz, '#f1dbc4');
+  box(environment, MAP.width + .55, .42, MAP.height + .55, cx, -.25, cz, '#d0b5a0');
+  box(environment, MAP.width + .1, .08, MAP.height + .1, cx, -.005, cz, '#e7d4c0');
+  const tileCells = [];
+  for (let y = 0; y < MAP.height; y++) for (let x = 0; x < MAP.width; x++) if ((!stage.cells || stage.cells.includes(`${x},${y}`)) && !stage.holes.some(h => h.x === x && h.y === y)) tileCells.push({ x, y });
+  const tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(.99, .025, .99), colorMaterial('#ffffff'), tileCells.length), matrix = new THREE.Matrix4();
+  tileCells.forEach((cell, i) => { matrix.makeTranslation(cell.x + .5, .045, cell.y + .5); tiles.setMatrixAt(i, matrix); tiles.setColorAt(i, new THREE.Color((cell.x + cell.y) % 2 ? '#efddcb' : '#f1dfcd')); });
   tiles.receiveShadow = true; scene.add(tiles);
-  box(environment, 16.4, 1.2, 0.25, 8, 0.5, -0.2, '#e6ccb8');
-  box(environment, 16.5, 0.18, 0.33, 8, 1.12, -0.2, '#8aa99e');
-  box(environment, 0.2, 0.65, 12.4, -0.2, 0.25, 6, '#e6ccb8');
-  box(environment, 0.2, 0.35, 12.4, 16.2, 0.13, 6, '#e6ccb8');
-  box(environment, 0.28, 0.14, 12.45, -0.2, 0.62, 6, '#8aa99e');
-  box(environment, 0.26, 0.12, 12.45, 16.2, 0.35, 6, '#8aa99e');
-  for (const x of [0, 5, 11, 16]) box(environment, 0.35, 0.85, 0.45, x, 0.3, -0.18, '#d7b7a3');
-  for (const x of [0, 5.8, 10.2, 16]) box(environment, 0.34, 0.7, 0.34, x, 0.25, 12.18, '#d7b7a3');
-  box(environment, 5.7, 0.35, 0.22, 2.85, 0.1, 12.2, '#e6ccb8');
-  box(environment, 5.7, 0.35, 0.22, 13.15, 0.1, 12.2, '#e6ccb8');
-
+  for (const hole of stage.holes) box(environment, .99, .015, .99, hole.x + .5, .04, hole.y + .5, '#655244', false);
+  box(environment, MAP.width + .4, .85, .24, cx, .35, -.2, '#e6ccb8');
+  box(environment, MAP.width + .5, .15, .3, cx, .82, -.2, '#8aa99e');
+  for (const [x, h] of [[-.2, .65], [MAP.width + .2, .3]]) {
+    box(environment, .22, h, MAP.height + .4, x, h / 2, cz, '#e6ccb8');
+    box(environment, .28, .12, MAP.height + .45, x, h, cz, '#8aa99e');
+  }
+  for (const x of [0, MAP.width]) for (const z of [0, MAP.height]) box(environment, .32, .6, .32, x, .2, z, '#d7b7a3');
+  box(environment, MAP.width + .3, .23, .22, cx, .08, MAP.height + .2, '#e6ccb8');
   for (const fixture of FIXED) {
-    const cells = [];
-    for (let y = 0; y < fixture.height; y++) for (let x = 0; x < fixture.width; x++) cells.push({ x: fixture.x + x, y: fixture.y + y });
+    const cells = Array.from({ length: fixture.width * fixture.height }, (_, i) => ({ x: fixture.x + i % fixture.width, y: fixture.y + Math.floor(i / fixture.width) }));
     outline(cells, fixture.color, scene, false);
     if (fixture.id === 'inbound') {
-      for (let row = 0; row < 3; row++) for (let layer = 0; layer < 3; layer++) wood(environment, 1.55, 0.22, 0.72, 0.95, 0.22 + layer * 0.24, 1.5 + row * 0.92, layer % 2 ? '#d2a36c' : '#bd8d53');
-    } else if (fixture.id === 'outbound') {
-      for (const x of [0.2, 1.8]) for (const z of [8.07, 10.93]) wood(environment, 0.14, 1.88, 0.14, x, 0.99, z, '#b88b5b');
-      for (let layer = 0; layer < 3; layer++) {
-        for (const x of [0.28, 1.72]) wood(environment, 0.15, 0.1, 2.86, x, 0.17 + layer * 0.55, 9.5, '#ba905f');
-        for (const z of [8.15, 9.5, 10.85]) wood(environment, 1.58, 0.1, 0.13, 1, 0.17 + layer * 0.55, z, '#ba905f');
-      }
-      for (const x of [0.2, 1.8]) wood(environment, 0.15, 0.12, 2.9, x, 1.99, 9.5, '#c39a67');
-      for (let layer = 0; layer < 3; layer++) for (let row = 0; row < 3; row++) for (const x of [0.62, 1.36]) {
-        const item = goods(scene, 4, x, 0.23 + layer * 0.55, 8.45 + row * 0.9, 0.6); item.visible = false; warehouseBoxes.push(item);
-      }
+      for (let row = 0; row < fixture.height; row++) for (let layer = 0; layer < 3; layer++) wood(environment, fixture.width - .22, .16, .66, fixture.x + fixture.width / 2, .17 + layer * .17, fixture.y + .5 + row, layer % 2 ? '#d2a36c' : '#bd8d53');
     } else {
-      box(environment, 1.9, 0.12, 1.9, 15, 0.14, 5, '#b2c8bc');
-      box(environment, 1.9, 1.65, 0.13, 15, 0.95, 4.06, '#dcd9c8');
-      for (const x of [14.07, 15.93]) box(environment, 0.14, 1.65, 1.9, x, 0.95, 5, '#dcd9c8');
-      box(environment, 1.38, 1.35, 0.12, 14.9, 0.8, 5.97, '#89b0a4');
-      cylinder(environment, 0.28, 0.21, 0.42, 15, 0.5, 4.85, '#f5f3e7');
-      box(environment, 0.55, 0.6, 0.22, 15, 0.7, 4.36, '#f5f3e7');
-      sphere(environment, 0.09, 15.42, 0.85, 6.05, '#e5ce88');
+      wood(environment, fixture.width - .15, .15, fixture.height - .16, fixture.x + fixture.width / 2, .15, fixture.y + fixture.height / 2, '#b88b5b');
+      for (let i = 0; i < 2; i++) { const item = goods(scene, 4, fixture.x + .5, .24, fixture.y + .55 + i * .8, .6); item.visible = false; warehouseBoxes.push(item); }
     }
-    const fixtureLabel = label(fixture.id === 'toilet' ? 'WC · 고정' : fixture.id === WAREHOUSE.id ? '창고 · 0개' : '↓ 입고 · 고정', 'fixed-label');
-    if (fixture.id === WAREHOUSE.id) { warehouseLabel = fixtureLabel; fixtureLabel.id = 'warehouse-stock'; }
-    labels.push({ el: fixtureLabel, pos: new THREE.Vector3(fixture.x + fixture.width / 2, 2.1, fixture.y + fixture.height / 2) });
+    const el = label(fixture.id === 'outbound' ? '창고 · 직원 필요' : '↓ 목재 입고', 'fixed-label');
+    if (fixture.id === 'outbound') { warehouseLabel = el; el.id = 'warehouse-stock'; }
+    labels.push({ el, pos: new THREE.Vector3(fixture.x + fixture.width / 2, 1.2, fixture.y + fixture.height / 2) });
   }
-  for (const [x, z] of [[-0.8, -0.3], [16.8, -0.3], [5.5, 12.8], [10.5, 12.8], [16.8, 10]]) art.plant(environment, x, z);
+  for (const [x, z] of [[MAP.width + .8, -.2], [MAP.width + .8, MAP.height + .2]]) art.plant(environment, x, z);
   art.compact(environment, 'environment');
-  const { cat, dog, wag } = art.pets(scene);
 
   const equipmentGroup = new THREE.Group(), marks = new THREE.Group(), preview = new THREE.Group(), crowd = new THREE.Group(), heat = new THREE.Group();
   scene.add(equipmentGroup, marks, preview, crowd, heat);
@@ -113,6 +94,7 @@ export function createFactoryView(host, callbacks) {
     [...machineLabels, ...stockLabels, ...slotLabels, ...slotTargets].forEach(entry => entry.el.remove()); machineLabels = []; stockLabels = []; slotLabels = []; slotTargets = [];
     for (const item of layout) {
       const model = machineModel(item); modelMap.set(item.id, model);
+      if (EQUIPMENT[item.type].belt) continue;
       const place = footprint(item).work[0], operator = WORKERS.find(worker => assignments[worker.key] === item.id);
       box(marks, 0.9, 0.035, 0.9, place.x + 0.5, 0.082, place.y + 0.5, operator ? '#bdd4a2' : '#e8d7a6', false);
       outline([place], pendingWorker ? '#4b823a' : operator ? '#779b5b' : '#b69b58', marks, false);
@@ -152,6 +134,7 @@ export function createFactoryView(host, callbacks) {
     for (const worker of sim.workers) {
       const obj = workerModels[worker.id];
       const x = THREE.MathUtils.lerp(worker.from.x, worker.x, alpha), y = THREE.MathUtils.lerp(worker.from.y, worker.y, alpha);
+      obj.group.visible = !!worker.machineId;
       obj.group.position.set(x + 0.5, 0.07, y + 0.5);
       const dx = worker.x - worker.from.x, dy = worker.y - worker.from.y;
       if (dx || dy) obj.body.rotation.y = Math.atan2(dx, dy);
@@ -161,7 +144,7 @@ export function createFactoryView(host, callbacks) {
       obj.legs.forEach((leg, index) => { leg.rotation.x = (dx || dy) ? Math.sin(seconds * 15 + index * Math.PI) * 0.45 : 0; });
       obj.arms.forEach((arm, index) => { arm.rotation.x = worker.carrying ? -1.05 : (dx || dy) ? Math.sin(seconds * 15 + index * Math.PI) * -0.32 : -0.08; });
       obj.cargo.forEach((item, stage) => { item.visible = worker.carrying && worker.job?.stage === stage; });
-      obj.marker.visible = worker.wait > 0 || worker.breakLeft > 0 || worker.job?.phase === 'toilet';
+      obj.marker.visible = worker.wait > 0;
       obj.marker.position.y = 1.85 + Math.sin(seconds * 3) * 0.05;
     }
     for (const entry of machineLabels) {
@@ -176,9 +159,6 @@ export function createFactoryView(host, callbacks) {
     }
     warehouseBoxes.forEach((item, index) => { item.visible = index < sim.warehouse.stock; });
     warehouseLabel.textContent = `창고 · ${sim.warehouse.stock}개`; warehouseLabel.dataset.count = String(sim.warehouse.stock);
-    cat.position.y = 0.075 + Math.sin(seconds * 1.8) * 0.008;
-    dog.rotation.y = 1.3 + Math.sin(seconds * 0.6) * 0.09;
-    wag.rotation.z = Math.sin(seconds * 5) * 0.28;
   }
   function showHeat(sim, visible) {
     clear(heat); if (!visible) return;
@@ -190,7 +170,7 @@ export function createFactoryView(host, callbacks) {
   }
   let width = 1, height = 1;
   function positionCamera() {
-    const target = new THREE.Vector3(8 + panX, 0, 6 + panZ);
+    const target = new THREE.Vector3(MAP.width / 2 + panX, 0, MAP.height / 2 + panZ);
     camera.position.copy(target).addScaledVector(cameraDirection, cameraDistance);
     camera.lookAt(target); camera.updateMatrixWorld();
   }
@@ -198,13 +178,14 @@ export function createFactoryView(host, callbacks) {
     width = host.clientWidth; height = host.clientHeight;
     renderer.setSize(width, height);
     const aspect = width / height;
-    const half = Math.max(8.7, 7.5 / aspect);
+    const half = Math.max(MAP.width * .45, 5.4 / aspect);
     camera.aspect = aspect;
+    camera.setViewOffset(width, height, 0, height * .06, width, height);
     cameraDistance = half / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     positionCamera();
     camera.updateProjectionMatrix();
   }
-  new ResizeObserver(resize).observe(host);
+  const observer = new ResizeObserver(resize); observer.observe(host);
   const raycaster = new THREE.Raycaster(), floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.08);
   function pick(event) {
     const bounds = renderer.domElement.getBoundingClientRect();
@@ -213,7 +194,7 @@ export function createFactoryView(host, callbacks) {
     const cell = point ? { x: Math.floor(point.x), y: Math.floor(point.z) } : null;
     const hit = raycaster.intersectObjects(equipmentGroup.children, true)[0];
     const fixture = cell && FIXED.find(item => cell.x >= item.x && cell.x < item.x + item.width && cell.y >= item.y && cell.y < item.y + item.height);
-    const workId = cell && layout.find(item => cellKey(footprint(item).work[0]) === cellKey(cell))?.id;
+    const workId = cell && layout.find(item => footprint(item).work.some(place => cellKey(place) === cellKey(cell)))?.id;
     return { cell, id: hit?.object.userData.machineId, fixedId: fixture?.id, workId };
   }
   const pointers = new Map();
@@ -237,7 +218,7 @@ export function createFactoryView(host, callbacks) {
       if (oldDistance > 0) zoom(distance / oldDistance);
       dragged = true; return;
     }
-    if (dragged || start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 7) {
+    if (callbacks.canPan?.() !== false && (dragged || start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 7)) {
       const before = planePoint(previous.x, previous.y), after = planePoint(event.clientX, event.clientY);
       if (before && after) {
         const dx = before.x - after.x, dz = before.z - after.z;
@@ -278,5 +259,6 @@ export function createFactoryView(host, callbacks) {
     renderer.render(scene, camera);
   }
   resize();
-  return { setLayout, setPreview, update, showHeat, render, renderer, camera, fit, audit: art.audit };
+  function projectCell(cell) { camera.updateMatrixWorld(); const p = new THREE.Vector3(cell.x + .5, .08, cell.y + .5).project(camera), bounds = host.getBoundingClientRect(); return { x: bounds.left + (p.x + 1) * width / 2, y: bounds.top + (1 - p.y) * height / 2 }; }
+  return { setLayout, setPreview, update, showHeat, render, renderer, camera, fit, audit: art.audit, projectCell, pickAt: (clientX, clientY) => pick({ clientX, clientY }) };
 }
