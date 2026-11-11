@@ -1,7 +1,7 @@
 // Authored feasible production references, not proven global optima.
 export const STAGE_LAYOUTS = {
   "sample-01": {
-    "target": 7.7,
+    "target": 10,
     "startLayout": [
       {
         "id": "m1",
@@ -48,12 +48,12 @@ export const STAGE_LAYOUTS = {
         "rotation": 3
       }
     ],
-    "referenceRate": 8.823529411764707,
-    "startRate": 4.823151125401929,
+    "referenceRate": 11.4,
+    "startRate": 5.4,
     "tested": 160
   },
   "sample-02": {
-    "target": 6.3,
+    "target": 8.8,
     "startLayout": [
       {
         "id": "m1",
@@ -100,12 +100,12 @@ export const STAGE_LAYOUTS = {
         "rotation": 3
       }
     ],
-    "referenceRate": 7.246376811594203,
-    "startRate": 3.31858407079646,
+    "referenceRate": 10,
+    "startRate": 4.4,
     "tested": 168
   },
   "sample-03": {
-    "target": 7.8,
+    "target": 10.5,
     "startLayout": [
       {
         "id": "m1",
@@ -152,12 +152,12 @@ export const STAGE_LAYOUTS = {
         "rotation": 0
       }
     ],
-    "referenceRate": 8.875739644970414,
-    "startRate": 2.586206896551724,
+    "referenceRate": 12,
+    "startRate": 3,
     "tested": 160
   },
   "sample-04": {
-    "target": 8.2,
+    "target": 16,
     "startLayout": [
       {
         "id": "m1",
@@ -225,8 +225,8 @@ export const STAGE_LAYOUTS = {
         "rotation": 2
       }
     ],
-    "referenceRate": 9.146341463414634,
-    "startRate": 3.1380753138075317,
+    "referenceRate": 17.8,
+    "startRate": 4.6,
     "tested": 160,
     "referenceAssignments": {
       "w1": "m1",
@@ -254,7 +254,7 @@ export const STAGE_LAYOUTS = {
     "referenceLines": 2
   },
   "sample-05": {
-    "target": 7.4,
+    "target": 11.8,
     "startLayout": [
       {
         "id": "m1",
@@ -322,8 +322,8 @@ export const STAGE_LAYOUTS = {
         "rotation": 0
       }
     ],
-    "referenceRate": 8.241758241758243,
-    "startRate": 2.542372881355932,
+    "referenceRate": 13.2,
+    "startRate": 3.2,
     "tested": 160,
     "referenceAssignments": {
       "w1": "m1",
@@ -351,7 +351,7 @@ export const STAGE_LAYOUTS = {
     "referenceLines": 2
   },
   "sample-06": {
-    "target": 8.8,
+    "target": 16.3,
     "startLayout": [
       {
         "id": "m1",
@@ -419,8 +419,8 @@ export const STAGE_LAYOUTS = {
         "rotation": 0
       }
     ],
-    "referenceRate": 9.803921568627452,
-    "startRate": 2.7173913043478257,
+    "referenceRate": 18.2,
+    "startRate": 4.2,
     "tested": 160,
     "referenceAssignments": {
       "w1": "m1",
@@ -448,7 +448,7 @@ export const STAGE_LAYOUTS = {
     "referenceLines": 2
   },
   "sample-07": {
-    "target": 6.8,
+    "target": 11.8,
     "startLayout": [
       {
         "id": "m1",
@@ -516,8 +516,8 @@ export const STAGE_LAYOUTS = {
         "rotation": 0
       }
     ],
-    "referenceRate": 7.575757575757576,
-    "startRate": 3.2679738562091503,
+    "referenceRate": 13.2,
+    "startRate": 4.6,
     "tested": 161,
     "referenceAssignments": {
       "w1": "m1",
@@ -545,7 +545,7 @@ export const STAGE_LAYOUTS = {
     "referenceLines": 2
   },
   "sample-08": {
-    "target": 4.8,
+    "target": 11.5,
     "startLayout": [
       {
         "id": "m1",
@@ -580,8 +580,8 @@ export const STAGE_LAYOUTS = {
       {
         "id": "m2",
         "type": "assembly",
-        "x": 2,
-        "y": 9,
+        "x": 3,
+        "y": 10,
         "rotation": 1
       },
       {
@@ -634,8 +634,8 @@ export const STAGE_LAYOUTS = {
         "rotation": 3
       }
     ],
-    "referenceRate": 5.395683453237409,
-    "startRate": 2.868068833652008,
+    "referenceRate": 12.8,
+    "startRate": 4,
     "tested": 160,
     "referenceAssignments": {
       "w1": "m1",
@@ -663,7 +663,7 @@ export const STAGE_LAYOUTS = {
     "referenceLines": 3
   },
   "sample-09": {
-    "target": 7.4,
+    "target": 14.2,
     "startLayout": [
       {
         "id": "m1",
@@ -752,8 +752,8 @@ export const STAGE_LAYOUTS = {
         "rotation": 1
       }
     ],
-    "referenceRate": 8.241758241758243,
-    "startRate": 3.0120481927710845,
+    "referenceRate": 15.8,
+    "startRate": 4.2,
     "tested": 161,
     "referenceAssignments": {
       "w1": "m1",
@@ -781,7 +781,7 @@ export const STAGE_LAYOUTS = {
     "referenceLines": 3
   },
   "sample-10": {
-    "target": 4.7,
+    "target": 12.9,
     "startLayout": [
       {
         "id": "m1",
@@ -870,8 +870,8 @@ export const STAGE_LAYOUTS = {
         "rotation": 2
       }
     ],
-    "referenceRate": 5.300353356890459,
-    "startRate": 2.9296875,
+    "referenceRate": 14.4,
+    "startRate": 4.4,
     "tested": 160,
     "referenceAssignments": {
       "w1": "m1",
