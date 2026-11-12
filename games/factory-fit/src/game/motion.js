@@ -67,7 +67,7 @@ export function motionFrame(sim) {
         facing ? Math.atan2(facing.x,facing.y) : angle;
       // Spawn already looking at the station. Replaying tick zero must not spin
       // from world north after the edit view has shown the worker in position.
-      if(!old && !sim.tick) angle=target;
+      if(!old) angle=target;
       turnTo(target,DT);
       segment(Math.max(0,DT-time),angle);
     }

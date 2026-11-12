@@ -48,7 +48,7 @@ export function buildEquipment(item, spec, kit) {
     const mesh=new THREE.Mesh(geometry,material(color,kind));mesh.position.y=bottom;mesh.castShadow=mesh.receiveShadow=true;group.add(mesh);
   }
   shell(.08,freestanding ? .87 : .67,freestanding ? .03 : .23,body);
-  shell(.035,.14,.9,freestanding ? body : '#c99b5e',freestanding ? 'clay' : 'wood');
+  shell(.035,.14,.9,body);
   // Feet at external corners only, instead of four feet per tile.
   contour.forEach((p,i)=>{const [a,b]=directions(p,i);if(a[0]*b[1]-a[1]*b[0]>0)
     part(.14,.19,.14,p[0]-(a[1]+b[1])*.19-.5,.13,p[1]+(a[0]+b[0])*.19-.5,dark);
@@ -59,9 +59,9 @@ export function buildEquipment(item, spec, kit) {
   const outputY=spec.mask.findIndex(row=>row.includes('O')), outputX=spec.mask[outputY].indexOf('O');
   // One full tile is reserved for goods. Rim and arrow stay within that tile.
   const trayStart = group.children.length;
-  part(.92,.035,.92,outputX,1.065,outputY,'#278f88');
-  for(const dx of [-.46,.46]) part(.045,.13,.96,outputX+dx,1.12,outputY,body);
-  part(.88,.13,.045,outputX,1.12,outputY-.46,body);
+  part(.92,.035,.92,outputX,1.065,outputY,spec.trayColor);
+  for(const dx of [-.46,.46]) part(.045,.13,.96,outputX+dx,1.12,outputY,spec.trayColor);
+  part(.88,.13,.045,outputX,1.12,outputY-.46,spec.trayColor);
   part(.09,.012,.36,outputX,1.09,outputY,cream);
   for(const sign of [-1,1]) { const p=part(.09,.012,.23,outputX+sign*.065,1.09,outputY+.12,cream); p.rotation.y=sign*Math.PI/4; }
 

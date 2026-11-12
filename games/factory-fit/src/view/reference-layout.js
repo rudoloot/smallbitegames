@@ -1,5 +1,6 @@
 import {cellKey,footprint} from '../game/layout.js';
 import {dockBody} from '../game/docks.js';
+import {outputColor} from '../game/simulation.js';
 import {EQUIPMENT} from '../game/config.js';
 
 export function showReference(container,stage){
@@ -15,7 +16,10 @@ export function showReference(container,stage){
   }
   for(const [i,item] of stage.referenceLayout.entries()){
     const shape=footprint(item),number=String(i+1),recipe=stage.stepRecipes[item.id];
-    for(const p of shape.body)marks.set(cellKey(p),[number+(cellKey(p)===cellKey(shape.output)?'·O':''),EQUIPMENT[item.type].color]);
+    for(const p of shape.body){
+      const tray=cellKey(p)===cellKey(shape.output);
+      marks.set(cellKey(p),[number+(tray?'·O':''),tray?outputColor(item,stage):EQUIPMENT[item.type].color]);
+    }
     marks.set(cellKey(shape.work[0]),[number+'·W','#bfd7e3']);
     const row=document.createElement('li');
     row.textContent=number+' · '+recipe.operation+' — '+Object.entries(recipe.needs).map(([name,n])=>name+' ×'+n).join(' + ')+' → '+recipe.output;
@@ -27,6 +31,8 @@ export function showReference(container,stage){
     if(stage.cells.includes(key)){
       const [text,color]=marks.get(key)??['','#e4dece'];
       cell.textContent=text;cell.style.backgroundColor=color;
+      const [r,g,b]=color.slice(1).match(/../g).map(hex=>parseInt(hex,16));
+      cell.style.color=.299*r+.587*g+.114*b<132?'#fff':'#192820';
     }
     grid.append(cell);
   }

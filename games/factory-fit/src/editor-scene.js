@@ -2,22 +2,23 @@ import { EQUIPMENT_SHAPES } from './game/equipment-shapes.js';
 import { createFactoryView } from './view/factory.js';
 import { createEquipmentPreviews } from './view/equipment-previews.js';
 import { createWorkerPreviews } from './view/worker-previews.js';
-import { createSimulation } from './game/simulation.js';
+import { outputColor, createSimulation } from './game/simulation.js';
 
 const images=new Map();
 let portraits;
-export function equipmentImages(steps, selectedType, selectedVariant) {
-  const items=[...new Set(steps.map(s=>s.type))].map(type=>{
+export function equipmentImages(steps, selectedType, selectedVariant, stage) {
+  const items=steps.map(({id,type})=>{
     const spec=EQUIPMENT_SHAPES[type];
     const variant=type===selectedType && Object.hasOwn(spec.variants,selectedVariant) ? selectedVariant : spec.defaultVariant;
-    return {type,variant,key:type+'/'+variant};
+    const operator=stage.workers[stage.inventory.findIndex(given=>given.id===id)];
+    return {id,type,variant,operator,key:[type,variant,operator.key,outputColor({id,type},stage)].join('/')};
   });
   const missing=items.filter(item=>!images.has(item.key));
   if(missing.length){
-    const rendered=createEquipmentPreviews(missing);
-    for(const item of missing) images.set(item.key,rendered.get(item.type));
+    const rendered=createEquipmentPreviews(missing,{inventoryView:true,stage});
+    for(const item of missing) images.set(item.key,rendered.get(item.id));
   }
-  return new Map(items.map(item=>[item.type,images.get(item.key)]));
+  return new Map(items.map(item=>[item.id,images.get(item.key)]));
 }
 export function workerImage(workers,key) {
   portraits??=createWorkerPreviews(workers);

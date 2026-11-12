@@ -212,10 +212,10 @@ function draw(){
   document.querySelector('.viewport').hidden=!grid;$('scene-frame').hidden=grid;
   $('fit').disabled=grid;
   if(graphics){
-    const images=graphics.equipmentImages(steps,selectedType,variant);
+    const images=graphics.equipmentImages(steps,selectedType,variant,sharedStage(doc));
     for(const s of steps){
       const b=$('equipment').querySelector('[data-tool="'+toolKey(doc,s)+'"]');
-      const img=document.createElement('img');img.alt='';img.src=images.get(s.type);b.prepend(img);
+      const img=document.createElement('img');img.alt='';img.src=images.get(s.id);b.prepend(img);
       b.title=s.label+' · '+EQUIPMENT[s.type].name;
     }
     if(group==='workers')$('portrait').src=graphics.workerImage(STAGE.workers,$('worker').value);

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { footprint, operatorFacing } from '../game/layout.js';
+import { EQUIPMENT } from '../game/config.js';
 import { shapeFor } from '../game/equipment-shapes.js';
 import { createArtKit } from './art.js';
 
@@ -24,13 +25,13 @@ function trimmedImage(source) {
 }
 
 // Render the game's actual models once; cards need no extra animation loop or live contexts.
-export function createEquipmentPreviews(inventory, {inventoryView=false}={}) {
+export function createEquipmentPreviews(inventory, {inventoryView=false,stage}={}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(320, inventoryView ? 320 : 200);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = .95;
-  const art = createArtKit(renderer), scene = new THREE.Scene(), images = new Map();
+  const art = createArtKit(renderer,stage), scene = new THREE.Scene(), images = new Map();
   scene.add(new THREE.HemisphereLight('#fff5e9', '#c8b7aa', 1.4));
   const light = new THREE.DirectionalLight('#fff3e4', 2.6);
   light.position.set(-3, 8, 5); scene.add(light);
@@ -46,7 +47,7 @@ export function createEquipmentPreviews(inventory, {inventoryView=false}={}) {
         const bounds=new THREE.Box3().setFromObject(model), markers=[];
         if(item.operator && shapeFor(item)?.workCell){
           const shape=footprint({...item,x:0,y:0,rotation:0}), work=shape.work[0];
-          const operator=art.worker(item.operator.color,item.operator.faceStyle,item.operator);
+          const operator=art.worker(EQUIPMENT[item.type].color,item.operator.faceStyle,item.operator);
           const facing=operatorFacing(shape);
           operator.group.position.set(work.x+.5,0,work.y+.5);
           operator.body.rotation.y=Math.atan2(facing.x,facing.y);

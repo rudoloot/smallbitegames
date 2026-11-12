@@ -7,6 +7,25 @@ export {DT};
 const BUFFER = 2;
 import { shapeFor } from './equipment-shapes.js';
 export const recipeFor = (item, stage = STAGE) => ({ ...EQUIPMENT[item.type], ...shapeFor(item), ...stage.recipes?.[item.type], ...stage.stepRecipes?.[item.id?.split('-')[0]] });
+// A spare of a machine has the same recipe as its original. Count destinations
+// by equipment type so duplicate copies on the floor share one visual cue.
+export function outputDestinations(item,stage) {
+  const {output}=recipeFor(item,stage);
+  if(!output)return [];
+  if(output===stage.product)return ['outbound'];
+  const types=new Set();
+  for(const candidate of stage.inventory){
+    const recipe=recipeFor(candidate,stage);
+    if(recipe.needs ? recipe.needs[output]>0 : recipe.input===output) types.add(candidate.type);
+  }
+  return [...types];
+}
+
+export function outputColor(item,stage) {
+  if (!stage.inventory.some(given=>given.id===item.id || given.id===item.id?.split('-')[0])) return '#65757c';
+  const [destination]=outputDestinations(item,stage);
+  return destination==='outbound' ? stage.fixtures.find(f=>f.id==='outbound').color : EQUIPMENT[destination]?.color??'#65757c';
+}
 const warehouse = sim => sim.stage.fixtures.find(item => item.id === 'outbound');
 const ownPlace = (sim, worker) => (isOutbound(worker.machineId) || isInlet(worker.machineId)) ? { id: 'outbound', work: [worker.home] } : sim.machines.find(m => m.id === worker.machineId);
 export function createSimulation(layout, assignments = createAssignments(layout), stage = STAGE) {
@@ -35,7 +54,7 @@ export function reconfigureSimulation(sim, layout, assignments, stage = sim.stag
     next.averageProductionSeconds = null;
     if (next.rateWindow) Object.assign(next.rateWindow, { startTime: sim.productionTime, startStock: sim.shipped });
   }
-  if(sim.motion) next.motion={...sim.motion,tick:-1};
+  if(sim.motion) next.motion={...sim.motion,tick:-1,motions:[...sim.motion.motions]};
   next.heat = {...sim.heat};
   next.warehouse.stock = sim.warehouse.stock;
   next.measurementStart = sim.measurementStart;
@@ -58,14 +77,19 @@ export function reconfigureSimulation(sim, layout, assignments, stage = sim.stag
   for (const worker of next.workers) {
     if (!worker.machineId) continue;
     const old = sim.workers.find(w => w.machineId === worker.machineId);
-    if (!old) continue;
+    if (!old) { if(next.motion) next.motion.motions[worker.id]=null; continue; }
     const own = ownPlace(next,worker);
     const blocked = routeBlocked(next,worker);
     const sameWorker = old.key === worker.key;
     if (sameWorker && !own.parked && !ownPlace(sim,old)?.parked) {
       const home = worker.home;
       Object.assign(worker, structuredClone(old), {home});
-      if (blocked.has(cellKey(worker))) {
+      const movedHome=stage.paired && cellKey(home)!==cellKey(old.home);
+      if (movedHome || blocked.has(cellKey(worker))) {
+        if(next.motion) next.motion.motions[worker.id]=null;
+        worker.transfers=[];
+        worker.wait=0;
+        worker.waitingForSource=null;
         Object.assign(worker, home, {from:{...home},path:[]});
       } else if (blocked.has(cellKey(worker.from))) {
         worker.from = {x:worker.x,y:worker.y};

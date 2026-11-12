@@ -4,7 +4,7 @@ import { inletId, dockBody, dockSlots, isInlet, isOutbound } from '../game/docks
 import * as THREE from 'three';
 import { EQUIPMENT, STAGE } from '../game/config.js';
 import { createArtKit } from './art.js';
-import { footprint, cellKey } from '../game/layout.js';
+import { footprint, cellKey, operatorFacing } from '../game/layout.js';
 
 export function createFactoryView(host, callbacks, stage = STAGE) {
   const MAP = { width: stage.width, height: stage.height }, FIXED = stage.fixtures, WORKERS = stage.workers, WAREHOUSE = FIXED.find(f => f.id === 'outbound');
@@ -156,7 +156,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     if (isInlet(fixture.id)) {
       inletGroup.add(art.inbound(fixture));
     } else {
-      wood(environment, fixture.width - .15, .15, fixture.height - .16, fixture.x + fixture.width / 2, .15, fixture.y + fixture.height / 2, '#b88b5b');
+      wood(environment, fixture.width - .15, .15, fixture.height - .16, fixture.x + fixture.width / 2, .15, fixture.y + fixture.height / 2, fixture.color);
       for (let i = 0; i < 4; i++) { const item = goods(scene, (stage.goods?.length??stage.modelSteps?.length??5)-1, fixture.x + .5, .24 + Math.floor(i / 2) * .49, fixture.y + (fixture.height === 1 ? .28 + (i % 2) * .44 : .55 + (i % 2) * .8), .6); warehouseBoxes.push(item); }
     }
     const el = label(fixture.id === 'outbound' ? '출고장' : fixture.label, 'fixed-label');
@@ -223,7 +223,16 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     if (!item) return;
     const inlet=item.type==='inbound';
     const model = inlet ? art.inbound(item) : art.machine(item,recipeFor(item,stage));
-    model.traverse(mesh => {
+    const ghostGroup=new THREE.Group();
+    ghostGroup.add(model);
+    if(item.operator && !inlet){
+      const shape=footprint(item),cell=shape.work[0],facing=operatorFacing(shape);
+      const operator=art.worker(EQUIPMENT[item.type].color,item.operator.faceStyle,item.operator);
+      operator.group.position.set(cell.x+.5,.07,cell.y+.5);
+      operator.body.rotation.y=Math.atan2(facing.x,facing.y);
+      ghostGroup.add(operator.group);
+    }
+    ghostGroup.traverse(mesh => {
       if (!mesh.isMesh) return;
       const original = mesh.material, key = original.uuid + '/' + valid;
       if (!ghostMaterials.has(key)) ghostMaterials.set(key, original.clone());
@@ -233,8 +242,8 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       ghost.polygonOffset = true; ghost.polygonOffsetFactor = -2; ghost.polygonOffsetUnits = -2;
       mesh.material = ghost; mesh.castShadow = false; mesh.receiveShadow = false; mesh.renderOrder = 3;
     });
-    preview.add(model);
-    previewState = { id: item.id, x: item.x, y: item.y, rotation: item.rotation, valid, opacity: .36 };
+    preview.add(ghostGroup);
+    previewState = { id: item.id, x: item.x, y: item.y, rotation: item.rotation, operator: item.operator?.key, valid, opacity: .36 };
     outline(inlet ? dockBody(item) : footprint(item).body, valid ? '#477c55' : '#ef4238', preview);
     if(!inlet) outline(footprint(item).work, valid ? '#477c55' : '#ab5544', preview);
     else if(item.supplies){
@@ -280,6 +289,8 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     const elapsed=THREE.MathUtils.clamp(alpha,0,1)*duration;
     for (const worker of sim.workers) {
       const obj = workerModels[worker.id];
+      const own=sim.machines.find(machine=>machine.id===worker.machineId);
+      obj.setHelmetColor(own?EQUIPMENT[own.type].color:worker.machineId==='outbound'?WAREHOUSE.color:worker.color);
       // A pickup and deposit may both finish in one tick when the operator
       // stands next to both surfaces. Play those transfers in simulation order.
       const events=worker.transfers;
@@ -301,12 +312,11 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       obj.body.rotation.x = event ? Math.sin(fraction*Math.PI)*.12 : 0;
       const waiting = waitingWorkers[worker.key];
       const x = waiting?.x ?? THREE.MathUtils.lerp(pose.x,pose.toX,blend), y = waiting?.y ?? THREE.MathUtils.lerp(pose.y,pose.toY,blend);
-      obj.group.visible = !!worker.machineId || !!waiting;
+      obj.group.visible = (!!worker.machineId || !!waiting) && previewState?.operator!==worker.key;
       obj.group.position.set(x + 0.5, 0.07, y + 0.5);
       obj.bubble.pos.set(x + .5, 2.05, y + .5);
       const dx=blend<1 ? pose.toX-pose.x : 0, dy=blend<1 ? pose.toY-pose.y : 0;
       obj.body.rotation.y=pose.angle+pose.delta*blend;
-      const own = sim.machines.find(machine => machine.id === worker.machineId);
       const processingHere = !own?.parked && own?.processing > 0 && !worker.job && cellKey(worker) === cellKey(own.work[0]);
       obj.bubble.el.hidden = !worker.machineId || processingHere || worker.idleSeconds < 10;
       const turning=blend<1 && Math.abs(pose.delta)>1e-8;

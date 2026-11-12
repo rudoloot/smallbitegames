@@ -4,6 +4,7 @@ import { FACTORIES } from '../game/products.js';
 import { workshopProduct } from './workshop-product-models.js';
 import { buildProduct } from './product-models.js';
 import { EQUIPMENT, TYPES, STAGE } from '../game/config.js';
+import {outputColor} from '../game/simulation.js';
 import { shapeFor } from '../game/equipment-shapes.js';
 import { buildEquipment } from './equipment-models.js';
 
@@ -194,14 +195,14 @@ export function createArtKit(renderer, factory=STAGE) {
   }
   function machine(item, spec = EQUIPMENT[item.type]) {
     if (EQUIPMENT[item.type]?.mask) {
-      spec = {...spec, ...shapeFor(item),inputTray:factory.forward};
+      spec = {...spec, ...shapeFor(item),trayColor:outputColor(item,factory),inputTray:factory.forward};
       const group = new THREE.Group();
       const model = buildEquipment(item, spec, { box, wood, cylinder, sphere, material, cached });
       const output = model.userData.outputAnchor.clone(), process = model.userData.processAnchor.clone();
       group.add(model); group.position.set(item.x + (item.rotation % 2 ? spec.height : spec.width)/2, .07, item.y + (item.rotation % 2 ? spec.width : spec.height)/2);
       model.rotation.y = -item.rotation * Math.PI / 2;
       // Merge local-space geometry before applying the machine rotation.
-      model.rotation.y = 0; compact(model, `reference/${item.type}/${item.variant ?? spec.defaultVariant}`); model.rotation.y = -item.rotation * Math.PI / 2;
+      model.rotation.y = 0; compact(model, `reference/${item.type}/${item.variant ?? spec.defaultVariant}/${spec.trayColor}`); model.rotation.y = -item.rotation * Math.PI / 2;
       const processingItem = goods(model, spec.inputStage ?? 0, process.x, process.y, process.z, .45); processingItem.visible = false;
       const outputItem = goods(model,spec.outputStage ?? 4,output.x,output.y,output.z,.45);
       outputItem.visible = false;
@@ -224,6 +225,7 @@ export function createArtKit(renderer, factory=STAGE) {
     contactShadow(model, w + .6, d + .5, 0, 0, 0);
     if (spec.belt) {
       box(model, .94, .32, .96, 0, .23, 0, spec.color);
+      for (const side of [-1,1]) box(model,.12,.10,.94,side*.40,.44,0,spec.color);
       for (const z of [-.32, -.16, 0, .16, .32]) {
         const roller = cylinder(model, .065, .065, .75, 0, .41, z, '#414b50');
         roller.rotation.z = Math.PI / 2;
@@ -320,13 +322,22 @@ export function createArtKit(renderer, factory=STAGE) {
       sphere(head, .17, 0, -.14, -.47, hair, [.7, 1.6, .9]);
       sphere(head, .09, 0, -.025, -.37, color, [1, .65, .65]);
     } else if (hairstyle === 'bob') sphere(head, .28, 0, -.11, -.14, hair, [1.03, 1, .7]);
+    compact(head, `face/${color}/${index}/${hairstyle}/${appearance.skin}/${hair}`);
+    const helmet=new THREE.Group();
+    head.add(helmet);
     const hat = color;
-    const dome = mesh(head, cached('helmet-dome', () => new THREE.SphereGeometry(.355, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2)), hat, 0, .16, -.015); dome.scale.z = 1.04;
-    cylinder(head, .374, .374, .048, 0, .17, 0, hat, 32);
-    box(head, .48, .05, .25, 0, .17, .265, hat);
-    box(head, .055, .048, .47, 0, .5, -.015, shade(hat, .12));
-    box(head, .11, .04, .018, 0, .215, .35, color);
-    compact(head, `head/${color}/${index}/${hairstyle}/${appearance.skin}/${hair}`);
+    const dome = mesh(helmet, cached('helmet-dome', () => new THREE.SphereGeometry(.355, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2)), hat, 0, .16, -.015); dome.scale.z = 1.04;
+    cylinder(helmet, .374, .374, .048, 0, .17, 0, hat, 32);
+    box(helmet, .48, .05, .25, 0, .17, .265, hat);
+    const helmetRidge=box(helmet, .055, .048, .47, 0, .5, -.015, shade(hat, .12));
+    box(helmet, .11, .04, .018, 0, .215, .35, color);
+    let helmetColor=color;
+    function setHelmetColor(next){
+      if(next===helmetColor)return;
+      helmetColor=next;
+      for(const piece of helmet.children)piece.material=material(next);
+      helmetRidge.material=material(shade(next,.12));
+    }
     box(body, .4, .4, .32, 0, .62, 0, '#e2dfcf', true, 'cloth');
     box(body, .32, .3, .065, 0, .57, .173, '#7297b1', true, 'cloth');
     box(body, .15, .12, .035, 0, .57, .219, '#6489a5', true, 'cloth');
@@ -338,7 +349,7 @@ export function createArtKit(renderer, factory=STAGE) {
     const extraCargo = [1, 2].map(i => {
       const item = goods(body, factory.modelSteps?factory.modelSteps.length-1:4, 0, .4 + i * .24, .4, .43); item.visible = false; return item;
     });
-    return { group, body, head, arms, legs, cargo, extraCargo, marker };
+    return { group, body, head, setHelmetColor, arms, legs, cargo, extraCargo, marker };
   }
   function plant(group, x, z) {
     cylinder(group, .27, .2, .4, x, .18, z, '#d59a71');

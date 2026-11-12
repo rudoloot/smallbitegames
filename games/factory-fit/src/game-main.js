@@ -139,7 +139,8 @@ function refresh({ model = true } = {}) {
     view.setLayout(working.layout, selectedId, working.assignments, pendingWorker, working.waitingWorkers,sessionStage(STAGE,working));
     if (mode === 'edit') sim = createLiveSimulation(working.layout, working.assignments);
     const given = draft && suppliedEquipment(draft.id);
-    view.setPreview(draft && draft.x !== null ? inlet ? {...STAGE.fixtures.find(f=>f.id===draft.id),x:draft.x,y:draft.y,type:'inbound'} : { ...draft, type: given.type } : null, !!result?.ok);
+    view.setPreview(draft && draft.x !== null ? inlet ? {...STAGE.fixtures.find(f=>f.id===draft.id),x:draft.x,y:draft.y,type:'inbound'} : { ...draft, type: given.type, operator:STAGE.paired && !EQUIPMENT[given.type].belt
+      ? STAGE.workers.find(w=>(result?.state?.assignments??working.assignments)[w.key]===draft.id) ?? STAGE.workers[STAGE.inventory.indexOf(given)] : null } : null, !!result?.ok);
   }
   updateProduction();
   updateEquipmentInfo();

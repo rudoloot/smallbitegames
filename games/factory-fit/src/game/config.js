@@ -7,7 +7,7 @@ const RECIPES = {
   assembly: { name: '조립대', short: '조립', width: 3, height: 3, seconds: 4.8, input: 'parts', output: 'crate', inputStage: 1, outputStage: 2 },
   packing: { name: '포장대', short: '포장', width: 2, height: 2, seconds: 2.2, input: 'crate', output: 'finished', inputStage: 2, outputStage: 4 },
   press: { name: '성형 작업대', short: '성형', width: 2, height: 1, seconds: 6, input: 'timber', output: 'finished', inputStage: 0, outputStage: 4 },
-  conveyor: { name: '컨베이어', short: '벨트', width: 1, height: 1, color: '#829b93', belt: true },
+  conveyor: { name: '컨베이어', short: '벨트', width: 1, height: 1, color: '#89959e', belt: true },
 };
 export const EQUIPMENT = Object.freeze(Object.fromEntries([...new Set([...Object.keys(RECIPES), ...Object.keys(EQUIPMENT_SHAPES)])].map(type => [type, { short: EQUIPMENT_SHAPES[type]?.name, ...RECIPES[type], ...EQUIPMENT_SHAPES[type] }])));
 export const PRODUCTS = Object.freeze({ timber: '목재', parts: '상자 부재', crate: '나무상자', finished: '완제품' });
