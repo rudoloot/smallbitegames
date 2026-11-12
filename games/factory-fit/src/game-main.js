@@ -5,7 +5,7 @@ import {sessionStage,dockSlots,inletId,isInlet,isOutbound} from './game/docks.js
 import { inBounds, cellKey, outsideFactory } from './game/layout.js';
 import { shapeLabel, showShapeOptions } from './view/shape-options.js';
 import { icon } from './view/ui-icons.js';
-import { STAGE, STAGES, EQUIPMENT, PRODUCTS, suppliedEquipment } from './game/config.js';
+import { STAGE, STAGES, EQUIPMENT, PRODUCTS, createAssignments, suppliedEquipment } from './game/config.js';
 import { transact, createSession } from './game/session.js';
 import { createSimulation, stepSimulation, reconfigureSimulation, recipeFor, DT } from './game/simulation.js';
 import { loadSession, saveSession, loadProgress, saveProgress } from './platform/storage.js';
@@ -16,7 +16,7 @@ const openingSession = createSession();
 if (STAGE.id === 'editor-preview') {
   if(STAGE.workshopInlets){openingSession.inbound=STAGE.startInbound;openingSession.inlets=STAGE.startInlets??{};}
   openingSession.layout = structuredClone(STAGE.startLayout);
-  Object.assign(openingSession.assignments,STAGE.startAssignments);
+  openingSession.assignments=STAGE.paired?createAssignments(openingSession.layout,STAGE):{...openingSession.assignments,...STAGE.startAssignments};
 }
 let session = (STAGE.id==='editor-preview' ? null : loadSession()) ?? structuredClone(openingSession), draft = null, pendingWorker = null, selectedId = null, view;
 const undoStack = [], redoStack = [];
@@ -221,12 +221,14 @@ function pick(hit) {
   if (waiting) { chooseWorker(waiting[0]); return; }
   if(isInlet(hit.fixedId)) {beginInbound(hit.fixedId);return;}
   if (hit.id) beginMachine(hit.id);
+  else if (hit.workId && STAGE.paired) { if(session.layout.some(m=>m.id===hit.workId)) beginMachine(hit.workId); }
   else if (hit.workId) { const key = Object.keys(session.assignments).find(key => session.assignments[key] === hit.workId); if (key) chooseWorker(key); else { selectInventory('workers'); notice('아래 작업자를 고른 뒤 이 자리에 배치하세요.'); } }
 }
 const inventories = {equipment:{slots:[],page:0},workers:{slots:[],page:0}};
 let activeInventory='equipment';
 function selectInventory(name) {
   
+  if(STAGE.paired && name==='workers')return;
   activeInventory=name;
   for (const key of Object.keys(inventories)) {
     const active=key===name, tab=$('#'+key+'-tab');
@@ -238,9 +240,10 @@ function selectInventory(name) {
 }
 for (const name of Object.keys(inventories)) {
   const tab=$('#'+name+'-tab');
+  if(STAGE.paired && name==='workers'){tab.hidden=true;continue;}
   tab.onclick=()=>selectInventory(name);
   tab.onkeydown=event=>{
-    if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+    if (STAGE.paired || !['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
     event.preventDefault();event.stopPropagation();
     const next=event.key==='Home'?'equipment':event.key==='End'?'workers':name==='workers'?'equipment':'workers';
     selectInventory(next);
@@ -299,7 +302,7 @@ for(const fixture of inboundFixtures){
   };
   appendSlot('equipment',card);
 }
-const route = STAGE.forward?(STAGE.referenceLayout??STAGE.inventory):FACTORIES[STAGE.factory ?? 'box'].steps.filter(step => !STAGE.steps || STAGE.steps.includes(step.id));
+const route = STAGE.referenceLayout?(STAGE.referenceLayout??STAGE.inventory):FACTORIES[STAGE.factory ?? 'box'].steps.filter(step => !STAGE.steps || STAGE.steps.includes(step.id));
 const typeOrder = [...new Set([...route, ...STAGE.inventory].map(item => item.type))];
 const sortedEquipment = [...STAGE.inventory].sort((a,b) =>
   typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type) ||
@@ -315,7 +318,7 @@ for (const given of sortedEquipment) {
   card.onclick=()=>{if(performance.now()>suppressClickUntil)beginSupply(given.id);};
   appendSlot('equipment',card);
 }
-for (const worker of STAGE.workers) {
+for (const worker of STAGE.paired?[]:STAGE.workers) {
   const card=document.createElement('button');card.type='button';card.className='supply-card worker';card.dataset.workerKey=worker.key;
   card.setAttribute('aria-label',worker.name+' 작업자 선택');
   card.innerHTML=`<img data-worker-portrait="${worker.key}" alt="" draggable="false"><span>${worker.name}</span>`;
@@ -407,13 +410,11 @@ for (const stage of STAGES) {
   button.addEventListener('click', () => { location.href = stageUrl(stage.id); }); $('#stage-list').append(button);
 }
 if (STAGE.playbackGoals) $('#goal-help').append(' 생산량과 목표는 회전·운반을 포함한 1배속 시간으로 계산합니다.');
-if(STAGE.forward){
+if(STAGE.paired){
   $('#reference-open').hidden=!STAGE.referenceLayout;
   $('#reference-open').onclick=()=>{showReference($('#reference-content'),STAGE);$('#options-dialog').close();$('#reference-dialog').showModal();};
   $('#reference-close').onclick=()=>$('#reference-dialog').close();
-  $('#catalog-dialog p').textContent='I 입력 칸 · W 작업자 자리 · 한 칸 50cm';
-  $('#worker-guidance').textContent='입고장이나 설비의 파란 작업자 자리를 누르세요.';
-  $('#help-dialog ol li:nth-child(4)').textContent=STAGE.hint+' 입고장 네 면의 빈칸에는 여러 명을 배치할 수 있어요.';
+  $('#help-dialog ol li:nth-child(4)').textContent=STAGE.hint+' 입고장은 설비 탭에서 골라 설치하세요.';
   $('#goal-help').textContent='완제품 설비가 한 대면 최근 '+STAGE.sampleCount+'개 출고 간격의 평균으로 목표를 판정합니다.';
 }
 if (STAGE.minuteGoal) $('#goal-help').textContent = '가동 60초 후부터 최근 60초 동안 창고에 입고된 수량으로 목표를 판정합니다.';
@@ -436,16 +437,16 @@ async function boot() {
     const { createFactoryView } = await import('./view/factory.js');
     const { createEquipmentPreviews } = await import('./view/equipment-previews.js');
     const { createWorkerPreviews } = await import('./view/worker-previews.js');
-    const portraits = createWorkerPreviews(STAGE.workers);
+    const portraits = STAGE.paired ? null : createWorkerPreviews(STAGE.workers);
     for(const img of document.querySelectorAll('[data-worker-portrait]')) img.src=portraits.get(img.dataset.workerPortrait);
     generatePreviews = createEquipmentPreviews;
     const previews = createEquipmentPreviews(catalogInventory);
     for (const [type,image] of previews) previewCache.set(type+'/'+(EQUIPMENT[type].defaultVariant ?? ''), image);
     for (const img of document.querySelectorAll('#catalog-grid [data-equipment-type]')) img.src = previews.get(img.dataset.equipmentType);
-    const inventoryImages = createEquipmentPreviews([...sortedEquipment,...inboundFixtures.map(f=>({...f,type:'inbound'}))], {inventoryView:true});
+    const inventoryImages = createEquipmentPreviews([...sortedEquipment.map(item=>({...item,operator:STAGE.paired?STAGE.workers[STAGE.inventory.indexOf(item)]:null})),...inboundFixtures.map(f=>({...f,type:'inbound'}))], {inventoryView:true});
     for(const f of inboundFixtures) document.querySelector('[data-fixture="'+f.id+'"] img').src=inventoryImages.get(f.id);
     for (const img of document.querySelectorAll('#equipment-list [data-equipment-type]')) {
-      img.src = inventoryImages.get(img.dataset.equipmentType+'/'+img.dataset.variant);
+      img.src = inventoryImages.get(img.closest('button').dataset.supplyId);
     }
     view = createFactoryView($('#scene'), { onPick: pick, onContextLost: () => { running = false; notice('3D 연결이 끊겼어요. 새로고침하면 저장한 배치를 복원합니다.', true); } }, STAGE);
     sim = createLiveSimulation(session.layout, session.assignments);

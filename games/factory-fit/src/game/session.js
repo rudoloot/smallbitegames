@@ -1,4 +1,4 @@
-import {inletId,isInlet,atWall,sessionStage,dockSlots,dockBody,isOutbound} from './docks.js';
+import {inletId,isInlet,atWall,sessionStage,dockSlots,dockBody,dockSides,isOutbound} from './docks.js';
 import { STAGE, createAssignments, EQUIPMENT, suppliedEquipment } from './config.js';
 import { validateLayout, inboundPickupCells, cellKey, footprint, inBounds } from './layout.js';
 export function createSession(stage = STAGE) { return { version: 5, stageId: stage.id, ...(stage.playerPlacesInbound ? { inbound: null } : {}), layout: [], assignments: createAssignments([], stage) }; }
@@ -15,6 +15,7 @@ function validFacilities(state, stage) {
   for (const item of state.layout) {
     for (const c of footprint(item).body) used.add(cellKey(c));
   }
+  if(stage.paired && fixtures.filter(f=>isInlet(f.id)).some(f=>!dockSides(f).flat().some(c=>inBounds(c,stage) && !used.has(cellKey(c)))))return false;
   if (inlet && !inboundPickupCells(stage,used).length) return false;
   for (const item of state.layout) for (const c of footprint(item).work) used.add(cellKey(c));
   if(stage.forward){
@@ -35,7 +36,7 @@ function validFacilities(state, stage) {
   });
 }
 export function validSession(state, stage = STAGE) {
-  try { stage=sessionStage(stage,state); return state?.version === 5 && state.stageId === stage.id && validateLayout(state.layout, { stage, allowOutside: true }).valid && Object.keys(state.assignments).length === stage.workers.length && stage.workers.every(worker => Object.hasOwn(state.assignments, worker.key) && (state.assignments[worker.key] === null || dockSlots(stage).some(s=>s.id===state.assignments[worker.key]) || state.layout.some(item => item.id === state.assignments[worker.key] && !EQUIPMENT[item.type].belt))) && validFacilities(state,stage) && validWaitingWorkers(state, stage) && new Set(Object.values(state.assignments).filter(Boolean)).size === Object.values(state.assignments).filter(Boolean).length; } catch { return false; }
+  try { stage=sessionStage(stage,state); return state?.version === 5 && state.stageId === stage.id && validateLayout(state.layout, { stage, allowOutside: true }).valid && Object.keys(state.assignments).length === stage.workers.length && stage.workers.every(worker => Object.hasOwn(state.assignments, worker.key) && (state.assignments[worker.key] === null || dockSlots(stage).some(s=>s.id===state.assignments[worker.key]) || state.layout.some(item => item.id === state.assignments[worker.key] && !EQUIPMENT[item.type].belt))) && (!stage.paired || (Object.values(state.assignments).includes("outbound") && state.layout.every(m=>EQUIPMENT[m.type].belt || Object.values(state.assignments).includes(m.id)))) && validFacilities(state,stage) && validWaitingWorkers(state, stage) && new Set(Object.values(state.assignments).filter(Boolean)).size === Object.values(state.assignments).filter(Boolean).length; } catch { return false; }
 }
 function validWaitingWorkers(state, stage) {
   const occupied = new Set(state.layout.flatMap(item => {
@@ -51,14 +52,15 @@ function validWaitingWorkers(state, stage) {
 }
 export function transact(state, action, stage = STAGE) {
   if (!validSession(state, stage)) return { ok: false, error: '저장 상태를 확인해 주세요.' };
+  if (stage.paired && ['assign','waitOutside'].includes(action.type)) return {ok:false,error:'작업자는 작업대와 함께 배치됩니다.'};
   const next = structuredClone(state);
-  if(stage.forward && ['moveInbound','removeInbound'].includes(action.type)){
+  if((stage.forward || stage.paired) && ['moveInbound','removeInbound'].includes(action.type)){
     const id=action.id??'inbound';
     if(!stage.fixtures.some(f=>f.id===id && isInlet(id)))return {ok:false,error:'지급된 입고장을 선택하세요.'};
     const pos=action.type==='removeInbound'?null:{x:action.x,y:action.y};
     if(id==='inbound')next.inbound=pos;else (next.inlets??={})[id]=pos;
     if(!pos)for(const key of Object.keys(next.assignments))if(inletId(next.assignments[key])===id)next.assignments[key]=null;
-    return validSession(next,stage)?{ok:true,state:next}:{ok:false,error:'입고장과 담당자 자리를 비워 주세요.'};
+    return validSession(next,stage)?{ok:true,state:next}:{ok:false,error:'입고장과 재료를 수거할 인접 칸을 비워 주세요.'};
   }
   if (action.type === 'removeInbound') {
     if (state.inbound===null) return {ok:false,error:'설치된 입고장이 없습니다.'};
@@ -89,13 +91,17 @@ export function transact(state, action, stage = STAGE) {
     const previous = next.assignments[action.workerId], other = stage.workers.find(worker => worker.key !== action.workerId && next.assignments[worker.key] === action.machineId);
     if (action.machineId && other) next.assignments[other.key] = previous; next.assignments[action.workerId] = action.machineId;
   } else return { ok: false, error: '지원하지 않는 조작입니다.' };
+  if (stage.paired) {
+    next.assignments=createAssignments(next.layout,stage,next.assignments);
+    if (!validateStaffing(next,stage).valid) return {ok:false,error:'작업자를 포함한 작업대 수를 초과했어요.'};
+  }
   stage=sessionStage(stage,next);
   if (!validFacilities(next, stage)) return {ok:false,error:'입출고장과 배정된 작업자 자리를 비워 주세요.'};
   if (!validWaitingWorkers(next, stage)) return { ok: false, error: '공장 밖의 빈 자리를 선택해 주세요.' };
   const result = validateLayout(next.layout, { stage, allowOutside: true }); return result.valid ? { ok: true, state: next } : { ok: false, error: result.errors[0] };
 }
 export function validateStaffing(state, stage = STAGE) {
-  const errors = state.layout.filter(item => !stage.unlimitedEquipment && !EQUIPMENT[item.type].belt && !Object.values(state.assignments).includes(item.id)).map(item => `${EQUIPMENT[item.type].name}에 작업자를 배치해 주세요.`);
+  const errors = state.layout.filter(item => (stage.paired || !stage.unlimitedEquipment) && !EQUIPMENT[item.type].belt && !Object.values(state.assignments).includes(item.id)).map(item => `${EQUIPMENT[item.type].name}에 작업자를 배치해 주세요.`);
   if(stage.forward){for(const f of stage.fixtures.filter(f=>isInlet(f.id)))if(!Object.values(state.assignments).some(id=>inletId(id)===f.id))errors.push(f.label+' 담당자를 배치해 주세요.');}
   else if (!Object.values(state.assignments).some(isOutbound)) errors.push('창고 직원을 배치해 주세요.'); return { valid: errors.length === 0, errors };
 }

@@ -50,7 +50,22 @@ export const DIRECTIONS = [{ x: 0, y: 1 }, { x: -1, y: 0 }, { x: 0, y: -1 }, { x
 export function createDefaultLayout() { return []; }
 // Opening demonstration layout, also used as the initial editable layout and QA fixture.
 export function createSuggestedLayout() { if (STAGE.startLayout) return structuredClone(STAGE.startLayout); return [{ id: 'm1', type: 'cutter', x: 2, y: 0, rotation: 0 }, { id: 'm2', type: 'assembly', x: 6, y: 1, rotation: 0 }, { id: 'm3', type: 'packing', x: 4, y: 4, rotation: 0 }]; }
-export function createAssignments(layout, stage = STAGE) { return Object.fromEntries(stage.workers.map(worker => [worker.key, null])); }
+export function createAssignments(layout, stage = STAGE, previous = {}) {
+  const assignments = Object.fromEntries(stage.workers.map(worker => [worker.key, null]));
+  if (!stage.paired) return assignments;
+  assignments[stage.workers.at(-1).key] = 'outbound';
+  const machines = layout.filter(item => !EQUIPMENT[item.type].belt);
+  for (const item of machines) {
+    const index = stage.inventory.findIndex(given => given.id === item.id);
+    const key = stage.workers[index]?.key ?? Object.keys(previous).find(key => previous[key] === item.id);
+    if (key && assignments[key] === null) assignments[key] = item.id;
+  }
+  for (const item of machines.filter(m => !Object.values(assignments).includes(m.id))) {
+    const key = Object.keys(assignments).find(key => !assignments[key]);
+    if (key) assignments[key] = item.id;
+  }
+  return assignments;
+}
 
 export function suppliedEquipment(id, stage = STAGE) {
   if (typeof id !== 'string') return undefined;

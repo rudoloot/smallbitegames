@@ -209,8 +209,9 @@ export function createArtKit(renderer, factory=STAGE) {
       const slots=Object.entries(spec.needs??{}).flatMap(([product,count])=>Array(count).fill(product));
       slots.forEach((product,i)=>{
         const cols=Math.min(slots.length,3),rows=Math.ceil(slots.length/cols);
-        const piece=goods(model,factory.goods.indexOf(product),output.x+(i%cols-(cols-1)/2)*.26,
-          output.y,output.z+(Math.floor(i/cols)-(rows-1)/2)*.33,slots.length===1?.48:.25);
+        const anchor=factory.paired?process:output;
+        const piece=goods(model,factory.goods.indexOf(product),anchor.x+(i%cols-(cols-1)/2)*.26,
+          anchor.y,anchor.z+(Math.floor(i/cols)-(rows-1)/2)*.33,slots.length===1?.48:.25);
         piece.visible=false;stockItems.push({product,piece,quantity:slots.slice(0,i+1).filter(p=>p===product).length});
       });
       group.userData.inventory = { processingItem, outputItem,stockItems };

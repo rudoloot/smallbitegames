@@ -27,7 +27,7 @@ export function dockSlots(stage) {
         f.id+'@'+keyOf({x:cell.x-f.x,y:cell.y-f.y})})));
   }
   const dock=stage.fixtures.find(f=>f.id==='outbound');
-  if(dock.width!==2 || dock.height!==2) return [{id:'outbound',cell:dock.access}];
+  if(stage.paired || dock.width!==2 || dock.height!==2) return [{id:'outbound',cell:dock.access}];
   const blocked=new Set([...stage.holes,...(stage.pillars??[]),...stage.fixtures.flatMap(dockBody)].map(keyOf));
   return dockSides(dock).flat().filter(c=>onFloor(c,stage)&&!blocked.has(keyOf(c))).map(cell=>({
     id:keyOf(cell)===keyOf(dock.access)?'outbound':'outbound@'+keyOf(cell),cell
@@ -48,7 +48,7 @@ export function expandDocks(stage) {
   return {...stage,cells:[...cells],fixtures};
 }
 export function sessionStage(stage, state) {
-  if(stage.forward && state){
+  if((stage.forward || stage.paired && (stage.playerPlacesInbound || stage.workshopInlets)) && state){
     const fixtures=stage.fixtures.flatMap(f=>{
       if(!isInlet(f.id))return [f];
       const pos=f.id==='inbound'?(stage.workshopInlets && state.inbound===undefined?f:state.inbound):state.inlets?.[f.id];

@@ -1,36 +1,7 @@
-import {dockSides} from '../game/docks.js';
 import * as THREE from 'three';
 import { footprint, operatorFacing } from '../game/layout.js';
 import { shapeFor } from '../game/equipment-shapes.js';
 import { createArtKit } from './art.js';
-
-function workerTile() {
-  const canvas=document.createElement('canvas');
-  canvas.width=canvas.height=96;
-  const ctx=canvas.getContext('2d');
-  ctx.fillStyle='#c9e3f5';
-  ctx.strokeStyle='#39658a';
-  ctx.lineWidth=5;
-  ctx.beginPath();ctx.roundRect(4,4,88,88,12);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#234f73';
-  for (const side of [-1,1]) {
-    ctx.save();
-    ctx.translate(48+side*17,48);
-    ctx.rotate(side*.12);
-    ctx.beginPath();
-    ctx.ellipse(0,-12,12,19,0,0,Math.PI*2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.roundRect(-9,12,18,14,[3,3,8,8]);
-    ctx.fill();
-    ctx.restore();
-  }
-  const texture=new THREE.CanvasTexture(canvas);
-  texture.colorSpace=THREE.SRGBColorSpace;
-  const tile=new THREE.Mesh(new THREE.PlaneGeometry(.97,.97),new THREE.MeshBasicMaterial({map:texture,transparent:true}));
-  tile.rotation.x=-Math.PI/2;
-  return tile;
-}
 
 // Trim the rendered silhouette so each variant can use the full image area of its card.
 function trimmedImage(source) {
@@ -64,27 +35,23 @@ export function createEquipmentPreviews(inventory, {inventoryView=false}={}) {
   const light = new THREE.DirectionalLight('#fff3e4', 2.6);
   light.position.set(-3, 8, 5); scene.add(light);
   const camera = new THREE.PerspectiveCamera(28, 1.6, .1, 50);
-  const tile=inventoryView ? workerTile() : null;
+
   try {
     for (const item of inventory) {
-      const key=inventoryView && item.type==='inbound'?item.id:inventoryView ? item.type+'/'+(item.variant ?? '') : item.type;
+      const key=inventoryView ? item.id : item.type;
       if(images.has(key)) continue;
       const model = item.type==='inbound' ? art.inbound({...item,x:0,y:0}) : art.machine({ ...item, x: 0, y: 0, rotation: 0 });
       scene.add(model);
       if (inventoryView) {
-        const machineWork=shapeFor(item)?.workCell;
-        const cells=item.supplies?dockSides({...item,x:0,y:0}).flat():
-          machineWork?[{x:machineWork[0],y:machineWork[1]}]:[];
-        const markers=cells.map(({x,y})=>{
-          const marker=tile.clone();
-          const facing=item.supplies?{x:Math.max(0,Math.min(item.width-1,x))-x,y:Math.max(0,Math.min(item.height-1,y))-y}:
-            operatorFacing(footprint({...item,x:0,y:0,rotation:0}));
-          marker.rotation.z=Math.atan2(-facing.x,-facing.y);
-          marker.position.set(x+.5,.025,y+.5);scene.add(marker);
-          return marker;
-        });
-        const bounds=new THREE.Box3().setFromObject(model);
-        for(const marker of markers)bounds.expandByObject(marker);
+        const bounds=new THREE.Box3().setFromObject(model), markers=[];
+        if(item.operator && shapeFor(item)?.workCell){
+          const shape=footprint({...item,x:0,y:0,rotation:0}), work=shape.work[0];
+          const operator=art.worker(item.operator.color,item.operator.faceStyle,item.operator);
+          const facing=operatorFacing(shape);
+          operator.group.position.set(work.x+.5,0,work.y+.5);
+          operator.body.rotation.y=Math.atan2(facing.x,facing.y);
+          scene.add(operator.group);markers.push(operator.group);bounds.expandByObject(operator.group);
+        }
         const center=bounds.getCenter(new THREE.Vector3());
         const radius=bounds.getBoundingSphere(new THREE.Sphere()).radius*1.03;
         const topCamera=new THREE.OrthographicCamera(-radius,radius,radius,-radius,.1,50);
@@ -111,6 +78,6 @@ export function createEquipmentPreviews(inventory, {inventoryView=false}={}) {
     }
     return images;
   } finally {
-    if(tile){tile.material.map.dispose();tile.material.dispose();tile.geometry.dispose();}
+
     art.dispose(); renderer.dispose(); renderer.forceContextLoss(); }
 }

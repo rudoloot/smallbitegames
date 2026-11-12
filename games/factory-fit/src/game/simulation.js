@@ -1,5 +1,5 @@
 import {dispatch,deliver,processBatch} from './forward-production.js';
-import {isInlet,isOutbound,dockSlots} from './docks.js';
+import {isInlet,isOutbound,dockSlots,dockSides} from './docks.js';
 import { STAGE, EQUIPMENT, DIRECTIONS, createAssignments } from './config.js';
 import { inboundPickupCells, outsideFactory, footprint, blockedCells, findPath, cellKey, neighbors, validateLayout } from './layout.js';
 import {DT,motionFrame} from './motion.js';
@@ -10,6 +10,7 @@ export const recipeFor = (item, stage = STAGE) => ({ ...EQUIPMENT[item.type], ..
 const warehouse = sim => sim.stage.fixtures.find(item => item.id === 'outbound');
 const ownPlace = (sim, worker) => (isOutbound(worker.machineId) || isInlet(worker.machineId)) ? { id: 'outbound', work: [worker.home] } : sim.machines.find(m => m.id === worker.machineId);
 export function createSimulation(layout, assignments = createAssignments(layout), stage = STAGE) {
+  if(stage.paired) assignments=createAssignments(layout,stage,assignments);
   const machines = layout.filter(item => !EQUIPMENT[item.type].belt).map(item => ({ ...item, parked: outsideFactory(item, stage), stock:{}, input: 0, incoming: 0, output: 0, reserved: 0, pendingOutput: false, processing: 0, progress: 0, cycleStartedAt: null, totalCycleSeconds: 0, completedCycles: 0, work: footprint(item).work }));
   const belts = layout.filter(item => EQUIPMENT[item.type].belt).map(item => ({ ...item, parked: outsideFactory(item, stage), item: null, reserved: false, remaining: 0 }));
   const slots = dockSlots(stage);
@@ -72,10 +73,12 @@ export function reconfigureSimulation(sim, layout, assignments, stage = sim.stag
     } else if (old.carrying) {
       worker.carrying = true;
       worker.cargo = old.cargo;
+      if(old.job?.phase==='shipment') worker.job=structuredClone(old.job);
       worker.load = [...old.load];
       worker.carriedWeight = old.carriedWeight;
     }
 
+    if(stage.paired && isOutbound(worker.machineId)) continue;
     if(stage.forward){
       if(worker.job && (worker.job.phase==='home' || worker.job.destination==='outbound' || next.machines.some(m=>m.id===worker.job.destination && !m.parked))){
         const dest=next.machines.find(m=>m.id===worker.job.destination);
@@ -85,12 +88,16 @@ export function reconfigureSimulation(sim, layout, assignments, stage = sim.stag
       worker.path=[];worker.job=null;continue;
     }
     const job = worker.job;
+    if(job?.phase==='shipment'){
+      restoreRoute(next,worker,shippingGoals(next),blocked);
+      continue;
+    }
     if (job?.phase === 'pickup') {
       const object = job.sourceKind === 'machine' ? next.machines.find(m=>m.id===job.source)
         : job.sourceKind === 'belt' ? next.belts.find(b=>b.id===job.source) : null;
       const available = job.sourceKind === 'inbound' || (object && !object.parked &&
         (job.sourceKind === 'machine' ? object.output>0 : object.item && !object.reserved));
-      const goals = available ? sourceGoals(next,worker,{kind:job.sourceKind,object}) : [];
+      const goals = available ? sourceGoals(next,worker,{kind:job.sourceKind,id:job.source,object}) : [];
       if (restoreRoute(next,worker,goals,blocked)) {
         if (job.sourceKind === 'machine') { object.output--; object.reserved++; }
         if (job.sourceKind === 'belt') object.reserved = true;
@@ -153,7 +160,7 @@ function updateBelts(sim) {
     if (target && !target.item) { target.item = belt.item; target.remaining = .6; belt.item = null; }
     else if (!target) {
       const machine = sim.machines.find(m => !m.parked && recipeFor(m, sim.stage).input === belt.item.product && footprint(m).body.some(c => cellKey(c) === cellKey(next)));
-      if (machine && machine.input + machine.incoming < BUFFER) { machine.input++; belt.item = null; }
+      if (machine && machine.input + machine.incoming < BUFFER) { machine.input++; machine.stock[belt.item.product]=(machine.stock[belt.item.product]??0)+1; belt.item = null; }
     }
   }
   for (const machine of sim.machines) {
@@ -163,6 +170,10 @@ function updateBelts(sim) {
   }
 }
 function sourceGoals(sim, worker, source) {
+  if (source.kind === 'inbound' && sim.stage.paired) {
+    const dock=sim.stage.fixtures.find(f=>f.id===source.id);
+    return dock ? dockSides(dock).flat() : [];
+  }
   if (source.kind === 'inbound') return inboundPickupCells(sim.stage, sim.blocked);
   const blocked = routeBlocked(sim, worker), shape = source.kind === 'belt' ? null : footprint(source.object);
   const cells = source.kind === 'belt' ? [source.object] : shape.output ? [shape.output] : shape.body;
@@ -176,15 +187,43 @@ function assignJob(sim, worker, collecting = false) {
     const path = pathTo(sim, worker, own.work); if (path) { worker.path = path; worker.job = { phase: 'home', goals: own.work, target: own.work[0] }; } return;
   }
   const storing = own.id === 'outbound', recipe = storing ? null : recipeFor(own, sim.stage);
-  if (!storing && (own.pendingOutput || own.processing > 0 || own.input > 0 || own.input + own.incoming >= BUFFER)) return;
+  if(sim.stage.paired && storing){
+    if(worker.cargo && worker.receivedTick<sim.tick){
+      worker.transfers.push({x:worker.x,y:worker.y,from:'hand',to:'outbound',id:'outbound',stage:worker.cargo.stage});
+      sim.warehouse.stock++;recordShipment(sim,1);
+      worker.cargo=null;worker.carrying=false;worker.metrics.transfers++;
+    }
+    return;
+  }
+  if(sim.stage.paired && recipe.output===sim.stage.product && own.output){
+    const goals=shippingGoals(sim),path=pathTo(sim,worker,goals);
+    if(path===null)return;
+    own.output--;
+    worker.carrying=true;
+    worker.cargo=itemData(sim,recipe.output,recipe.outputStage);
+    worker.transfers.push({x:worker.x,y:worker.y,from:'output',to:'hand',id:own.id,stage:recipe.outputStage});
+    worker.path=path;
+    worker.job={phase:'shipment',goals,target:path.at(-1)??{x:worker.x,y:worker.y}};
+    worker.status='완제품을 출고 담당자에게 전달하는 중';
+    return;
+  }
+  if (!storing && (own.pendingOutput || own.processing > 0 || (!sim.stage.paired && (own.input > 0 || own.input + own.incoming >= BUFFER)))) return;
   const wanted = storing ? sim.stage.product : recipe.input, sources = [];
-  if (wanted === sim.stage.input && sim.supplied + sim.workers.filter(w => w.job?.sourceKind === 'inbound' && w.job.phase === 'pickup').length < (sim.stage.batch ?? Infinity)) sources.push({ id: 'inbound', kind: 'inbound', cargo: itemData(sim, wanted, 0) });
+  const needs=recipe?.needs ?? {[wanted]:1};
+  const accepts=product=>sim.stage.paired && !storing ? (needs[product]??0)>(own.stock[product]??0) : product===wanted;
+  if(sim.stage.paired){
+    for(const dock of sim.stage.fixtures.filter(f=>isInlet(f.id))){
+      for(const product of dock.supplies??[sim.stage.input]){
+        if(accepts(product)) sources.push({id:dock.id,kind:'inbound',cargo:itemData(sim,product,Math.max(0,sim.stage.goods?.indexOf(product)??0))});
+      }
+    }
+  } else if (wanted === sim.stage.input && sim.supplied + sim.workers.filter(w => w.job?.sourceKind === 'inbound' && w.job.phase === 'pickup').length < (sim.stage.batch ?? Infinity)) sources.push({ id: 'inbound', kind: 'inbound', cargo: itemData(sim, wanted, 0) });
   for (const machine of sim.machines) {
     if (machine.parked) continue;
     const sourceRecipe = recipeFor(machine, sim.stage);
-    if (sourceRecipe.output === wanted && machine.id !== own.id && (!storing || machine.output > 0) && !connectedBelt(sim, machine)) sources.push({ id: machine.id, kind: 'machine', object: machine, cargo: itemData(sim, wanted, sourceRecipe.outputStage) });
+    if (accepts(sourceRecipe.output) && machine.id !== own.id && ((!storing && !sim.stage.paired) || machine.output > 0) && !connectedBelt(sim, machine)) sources.push({ id: machine.id, kind: 'machine', object: machine, cargo: itemData(sim, sourceRecipe.output, sourceRecipe.outputStage) });
   }
-  for (const belt of sim.belts) if (!belt.parked && belt.item?.product === wanted && !belt.reserved && !beltAt(sim, beltNext(belt)) && !sim.machines.some(m => footprint(m).body.some(c => cellKey(c) === cellKey(beltNext(belt))))) sources.push({ id: belt.id, kind: 'belt', object: belt, cargo: belt.item });
+  for (const belt of sim.belts) if (!belt.parked && belt.item && accepts(belt.item.product) && !belt.reserved && !beltAt(sim, beltNext(belt)) && !sim.machines.some(m => footprint(m).body.some(c => cellKey(c) === cellKey(beltNext(belt))))) sources.push({ id: belt.id, kind: 'belt', object: belt, cargo: belt.item });
   let best;
   for (const source of sources) {
     const capacity = storing ? (sim.stage.warehouseCarryKg ?? 20) - worker.carriedWeight : worker.strength;
@@ -205,9 +244,34 @@ function assignJob(sim, worker, collecting = false) {
   if (storing) sim.warehouse.incoming++; else own.incoming++;
   worker.path = path; worker.job = { phase: 'pickup', target: path.at(-1) ?? { x: worker.x, y: worker.y }, goals, source: source.id, sourceKind: source.kind, destination: own.id, cargo: source.cargo, stage: source.cargo.stage }; worker.status = '재료를 가지러 가는 중';
 }
+function recordShipment(sim,count) {
+  const sampleCount = sim.stage.sampleCount ?? 5;
+  for (let i = 0; i < count; i++) {
+    sim.shipmentTimes.push(sim.productionTime);
+    if (sim.stage.minuteGoal) sim.minuteShipmentTicks.push(sim.tick);
+    if (sim.shipmentTimes.length > sampleCount) sim.measurementStart = sim.shipmentTimes.shift();
+  }
+  if (count > 0 && !sim.rateWindow) {
+    sim.averageProductionSeconds = (sim.productionTime - sim.measurementStart) / sim.shipmentTimes.length;
+    sim.productionRate = 60 / sim.averageProductionSeconds;
+  }
+  sim.shipped = sim.warehouse.stock; sim.firstShipment ??= sim.productionTime;
+}
+
+function shippingGoals(sim) {
+  return neighbors(warehouse(sim).access,sim.stage);
+}
 function arrive(sim, worker) {
   const job = worker.job; if (!job || worker.path.length || cellKey(worker) !== cellKey(job.target)) return;
   if (job.phase === 'home') { worker.job = null; return; }
+  if(job.phase==='shipment'){
+    const receiver=sim.workers.find(w=>w.machineId==='outbound');
+    if(receiver.carrying || receiver.transfers.length)return;
+    worker.transfers.push({x:worker.x,y:worker.y,from:'hand',to:'receiver',id:'outbound',stage:worker.cargo.stage});
+    receiver.receivedTick=sim.tick;receiver.carrying=true;receiver.cargo=worker.cargo;
+    worker.metrics.transfers++;worker.carrying=false;worker.cargo=null;worker.job=null;
+    return;
+  }
   if(sim.stage.forward)return deliver(sim,worker);
   if (job.phase === 'pickup') {
     const own = ownPlace(sim, worker), path = pathTo(sim, worker, own.work); if (path === null) return;
@@ -228,20 +292,11 @@ function arrive(sim, worker) {
       stage:worker.cargo.stage,count:Math.max(1,worker.load.length)});
     if (job.destination === 'outbound') {
       const count = worker.load.length; sim.warehouse.stock += count;
-      const sampleCount = sim.stage.sampleCount ?? 5;
-      for (let i = 0; i < count; i++) {
-        sim.shipmentTimes.push(sim.productionTime);
-        if (sim.stage.minuteGoal) sim.minuteShipmentTicks.push(sim.tick);
-        if (sim.shipmentTimes.length > sampleCount) sim.measurementStart = sim.shipmentTimes.shift();
-      }
-      if (count > 0 && !sim.rateWindow) {
-        sim.averageProductionSeconds = (sim.productionTime - sim.measurementStart) / sim.shipmentTimes.length;
-        sim.productionRate = 60 / sim.averageProductionSeconds;
-      }
-      sim.warehouse.incoming -= count; sim.shipped = sim.warehouse.stock; sim.firstShipment ??= sim.productionTime;
+      recordShipment(sim,count);
+      sim.warehouse.incoming -= count;
       worker.load = []; worker.carriedWeight = 0;
     }
-    else { const machine = ownPlace(sim, worker); machine.input++; machine.incoming--; }
+    else { const machine = ownPlace(sim, worker); machine.input++; machine.incoming--; machine.stock[job.cargo.product]=(machine.stock[job.cargo.product]??0)+1; }
     worker.metrics.transfers++;
     worker.carrying = false; worker.cargo = null; worker.job = null; worker.status = '작업 준비';
   }
@@ -298,7 +353,12 @@ export function stepSimulation(sim) {
         machine.pendingOutput = true;
         worker.transfers.push({x:worker.x,y:worker.y,from:'process',to:'hand',id:machine.id,stage:recipe.outputStage ?? 4});
       }
-    } else if (!machine.pendingOutput && machine.input > 0) { machine.input--; machine.processing = recipe.seconds; machine.cycleStartedAt = sim.time; worker.status = '작업 시작'; }
+    } else if (!machine.pendingOutput && machine.input > 0) {
+      const needs=recipe.needs??{[recipe.input]:1};
+      if(sim.stage.paired){
+        if(!Object.entries(needs).every(([product,count])=>(machine.stock[product]??0)>=count)) continue;
+        for(const [product,count] of Object.entries(needs)){machine.stock[product]-=count;machine.input-=count;}
+      } else machine.input--; machine.processing = recipe.seconds; machine.cycleStartedAt = sim.time; worker.status = '작업 시작'; }
     // A reserved item still occupies the tray until its collector physically picks it up.
     if (machine.pendingOutput) {
       if (machine.output + machine.reserved === 0) {

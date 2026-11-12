@@ -2,42 +2,43 @@
 export const forwardLayouts = [
   {
     "width": 6,
-    "height": 7,
+    "height": 6,
     "cells": [
-      "4,0",
-      "5,0",
-      "4,1",
-      "5,1",
-      "2,0",
-      "2,1",
-      "2,2",
-      "3,0",
+      "4,4",
+      "5,4",
+      "4,5",
+      "5,5",
       "3,4",
-      "3,5",
-      "2,4",
       "2,3",
-      "1,6",
-      "1,5",
-      "2,6",
+      "2,4",
       "2,5",
+      "3,3",
+      "3,1",
+      "3,2",
+      "2,1",
+      "2,0",
+      "0,0",
+      "1,0",
+      "0,1",
+      "1,1",
       "0,3",
       "1,3",
       "0,4",
       "1,4",
-      "0,5",
-      "3,1",
       "1,2",
       "0,2",
-      "1,1",
-      "1,0",
-      "0,1",
-      "0,0",
-      "3,2"
+      "2,2",
+      "3,5",
+      "4,3",
+      "5,3",
+      "4,2",
+      "4,1",
+      "5,2"
     ],
     "pillars": [
       {
-        "x": 1,
-        "y": 2
+        "x": 4,
+        "y": 3
       }
     ],
     "fixtures": [
@@ -47,7 +48,7 @@ export const forwardLayouts = [
         "height": 2,
         "access": {
           "x": 0,
-          "y": 5
+          "y": 2
         },
         "x": 0,
         "y": 3,
@@ -60,12 +61,12 @@ export const forwardLayouts = [
       {
         "id": "outbound",
         "x": 4,
-        "y": 0,
+        "y": 4,
         "width": 2,
         "height": 2,
         "access": {
           "x": 3,
-          "y": 0
+          "y": 4
         },
         "color": "#579087",
         "label": "출고장"
@@ -108,9 +109,9 @@ export const forwardLayouts = [
         "id": "m1",
         "type": "cutter",
         "variant": "O",
-        "rotation": 3,
-        "x": 1,
-        "y": 5
+        "rotation": 0,
+        "x": 0,
+        "y": 0
       },
       {
         "id": "m2",
@@ -118,7 +119,7 @@ export const forwardLayouts = [
         "variant": "S",
         "rotation": 1,
         "x": 2,
-        "y": 3
+        "y": 0
       },
       {
         "id": "m3",
@@ -126,78 +127,90 @@ export const forwardLayouts = [
         "variant": "J",
         "rotation": 1,
         "x": 2,
-        "y": 0
+        "y": 3
       }
     ],
     "referenceAssignments": {
       "w1": "m1",
       "w2": "m2",
       "w3": "m3",
-      "w4": "inbound"
+      "w4": null,
+      "w5": null,
+      "w6": null,
+      "w7": null,
+      "w8": null,
+      "w9": null,
+      "w10": null,
+      "w11": null,
+      "w12": null,
+      "w13": null,
+      "w14": null,
+      "w15": null,
+      "w16": null,
+      "w17": null,
+      "w18": null,
+      "w19": null,
+      "w20": "outbound"
     },
-    "referenceMeanSeconds": 9.4,
-    "targetPerMinute": 6.3
+    "referenceMeanSeconds": 12.6634,
+    "targetPerMinute": 4.7
   },
   {
-    "width": 13,
-    "height": 7,
+    "width": 11,
+    "height": 8,
     "cells": [
-      "11,4",
-      "12,4",
-      "11,5",
-      "12,5",
-      "9,4",
-      "9,5",
       "9,6",
-      "10,4",
-      "8,5",
-      "7,5",
-      "6,5",
+      "10,6",
+      "9,7",
+      "10,7",
       "8,6",
-      "4,3",
-      "5,3",
+      "6,7",
+      "7,7",
+      "8,7",
+      "6,6",
+      "5,6",
+      "4,6",
+      "4,5",
+      "3,5",
+      "3,4",
+      "4,4",
       "5,4",
-      "6,4",
-      "2,1",
-      "2,2",
-      "2,3",
+      "5,3",
       "3,3",
-      "3,0",
-      "3,1",
       "3,2",
-      "4,2",
+      "3,1",
+      "2,1",
       "0,0",
       "1,0",
       "0,1",
       "1,1",
-      "2,0",
-      "4,5",
-      "5,5",
-      "4,6",
-      "5,6",
-      "4,4",
-      "10,5",
-      "3,4",
-      "2,4",
-      "3,5",
-      "3,6",
-      "2,5",
-      "2,6",
-      "10,6",
-      "11,6",
-      "12,6",
       "4,1",
-      "4,0",
-      "1,2"
+      "5,1",
+      "4,2",
+      "5,2",
+      "7,6",
+      "4,3",
+      "5,5",
+      "6,5",
+      "7,5",
+      "8,5",
+      "9,5",
+      "6,4",
+      "6,3",
+      "6,2",
+      "7,4",
+      "7,3",
+      "7,2",
+      "8,4"
     ],
     "pillars": [
       {
-        "x": 10,
+        "x": 6,
         "y": 5
       },
       {
-        "x": 11,
-        "y": 6
+        "x": 7,
+        "y": 3
       }
     ],
     "fixtures": [
@@ -207,10 +220,10 @@ export const forwardLayouts = [
         "height": 2,
         "access": {
           "x": 4,
-          "y": 4
+          "y": 3
         },
         "x": 4,
-        "y": 5,
+        "y": 1,
         "label": "프레임 입고장",
         "supplies": [
           "빈 테"
@@ -229,20 +242,19 @@ export const forwardLayouts = [
         "y": 0,
         "label": "착색 렌즈 입고장",
         "supplies": [
-          "왼쪽 원형 렌즈",
-          "오른쪽 원형 렌즈"
+          "원형 렌즈"
         ],
         "color": "#b98950"
       },
       {
         "id": "outbound",
-        "x": 11,
-        "y": 4,
+        "x": 9,
+        "y": 6,
         "width": 2,
         "height": 2,
         "access": {
-          "x": 10,
-          "y": 4
+          "x": 8,
+          "y": 6
         },
         "color": "#579087",
         "label": "출고장"
@@ -256,43 +268,38 @@ export const forwardLayouts = [
       },
       {
         "id": "m2",
-        "type": "machining",
+        "type": "assembly",
         "variant": "L"
       },
       {
         "id": "m3",
-        "type": "assembly",
+        "type": "inspection",
         "variant": "Z"
       },
       {
         "id": "m4",
-        "type": "inspection",
-        "variant": "J"
-      },
-      {
-        "id": "m5",
         "type": "packing",
         "variant": "J"
       },
       {
         "id": "m1-1",
         "type": "machining",
+        "variant": "Z"
+      },
+      {
+        "id": "m2-1",
+        "type": "assembly",
         "variant": "J"
       },
       {
         "id": "m3-1",
-        "type": "assembly",
-        "variant": "T"
+        "type": "inspection",
+        "variant": "O"
       },
       {
         "id": "m4-1",
-        "type": "inspection",
-        "variant": "T"
-      },
-      {
-        "id": "m5-1",
         "type": "packing",
-        "variant": "Z"
+        "variant": "T"
       }
     ],
     "referenceLayout": [
@@ -300,41 +307,33 @@ export const forwardLayouts = [
         "id": "m1",
         "type": "machining",
         "variant": "L",
-        "rotation": 1,
-        "x": 3,
-        "y": 0
-      },
-      {
-        "id": "m2",
-        "type": "machining",
-        "variant": "L",
-        "rotation": 1,
+        "rotation": 3,
         "x": 2,
         "y": 1
       },
       {
-        "id": "m3",
+        "id": "m2",
         "type": "assembly",
-        "variant": "Z",
+        "variant": "L",
         "rotation": 0,
-        "x": 4,
+        "x": 3,
         "y": 3
       },
       {
-        "id": "m4",
+        "id": "m3",
         "type": "inspection",
-        "variant": "J",
+        "variant": "Z",
         "rotation": 2,
-        "x": 6,
+        "x": 3,
         "y": 5
       },
       {
-        "id": "m5",
+        "id": "m4",
         "type": "packing",
         "variant": "J",
-        "rotation": 1,
-        "x": 9,
-        "y": 4
+        "rotation": 0,
+        "x": 6,
+        "y": 6
       }
     ],
     "referenceAssignments": {
@@ -342,77 +341,92 @@ export const forwardLayouts = [
       "w2": "m2",
       "w3": "m3",
       "w4": "m4",
-      "w5": "m5",
-      "w6": "inbound-2",
-      "w7": "inbound"
+      "w5": null,
+      "w6": null,
+      "w7": null,
+      "w8": null,
+      "w9": null,
+      "w10": null,
+      "w11": null,
+      "w12": null,
+      "w13": null,
+      "w14": null,
+      "w15": null,
+      "w16": null,
+      "w17": null,
+      "w18": null,
+      "w19": null,
+      "w20": "outbound"
     },
-    "referenceMeanSeconds": 13,
-    "targetPerMinute": 4.6
+    "referenceMeanSeconds": 28.6984,
+    "targetPerMinute": 2
   },
   {
-    "width": 8,
-    "height": 9,
+    "width": 10,
+    "height": 7,
     "cells": [
-      "6,1",
-      "7,1",
-      "6,2",
+      "8,2",
+      "9,2",
+      "8,3",
+      "9,3",
       "7,2",
-      "4,1",
-      "4,0",
-      "5,1",
-      "5,2",
-      "4,2",
-      "3,2",
-      "2,2",
-      "3,1",
-      "0,2",
-      "0,3",
-      "0,4",
-      "1,2",
-      "1,5",
-      "2,5",
-      "3,5",
-      "1,4",
-      "5,7",
-      "4,7",
-      "3,7",
-      "2,7",
-      "5,6",
-      "4,6",
-      "3,6",
-      "2,6",
-      "4,5",
-      "0,7",
-      "1,7",
-      "0,8",
-      "1,8",
-      "0,6",
-      "3,0",
-      "1,6",
-      "0,5",
-      "1,3",
-      "2,3",
-      "3,3",
-      "4,3",
       "5,3",
-      "2,4",
-      "3,4",
-      "4,4",
-      "5,4",
-      "5,5",
+      "5,2",
       "6,3",
       "6,4",
+      "5,5",
       "6,5",
-      "7,3"
+      "7,5",
+      "6,6",
+      "3,6",
+      "4,6",
+      "5,6",
+      "3,5",
+      "3,2",
+      "3,3",
+      "3,4",
+      "4,2",
+      "0,0",
+      "1,0",
+      "2,0",
+      "3,0",
+      "0,1",
+      "1,1",
+      "2,1",
+      "3,1",
+      "1,2",
+      "0,3",
+      "1,3",
+      "0,4",
+      "1,4",
+      "7,4",
+      "7,3",
+      "4,1",
+      "2,5",
+      "2,4",
+      "0,2",
+      "2,2",
+      "6,2",
+      "2,3",
+      "4,3",
+      "5,4",
+      "4,5",
+      "8,4",
+      "9,4",
+      "8,5",
+      "4,4",
+      "9,5",
+      "4,0",
+      "5,1"
     ],
     "pillars": [
       {
-        "x": 5,
-        "y": 3
+        "x": 0,
+        "y": 2
       },
       {
-        "x": 6,
-        "y": 5
+        "x": 9,
+        "y": 4
       }
     ],
     "fixtures": [
@@ -421,11 +435,11 @@ export const forwardLayouts = [
         "width": 2,
         "height": 2,
         "access": {
-          "x": 0,
-          "y": 6
+          "x": 2,
+          "y": 3
         },
         "x": 0,
-        "y": 7,
+        "y": 3,
         "label": "슬리퍼 자재 입고장",
         "supplies": [
           "EVA 알갱이",
@@ -435,13 +449,13 @@ export const forwardLayouts = [
       },
       {
         "id": "outbound",
-        "x": 6,
-        "y": 1,
+        "x": 8,
+        "y": 2,
         "width": 2,
         "height": 2,
         "access": {
-          "x": 5,
-          "y": 1
+          "x": 7,
+          "y": 2
         },
         "color": "#579087",
         "label": "출고장"
@@ -504,41 +518,41 @@ export const forwardLayouts = [
         "id": "m1",
         "type": "injection",
         "variant": "original",
-        "rotation": 2,
-        "x": 2,
-        "y": 6
+        "rotation": 0,
+        "x": 0,
+        "y": 0
       },
       {
         "id": "m2",
         "type": "grinder",
         "variant": "J",
-        "rotation": 0,
-        "x": 1,
-        "y": 4
+        "rotation": 1,
+        "x": 3,
+        "y": 2
       },
       {
         "id": "m3",
         "type": "assembly",
         "variant": "J",
-        "rotation": 1,
-        "x": 0,
-        "y": 2
+        "rotation": 0,
+        "x": 3,
+        "y": 5
       },
       {
         "id": "m4",
         "type": "inspection",
         "variant": "T",
-        "rotation": 2,
-        "x": 2,
-        "y": 2
+        "rotation": 0,
+        "x": 5,
+        "y": 5
       },
       {
         "id": "m5",
         "type": "packing",
         "variant": "S",
         "rotation": 3,
-        "x": 4,
-        "y": 0
+        "x": 5,
+        "y": 2
       }
     ],
     "referenceAssignments": {
@@ -547,73 +561,86 @@ export const forwardLayouts = [
       "w3": "m3",
       "w4": "m4",
       "w5": "m5",
-      "w6": "inbound"
+      "w6": null,
+      "w7": null,
+      "w8": null,
+      "w9": null,
+      "w10": null,
+      "w11": null,
+      "w12": null,
+      "w13": null,
+      "w14": null,
+      "w15": null,
+      "w16": null,
+      "w17": null,
+      "w18": null,
+      "w19": null,
+      "w20": "outbound"
     },
-    "referenceMeanSeconds": 19.3634,
-    "targetPerMinute": 3
+    "referenceMeanSeconds": 28.3618,
+    "targetPerMinute": 2.1
   },
   {
-    "width": 8,
-    "height": 8,
+    "width": 9,
+    "height": 10,
     "cells": [
-      "6,5",
       "7,5",
-      "6,6",
+      "8,5",
       "7,6",
-      "2,7",
-      "3,7",
-      "4,7",
-      "4,6",
-      "0,5",
-      "0,6",
-      "0,7",
-      "1,7",
-      "0,4",
-      "1,4",
-      "2,4",
-      "1,5",
-      "0,2",
-      "1,2",
-      "1,3",
-      "2,3",
-      "2,0",
-      "2,1",
-      "2,2",
-      "1,1",
-      "4,2",
-      "5,2",
-      "4,3",
-      "5,3",
-      "3,2",
-      "2,5",
-      "3,5",
-      "2,6",
-      "3,6",
-      "3,4",
-      "5,6",
-      "0,1",
-      "0,3",
-      "3,3",
-      "1,6",
-      "4,4",
+      "8,6",
+      "6,5",
       "5,4",
-      "6,4",
-      "7,4",
-      "4,5",
       "5,5",
-      "6,3",
-      "7,3",
-      "6,2",
-      "7,2"
+      "5,6",
+      "6,6",
+      "6,7",
+      "5,7",
+      "4,7",
+      "4,8",
+      "3,6",
+      "3,7",
+      "3,8",
+      "2,7",
+      "2,6",
+      "1,6",
+      "1,5",
+      "0,5",
+      "2,4",
+      "1,4",
+      "0,4",
+      "1,3",
+      "1,0",
+      "2,0",
+      "1,1",
+      "2,1",
+      "0,8",
+      "1,8",
+      "0,9",
+      "1,9",
+      "1,2",
+      "2,8",
+      "2,5",
+      "4,6",
+      "1,7",
+      "3,4",
+      "4,4",
+      "3,5",
+      "4,5",
+      "0,7",
+      "0,6",
+      "2,2",
+      "2,3",
+      "3,3",
+      "3,2"
     ],
     "pillars": [
       {
-        "x": 6,
-        "y": 4
+        "x": 4,
+        "y": 6
       },
       {
-        "x": 6,
-        "y": 3
+        "x": 0,
+        "y": 6
       }
     ],
     "fixtures": [
@@ -622,11 +649,11 @@ export const forwardLayouts = [
         "width": 2,
         "height": 2,
         "access": {
-          "x": 3,
-          "y": 4
+          "x": 1,
+          "y": 7
         },
-        "x": 2,
-        "y": 5,
+        "x": 0,
+        "y": 8,
         "label": "다리 입고장",
         "supplies": [
           "책상 다리"
@@ -638,11 +665,11 @@ export const forwardLayouts = [
         "width": 2,
         "height": 2,
         "access": {
-          "x": 3,
+          "x": 1,
           "y": 2
         },
-        "x": 4,
-        "y": 2,
+        "x": 1,
+        "y": 0,
         "label": "판재 입고장",
         "supplies": [
           "목재"
@@ -651,12 +678,12 @@ export const forwardLayouts = [
       },
       {
         "id": "outbound",
-        "x": 6,
+        "x": 7,
         "y": 5,
         "width": 2,
         "height": 2,
         "access": {
-          "x": 5,
+          "x": 6,
           "y": 5
         },
         "color": "#579087",
@@ -720,41 +747,41 @@ export const forwardLayouts = [
         "id": "m1",
         "type": "cutter",
         "variant": "T",
-        "rotation": 1,
-        "x": 2,
-        "y": 0
+        "rotation": 2,
+        "x": 0,
+        "y": 4
       },
       {
         "id": "m2",
         "type": "machining",
         "variant": "Z",
-        "rotation": 0,
+        "rotation": 2,
         "x": 0,
-        "y": 2
+        "y": 5
       },
       {
         "id": "m3",
         "type": "assembly",
         "variant": "T",
-        "rotation": 0,
-        "x": 0,
-        "y": 4
+        "rotation": 1,
+        "x": 3,
+        "y": 6
       },
       {
         "id": "m4",
         "type": "inspection",
         "variant": "L",
-        "rotation": 1,
-        "x": 0,
-        "y": 5
+        "rotation": 2,
+        "x": 4,
+        "y": 7
       },
       {
         "id": "m5",
         "type": "packing",
         "variant": "L",
-        "rotation": 0,
-        "x": 2,
-        "y": 6
+        "rotation": 1,
+        "x": 5,
+        "y": 4
       }
     ],
     "referenceAssignments": {
@@ -763,73 +790,85 @@ export const forwardLayouts = [
       "w3": "m3",
       "w4": "m4",
       "w5": "m5",
-      "w6": "inbound-2",
-      "w7": "inbound"
+      "w6": null,
+      "w7": null,
+      "w8": null,
+      "w9": null,
+      "w10": null,
+      "w11": null,
+      "w12": null,
+      "w13": null,
+      "w14": null,
+      "w15": null,
+      "w16": null,
+      "w17": null,
+      "w18": null,
+      "w19": null,
+      "w20": "outbound"
     },
-    "referenceMeanSeconds": 17.7333,
-    "targetPerMinute": 3.3
+    "referenceMeanSeconds": 25.5349,
+    "targetPerMinute": 2.3
   },
   {
-    "width": 9,
-    "height": 7,
+    "width": 8,
+    "height": 9,
     "cells": [
-      "7,5",
-      "8,5",
-      "7,6",
-      "8,6",
-      "5,6",
-      "4,6",
-      "5,5",
-      "6,5",
       "6,4",
-      "5,4",
-      "4,4",
-      "4,5",
-      "5,2",
-      "4,2",
-      "3,2",
-      "5,3",
-      "3,3",
-      "3,4",
-      "2,3",
-      "2,2",
-      "2,6",
-      "2,5",
-      "2,4",
-      "3,5",
-      "0,5",
-      "1,5",
-      "0,6",
-      "1,6",
-      "1,4",
-      "4,0",
-      "5,0",
-      "4,1",
-      "5,1",
-      "3,1",
-      "6,3",
-      "4,3",
-      "3,6",
-      "6,6",
       "7,4",
-      "8,4",
-      "7,3",
-      "8,3",
-      "3,0",
+      "6,5",
+      "7,5",
+      "5,4",
+      "5,5",
+      "5,6",
+      "4,5",
+      "4,4",
+      "3,4",
+      "3,5",
+      "3,6",
+      "4,6",
+      "2,7",
+      "3,7",
+      "4,7",
+      "2,6",
+      "2,4",
+      "2,5",
+      "1,4",
+      "1,3",
+      "3,2",
+      "2,2",
+      "1,2",
       "2,1",
-      "2,0",
+      "3,0",
+      "4,0",
+      "3,1",
+      "4,1",
+      "0,7",
+      "1,7",
+      "0,8",
+      "1,8",
+      "1,6",
+      "2,3",
+      "1,5",
+      "4,3",
+      "5,3",
+      "6,3",
+      "7,3",
+      "4,2",
+      "3,3",
+      "5,2",
       "6,2",
       "7,2",
-      "8,2"
+      "5,1",
+      "6,1"
     ],
     "pillars": [
       {
-        "x": 4,
-        "y": 3
+        "x": 1,
+        "y": 5
       },
       {
-        "x": 7,
-        "y": 2
+        "x": 5,
+        "y": 1
       }
     ],
     "fixtures": [
@@ -838,11 +877,11 @@ export const forwardLayouts = [
         "width": 2,
         "height": 2,
         "access": {
-          "x": 3,
-          "y": 1
+          "x": 1,
+          "y": 6
         },
-        "x": 4,
-        "y": 0,
+        "x": 0,
+        "y": 7,
         "label": "전장 부품 입고장",
         "supplies": [
           "필터 기판",
@@ -855,11 +894,11 @@ export const forwardLayouts = [
         "width": 2,
         "height": 2,
         "access": {
-          "x": 1,
-          "y": 4
+          "x": 2,
+          "y": 0
         },
-        "x": 0,
-        "y": 5,
+        "x": 3,
+        "y": 0,
         "label": "판재 입고장",
         "supplies": [
           "목재"
@@ -868,13 +907,13 @@ export const forwardLayouts = [
       },
       {
         "id": "outbound",
-        "x": 7,
-        "y": 5,
+        "x": 6,
+        "y": 4,
         "width": 2,
         "height": 2,
         "access": {
-          "x": 6,
-          "y": 5
+          "x": 5,
+          "y": 4
         },
         "color": "#579087",
         "label": "출고장"
@@ -937,41 +976,41 @@ export const forwardLayouts = [
         "id": "m1",
         "type": "machining",
         "variant": "T",
-        "rotation": 3,
-        "x": 2,
-        "y": 4
+        "rotation": 2,
+        "x": 1,
+        "y": 2
       },
       {
         "id": "m2",
         "type": "joining",
         "variant": "S",
         "rotation": 1,
-        "x": 2,
-        "y": 2
+        "x": 1,
+        "y": 3
       },
       {
         "id": "m3",
         "type": "electronics",
         "variant": "J",
-        "rotation": 2,
-        "x": 3,
-        "y": 2
+        "rotation": 0,
+        "x": 2,
+        "y": 6
       },
       {
         "id": "m4",
         "type": "inspection",
         "variant": "L",
-        "rotation": 2,
-        "x": 4,
+        "rotation": 1,
+        "x": 3,
         "y": 4
       },
       {
         "id": "m5",
         "type": "packing",
         "variant": "S",
-        "rotation": 2,
+        "rotation": 1,
         "x": 4,
-        "y": 5
+        "y": 4
       }
     ],
     "referenceAssignments": {
@@ -980,86 +1019,100 @@ export const forwardLayouts = [
       "w3": "m3",
       "w4": "m4",
       "w5": "m5",
-      "w6": "inbound-2",
-      "w7": "inbound"
+      "w6": null,
+      "w7": null,
+      "w8": null,
+      "w9": null,
+      "w10": null,
+      "w11": null,
+      "w12": null,
+      "w13": null,
+      "w14": null,
+      "w15": null,
+      "w16": null,
+      "w17": null,
+      "w18": null,
+      "w19": null,
+      "w20": "outbound"
     },
-    "referenceMeanSeconds": 14.4333,
-    "targetPerMinute": 4.1
+    "referenceMeanSeconds": 21.2699,
+    "targetPerMinute": 2.8
   },
   {
-    "width": 9,
-    "height": 12,
+    "width": 11,
+    "height": 10,
     "cells": [
-      "7,10",
-      "8,10",
-      "7,11",
-      "8,11",
-      "5,11",
-      "4,11",
-      "5,10",
-      "6,10",
-      "3,8",
-      "3,9",
-      "3,10",
-      "4,10",
-      "2,8",
-      "2,7",
-      "2,6",
-      "3,7",
-      "0,5",
-      "1,5",
-      "0,6",
-      "1,6",
-      "3,4",
-      "4,4",
-      "3,5",
-      "2,5",
-      "2,4",
-      "2,3",
-      "2,2",
-      "1,4",
-      "2,0",
+      "9,0",
+      "10,0",
+      "9,1",
+      "10,1",
+      "8,0",
+      "8,1",
+      "8,2",
+      "7,1",
+      "7,0",
+      "5,0",
+      "4,0",
       "3,0",
-      "2,1",
       "3,1",
-      "3,2",
-      "5,6",
-      "6,6",
+      "1,3",
+      "2,3",
+      "3,3",
+      "2,4",
+      "3,5",
+      "3,4",
+      "4,5",
+      "4,4",
+      "2,6",
+      "2,5",
+      "3,6",
+      "3,7",
       "5,7",
-      "6,7",
-      "5,8",
+      "5,6",
+      "5,5",
+      "4,7",
+      "2,8",
+      "3,8",
+      "2,9",
+      "3,9",
+      "0,0",
+      "1,0",
+      "0,1",
+      "1,1",
+      "6,0",
+      "3,2",
+      "5,4",
+      "4,8",
+      "2,1",
+      "2,0",
+      "2,2",
+      "4,6",
+      "2,7",
+      "4,1",
+      "5,1",
+      "6,1",
       "4,2",
       "4,3",
-      "4,8",
-      "3,3",
-      "3,6",
-      "4,7",
-      "4,9",
-      "6,11",
-      "5,5",
-      "4,5",
-      "5,4",
-      "5,3",
+      "1,2",
       "5,2",
-      "4,6",
-      "5,9",
-      "6,5",
-      "6,4",
+      "5,3",
+      "6,2",
+      "7,2",
       "6,3",
-      "6,2"
+      "7,3"
     ],
     "pillars": [
       {
-        "x": 3,
+        "x": 6,
+        "y": 1
+      },
+      {
+        "x": 7,
         "y": 3
       },
       {
-        "x": 5,
-        "y": 5
-      },
-      {
         "x": 6,
-        "y": 4
+        "y": 3
       }
     ],
     "fixtures": [
@@ -1068,11 +1121,11 @@ export const forwardLayouts = [
         "width": 2,
         "height": 2,
         "access": {
-          "x": 5,
-          "y": 8
+          "x": 2,
+          "y": 0
         },
-        "x": 5,
-        "y": 6,
+        "x": 0,
+        "y": 0,
         "label": "솜 입고장",
         "supplies": [
           "솜"
@@ -1084,11 +1137,11 @@ export const forwardLayouts = [
         "width": 2,
         "height": 2,
         "access": {
-          "x": 3,
-          "y": 2
+          "x": 4,
+          "y": 8
         },
         "x": 2,
-        "y": 0,
+        "y": 8,
         "label": "원단 입고장",
         "supplies": [
           "앞면 원단",
@@ -1098,13 +1151,13 @@ export const forwardLayouts = [
       },
       {
         "id": "outbound",
-        "x": 7,
-        "y": 10,
+        "x": 9,
+        "y": 0,
         "width": 2,
         "height": 2,
         "access": {
-          "x": 6,
-          "y": 10
+          "x": 8,
+          "y": 0
         },
         "color": "#579087",
         "label": "출고장"
@@ -1168,48 +1221,48 @@ export const forwardLayouts = [
         "type": "cutting",
         "variant": "J",
         "rotation": 3,
-        "x": 1,
-        "y": 2
+        "x": 4,
+        "y": 5
       },
       {
         "id": "m2",
         "type": "cutting",
         "variant": "S",
-        "rotation": 0,
+        "rotation": 3,
         "x": 2,
-        "y": 4
+        "y": 5
       },
       {
         "id": "m3",
         "type": "sewing",
         "variant": "O",
-        "rotation": 0,
-        "x": 0,
-        "y": 5
+        "rotation": 3,
+        "x": 3,
+        "y": 4
       },
       {
         "id": "m4",
         "type": "sewing",
         "variant": "T",
-        "rotation": 3,
-        "x": 2,
-        "y": 6
+        "rotation": 0,
+        "x": 1,
+        "y": 3
       },
       {
         "id": "m5",
         "type": "filling",
         "variant": "L",
-        "rotation": 1,
+        "rotation": 2,
         "x": 3,
-        "y": 8
+        "y": 0
       },
       {
         "id": "m6",
         "type": "packing",
         "variant": "S",
-        "rotation": 2,
-        "x": 4,
-        "y": 10
+        "rotation": 1,
+        "x": 7,
+        "y": 0
       }
     ],
     "referenceAssignments": {
@@ -1219,10 +1272,22 @@ export const forwardLayouts = [
       "w4": "m4",
       "w5": "m5",
       "w6": "m6",
-      "w7": "inbound-2",
-      "w8": "inbound"
+      "w7": null,
+      "w8": null,
+      "w9": null,
+      "w10": null,
+      "w11": null,
+      "w12": null,
+      "w13": null,
+      "w14": null,
+      "w15": null,
+      "w16": null,
+      "w17": null,
+      "w18": null,
+      "w19": null,
+      "w20": "outbound"
     },
-    "referenceMeanSeconds": 15.7,
-    "targetPerMinute": 3.8
+    "referenceMeanSeconds": 19.5414,
+    "targetPerMinute": 3
   }
 ];

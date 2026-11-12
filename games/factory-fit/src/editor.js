@@ -31,6 +31,12 @@ let doc=blank(),mode='start',tool='cutter',rotation=0,variant='O',history=[];
 let group='machines', grid=false, moving=null, scene, graphics;
 const sharedStage = d => ({...STAGE,id:'editor-preview',name:d.name,width:d.width,height:d.height,cells:d.cells,
   holes:d.holes,pillars:d.pillars,fixtures:d.fixtures,targetPerMinute:d.target,minuteGoal:false,...workshopConfig(d)});
+function pairPlans(d){
+  const stage=sharedStage(d);
+  for(const plan of [d.start,d.reference]) plan.assignments=createAssignments(plan.layout,stage,plan.assignments);
+  return d;
+}
+pairPlans(doc);
 const stageFor = (d, key = mode) => sessionStage(sharedStage(d), d[key]);
 function issue(d) {
   if(d?.version!==1 || typeof d.name!=='string' || !Number.isFinite(d.target) || d.target<=0 ||
@@ -73,11 +79,11 @@ function restoreDocument(value) {
     }
   }
   const stage=sharedStage(value);
-  return {...value,start:restoreLayoutVariants(value.start,stage),reference:restoreLayoutVariants(value.reference,stage)};
+  return pairPlans({...value,start:restoreLayoutVariants(value.start,stage),reference:restoreLayoutVariants(value.reference,stage)});
 }
 try { const saved=restoreDocument(JSON.parse(localStorage.getItem(storageKey)));if(saved&&!issue(saved))doc=saved; } catch {}
 function save(){try{localStorage.setItem(storageKey,JSON.stringify(doc));}catch{$('status').textContent='자동 저장 공간이 부족합니다. 파일로 저장해 주세요.';}}
-function accept(next){const error=issue(next);if(error){$('status').textContent=error;return false;}
+function accept(next){pairPlans(next);const error=issue(next);if(error){$('status').textContent=error;return false;}
   history.push(doc);if(history.length>60)history.shift();doc=next;$('status').textContent='';save();draw();return true;}
 function cellMap(d) {
   const map=new Map(),mark=(c,kind,text,id,color)=>map.set(cellKey(c),{kind,text,id,color});
@@ -134,7 +140,7 @@ function preview(cell){
   if(!item)return null;
   const next={...doc,[mode]:{...doc[mode],layout:[...doc[mode].layout]}};
   applyMachine(next[mode],item);
-  return {item,valid:!issue(next)};
+  return {item,valid:!issue(pairPlans(next))};
 }
 function editCell(x,y,centered=false) {
   const next=structuredClone(doc),plan=next[mode],cell={x,y},key=cellKey(cell);
@@ -277,7 +283,7 @@ $('simulate').onclick=()=>{const plan=doc[mode],sim=createSimulation(plan.layout
   for(let i=0;i<ticks;i++)stepSimulation(sim);
   $('status').textContent='5분 예열 후 5분간 '+(sim.shipped-before)+'개 입고 · '+((sim.shipped-before)/5).toFixed(1)+'개/분 · 목표 '+doc.target+'개/분';};
 $('play').onclick=()=>{const p=doc[mode];
-  sessionStorage.setItem('factory-fit.editor.preview',JSON.stringify({factory:doc.factory,steps:doc.steps,name:doc.name,width:doc.width,height:doc.height,cells:doc.cells,holes:doc.holes,pillars:doc.pillars,fixtures:sharedStage(doc).forward?doc.fixtures:stageFor(doc).fixtures,startInbound:p.inbound,startInlets:p.inlets,targetPerMinute:doc.target,startLayout:p.layout,startAssignments:p.assignments}));
+  sessionStorage.setItem('factory-fit.editor.preview',JSON.stringify({factory:doc.factory,steps:doc.steps,name:doc.name,width:doc.width,height:doc.height,cells:doc.cells,holes:doc.holes,pillars:doc.pillars,fixtures:sharedStage(doc).workshopInlets?doc.fixtures:stageFor(doc).fixtures,startInbound:p.inbound,startInlets:p.inlets,targetPerMinute:doc.target,startLayout:p.layout,startAssignments:p.assignments}));
   save();location.href=sitePath('./?stage=editor-preview');};
 draw();
 try{

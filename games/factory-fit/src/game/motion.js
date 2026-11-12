@@ -9,6 +9,7 @@ function machineCenter(item){
   return {x:item.x+(item.rotation%2?h:w)/2,y:item.y+(item.rotation%2?w:h)/2};
 }
 function surfacePoint(kind,event,sim){
+  if(kind==='receiver'){const p=sim.stage.fixtures.find(f=>f.id==='outbound').access;return {x:p.x+.5,y:p.y+.5};}
   if(kind==='inbound' || kind==='outbound'){
     const dock=sim.stage.fixtures.find(f=>f.id===(kind==='inbound'?event.id:kind));
     return dock && {x:clamp(event.x+.5,dock.x+.5,dock.x+dock.width-.5),
