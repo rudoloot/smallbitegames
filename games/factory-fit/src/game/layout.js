@@ -1,4 +1,4 @@
-import {onFloor,dockSides} from './docks.js';
+import {onFloor,dockSides,dockSlots} from './docks.js';
 import { EQUIPMENT, STAGE, suppliedEquipment } from './config.js';
 import { shapeFor } from './equipment-shapes.js';
 export const cellKey = ({ x, y }) => `${x},${y}`;
@@ -45,7 +45,7 @@ export function findPath(start, goals, blocked, stage = STAGE) {
 }
 export function validateLayout(layout, { stage = STAGE, requireAll = false, checkPaths = false, allowOutside = false } = {}) {
   if (!Array.isArray(layout) || (!stage.unlimitedEquipment && layout.length > stage.inventory.length)) return { valid: false, errors: ['지급된 설비만 배치할 수 있습니다.'] };
-  const errors = new Set(), ids = new Set(), occupied = new Set([...fixedCells(stage), ...(stage.pillars ?? [])].map(cellKey)), access = new Set(stage.fixtures.filter(item=>item.id!=='inbound').map(item => cellKey(item.access)));
+  const errors = new Set(), ids = new Set(), occupied = new Set([...fixedCells(stage), ...(stage.pillars ?? [])].map(cellKey)), access = new Set(stage.fixtures.filter(item=>item.id!=='inbound' && (item.width!==2 || item.height!==2)).map(item => cellKey(item.access)));
   for (const item of layout) {
     const supply = suppliedEquipment(item.id, stage);
     if ((supply?.variant && supply.variant !== item.variant) || (item.variant !== undefined && !Object.hasOwn(EQUIPMENT[item.type]?.variants ?? {}, item.variant)) || !supply || supply.type !== item.type || !Number.isInteger(item.x) || !Number.isInteger(item.y) || !Number.isInteger(item.rotation) || item.rotation < 0 || item.rotation > 3 || ids.has(item.id)) return { valid: false, errors: ['지급 설비와 위치·방향을 확인해 주세요.'] };
@@ -61,6 +61,11 @@ export function validateLayout(layout, { stage = STAGE, requireAll = false, chec
     if (checkPaths && findPath(cell, inboundPickupCells(stage, blocked), blocked, stage) === null) errors.add(`${EQUIPMENT[item.type].name}: 작업자 통로가 끊겼습니다.`);
   }
   if (requireAll && !stage.unlimitedEquipment && ids.size !== stage.inventory.length) errors.add('지급된 작업대를 모두 배치해 주세요.');
-  if (checkPaths) for (const fixture of stage.fixtures.filter(f=>f.id!=='inbound')) if (findPath(fixture.access, inboundPickupCells(stage, blocked), blocked, stage) === null) errors.add(`${fixture.label}까지 통로가 필요합니다.`);
+  if (checkPaths) {
+    const pickups = inboundPickupCells(stage, blocked);
+    const reachable = dockSlots(stage).some(({cell}) =>
+      !blocked.has(cellKey(cell)) && !slots.has(cellKey(cell)) && findPath(cell,pickups,blocked,stage) !== null);
+    if (!reachable) errors.add('출고장까지 통로가 필요합니다.');
+  }
   return { valid: errors.size === 0, errors: [...errors] };
 }

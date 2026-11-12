@@ -1,4 +1,4 @@
-// Four pillars occupy spare tiles outside the reference production line.
+// Two pillars occupy spare tiles outside the reference production line.
 export const firstBoxStage = {
   "width": 9,
   "height": 5,
@@ -31,22 +31,8 @@ export const firstBoxStage = {
     }
   ],
   "pillars": [
-    {
-      "x": 1,
-      "y": 2
-    },
-    {
-      "x": 3,
-      "y": 3
-    },
-    {
-      "x": 5,
-      "y": 1
-    },
-    {
-      "x": 7,
-      "y": 2
-    }
+    {"x": 1, "y": 2},
+    {"x": 7, "y": 2}
   ],
   "inventory": [
     {
