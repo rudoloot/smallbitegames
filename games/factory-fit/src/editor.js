@@ -9,7 +9,7 @@ import { STAGE, EQUIPMENT, createAssignments } from './game/config.js';
 import { footprint, validateLayout, cellKey } from './game/layout.js';
 import { sessionStage, isInlet, atWall, dockBody, dockSides, dockSlots } from './game/docks.js';
 import { validSession } from './game/session.js';
-import { createSimulation, stepSimulation, DT } from './game/simulation.js';
+import { inletColors, inletCellColor, createSimulation, stepSimulation, DT } from './game/simulation.js';
 
 const $ = id => document.getElementById(id);
 const storageKey = 'factory-fit.editor.v1';
@@ -89,7 +89,11 @@ function cellMap(d) {
   const map=new Map(),mark=(c,kind,text,id,color)=>map.set(cellKey(c),{kind,text,id,color});
   for(const c of d.pillars)mark(c,'pillar','■');
   for(const c of d.holes)mark(c,'hole','×');
-  for(const f of stageFor(d).fixtures) dockBody(f).forEach((c,i)=>mark(c,isInlet(f.id)?'inbound':f.id,i?'':(isInlet(f.id)?(f.id==='inbound'?'입':'입2'):'출'),f.id));
+  const stage=stageFor(d);
+  for(const f of stage.fixtures) {
+    const colors=isInlet(f.id)?inletColors(f,stage):null;
+    dockBody(f).forEach((c,i)=>mark(c,isInlet(f.id)?'inbound':f.id,i?'':(isInlet(f.id)?(f.id==='inbound'?'입':'입2'):'출'),f.id,colors?inletCellColor(f,c,colors):undefined));
+  }
   for(const {id,cell} of dockSlots(stageFor(d)).sort((a,b)=>Number(Object.values(d[mode].assignments).includes(b.id))-Number(Object.values(d[mode].assignments).includes(a.id)))) if(!map.has(cellKey(cell)))mark(cell,'work','○',id);
   const plan=d[mode];
   for(const m of plan.layout){const f=footprint(m);f.body.forEach((c,i)=>{

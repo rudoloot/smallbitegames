@@ -1,5 +1,5 @@
 import {motionFrame,transferSeconds} from '../game/motion.js';
-import {recipeFor} from '../game/simulation.js';
+import {recipeFor, inletColors} from '../game/simulation.js';
 import { inletId, dockBody, dockSlots, isInlet, isOutbound } from '../game/docks.js';
 import * as THREE from 'three';
 import { EQUIPMENT, STAGE } from '../game/config.js';
@@ -152,7 +152,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     const inletGroup=new THREE.Group();
     if(isInlet(fixture.id))scene.add(inletGroup);
     const cells = Array.from({ length: fixture.width * fixture.height }, (_, i) => ({ x: fixture.x + i % fixture.width, y: fixture.y + Math.floor(i / fixture.width) }));
-    outline(cells, fixture.color, isInlet(fixture.id)?inletGroup:scene, false);
+    outline(cells, isInlet(fixture.id) ? inletColors(fixture,stage)[0] : fixture.color, isInlet(fixture.id)?inletGroup:scene, false);
     if (isInlet(fixture.id)) {
       inletGroup.add(art.inbound(fixture));
     } else {

@@ -21,6 +21,26 @@ export function outputDestinations(item,stage) {
   return [...types];
 }
 
+// Keep one band per supplied material so mixed pallets match the cargo above them.
+export function inletColors(dock, stage) {
+  const supplies = dock.supplies ?? [stage.input];
+  const fallback = dock.color ?? '#b98950';
+  if (!supplies.length) return [fallback];
+  return supplies.map(supply => {
+    const receiver = stage.inventory.find(item => {
+      const recipe = recipeFor(item, stage);
+      return recipe.needs ? recipe.needs[supply] > 0 : recipe.input === supply;
+    });
+    return EQUIPMENT[receiver?.type]?.color ?? fallback;
+  });
+}
+
+export function inletCellColor(dock, cell, colors) {
+  const column = cell.x - dock.x;
+  const row = cell.y - dock.y;
+  return colors[(row * dock.width + column) % colors.length];
+}
+
 export function outputColor(item,stage) {
   if (!stage.inventory.some(given=>given.id===item.id || given.id===item.id?.split('-')[0])) return '#65757c';
   const [destination]=outputDestinations(item,stage);

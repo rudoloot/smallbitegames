@@ -1,6 +1,7 @@
 import {cellKey,footprint} from '../game/layout.js';
 import {dockBody} from '../game/docks.js';
-import {outputColor} from '../game/simulation.js';
+import {isInlet} from '../game/docks.js';
+import {outputColor, inletColors, inletCellColor} from '../game/simulation.js';
 import {EQUIPMENT} from '../game/config.js';
 
 export function showReference(container,stage){
@@ -10,7 +11,8 @@ export function showReference(container,stage){
   const marks=new Map(), legend=document.createElement('ol');
   for(const dock of stage.fixtures){
     const text=dock.supplies?'입'+(1+stage.fixtures.filter(f=>f.supplies).indexOf(dock)):'출';
-    for(const p of dockBody(dock)) marks.set(cellKey(p),[text,dock.color]);
+    const colors=isInlet(dock.id) ? inletColors(dock,stage) : [dock.color];
+    for(const p of dockBody(dock)) marks.set(cellKey(p),[text,inletCellColor(dock,p,colors)]);
     if(dock.id==='outbound')marks.set(cellKey(dock.access),[text+'·W','#bfd7e3']);
     const row=document.createElement('li');row.textContent=text+' · '+dock.label;legend.append(row);
   }

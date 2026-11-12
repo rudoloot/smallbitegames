@@ -4,7 +4,7 @@ import { FACTORIES } from '../game/products.js';
 import { workshopProduct } from './workshop-product-models.js';
 import { buildProduct } from './product-models.js';
 import { EQUIPMENT, TYPES, STAGE } from '../game/config.js';
-import {outputColor} from '../game/simulation.js';
+import {outputColor, inletColors} from '../game/simulation.js';
 import { shapeFor } from '../game/equipment-shapes.js';
 import { buildEquipment } from './equipment-models.js';
 
@@ -182,13 +182,20 @@ export function createArtKit(renderer, factory=STAGE) {
     wood(group, w - .22, .13, d - .3, 0, .76, 0, '#bc9260');
     for (let i = 0; i < 4; i++) wood(group, w - .12, .23, (d - .13) / 4 - .012, 0, .92, (i - 1.5) * (d - .13) / 4, i % 2 ? shade(color, .045) : color);
   }
-  function inbound({x=0,y=0,width=2,height=2,supplies}) {
+  function inbound(dock) {
+    const {x=0,y=0,width=2,height=2,supplies}=dock;
+    const colors=inletColors(dock,factory);
     const group=new THREE.Group();
     if(supplies || factory.modelSteps){
-      wood(group,width-.12,.16,height-.12,width/2,.12,height/2,'#aa835a');
+      const columns = new Set(colors).size === 1 ? 1 : width;
+      const rows = colors.length > columns && columns > 1 ? height : 1;
+      const w = (width-.12)/columns, d = (height-.12)/rows;
+      for (let row=0; row<rows; row++) for (let col=0; col<columns; col++) {
+        wood(group,w,.16,d,.06+(col+.5)*w,.12,.06+(row+.5)*d,colors[(row*columns+col)%colors.length]);
+      }
       for(let i=0;i<(supplies?.length===0?0:4);i++)goods(group,supplies?factory.goods.indexOf(supplies[i%supplies.length]):0,.52+(i%2)*.93,.23,.53+(i>>1)*.9,.7);
     }else for(let row=0;row<height;row++) for(let layer=0;layer<3;layer++){
-      wood(group,width-.22,.16,.66,width/2,.17+layer*.17,row+.5,layer%2?'#d2a36c':'#bd8d53');
+      wood(group,width-.22,.16,.66,width/2,.17+layer*.17,row+.5,colors[0]);
     }
     group.position.set(x,0,y);
     return group;
