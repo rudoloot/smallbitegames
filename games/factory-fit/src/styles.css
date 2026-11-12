@@ -140,3 +140,6 @@ button{font-weight:500;letter-spacing:-.02em;transition:background-color .15s,bo
 .onboarding{top:60px;left:50%;right:auto;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#fffdf5ed;border-radius:8px;padding:5px 10px;white-space:nowrap;text-shadow:none}
 .onboarding strong,.onboarding span{font-size:11px;margin:0;color:#42564b}
 .inventory-slot .supply-card{animation:none}
+
+#equipment-list .supply-card{padding:0 1px 1px;overflow:hidden}
+#equipment-list [data-fixture=inbound] .ui-icon{place-self:center;width:72%;height:86%;color:#936735}

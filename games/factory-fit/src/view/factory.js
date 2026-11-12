@@ -3,7 +3,7 @@ import { dockSlots, isOutbound } from '../game/docks.js';
 import * as THREE from 'three';
 import { EQUIPMENT, STAGE } from '../game/config.js';
 import { createArtKit } from './art.js';
-import { footprint, cellKey } from '../game/layout.js';
+import { operatorFacing, footprint, cellKey } from '../game/layout.js';
 
 export function createFactoryView(host, callbacks, stage = STAGE) {
   const MAP = { width: stage.width, height: stage.height }, FIXED = stage.fixtures, WORKERS = stage.workers, WAREHOUSE = FIXED.find(f => f.id === 'outbound');
@@ -270,9 +270,8 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       const waitingSource = worker.waitingForSource && modelMap.get(worker.waitingForSource);
       if (sim.tick && !(dx || dy) && waitingSource) obj.body.rotation.y = Math.atan2(waitingSource.position.x - (x + .5), waitingSource.position.z - (y + .5));
       if (!(dx || dy) && own && !waitingSource && cellKey(worker) === cellKey(own.work[0])) {
-        const shape = footprint(own);
-        const station = shape.body.find(c => cellKey(c) !== cellKey(shape.output) && Math.abs(c.x-x)+Math.abs(c.y-y) === 1);
-        if (station) obj.body.rotation.y = Math.atan2(station.x-x,station.y-y);
+        const facing = operatorFacing(footprint(own));
+        if (facing) obj.body.rotation.y = Math.atan2(facing.x,facing.y);
       }
       const working = !own?.parked && own?.processing > 0 && !worker.job && !(dx || dy);
       // Drive work gestures from simulation time so pausing also freezes the hands.

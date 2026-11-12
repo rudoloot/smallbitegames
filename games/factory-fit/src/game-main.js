@@ -225,25 +225,30 @@ for (const name of Object.keys(inventories)) {
   };
 }
 function updateCards() {
-  const {slots,page:inventoryPage}=inventories[activeInventory];
-  const pages = Math.ceil(slots.length/10);
-  for (const [index,slot] of slots.entries()) {
-    slot.hidden = Math.floor(index/10) !== inventoryPage;
-    const card=slot.querySelector('button');
+  const inventory=inventories[activeInventory], available=[];
+  for (const slot of inventory.slots) {
+    slot.hidden=true;
+    const card=slot.firstElementChild;
     if (!card) continue;
-    const {supplyId,workerKey}=card.dataset;
-    const used=card.dataset.fixture==='inbound' ? session.inbound!==null : workerKey ? session.assignments[workerKey] || session.waitingWorkers?.[workerKey]
+    const {fixture,supplyId,workerKey}=card.dataset;
+    const used=fixture==='inbound' ? session.inbound!==null : workerKey
+      ? session.assignments[workerKey] || session.waitingWorkers?.[workerKey]
       : !STAGE.unlimitedEquipment && session.layout.some(m=>m.id===supplyId);
-    card.hidden=!!used;
     card.disabled=!canEdit() || !!used;
+    if (!used) available.push(slot);
   }
-  $('#inventory-page').textContent=(inventoryPage+1)+' / '+pages;
-  $('#previous').disabled=inventoryPage===0;
-  $('#next').disabled=inventoryPage+1>=pages;
+  const pages=Math.max(1,Math.ceil(available.length/10));
+  inventory.page=Math.min(inventory.page,pages-1);
+  const visible=available.slice(inventory.page*10,(inventory.page+1)*10);
+  const blanks=inventory.slots.filter(slot=>!slot.firstElementChild);
+  for (const slot of [...visible,...blanks.slice(0,10-visible.length)]) slot.hidden=false;
+  $('#inventory-page').textContent=(inventory.page+1)+' / '+pages;
+  $('#previous').disabled=inventory.page===0;
+  $('#next').disabled=inventory.page+1>=pages;
 }
 function turnCard(direction) {
   const inventory=inventories[activeInventory];
-  inventory.page=Math.min(Math.ceil(inventory.slots.length/10)-1, Math.max(0,inventory.page+direction));
+  inventory.page=Math.max(0,inventory.page+direction);
   updateCards();
 }
 function appendSlot(name,card) {
@@ -294,8 +299,8 @@ for (const worker of STAGE.workers) {
   card.onclick=()=>{if(performance.now()>suppressClickUntil)chooseWorker(worker.key);};
   appendSlot('workers',card);
 }
-for(const [name,inventory] of Object.entries(inventories)) {
-  while(!inventory.slots.length || inventory.slots.length%10) appendSlot(name);
+for(const name of Object.keys(inventories)) {
+  for(let i=0;i<10;i++) appendSlot(name);
 }
 // A card swipe browses the tray. Only a click selects a card.
 let gesture = null, suppressClickUntil = 0;
@@ -397,7 +402,11 @@ async function boot() {
     generatePreviews = createEquipmentPreviews;
     const previews = createEquipmentPreviews(catalogInventory);
     for (const [type,image] of previews) previewCache.set(type+'/'+(EQUIPMENT[type].defaultVariant ?? ''), image);
-    for (const img of document.querySelectorAll('[data-equipment-type]')) img.src = img.dataset.variant ? catalogPreview(img.dataset.equipmentType,img.dataset.variant) : previews.get(img.dataset.equipmentType);
+    for (const img of document.querySelectorAll('#catalog-grid [data-equipment-type]')) img.src = previews.get(img.dataset.equipmentType);
+    const inventoryImages = createEquipmentPreviews(sortedEquipment, {inventoryView:true});
+    for (const img of document.querySelectorAll('#equipment-list [data-equipment-type]')) {
+      img.src = inventoryImages.get(img.dataset.equipmentType+'/'+img.dataset.variant);
+    }
     view = createFactoryView($('#scene'), { onPick: pick, onContextLost: () => { running = false; notice('3D 연결이 끊겼어요. 새로고침하면 저장한 배치를 복원합니다.', true); } }, STAGE);
     sim = createLiveSimulation(session.layout, session.assignments);
     if (session.layout.length) { mode='run'; running=true; }

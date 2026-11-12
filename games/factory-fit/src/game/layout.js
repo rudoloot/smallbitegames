@@ -14,6 +14,13 @@ export function footprint(item) {
   const output = outputY >= 0 ? transform(spec.mask[outputY].indexOf('O'), outputY) : null;
   return { body: cells.map(([x,y]) => transform(x,y)), work: spec.belt ? [] : [transform(...(spec.workCell ?? [Math.floor((spec.width - 1) / 2), spec.height]))], output, outlet: outputY >= 0 ? transform(spec.mask[outputY].indexOf('O') + (spec.mask[outputY].indexOf('O') === 0 ? -1 : 1), outputY) : transform(spec.width, spec.height - 1) };
 }
+export function operatorFacing(shape) {
+  const work = shape.work[0];
+  const station = shape.body.find(cell =>
+    (!shape.output || cellKey(cell) !== cellKey(shape.output)) &&
+    Math.abs(cell.x-work.x) + Math.abs(cell.y-work.y) === 1);
+  return station && {x:station.x-work.x, y:station.y-work.y};
+}
 export function outsideFactory(item, stage = STAGE) {
   const { body, work } = footprint(item);
   return [...body, ...work].every(cell => !inBounds(cell, stage));
