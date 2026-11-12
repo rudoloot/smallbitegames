@@ -21,9 +21,11 @@ export function outsideFactory(item, stage = STAGE) {
 export function blockedCells(layout, stage = STAGE) { return new Set([...fixedCells(stage), ...stage.holes, ...(stage.pillars ?? []), ...layout.flatMap(item => footprint(item).body)].map(cellKey)); }
 export function inboundPickupCells(stage, blocked) {
   const inlet = stage.fixtures.find(f => f.id === 'inbound');
+  if (!inlet) return [];
   return dockSides(inlet).flat().filter(cell => inBounds(cell, stage) && !blocked.has(cellKey(cell)));
 }
 export function findPath(start, goals, blocked, stage = STAGE) {
+  if (!goals.length) return null;
   const targets = new Set(goals.filter(cell => inBounds(cell, stage) && !blocked.has(cellKey(cell))).map(cellKey));
   if (targets.has(cellKey(start))) return [];
   const queue = [start], seen = new Map([[cellKey(start), null]]); let end;

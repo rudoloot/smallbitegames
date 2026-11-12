@@ -39,6 +39,8 @@ export function expandDocks(stage) {
   return {...stage,cells:[...cells],fixtures};
 }
 export function sessionStage(stage, state) {
+  // Existing saves without this field used the authored inlet.
+  if (state?.inbound === null) return {...stage,fixtures:stage.fixtures.filter(f=>f.id!=='inbound')};
   if (!state?.inbound) return stage;
   return {...stage,fixtures:stage.fixtures.map(f=>f.id==='inbound'?{...f,x:state.inbound.x,y:state.inbound.y}:f)};
 }

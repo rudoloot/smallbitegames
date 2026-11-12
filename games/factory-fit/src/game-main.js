@@ -203,6 +203,7 @@ function pick(hit) {
 const inventories = {equipment:{slots:[],page:0},workers:{slots:[],page:0}};
 let activeInventory='equipment';
 function selectInventory(name) {
+  movingInbound=false;
   activeInventory=name;
   for (const key of Object.keys(inventories)) {
     const active=key===name, tab=$('#'+key+'-tab');
@@ -231,7 +232,7 @@ function updateCards() {
     const card=slot.querySelector('button');
     if (!card) continue;
     const {supplyId,workerKey}=card.dataset;
-    const used=workerKey ? session.assignments[workerKey] || session.waitingWorkers?.[workerKey]
+    const used=card.dataset.fixture==='inbound' ? session.inbound!==null : workerKey ? session.assignments[workerKey] || session.waitingWorkers?.[workerKey]
       : !STAGE.unlimitedEquipment && session.layout.some(m=>m.id===supplyId);
     card.hidden=!!used;
     card.disabled=!canEdit() || !!used;
@@ -258,6 +259,17 @@ if(STAGE.processTitle){
   $('#help-dialog .eyebrow').textContent=STAGE.processTitle+' 공장';
   $('#onboarding strong').textContent=STAGE.processTitle+' 공장';
   $('#onboarding span').textContent=STAGE.processSummary;
+}
+if (STAGE.playerPlacesInbound) {
+  const card=document.createElement('button');
+  card.type='button';card.className='supply-card';card.dataset.fixture='inbound';
+  card.innerHTML=icon('timber')+'<span>입고장</span>';
+  card.onclick=()=>{
+    if (performance.now()<=suppressClickUntil || !canEdit()) return;
+    draft=null;pendingWorker=null;selectedId=null;movingInbound=true;refresh();
+    notice('입고장을 설치할 빈 2×2칸의 시작 칸을 누르세요.');
+  };
+  appendSlot('equipment',card);
 }
 const route = FACTORIES[STAGE.factory ?? 'box'].steps.filter(step => !STAGE.steps || STAGE.steps.includes(step.id));
 const typeOrder = [...new Set([...route, ...STAGE.inventory].map(item => item.type))];

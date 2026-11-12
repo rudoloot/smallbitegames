@@ -3,7 +3,7 @@ import { productStages } from './product-stages.js';
 import { FACTORIES,processConfig } from './products.js';
 
 export function buildStages(base) {
-  const common = {...base,shape:'custom',holes:[],unlimitedEquipment:false,startLayout:[]};
+  const common = {...base,shape:'custom',playerPlacesInbound:true,holes:[],unlimitedEquipment:false,startLayout:[]};
   const box = {...common,...firstBoxStage,id:'sample-01',factory:'box',name:'첫 번째 나무상자',
     number:1,region:'meadow',revision:'box-v2',referenceAssignments:{w1:'m1',w2:'m2',w3:'m3',w4:'outbound'}};
   return [box,...productStages.map((spec,index)=>({

@@ -1,7 +1,7 @@
 import {atWall,sessionStage,dockSlots,dockBody,isOutbound} from './docks.js';
 import { STAGE, createAssignments, EQUIPMENT, suppliedEquipment } from './config.js';
 import { validateLayout, inboundPickupCells, cellKey, footprint, inBounds } from './layout.js';
-export function createSession(stage = STAGE) { return { version: 5, stageId: stage.id, layout: [], assignments: createAssignments([], stage) }; }
+export function createSession(stage = STAGE) { return { version: 5, stageId: stage.id, ...(stage.playerPlacesInbound ? { inbound: null } : {}), layout: [], assignments: createAssignments([], stage) }; }
 function validFacilities(state, stage) {
   const fixtures = stage.fixtures, inlet = fixtures.find(f=>f.id==='inbound');
   const outlet = fixtures.find(f=>f.id==='outbound');
@@ -15,7 +15,7 @@ function validFacilities(state, stage) {
   for (const item of state.layout) {
     for (const c of footprint(item).body) used.add(cellKey(c));
   }
-  if (!inboundPickupCells(stage,used).length) return false;
+  if (inlet && !inboundPickupCells(stage,used).length) return false;
   for (const item of state.layout) for (const c of footprint(item).work) used.add(cellKey(c));
   return Object.values(state.assignments).filter(isOutbound).every(id=>{
     const slot=dockSlots(stage).find(s=>s.id===id);

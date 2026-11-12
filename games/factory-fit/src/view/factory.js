@@ -174,8 +174,11 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   function setLayout(next, selection = null, assignments = {}, pendingWorker = null, waiting = {}, liveStage = stage) {
     currentFixtures=liveStage.fixtures;
     const inlet=currentFixtures.find(f=>f.id==='inbound'), original=FIXED.find(f=>f.id==='inbound');
-    inletLabel.pos.set(inlet.x+inlet.width/2,1.2,inlet.y+inlet.height/2);
-    inletGroup.position.set(inlet.x-original.x,0,inlet.y-original.y);
+    inletGroup.visible=!!inlet;
+    if (inlet) {
+      inletLabel.pos.set(inlet.x+inlet.width/2,1.2,inlet.y+inlet.height/2);
+      inletGroup.position.set(inlet.x-original.x,0,inlet.y-original.y);
+    }
     waitingWorkers = waiting;
     layout = next; selectedId = selection; clear(equipmentGroup); clear(marks); modelMap = new Map();
     [...machineLabels, ...stockLabels, ...slotLabels, ...slotTargets].forEach(entry => entry.el.remove()); machineLabels = []; stockLabels = []; slotLabels = []; slotTargets = [];
@@ -240,7 +243,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   let previousSim = null;
   const deliveries = new Map();
   function update(sim, alpha, seconds, paused = false) {
-    for (const entry of labels) entry.el.hidden = !paused;
+    for (const entry of labels) entry.el.hidden = !paused || (entry===inletLabel && !inletGroup.visible);
     if (previousSim !== sim) { deliveries.clear(); previousSim = sim; }
     if (!workerModels.length) workerModels = sim.workers.map((worker, index) => workerModel(worker, index));
     for (const worker of sim.workers) {
