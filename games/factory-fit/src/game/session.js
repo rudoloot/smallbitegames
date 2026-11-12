@@ -1,4 +1,4 @@
-import {inletId,isInlet,atWall,sessionStage,dockSlots,dockBody,dockSides,isOutbound} from './docks.js';
+import {parkedInlet,inletId,isInlet,atWall,sessionStage,dockSlots,dockBody,dockSides,isOutbound} from './docks.js';
 import { STAGE, createAssignments, EQUIPMENT, suppliedEquipment } from './config.js';
 import { validateLayout, inboundPickupCells, cellKey, footprint, inBounds } from './layout.js';
 export function createSession(stage = STAGE) { return { version: 5, stageId: stage.id, ...(stage.playerPlacesInbound ? { inbound: null } : {}), layout: [], assignments: createAssignments([], stage) }; }
@@ -8,19 +8,24 @@ function validFacilities(state, stage) {
   if (outlet.width===2 && outlet.height===2 && !atWall(outlet,stage)) return false;
   if (state.inbound && inlet && (!Number.isInteger(inlet.x) || !Number.isInteger(inlet.y))) return false;
   const used = new Set([...stage.holes,...(stage.pillars??[]),...Object.values(state.waitingWorkers??{})].map(cellKey));
-  for (const dock of fixtures) for (const cell of dockBody(dock)) {
-    if (!inBounds(cell,stage) || used.has(cellKey(cell))) return false;
-    used.add(cellKey(cell));
+  const activeInlets = fixtures.filter(f => isInlet(f.id) && !parkedInlet(f,stage));
+  for (const dock of fixtures) {
+    if (!Number.isSafeInteger(dock.x) || !Number.isSafeInteger(dock.y)) return false;
+    const parked = parkedInlet(dock,stage);
+    for (const cell of dockBody(dock)) {
+      if ((!parked && !inBounds(cell,stage)) || used.has(cellKey(cell))) return false;
+      used.add(cellKey(cell));
+    }
   }
   for (const item of state.layout) {
     for (const c of footprint(item).body) used.add(cellKey(c));
   }
-  if(stage.paired && fixtures.filter(f=>isInlet(f.id)).some(f=>!dockSides(f).flat().some(c=>inBounds(c,stage) && !used.has(cellKey(c)))))return false;
-  if (inlet && !inboundPickupCells(stage,used).length) return false;
+  if(stage.paired && activeInlets.some(f=>!dockSides(f).flat().some(c=>inBounds(c,stage) && !used.has(cellKey(c)))))return false;
+  if (inlet && !parkedInlet(inlet,stage) && !inboundPickupCells(stage,used).length) return false;
   for (const item of state.layout) for (const c of footprint(item).work) used.add(cellKey(c));
   if(stage.forward){
     const slots=dockSlots(stage);
-    for(const dock of fixtures.filter(f=>isInlet(f.id))){
+    for(const dock of activeInlets){
       if(!slots.some(s=>inletId(s.id)===dock.id && !used.has(cellKey(s.cell))))return false;
     }
     for(const id of Object.values(state.assignments).filter(isInlet)){
@@ -59,7 +64,7 @@ export function transact(state, action, stage = STAGE) {
     if(!stage.fixtures.some(f=>f.id===id && isInlet(id)))return {ok:false,error:'지급된 입고장을 선택하세요.'};
     const pos=action.type==='removeInbound'?null:{x:action.x,y:action.y};
     if(id==='inbound')next.inbound=pos;else (next.inlets??={})[id]=pos;
-    if(!pos)for(const key of Object.keys(next.assignments))if(inletId(next.assignments[key])===id)next.assignments[key]=null;
+    if(!pos || parkedInlet({...stage.fixtures.find(f=>f.id===id),...pos},stage))for(const key of Object.keys(next.assignments))if(inletId(next.assignments[key])===id)next.assignments[key]=null;
     return validSession(next,stage)?{ok:true,state:next}:{ok:false,error:'입고장과 재료를 수거할 인접 칸을 비워 주세요.'};
   }
   if (action.type === 'removeInbound') {

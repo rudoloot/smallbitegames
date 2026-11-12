@@ -6,6 +6,9 @@ export function dockBody(dock) {
   return Array.from({ length: dock.width * dock.height }, (_, i) =>
     ({ x: dock.x + i % dock.width, y: dock.y + Math.floor(i / dock.width) }));
 }
+export function parkedInlet(dock, stage) {
+  return isInlet(dock.id) && dockBody(dock).every(cell => !onFloor(cell, stage));
+}
 export function dockSides({ x, y, width, height }) {
   return [
     Array.from({length:height}, (_,i)=>({x:x+width,y:y+i})),
@@ -21,7 +24,7 @@ export const isOutbound = id => id === 'outbound' || (typeof id === 'string' && 
 export function dockSlots(stage) {
   if(stage.forward){
     const blocked=new Set([...stage.holes,...(stage.pillars??[]),...stage.fixtures.flatMap(dockBody)].map(keyOf));
-    return stage.fixtures.filter(f=>isInlet(f.id)).flatMap(f=>dockSides(f).flat()
+    return stage.fixtures.filter(f=>isInlet(f.id) && !parkedInlet(f,stage)).flatMap(f=>dockSides(f).flat()
       .filter(cell=>onFloor(cell,stage)&&!blocked.has(keyOf(cell)))
       .map(cell=>({cell,id:keyOf(cell)===keyOf(f.access)?f.id:
         f.id+'@'+keyOf({x:cell.x-f.x,y:cell.y-f.y})})));

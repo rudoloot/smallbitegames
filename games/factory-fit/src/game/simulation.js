@@ -1,5 +1,5 @@
 import {dispatch,deliver,processBatch} from './forward-production.js';
-import {isInlet,isOutbound,dockSlots,dockSides} from './docks.js';
+import {parkedInlet,isInlet,isOutbound,dockSlots,dockSides} from './docks.js';
 import { STAGE, EQUIPMENT, DIRECTIONS, createAssignments } from './config.js';
 import { inboundPickupCells, outsideFactory, footprint, blockedCells, findPath, cellKey, neighbors, validateLayout } from './layout.js';
 import {DT,motionFrame} from './motion.js';
@@ -49,6 +49,10 @@ export function outputColor(item,stage) {
 const warehouse = sim => sim.stage.fixtures.find(item => item.id === 'outbound');
 const ownPlace = (sim, worker) => (isOutbound(worker.machineId) || isInlet(worker.machineId)) ? { id: 'outbound', work: [worker.home] } : sim.machines.find(m => m.id === worker.machineId);
 export function createSimulation(layout, assignments = createAssignments(layout), stage = STAGE) {
+  // Keep stored docks in the editable layout, but disable their material supply.
+  if (stage.fixtures.some(dock => parkedInlet(dock,stage))) {
+    stage = {...stage, fixtures:stage.fixtures.filter(dock => !parkedInlet(dock,stage))};
+  }
   if(stage.paired) assignments=createAssignments(layout,stage,assignments);
   const machines = layout.filter(item => !EQUIPMENT[item.type].belt).map(item => ({ ...item, parked: outsideFactory(item, stage), stock:{}, input: 0, incoming: 0, output: 0, reserved: 0, pendingOutput: false, processing: 0, progress: 0, cycleStartedAt: null, totalCycleSeconds: 0, completedCycles: 0, work: footprint(item).work }));
   const belts = layout.filter(item => EQUIPMENT[item.type].belt).map(item => ({ ...item, parked: outsideFactory(item, stage), item: null, reserved: false, remaining: 0 }));

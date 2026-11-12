@@ -1,7 +1,7 @@
 import {sitePath} from './site-path.js';
 import { showReference } from './view/reference-layout.js';
 import { FACTORIES } from './game/products.js';
-import {sessionStage,dockSlots,inletId,isInlet,isOutbound} from './game/docks.js';
+import {parkedInlet,sessionStage,dockSlots,inletId,isInlet,isOutbound} from './game/docks.js';
 import { inBounds, cellKey, outsideFactory } from './game/layout.js';
 import { shapeLabel, showShapeOptions } from './view/shape-options.js';
 import { icon } from './view/ui-icons.js';
@@ -125,7 +125,9 @@ function refresh({ model = true } = {}) {
   if(inlet){
     $('#selected-name').textContent=STAGE.fixtures.find(f=>f.id===draft.id).label;
     $('#shape').hidden=true;
-    $('#placement-status').textContent=draft.x===null ? '빈 2×2칸을 누른 뒤 설치하세요.' : result?.ok ? '배치 가능 · 설치를 눌러 확정하세요.' : result.error;
+    const dock = {...STAGE.fixtures.find(f=>f.id===draft.id), x:draft.x, y:draft.y};
+    const placement = parkedInlet(dock,STAGE) ? '공장 밖 임시 보관 · 자재 공급 중지' : '배치 가능';
+    $('#placement-status').textContent=draft.x===null ? '빈 2×2칸을 선택하세요. 공장 밖에도 임시 보관할 수 있어요.' : result?.ok ? placement+' · 설치를 눌러 확정하세요.' : result.error;
     $('#confirm').disabled=!result?.ok;
     $('#remove').hidden=!placedInlet(draft?.id);
   } else if (draft) {
