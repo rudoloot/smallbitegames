@@ -1,10 +1,11 @@
+import {sitePath} from './site-path.js';
 import { STAGES } from './game/config.js';
 import { loadProgress } from './platform/storage.js';
 import { icon } from './view/ui-icons.js';
 const regions=[{id:'meadow',name:'초록 들판',eyebrow:'GREENFIELD',copy:'작은 공장에서 시작하는 새로운 흐름',color:'#a8bd84'},
  {id:'snow',name:'눈꽃 산업단지',eyebrow:'SNOW VALLEY',copy:'하얀 설원 위, 더 복잡해진 공장들',color:'#adc9d7'}];
 const progress=loadProgress();
-const isCleared=stage=>progress.some(key=>key.startsWith(stage.id+':'));
+const isCleared=stage=>progress.some(key=>key.startsWith([stage.id,stage.revision].filter(Boolean).join(':')+':'));
 function factory(stage, cleared, snow) {
   // Match the in-game camera orientation: map Y runs right-to-left, X runs top-to-bottom.
   const cells = stage.cells ?? Array.from({length:stage.width*stage.height},(_,i)=>(i%stage.width)+','+Math.floor(i/stage.width));
@@ -27,7 +28,7 @@ function factory(stage, cleared, snow) {
 }
 const game=document.querySelector('.game');game.hidden=true;
 const home=document.createElement('main');home.className='world-home';home.setAttribute('aria-label','공장 스테이지 맵');document.body.append(home);
-home.innerHTML=`<header class="world-header"><div class="world-brand"><span class="brand-mark">${icon('crate')}</span><div><strong>FACTORY FIT</strong><small>작은 공간, 더 나은 흐름</small></div></div><span class="world-progress">${STAGES.filter(isCleared).length} / ${STAGES.length} 완료</span></header><section class="region-heading"><p id="region-eyebrow"></p><h1 id="region-name"></h1><p id="region-description"></p></section><div class="world-viewport" aria-label="좌우로 드래그해 지역 변경"><div id="world-pages"></div></div><footer class="world-footer"><button id="region-previous" aria-label="이전 지역">${icon('previous')}</button><div><strong id="region-page"></strong><small>공장을 눌러 시작 · 좌우로 지역 이동</small></div><button id="region-next" aria-label="다음 지역">${icon('next')}</button></footer>`;
+home.innerHTML=`<header class="world-header"><div class="world-brand"><span class="brand-mark">${icon('crate')}</span><div><strong>FACTORY FIT</strong><small>작은 공간, 더 나은 흐름</small></div></div><a href="./editor.html" class="editor-link">문제 제작실</a><span class="world-progress">${STAGES.filter(isCleared).length} / ${STAGES.length} 완료</span></header><section class="region-heading"><p id="region-eyebrow"></p><h1 id="region-name"></h1><p id="region-description"></p></section><div class="world-viewport" aria-label="좌우로 드래그해 지역 변경"><div id="world-pages"></div></div><footer class="world-footer"><button id="region-previous" aria-label="이전 지역">${icon('previous')}</button><div><strong id="region-page"></strong><small>공장을 눌러 시작 · 좌우로 지역 이동</small></div><button id="region-next" aria-label="다음 지역">${icon('next')}</button></footer>`;
 const slots=Array.from({length:20},(_,i)=>({x:14+(i%4)*24,y:12+Math.floor(i/4)*18}));
 for(const region of regions){
  const snow=region.id==='snow', stages=STAGES.filter(s=>s.region===region.id), page=document.createElement('section');page.className='world-page '+region.id;page.setAttribute('aria-label',region.name);
@@ -64,3 +65,5 @@ function stageUrl(stage) {
 
 const siteExit = document.getElementById("site-exit");
 if(siteExit) home.querySelector(".world-header").append(siteExit);
+
+home.querySelector(".editor-link").href = sitePath("./editor.html");

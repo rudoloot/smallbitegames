@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { EQUIPMENT, TYPES } from '../game/config.js';
+import { shapeFor } from '../game/equipment-shapes.js';
 import { buildEquipment } from './equipment-models.js';
 
 // The approved concept image is the visual reference. Geometry stays in tile units.
@@ -168,25 +169,37 @@ export function createArtKit(renderer) {
     wood(group, w - .22, .13, d - .3, 0, .76, 0, '#bc9260');
     for (let i = 0; i < 4; i++) wood(group, w - .12, .23, (d - .13) / 4 - .012, 0, .92, (i - 1.5) * (d - .13) / 4, i % 2 ? shade(color, .045) : color);
   }
-  function machine(item) {
+  function machine(item, spec = EQUIPMENT[item.type]) {
     if (EQUIPMENT[item.type]?.mask) {
-      const spec = EQUIPMENT[item.type], group = new THREE.Group();
-      const model = buildEquipment(item.type, { box, wood, cylinder, sphere, material, cached });
+      spec = {...spec, ...shapeFor(item)};
+      const group = new THREE.Group();
+      const model = buildEquipment(item, spec, { box, wood, cylinder, sphere, material, cached });
       const output = model.userData.outputAnchor.clone(), process = model.userData.processAnchor.clone();
       group.add(model); group.position.set(item.x + (item.rotation % 2 ? spec.height : spec.width)/2, .07, item.y + (item.rotation % 2 ? spec.width : spec.height)/2);
       model.rotation.y = -item.rotation * Math.PI / 2;
       // Merge local-space geometry before applying the machine rotation.
-      model.rotation.y = 0; compact(model, `reference/${item.type}`); model.rotation.y = -item.rotation * Math.PI / 2;
+      model.rotation.y = 0; compact(model, `reference/${item.type}/${item.variant ?? spec.defaultVariant}`); model.rotation.y = -item.rotation * Math.PI / 2;
       const processingItem = goods(model, spec.inputStage ?? 0, process.x, process.y, process.z, .45); processingItem.visible = false;
-      const outputItems = [0].map(i => { const g=goods(model,spec.outputStage ?? 4,output.x,output.y+i*.35,output.z,.45);g.visible=false;return g; });
-      group.userData.inventory = { processingItem, outputItems };
+      const outputItem = goods(model,spec.outputStage ?? 4,output.x,output.y,output.z,.45);
+      outputItem.visible = false;
+      group.userData.inventory = { processingItem, outputItem };
       group.traverse(obj=>{if(obj.isMesh)obj.userData.machineId=item.id;}); return group;
     }
-    const spec = EQUIPMENT[item.type], group = new THREE.Group(), model = new THREE.Group(); group.add(model);
+    const group = new THREE.Group(), model = new THREE.Group(); group.add(model);
     const w = spec.width, d = spec.height;
     group.position.set(item.x + (item.rotation % 2 ? d : w) / 2, .07, item.y + (item.rotation % 2 ? w : d) / 2);
     model.rotation.y = -item.rotation * Math.PI / 2;
     contactShadow(model, w + .6, d + .5, 0, 0, 0);
+    if (spec.belt) {
+      box(model, .94, .32, .96, 0, .23, 0, spec.color);
+      for (const z of [-.32, -.16, 0, .16, .32]) {
+        const roller = cylinder(model, .065, .065, .75, 0, .41, z, '#414b50');
+        roller.rotation.z = Math.PI / 2;
+      }
+      compact(model, 'machine/conveyor');
+      group.traverse(obj => { if (obj.isMesh) obj.userData.machineId = item.id; });
+      return group;
+    }
     if (item.type === 'cutter') {
       box(model, w - .3, .85, d - .35, 0, .47, 0, '#629b82');
       box(model, w - .62, .35, .12, 0, .43, d / 2 - .12, '#68977f');
@@ -225,9 +238,10 @@ export function createArtKit(renderer) {
     compact(model, `machine/${item.type}`);
     const stage = spec.inputStage, top = item.type === 'paint' ? 1.02 : 1.065;
     const processingItem = goods(model, stage, item.type === 'cutter' ? -.65 : 0, top, item.type === 'assembly' || item.type === 'packing' ? -.35 : 0, .7); processingItem.visible = false;
-    const positions = item.type === 'cutter' ? [[-.85, .6], [.85, .6]] : item.type === 'assembly' ? [[-.85, .85], [.85, .85]] : item.type === 'paint' ? [[-.4, 1], [.4, 1]] : [[-.43, .55], [.43, .55]];
-    const outputItems = positions.map(([x, z]) => { const output = goods(model, spec.outputStage, x, top, z, .54); output.visible = false; return output; });
-    group.userData.inventory = { processingItem, outputItems };
+    const [x,z] = item.type === 'cutter' ? [-.85,.6] : item.type === 'assembly' ? [-.85,.85] : item.type === 'paint' ? [-.4,1] : [-.43,.55];
+    const outputItem = goods(model,spec.outputStage,x,top,z,.54);
+    outputItem.visible = false;
+    group.userData.inventory = { processingItem, outputItem };
     group.traverse(obj => { if (obj.isMesh) obj.userData.machineId = item.id; }); return group;
   }
   function faceMaterial(index = 0, skin = '#edc5a1') {
@@ -316,6 +330,5 @@ export function createArtKit(renderer) {
     for (const map of maps) map.dispose();
     for (const geometry of geometries.values()) geometry.dispose();
   }
-  function setEquipmentColor(color) { if (!/^#[0-9a-f]{6}$/i.test(color)) return; material('#788665').color.set(color); }
-  return { box, wood, sphere, cylinder, ring, crate, goods, material, contactShadow, compact, machine, worker, plant, audit, dispose, setEquipmentColor };
+  return { box, wood, sphere, cylinder, ring, crate, goods, material, contactShadow, compact, machine, worker, plant, audit, dispose };
 }

@@ -2,14 +2,13 @@ import * as THREE from 'three';
 import { createArtKit } from './art.js';
 
 // Render the game's actual models once; cards need no extra animation loop or live contexts.
-export function createEquipmentPreviews(inventory, color = '#788665') {
+export function createEquipmentPreviews(inventory) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(320, 200);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = .95;
   const art = createArtKit(renderer), scene = new THREE.Scene(), images = new Map();
-  art.setEquipmentColor(color);
   scene.add(new THREE.HemisphereLight('#fff5e9', '#c8b7aa', 1.4));
   const light = new THREE.DirectionalLight('#fff3e4', 2.6);
   light.position.set(-3, 8, 5); scene.add(light);

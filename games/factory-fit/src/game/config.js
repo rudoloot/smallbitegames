@@ -1,13 +1,15 @@
+import {processConfig} from './products.js';
+import {expandDocks} from './docks.js';
 import { buildStages } from './stages.js';
 import { EQUIPMENT_SHAPES } from './equipment-shapes.js';
 const RECIPES = {
-  cutter: { name: '절단기', short: '절단', width: 3, height: 2, color: '#629b82', seconds: 2.4, input: 'timber', output: 'parts', inputStage: 0, outputStage: 1 },
-  assembly: { name: '조립대', short: '조립', width: 3, height: 3, color: '#ca9659', seconds: 4.8, input: 'parts', output: 'crate', inputStage: 1, outputStage: 2 },
-  packing: { name: '포장대', short: '포장', width: 2, height: 2, color: '#d1a05f', seconds: 2.2, input: 'crate', output: 'finished', inputStage: 2, outputStage: 4 },
-  press: { name: '성형 작업대', short: '성형', width: 2, height: 1, color: '#8ba6bc', seconds: 6, input: 'timber', output: 'finished', inputStage: 0, outputStage: 4 },
+  cutter: { name: '절단기', short: '절단', width: 3, height: 2, seconds: 2.4, input: 'timber', output: 'parts', inputStage: 0, outputStage: 1 },
+  assembly: { name: '조립대', short: '조립', width: 3, height: 3, seconds: 4.8, input: 'parts', output: 'crate', inputStage: 1, outputStage: 2 },
+  packing: { name: '포장대', short: '포장', width: 2, height: 2, seconds: 2.2, input: 'crate', output: 'finished', inputStage: 2, outputStage: 4 },
+  press: { name: '성형 작업대', short: '성형', width: 2, height: 1, seconds: 6, input: 'timber', output: 'finished', inputStage: 0, outputStage: 4 },
   conveyor: { name: '컨베이어', short: '벨트', width: 1, height: 1, color: '#829b93', belt: true },
 };
-export const EQUIPMENT = Object.freeze(Object.fromEntries([...new Set([...Object.keys(RECIPES), ...Object.keys(EQUIPMENT_SHAPES)])].map(type => [type, { short: EQUIPMENT_SHAPES[type]?.name, color: '#788665', ...RECIPES[type], ...EQUIPMENT_SHAPES[type] }])));
+export const EQUIPMENT = Object.freeze(Object.fromEntries([...new Set([...Object.keys(RECIPES), ...Object.keys(EQUIPMENT_SHAPES)])].map(type => [type, { short: EQUIPMENT_SHAPES[type]?.name, ...RECIPES[type], ...EQUIPMENT_SHAPES[type] }])));
 export const PRODUCTS = Object.freeze({ timber: '목재', parts: '상자 부재', crate: '나무상자', finished: '완제품' });
 const WORKER_NAMES = ['Alex','Emma','Mia','Noah','Leo','Lily','Max','Chloe','Jack','Zoe','Owen','Ruby','Finn','Ivy','Luke','Ella','Ben','Lucy','Sam','Nora'];
 export const WORKERS = Object.freeze(WORKER_NAMES.map((name,index)=>({
@@ -31,7 +33,15 @@ const LEGACY_STAGE = Object.freeze({
 });
 export const STAGES = buildStages(LEGACY_STAGE);
 const selectedStage = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('stage');
-export const STAGE = STAGES.find(stage => stage.id === selectedStage) ?? LEGACY_STAGE;
+function previewStage() {
+  if (selectedStage !== 'editor-preview') return null;
+  try {
+    const data=JSON.parse(sessionStorage.getItem('factory-fit.editor.preview'));
+    if (!data || !Array.isArray(data.cells) || !Array.isArray(data.startLayout)) return null;
+    return {...LEGACY_STAGE,...data,...processConfig(data.factory,data.steps),id:'editor-preview',number:0,shape:'custom',region:'meadow'};
+  } catch { return null; }
+}
+export const STAGE = previewStage() ?? STAGES.find(stage => stage.id === (selectedStage === 'first-workflow-01' ? 'sample-01' : selectedStage)) ?? expandDocks(LEGACY_STAGE);
 export const MAP = { width: STAGE.width, height: STAGE.height, tileMeters: STAGE.tileMeters };
 export const FIXED = STAGE.fixtures;
 export const WAREHOUSE = FIXED.find(item => item.id === 'outbound');

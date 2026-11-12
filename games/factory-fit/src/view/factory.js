@@ -1,3 +1,5 @@
+import {recipeFor} from '../game/simulation.js';
+import { dockSlots, isOutbound } from '../game/docks.js';
 import * as THREE from 'three';
 import { EQUIPMENT, STAGE } from '../game/config.js';
 import { createArtKit } from './art.js';
@@ -49,16 +51,20 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   }
   const environment = new THREE.Group(); scene.add(environment);
   const labels = [], warehouseBoxes = [];
-  let warehouseLabel;
+  let warehouseLabel, inletLabel;
   const cx = MAP.width / 2, cz = MAP.height / 2;
   box(environment, 200, .15, 200, cx, -.52, cz, '#b8c1c2', false, 'concrete');
-  const rectangularFloor = !stage.cells || stage.cells.length === stage.width * stage.height;
+  const rectangularFloor = !stage.cells || (stage.cells.length === stage.width * stage.height && stage.cells.every(k=>{const [x,y]=k.split(',').map(Number);return x>=0&&x<stage.width&&y>=0&&y<stage.height;}));
   if (rectangularFloor) {
     box(environment, MAP.width + .55, .42, MAP.height + .55, cx, -.25, cz, '#d0b5a0');
     box(environment, MAP.width + .1, .08, MAP.height + .1, cx, -.005, cz, '#e7d4c0');
   } else for (const key of stage.cells) { const [x,z]=key.split(',').map(Number); box(environment, 1, .42, 1, x+.5, -.25, z+.5, '#d0b5a0', false); }
   const tileCells = [];
-  for (let y = 0; y < MAP.height; y++) for (let x = 0; x < MAP.width; x++) if ((!stage.cells || stage.cells.includes(`${x},${y}`)) && !stage.holes.some(h => h.x === x && h.y === y)) tileCells.push({ x, y });
+  const floor = stage.cells ?? Array.from({length:MAP.width*MAP.height}, (_,i)=>(i%MAP.width)+','+Math.floor(i/MAP.width));
+  for (const key of floor) {
+    const [x,y]=key.split(',').map(Number);
+    if (!stage.holes.some(h=>h.x===x && h.y===y)) tileCells.push({x,y});
+  }
   const tiles = new THREE.InstancedMesh(new THREE.BoxGeometry(.99, .025, .99), colorMaterial('#ffffff'), tileCells.length), matrix = new THREE.Matrix4();
   tileCells.forEach((cell, i) => { matrix.makeTranslation(cell.x + .5, .045, cell.y + .5); tiles.setMatrixAt(i, matrix); tiles.setColorAt(i, new THREE.Color((cell.x + cell.y) % 2 ? '#efddcb' : '#f1dfcd')); });
   tiles.receiveShadow = true; scene.add(tiles);
@@ -139,11 +145,13 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     box(environment,.62,1.65,.62,pillar.x+.5,.93,pillar.y+.5,'#c8c8bb');
     box(environment,.72,.12,.72,pillar.x+.5,1.78,pillar.y+.5,'#e0dfd1');
   }
+  const inletGroup = new THREE.Group(); scene.add(inletGroup);
+  let currentFixtures = FIXED;
   for (const fixture of FIXED) {
     const cells = Array.from({ length: fixture.width * fixture.height }, (_, i) => ({ x: fixture.x + i % fixture.width, y: fixture.y + Math.floor(i / fixture.width) }));
-    outline(cells, fixture.color, scene, false);
+    outline(cells, fixture.color, fixture.id==='inbound'?inletGroup:scene, false);
     if (fixture.id === 'inbound') {
-      for (let row = 0; row < fixture.height; row++) for (let layer = 0; layer < 3; layer++) wood(environment, fixture.width - .22, .16, .66, fixture.x + fixture.width / 2, .17 + layer * .17, fixture.y + .5 + row, layer % 2 ? '#d2a36c' : '#bd8d53');
+      for (let row = 0; row < fixture.height; row++) for (let layer = 0; layer < 3; layer++) wood(inletGroup, fixture.width - .22, .16, .66, fixture.x + fixture.width / 2, .17 + layer * .17, fixture.y + .5 + row, layer % 2 ? '#d2a36c' : '#bd8d53');
     } else {
       wood(environment, fixture.width - .15, .15, fixture.height - .16, fixture.x + fixture.width / 2, .15, fixture.y + fixture.height / 2, '#b88b5b');
       for (let i = 0; i < 4; i++) { const item = goods(scene, 4, fixture.x + .5, .24 + Math.floor(i / 2) * .49, fixture.y + (fixture.height === 1 ? .28 + (i % 2) * .44 : .55 + (i % 2) * .8), .6); warehouseBoxes.push(item); }
@@ -151,18 +159,24 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     const el = label(fixture.id === 'outbound' ? '출고장' : '입고장', 'fixed-label');
     el.hidden = true;
     if (fixture.id === 'outbound') { warehouseLabel = el; el.id = 'warehouse-stock'; }
-    labels.push({ el, pos: new THREE.Vector3(fixture.x + fixture.width / 2, 1.2, fixture.y + fixture.height / 2) });
+    const entry={ el, pos: new THREE.Vector3(fixture.x + fixture.width / 2, 1.2, fixture.y + fixture.height / 2) };
+    labels.push(entry);if(fixture.id==='inbound') inletLabel=entry;
   }
   for (const [x, z] of [[MAP.width + .8, -.2], [MAP.width + .8, MAP.height + .2]]) art.plant(environment, x, z);
   art.compact(environment, 'environment');
 
   const equipmentGroup = new THREE.Group(), marks = new THREE.Group(), preview = new THREE.Group(), crowd = new THREE.Group(), heat = new THREE.Group();
   scene.add(equipmentGroup, marks, preview, crowd, heat);
-  let layout = [], selectedId = null, modelMap = new Map(), workerModels = [], machineLabels = [], stockLabels = [], slotLabels = [], slotTargets = [];
+  let waitingWorkers = {}, layout = [], selectedId = null, modelMap = new Map(), workerModels = [], machineLabels = [], stockLabels = [], slotLabels = [], slotTargets = [];
   function machineModel(item) {
-    const model = art.machine(item); equipmentGroup.add(model); return model;
+    const model = art.machine(item,recipeFor(item,stage)); equipmentGroup.add(model); return model;
   }
-  function setLayout(next, selection = null, assignments = {}, pendingWorker = null) {
+  function setLayout(next, selection = null, assignments = {}, pendingWorker = null, waiting = {}, liveStage = stage) {
+    currentFixtures=liveStage.fixtures;
+    const inlet=currentFixtures.find(f=>f.id==='inbound'), original=FIXED.find(f=>f.id==='inbound');
+    inletLabel.pos.set(inlet.x+inlet.width/2,1.2,inlet.y+inlet.height/2);
+    inletGroup.position.set(inlet.x-original.x,0,inlet.y-original.y);
+    waitingWorkers = waiting;
     layout = next; selectedId = selection; clear(equipmentGroup); clear(marks); modelMap = new Map();
     [...machineLabels, ...stockLabels, ...slotLabels, ...slotTargets].forEach(entry => entry.el.remove()); machineLabels = []; stockLabels = []; slotLabels = []; slotTargets = [];
     for (const item of layout) {
@@ -174,28 +188,32 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       slotLabels.push({ el: label(operator ? operator.name : '＋ 작업자', `slot-label ${operator ? 'assigned' : 'empty'}${selection === item.id || pendingWorker ? ' active' : ''}`), pos: new THREE.Vector3(place.x + 0.5, operator ? 1.8 : 0.35, place.y + 0.5) });
       const target = document.createElement('button'); target.type = 'button'; target.className = 'slot-target'; target.dataset.workId = item.id;
       target.setAttribute('aria-label', `${EQUIPMENT[item.type].name} 작업자 자리 · ${operator?.name ?? '미배치'}`);
-      target.addEventListener('click', () => callbacks.onPick?.({ cell: place, workId: item.id })); host.append(target);
+      target.addEventListener('click', event => { if (event.detail === 0) callbacks.onPick?.({ cell: place, workId: item.id }); }); host.append(target);
       slotTargets.push({ el: target, pos: new THREE.Vector3(place.x + 0.5, 0.12, place.y + 0.5) });
       if (item.id === selection) outline(footprint(item).body, '#fff6b9', marks, false);
       machineLabels.push({ el: label(EQUIPMENT[item.type].short, item.id === selection ? 'machine-label active' : 'machine-label'), pos: new THREE.Vector3(model.position.x, item.type === 'paint' ? 2.7 : 2.1, model.position.z), id: item.id });
       const stockLabel = label('', 'stock-label'); stockLabel.hidden = true; stockLabel.dataset.machineId = item.id; stockLabel.dataset.outputCount = '0';
       stockLabels.push({ el: stockLabel, pos: new THREE.Vector3(model.position.x + 0.65, 1.65, model.position.z + 0.6), id: item.id });
     }
-    const place = WAREHOUSE.access, operator = WORKERS.find(worker => assignments[worker.key] === WAREHOUSE.id);
+    const occupied=new Set(layout.flatMap(m=>{const f=footprint(m);return [...f.body,...f.work];}).map(cellKey));
+    for (const {id,cell:place} of dockSlots(liveStage)) {
+    if (occupied.has(cellKey(place))) continue;
+    const operator=WORKERS.find(w=>assignments[w.key]===id);
     box(marks, 0.9, 0.035, 0.9, place.x + 0.5, 0.082, place.y + 0.5, operator ? '#a8c6e6' : '#d1ddec', false);
     outline([place], pendingWorker || selection === WAREHOUSE.id ? '#4b823a' : '#779b5b', marks, false);
     slotLabels.push({ el: label(operator ? operator.name : '＋ 창고 직원', `slot-label ${operator ? 'assigned' : 'empty'}${selection === WAREHOUSE.id || pendingWorker ? ' active' : ''}`), pos: new THREE.Vector3(place.x + 0.5, operator ? 1.8 : 0.35, place.y + 0.5) });
-    const target = document.createElement('button'); target.type = 'button'; target.className = 'slot-target'; target.dataset.workId = WAREHOUSE.id;
+    const target = document.createElement('button'); target.type = 'button'; target.className = 'slot-target'; target.dataset.workId = id;
     target.setAttribute('aria-label', `창고 직원 자리 · ${operator?.name ?? '미배치'}`);
-    target.addEventListener('click', () => callbacks.onPick?.({ cell: place, workId: WAREHOUSE.id })); host.append(target);
+    target.addEventListener('click', event => { if (event.detail === 0) callbacks.onPick?.({ cell: place, workId: id }); }); host.append(target);
     slotTargets.push({ el: target, pos: new THREE.Vector3(place.x + 0.5, 0.12, place.y + 0.5) });
+  }
   }
   const ghostMaterials = new Map();
   let previewState = null;
   function setPreview(item, valid) {
     clear(preview); previewState = null;
     if (!item) return;
-    const model = art.machine(item);
+    const model = art.machine(item,recipeFor(item,stage));
     model.traverse(mesh => {
       if (!mesh.isMesh) return;
       const original = mesh.material, key = original.uuid + '/' + valid;
@@ -229,26 +247,31 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       const obj = workerModels[worker.id];
       let delivery = deliveries.get(worker.id);
       if (!delivery) { delivery = { carrying: false, started: -Infinity, stage: 4 }; deliveries.set(worker.id, delivery); }
-      if (delivery.carrying && !worker.carrying && worker.machineId === 'outbound') delivery.started = seconds;
+      if (delivery.carrying && !worker.carrying && isOutbound(worker.machineId)) delivery.started = seconds;
       if (worker.carrying) delivery.stage = worker.cargo?.stage ?? 4;
       delivery.carrying = worker.carrying;
       const deposit = Math.max(0, Math.min(1, (seconds - delivery.started) / .45));
       const placing = deposit < 1;
       obj.body.rotation.x = placing ? Math.sin(deposit * Math.PI) * .18 : 0;
-      const x = THREE.MathUtils.lerp(worker.from.x, worker.x, alpha), y = THREE.MathUtils.lerp(worker.from.y, worker.y, alpha);
-      obj.group.visible = !!worker.machineId;
+      const waiting = waitingWorkers[worker.key];
+      const x = waiting?.x ?? THREE.MathUtils.lerp(worker.from.x, worker.x, alpha), y = waiting?.y ?? THREE.MathUtils.lerp(worker.from.y, worker.y, alpha);
+      obj.group.visible = !!worker.machineId || !!waiting;
       obj.group.position.set(x + 0.5, 0.07, y + 0.5);
       obj.bubble.pos.set(x + .5, 2.05, y + .5);
       const dx = worker.x - worker.from.x, dy = worker.y - worker.from.y;
       if (dx || dy) obj.body.rotation.y = Math.atan2(dx, dy);
       else if (!sim.tick) obj.body.rotation.y = 1.1;
       const own = sim.machines.find(machine => machine.id === worker.machineId);
-      const processingHere = own?.processing > 0 && !worker.job && cellKey(worker) === cellKey(own.work[0]);
+      const processingHere = !own?.parked && own?.processing > 0 && !worker.job && cellKey(worker) === cellKey(own.work[0]);
       obj.bubble.el.hidden = !worker.machineId || processingHere || worker.idleSeconds < 10;
       const waitingSource = worker.waitingForSource && modelMap.get(worker.waitingForSource);
       if (sim.tick && !(dx || dy) && waitingSource) obj.body.rotation.y = Math.atan2(waitingSource.position.x - (x + .5), waitingSource.position.z - (y + .5));
-      if (sim.tick && !(dx || dy) && (own?.processing > 0 || own?.pendingOutput)) obj.body.rotation.y = Math.atan2(modelMap.get(own.id).position.x - (x + .5), modelMap.get(own.id).position.z - (y + .5));
-      const working = own?.processing > 0 && !worker.job && !(dx || dy);
+      if (!(dx || dy) && own && !waitingSource && cellKey(worker) === cellKey(own.work[0])) {
+        const shape = footprint(own);
+        const station = shape.body.find(c => cellKey(c) !== cellKey(shape.output) && Math.abs(c.x-x)+Math.abs(c.y-y) === 1);
+        if (station) obj.body.rotation.y = Math.atan2(station.x-x,station.y-y);
+      }
+      const working = !own?.parked && own?.processing > 0 && !worker.job && !(dx || dy);
       // Drive work gestures from simulation time so pausing also freezes the hands.
       const workTime = Math.max(0, sim.time - .2 + alpha * .2);
       const workPhase = workTime * 7 + worker.id * 1.7;
@@ -262,14 +285,21 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
         arm.rotation.y = working ? (index ? -.12 : .12) + Math.sin(phase * .5) * .06 : 0;
         arm.rotation.z = working ? (index ? .10 : -.10) : 0;
       });
-      obj.cargo.forEach((item, stage) => { item.visible = worker.carrying && worker.job?.stage === stage || own?.pendingOutput && (sim.stage.recipes?.[own.type]?.outputStage ?? EQUIPMENT[own.type].outputStage ?? 4) === stage || placing && delivery.stage === stage; item.position.y = placing ? .4 - deposit * .25 : .4; });
+      let heldStage;
+      if (worker.carrying) heldStage = worker.cargo.stage;
+      else if (own?.pendingOutput) heldStage = recipeFor(own,sim.stage).outputStage ?? 4;
+      else if (placing) heldStage = delivery.stage;
+      obj.cargo.forEach((item, stage) => {
+        item.visible = stage === heldStage;
+        item.position.y = placing && !worker.carrying ? .4 - deposit * .25 : .4;
+      });
       obj.extraCargo.forEach((item, index) => { item.visible = worker.carrying && worker.load.length > index + 1; });
       obj.marker.visible = worker.wait > 0;
       obj.marker.position.y = 1.85 + Math.sin(seconds * 3) * 0.05;
     }
     for (const entry of machineLabels) {
       const machine = sim.machines.find(machine => machine.id === entry.id);
-      if (machine) entry.el.textContent = `${EQUIPMENT[machine.type].short}${sim.tick ? machine.processing > 0 ? ' · 가공' : machine.pendingOutput ? ' · 출력 대기' : ' · 대기' : ''}`;
+      if (machine) entry.el.textContent = `${EQUIPMENT[machine.type].short}${machine.parked ? ' · 공장 밖 대기' : sim.tick ? machine.processing > 0 ? ' · 가공' : machine.pendingOutput ? ' · 출력 대기' : ' · 대기' : ''}`;
     }
     for (const entry of stockLabels) {
       const machine = sim.machines.find(item => item.id === entry.id);
@@ -277,7 +307,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       const count = machine.output + machine.reserved;
       entry.el.hidden = true; entry.el.textContent = ''; entry.el.dataset.outputCount = String(count);
       const inventory = modelMap.get(machine.id)?.userData.inventory;
-      if (inventory) { inventory.processingItem.visible = machine.processing > 0; inventory.outputItems.forEach((item, index) => { item.visible = index < count; }); }
+      if (inventory) { inventory.processingItem.visible = machine.processing > 0; inventory.outputItem.visible = count > 0; }
     }
     warehouseLabel.textContent = '출고장'; warehouseLabel.dataset.count = String(sim.warehouse.stock); warehouseLabel.dataset.displayBoxes = String(warehouseBoxes.length);
   }
@@ -296,6 +326,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     camera.lookAt(target); camera.updateMatrixWorld();
   }
   function resize() {
+    if(!host.clientWidth || !host.clientHeight) return;
     width = host.clientWidth; height = host.clientHeight;
     renderer.setSize(width, height);
     const aspect = width / height;
@@ -304,7 +335,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     camera.setViewOffset(width, height, 0, height * .06, width, height);
     cameraDistance = half / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
     positionCamera();
-    camera.updateProjectionMatrix();
+    camera.updateProjectionMatrix(); callbacks.onCameraChange?.();
   }
   const observer = new ResizeObserver(resize); observer.observe(host);
   const raycaster = new THREE.Raycaster(), floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.08);
@@ -314,8 +345,8 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     const point = raycaster.ray.intersectPlane(floorPlane, new THREE.Vector3());
     const cell = point ? { x: Math.floor(point.x), y: Math.floor(point.z) } : null;
     const hit = raycaster.intersectObjects(equipmentGroup.children, true)[0];
-    const fixture = cell && FIXED.find(item => cell.x >= item.x && cell.x < item.x + item.width && cell.y >= item.y && cell.y < item.y + item.height);
-    const workId = cell && layout.find(item => footprint(item).work.some(place => cellKey(place) === cellKey(cell)))?.id;
+    const fixture = cell && currentFixtures.find(item => cell.x >= item.x && cell.x < item.x + item.width && cell.y >= item.y && cell.y < item.y + item.height);
+    const workId = cell && (slotTargets.find(t=>t.el.dataset.workId && isOutbound(t.el.dataset.workId) && Math.floor(t.pos.x)===cell.x && Math.floor(t.pos.z)===cell.y)?.el.dataset.workId ?? layout.find(item => footprint(item).work.some(place => cellKey(place) === cellKey(cell)))?.id);
     const bodyId = cell && layout.find(item => footprint(item).body.some(place => cellKey(place) === cellKey(cell)))?.id;
     return { cell, id: hit?.object.userData.machineId ?? bodyId, fixedId: fixture?.id, workId };
   }
@@ -326,11 +357,11 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     raycaster.setFromCamera(new THREE.Vector2((clientX - bounds.left) / bounds.width * 2 - 1, -(clientY - bounds.top) / bounds.height * 2 + 1), camera);
     return raycaster.ray.intersectPlane(floorPlane, new THREE.Vector3());
   }
-  function zoom(ratio) { camera.zoom = THREE.MathUtils.clamp(camera.zoom * ratio, 0.75, 3); camera.updateProjectionMatrix(); }
+  function zoom(ratio) { camera.zoom = THREE.MathUtils.clamp(camera.zoom * ratio, 0.75, 3); camera.updateProjectionMatrix(); callbacks.onCameraChange?.(); }
   function fit() { panX = panZ = 0; camera.zoom = 1; positionCamera(); camera.updateProjectionMatrix(); }
-  renderer.domElement.addEventListener('pointermove', event => {
+  host.addEventListener('pointermove', event => {
     const previous = pointers.get(event.pointerId);
-    if (!previous) { callbacks.onHover?.(pick(event).cell); return; }
+    if (!previous) { if(event.pointerType==='mouse' && callbacks.onHover) callbacks.onHover(pick(event).cell); return; }
     const oldPair = [...pointers.values()];
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     if (pointers.size >= 2) {
@@ -340,29 +371,34 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       if (oldDistance > 0) zoom(distance / oldDistance);
       dragged = true; return;
     }
-    if (callbacks.canPan?.() !== false && (dragged || start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 7)) {
+    if (dragged || start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > 7) {
       const before = planePoint(previous.x, previous.y), after = planePoint(event.clientX, event.clientY);
       if (before && after) {
         const dx = before.x - after.x, dz = before.z - after.z;
         panX = THREE.MathUtils.clamp(panX + dx, -14, 14); panZ = THREE.MathUtils.clamp(panZ + dz, -12, 12);
-        positionCamera();
+        positionCamera(); callbacks.onCameraChange?.();
       }
       dragged = true;
-    } else callbacks.onHover?.(pick(event).cell);
+    }
   });
-  renderer.domElement.addEventListener('pointerleave', () => callbacks.onHover?.(null));
-  renderer.domElement.addEventListener('pointerdown', event => {
-    renderer.domElement.setPointerCapture(event.pointerId);
-    if (!pointers.size) { dragged = false; start = { x: event.clientX, y: event.clientY }; }
+  host.addEventListener('pointerdown', event => {
+    if (event.button !== 0) return;
+    host.setPointerCapture(event.pointerId);
+    if (!pointers.size) { dragged = false; start = { x: event.clientX, y: event.clientY, workId: event.target.closest('[data-work-id]')?.dataset.workId }; } else dragged = true;
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   });
-  renderer.domElement.addEventListener('pointerup', event => {
-    if (pointers.size === 1 && !dragged) callbacks.onPick?.(pick(event));
+  host.addEventListener('pointerup', event => {
+    if (!pointers.has(event.pointerId)) return;
+    if (pointers.size === 1 && !dragged && Math.hypot(event.clientX - start.x, event.clientY - start.y) <= 7) {
+      const hit = pick(event);
+      if (start.workId) { hit.workId = start.workId; hit.id = null; }
+      callbacks.onPick?.(hit);
+    }
     pointers.delete(event.pointerId);
     if (!pointers.size) { start = null; dragged = false; }
   });
-  renderer.domElement.addEventListener('pointercancel', event => { pointers.delete(event.pointerId); dragged = true; });
-  renderer.domElement.addEventListener('wheel', event => { event.preventDefault(); zoom(Math.exp(-event.deltaY * 0.0015)); }, { passive: false });
+  host.addEventListener('pointercancel', event => { pointers.delete(event.pointerId); dragged = true; });
+  host.addEventListener('wheel', event => { event.preventDefault(); zoom(Math.exp(-event.deltaY * 0.0015)); }, { passive: false });
   renderer.domElement.addEventListener('webglcontextlost', event => { event.preventDefault(); callbacks.onContextLost?.(); });
   function render() {
     camera.updateMatrixWorld();
@@ -382,6 +418,14 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   }
   resize();
   function projectCell(cell) { camera.updateMatrixWorld(); const p = new THREE.Vector3(cell.x + .5, .08, cell.y + .5).project(camera), bounds = host.getBoundingClientRect(); return { x: bounds.left + (p.x + 1) * width / 2, y: bounds.top + (1 - p.y) * height / 2 }; }
-  return { setLayout, setPreview, inspectPreview: () => previewState, update, showHeat, render, renderer, camera, fit, setEquipmentColor: art.setEquipmentColor, audit: art.audit, projectCell, pickAt: (clientX, clientY) => pick({ clientX, clientY }) };
+  function dispose() {
+    observer.disconnect(); art.dispose();
+    scene.traverse(o=>{o.geometry?.dispose(); if(o.material&&!Array.isArray(o.material)) o.material.dispose();});
+    renderer.dispose(); renderer.forceContextLoss();
+    host.replaceChildren();
+  }
+  const cameraState=()=>({panX,panZ,zoom:camera.zoom});
+  function restoreCamera(state){panX=state.panX;panZ=state.panZ;camera.zoom=state.zoom;positionCamera();camera.updateProjectionMatrix();}
+  return { dispose, cameraState, restoreCamera, setLayout, setPreview, inspectPreview: () => previewState, update, showHeat, render, renderer, camera, fit, audit: art.audit, projectCell, pickAt: (clientX, clientY) => pick({ clientX, clientY }) };
 }
 

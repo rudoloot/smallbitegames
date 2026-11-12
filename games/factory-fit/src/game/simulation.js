@@ -1,28 +1,42 @@
+import {isOutbound,dockSlots} from './docks.js';
 import { STAGE, EQUIPMENT, DIRECTIONS, createAssignments } from './config.js';
-import { footprint, blockedCells, findPath, cellKey, neighbors, validateLayout } from './layout.js';
+import { inboundPickupCells, outsideFactory, footprint, blockedCells, findPath, cellKey, neighbors, validateLayout } from './layout.js';
 export const DT = 0.2;
 const BUFFER = 2;
-export const recipeFor = (item, stage = STAGE) => ({ ...EQUIPMENT[item.type], ...stage.recipes?.[item.type] });
+import { shapeFor } from './equipment-shapes.js';
+export const recipeFor = (item, stage = STAGE) => ({ ...EQUIPMENT[item.type], ...shapeFor(item), ...stage.recipes?.[item.type], ...stage.stepRecipes?.[item.id?.split('-')[0]] });
 const warehouse = sim => sim.stage.fixtures.find(item => item.id === 'outbound');
-const ownPlace = (sim, worker) => worker.machineId === 'outbound' ? { id: 'outbound', work: [warehouse(sim).access] } : sim.machines.find(m => m.id === worker.machineId);
+const ownPlace = (sim, worker) => isOutbound(worker.machineId) ? { id: 'outbound', work: [worker.home] } : sim.machines.find(m => m.id === worker.machineId);
 export function createSimulation(layout, assignments = createAssignments(layout), stage = STAGE) {
-  const machines = layout.filter(item => !EQUIPMENT[item.type].belt).map(item => ({ ...item, input: 0, incoming: 0, output: 0, reserved: 0, pendingOutput: false, processing: 0, progress: 0, cycleStartedAt: null, totalCycleSeconds: 0, completedCycles: 0, work: footprint(item).work }));
-  const belts = layout.filter(item => EQUIPMENT[item.type].belt).map(item => ({ ...item, item: null, reserved: false, remaining: 0 }));
+  const machines = layout.filter(item => !EQUIPMENT[item.type].belt).map(item => ({ ...item, parked: outsideFactory(item, stage), input: 0, incoming: 0, output: 0, reserved: 0, pendingOutput: false, processing: 0, progress: 0, cycleStartedAt: null, totalCycleSeconds: 0, completedCycles: 0, work: footprint(item).work }));
+  const belts = layout.filter(item => EQUIPMENT[item.type].belt).map(item => ({ ...item, parked: outsideFactory(item, stage), item: null, reserved: false, remaining: 0 }));
+  const slots = dockSlots(stage);
   const workers = stage.workers.map((worker, id) => {
-    const machineId = assignments[worker.key], place = machineId === 'outbound' ? warehouse({ stage }).access : machines.find(m => m.id === machineId)?.work[0];
+    const machineId = assignments[worker.key], place = isOutbound(machineId) ? slots.find(s=>s.id===machineId)?.cell : machines.find(m => m.id === machineId)?.work[0];
     const spawn = place ?? { x: -3 - id, y: -3 };
-    return { ...worker, ...spawn, id, machineId, from: { ...spawn }, path: [], job: null, carrying: false, cargo: null, load: [], carriedWeight: 0, wait: 0, idleSeconds: 0, metrics: { moving: 0, collision: 0, working: 0, transfers: 0 }, status: place ? '자리 대기' : '미배치' };
+    return { ...worker, ...spawn, home: spawn, id, machineId, from: { ...spawn }, path: [], job: null, carrying: false, cargo: null, load: [], carriedWeight: 0, wait: 0, idleSeconds: 0, metrics: { moving: 0, collision: 0, working: 0, transfers: 0 }, status: place ? '자리 대기' : '미배치' };
   });
-  return { stage, layout, assignments, machines, belts, workers, blocked: blockedCells(layout, stage), tick: 0, time: 0, supplied: 0, shipped: 0, productionRate: 0, averageProductionSeconds: null, measurementStart: 0, shipmentTimes: [], warehouse: { stock: 0, incoming: 0 }, firstShipment: null, complete: false, outcome: null, reason: '', heat: {} };
+  const staffed = new Set(Object.values(assignments));
+  const parallel = machines.filter(m => !m.parked && staffed.has(m.id) && recipeFor(m, stage).output === stage.product).length > 1;
+  const rateWindow = parallel ? { startTick: 0, startStock: 0, minutes: [] } : null;
+  return { stage, layout, assignments, machines, belts, workers, rateWindow, blocked: blockedCells(layout, stage), tick: 0, time: 0, supplied: 0, shipped: 0, productionRate: 0, averageProductionSeconds: null, measurementStart: 0, shipmentTimes: [], minuteShipmentTicks: [], warehouse: { stock: 0, incoming: 0 }, firstShipment: null, complete: false, outcome: null, reason: '', heat: {} };
 }
 // Commit a layout edit without discarding the factory's production state.
-// Workers return to their assigned slots; old pickup reservations are released.
-export function reconfigureSimulation(sim, layout, assignments) {
-  const next = createSimulation(layout, assignments, sim.stage);
+// Reconcile in-flight work against the edited floor before the next tick.
+export function reconfigureSimulation(sim, layout, assignments, stage = sim.stage) {
+  const next = createSimulation(layout, assignments, stage);
   for (const key of ['tick', 'time', 'supplied', 'shipped', 'firstShipment', 'productionRate', 'averageProductionSeconds', 'continueAfterSuccess', 'complete', 'outcome']) next[key] = sim[key];
+  if (next.rateWindow && sim.rateWindow) next.rateWindow = structuredClone(sim.rateWindow);
+  else if (next.rateWindow || sim.rateWindow) {
+    next.productionRate = 0;
+    next.averageProductionSeconds = null;
+    if (next.rateWindow) Object.assign(next.rateWindow, { startTick: sim.tick, startStock: sim.shipped });
+  }
+  next.heat = {...sim.heat};
   next.warehouse.stock = sim.warehouse.stock;
   next.measurementStart = sim.measurementStart;
   next.shipmentTimes = [...sim.shipmentTimes];
+  next.minuteShipmentTicks = [...sim.minuteShipmentTicks];
   for (const machine of next.machines) {
     const old = sim.machines.find(m => m.id === machine.id && m.type === machine.type);
     if (!old) continue;
@@ -33,51 +47,110 @@ export function reconfigureSimulation(sim, layout, assignments) {
     const old = sim.belts.find(b => b.id === belt.id);
     if (old) { belt.item = old.item; belt.remaining = old.remaining; }
   }
-  for (const worker of next.workers.filter(w => w.machineId)) {
+  // All homes are already known, so new assignments can invalidate a route
+  // without making an unrelated worker start again at their own machine.
+  for (const worker of next.workers) {
+    if (!worker.machineId) continue;
     const old = sim.workers.find(w => w.machineId === worker.machineId);
-    if (!old?.carrying) continue;
-    worker.carrying = true; worker.cargo = old.cargo;
-    worker.load = [...old.load]; worker.carriedWeight = old.carriedWeight;
-    const target = { x: worker.x, y: worker.y };
-    worker.job = { phase: 'delivery', destination: worker.machineId, target, goals: [target], cargo: old.cargo, stage: old.cargo.stage };
-    if (worker.machineId === 'outbound') next.warehouse.incoming += worker.load.length;
-    else next.machines.find(m => m.id === worker.machineId).incoming++;
+    if (!old) continue;
+    const own = ownPlace(next,worker);
+    const blocked = routeBlocked(next,worker);
+    const sameWorker = old.key === worker.key;
+    if (sameWorker && !own.parked && !ownPlace(sim,old)?.parked) {
+      const home = worker.home;
+      Object.assign(worker, structuredClone(old), {home});
+      if (blocked.has(cellKey(worker))) {
+        Object.assign(worker, home, {from:{...home},path:[]});
+      } else if (blocked.has(cellKey(worker.from))) {
+        worker.from = {x:worker.x,y:worker.y};
+      }
+    } else if (old.carrying) {
+      worker.carrying = true;
+      worker.cargo = old.cargo;
+      worker.load = [...old.load];
+      worker.carriedWeight = old.carriedWeight;
+    }
+
+    const job = worker.job;
+    if (job?.phase === 'pickup') {
+      const object = job.sourceKind === 'machine' ? next.machines.find(m=>m.id===job.source)
+        : job.sourceKind === 'belt' ? next.belts.find(b=>b.id===job.source) : null;
+      const available = job.sourceKind === 'inbound' || (object && !object.parked &&
+        (job.sourceKind === 'machine' ? object.output>0 : object.item && !object.reserved));
+      const goals = available ? sourceGoals(next,worker,{kind:job.sourceKind,object}) : [];
+      if (restoreRoute(next,worker,goals,blocked)) {
+        if (job.sourceKind === 'machine') { object.output--; object.reserved++; }
+        if (job.sourceKind === 'belt') object.reserved = true;
+        if (isOutbound(worker.machineId)) next.warehouse.incoming++;
+        else own.incoming++;
+      } else {
+        worker.job = null;
+        worker.path = [];
+      }
+    }
+
+    if (worker.carrying) {
+      if (isOutbound(worker.machineId)) next.warehouse.incoming += worker.load.length;
+      else own.incoming++;
+      if (!worker.job) {
+        worker.job = {phase:'delivery',destination:own.id,goals:own.work,target:own.work[0],
+          cargo:worker.cargo,stage:worker.cargo.stage};
+        worker.status = '물건을 운반하는 중';
+      }
+    }
+    if (worker.job && worker.job.phase !== 'pickup') {
+      restoreRoute(next,worker,own.work,blocked);
+    }
   }
   return next;
+}
+function restoreRoute(sim,worker,goals,blocked) {
+  const job = worker.job;
+  job.goals = goals;
+  const targetValid = goals.some(cell=>cellKey(cell)===cellKey(job.target));
+  const end = worker.path.at(-1) ?? worker;
+  if (targetValid && cellKey(end)===cellKey(job.target) &&
+      !worker.path.some(cell=>blocked.has(cellKey(cell)))) return true;
+  const path = findPath(worker,goals,blocked,sim.stage);
+  worker.path = path ?? [];
+  // When a delivery is cut off, retain its cargo until an edit reopens a path.
+  if (goals.length) job.target = path?.at(-1) ?? (path ? {x:worker.x,y:worker.y} : goals[0]);
+  return path !== null;
 }
 function fail(sim, reason) { sim.complete = true; sim.outcome = 'failure'; sim.reason = reason; return sim; }
 export function validateRun(layout, assignments, stage = STAGE) {
   // Only reject invalid physical placement/data; missing staff and blocked routes are observable gameplay.
-  if (Object.values(assignments).some(id => id && id !== 'outbound' && !layout.some(m => m.id === id))) return { valid: false, errors: ['작업자 배정 데이터를 확인해 주세요.'] };
-  return validateLayout(layout, { stage });
+  if (Object.values(assignments).some(id => id && !dockSlots(stage).some(s=>s.id===id) && !layout.some(m => m.id === id))) return { valid: false, errors: ['작업자 배정 데이터를 확인해 주세요.'] };
+  return validateLayout(layout, { stage, allowOutside: true });
 }
 function routeBlocked(sim, worker, dynamic = false) {
   return new Set([...sim.blocked, ...sim.workers.filter(w => w.id !== worker.id && w.machineId).map(w => cellKey(ownPlace(sim, w).work[0])), ...(dynamic ? sim.workers.filter(w => w.id !== worker.id && w.machineId).map(cellKey) : [])]);
 }
 const pathTo = (sim, worker, goals, dynamic = false) => findPath(worker, goals, routeBlocked(sim, worker, dynamic), sim.stage);
 function itemData(sim, product, visualStage) { return { product, stage: visualStage, weight: sim.stage.weights?.[product] ?? 1 }; }
-function beltAt(sim, cell) { return sim.belts.find(b => cellKey(b) === cellKey(cell)); }
+function beltAt(sim, cell) { return sim.belts.find(b => !b.parked && cellKey(b) === cellKey(cell)); }
 function beltNext(belt) { const direction = DIRECTIONS[belt.rotation]; return { x: belt.x + direction.x, y: belt.y + direction.y }; }
 function connectedBelt(sim, machine) { return beltAt(sim, footprint(machine).outlet); }
 function updateBelts(sim) {
   // Snapshot the movable items, so a product can move at most one belt cell per tick.
-  const ready = sim.belts.filter(b => b.item && !b.reserved && b.remaining <= DT);
+  const ready = sim.belts.filter(b => !b.parked && b.item && !b.reserved && b.remaining <= DT);
   sim.belts.forEach(b => { b.remaining = Math.max(0, b.remaining - DT); });
   for (const belt of ready) {
     const next = beltNext(belt), target = beltAt(sim, next);
     if (target && !target.item) { target.item = belt.item; target.remaining = .6; belt.item = null; }
     else if (!target) {
-      const machine = sim.machines.find(m => recipeFor(m, sim.stage).input === belt.item.product && footprint(m).body.some(c => cellKey(c) === cellKey(next)));
+      const machine = sim.machines.find(m => !m.parked && recipeFor(m, sim.stage).input === belt.item.product && footprint(m).body.some(c => cellKey(c) === cellKey(next)));
       if (machine && machine.input + machine.incoming < BUFFER) { machine.input++; belt.item = null; }
     }
   }
   for (const machine of sim.machines) {
+    if (machine.parked) continue;
     const belt = connectedBelt(sim, machine), recipe = recipeFor(machine, sim.stage);
     if (belt && !belt.item && machine.output > 0) { machine.output--; belt.item = itemData(sim, recipe.output, recipe.outputStage); belt.remaining = .6; }
   }
 }
 function sourceGoals(sim, worker, source) {
-  if (source.kind === 'inbound') return [sim.stage.fixtures.find(f => f.id === 'inbound').access];
+  if (source.kind === 'inbound') return inboundPickupCells(sim.stage, sim.blocked);
   const blocked = routeBlocked(sim, worker), shape = source.kind === 'belt' ? null : footprint(source.object);
   const cells = source.kind === 'belt' ? [source.object] : shape.output ? [shape.output] : shape.body;
   return [...new Map(cells.flatMap(c => neighbors(c, sim.stage)).filter(c => !blocked.has(cellKey(c))).map(c => [cellKey(c), c])).values()];
@@ -93,10 +166,11 @@ function assignJob(sim, worker, collecting = false) {
   const wanted = storing ? sim.stage.product : recipe.input, sources = [];
   if (wanted === sim.stage.input && sim.supplied + sim.workers.filter(w => w.job?.sourceKind === 'inbound' && w.job.phase === 'pickup').length < (sim.stage.batch ?? Infinity)) sources.push({ id: 'inbound', kind: 'inbound', cargo: itemData(sim, wanted, 0) });
   for (const machine of sim.machines) {
+    if (machine.parked) continue;
     const sourceRecipe = recipeFor(machine, sim.stage);
     if (sourceRecipe.output === wanted && machine.id !== own.id && (!storing || machine.output > 0) && !connectedBelt(sim, machine)) sources.push({ id: machine.id, kind: 'machine', object: machine, cargo: itemData(sim, wanted, sourceRecipe.outputStage) });
   }
-  for (const belt of sim.belts) if (belt.item?.product === wanted && !belt.reserved && !beltAt(sim, beltNext(belt)) && !sim.machines.some(m => footprint(m).body.some(c => cellKey(c) === cellKey(beltNext(belt))))) sources.push({ id: belt.id, kind: 'belt', object: belt, cargo: belt.item });
+  for (const belt of sim.belts) if (!belt.parked && belt.item?.product === wanted && !belt.reserved && !beltAt(sim, beltNext(belt)) && !sim.machines.some(m => footprint(m).body.some(c => cellKey(c) === cellKey(beltNext(belt))))) sources.push({ id: belt.id, kind: 'belt', object: belt, cargo: belt.item });
   let best;
   for (const source of sources) {
     const capacity = storing ? (sim.stage.warehouseCarryKg ?? 20) - worker.carriedWeight : worker.strength;
@@ -138,9 +212,10 @@ function arrive(sim, worker) {
       const sampleCount = sim.stage.sampleCount ?? 5;
       for (let i = 0; i < count; i++) {
         sim.shipmentTimes.push(sim.time);
+        if (sim.stage.minuteGoal) sim.minuteShipmentTicks.push(sim.tick);
         if (sim.shipmentTimes.length > sampleCount) sim.measurementStart = sim.shipmentTimes.shift();
       }
-      if (count > 0) {
+      if (count > 0 && !sim.rateWindow) {
         sim.averageProductionSeconds = (sim.time - sim.measurementStart) / sim.shipmentTimes.length;
         sim.productionRate = 60 / sim.averageProductionSeconds;
       }
@@ -162,10 +237,10 @@ export function stepSimulation(sim) {
   if (!sim.tick) { const check = validateRun(sim.layout, sim.assignments, sim.stage); if (!check.valid) return fail(sim, check.errors[0]); }
   const previousActivity = sim.workers.map(worker => activityState(sim, worker));
   sim.tick++; sim.time = Number((sim.tick * DT).toFixed(4)); updateBelts(sim);
-  for (const worker of sim.workers) { worker.from = { x: worker.x, y: worker.y }; if (!worker.job) assignJob(sim, worker); arrive(sim, worker); }
+  for (const worker of sim.workers) { worker.from = { x: worker.x, y: worker.y }; if (ownPlace(sim, worker)?.parked) { worker.status = '공장 밖 대기'; continue; } if (!worker.job) assignJob(sim, worker); arrive(sim, worker); }
   const occupied = new Set(sim.workers.filter(w => w.machineId).map(cellKey));
   for (let i = 0; i < sim.workers.length; i++) {
-    const worker = sim.workers[(sim.tick + i) % sim.workers.length]; if (!worker.job) continue;
+    const worker = sim.workers[(sim.tick + i) % sim.workers.length]; if (!worker.job || ownPlace(sim, worker)?.parked) continue;
     if (!worker.path.length) { arrive(sim, worker); continue; }
     let next = worker.path[0];
     if (occupied.has(cellKey(next))) {
@@ -193,7 +268,7 @@ export function stepSimulation(sim) {
   }
   for (const machine of sim.machines) {
     const worker = sim.workers.find(w => w.machineId === machine.id), recipe = recipeFor(machine, sim.stage);
-    if (!worker || worker.job || cellKey(worker) !== cellKey(machine.work[0])) continue;
+    if (machine.parked || !worker || worker.job || cellKey(worker) !== cellKey(machine.work[0])) continue;
     if (machine.processing > 0) {
       machine.processing = Math.max(0, Number((machine.processing - DT).toFixed(4))); machine.progress = 1 - machine.processing / recipe.seconds; worker.metrics.working += DT; worker.status = '작업 중';
       if (!machine.processing) machine.pendingOutput = true;
@@ -212,8 +287,26 @@ export function stepSimulation(sim) {
     worker.idleSeconds = !worker.machineId || processingHere || activityState(sim, worker) !== previousActivity[worker.id]
       ? 0 : Number((worker.idleSeconds + DT).toFixed(4));
   }
+  // Count complete simulation minutes so the timing of a grouped delivery cannot
+  // inflate throughput. Empty minutes also enter the rolling average.
+  const window = sim.rateWindow;
+  if (window && sim.tick - window.startTick >= Math.round(60 / DT)) {
+    window.minutes.push(sim.shipped - window.startStock);
+    if (window.minutes.length > 3) window.minutes.shift();
+    window.startTick = sim.tick;
+    window.startStock = sim.shipped;
+    sim.productionRate = window.minutes.reduce((sum, count) => sum + count, 0) / window.minutes.length;
+    sim.averageProductionSeconds = sim.productionRate > 0 ? 60 / sim.productionRate : null;
+  }
+  let goalRate = sim.productionRate;
+  if (sim.stage.minuteGoal) {
+    const ticksPerMinute = Math.round(60 / DT);
+    const cutoff = sim.tick - ticksPerMinute;
+    while (sim.minuteShipmentTicks.length && sim.minuteShipmentTicks[0] <= cutoff) sim.minuteShipmentTicks.shift();
+    goalRate = cutoff < 0 ? 0 : sim.minuteShipmentTicks.length;
+  }
   if (sim.stage.targetPerMinute != null && sim.shipmentTimes.length === (sim.stage.sampleCount ?? 5)) {
-    if (sim.productionRate < sim.stage.targetPerMinute) return sim;
+    if ((window && !window.minutes.length && !sim.stage.minuteGoal) || goalRate < sim.stage.targetPerMinute) return sim;
     sim.complete = true; sim.outcome = 'success'; return sim;
   }
   if (sim.stage.targetPerMinute == null && sim.shipped >= sim.stage.goal) { sim.complete = true; sim.outcome = 'success'; return sim; }
