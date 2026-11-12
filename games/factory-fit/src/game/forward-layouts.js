@@ -33,7 +33,8 @@ export const forwardLayouts = [
       "5,3",
       "4,2",
       "4,1",
-      "5,2"
+      "5,2",
+      "3,0"
     ],
     "pillars": [
       {
@@ -152,8 +153,8 @@ export const forwardLayouts = [
       "w19": null,
       "w20": "outbound"
     },
-    "referenceMeanSeconds": 12.6634,
-    "targetPerMinute": 4.7
+    "referenceMeanSeconds": 14.6651,
+    "targetPerMinute": 4
   },
   {
     "width": 11,
@@ -358,7 +359,7 @@ export const forwardLayouts = [
       "w19": null,
       "w20": "outbound"
     },
-    "referenceMeanSeconds": 27.4,
+    "referenceMeanSeconds": 27.6,
     "targetPerMinute": 2.1
   },
   {
@@ -577,8 +578,8 @@ export const forwardLayouts = [
       "w19": null,
       "w20": "outbound"
     },
-    "referenceMeanSeconds": 28.3618,
-    "targetPerMinute": 2.1
+    "referenceMeanSeconds": 27.1301,
+    "targetPerMinute": 2.2
   },
   {
     "width": 9,
@@ -631,7 +632,12 @@ export const forwardLayouts = [
       "2,2",
       "2,3",
       "3,3",
-      "3,2"
+      "3,2",
+      "3,1",
+      "3,0",
+      "0,3",
+      "0,2",
+      "0,1"
     ],
     "pillars": [
       {
@@ -779,8 +785,8 @@ export const forwardLayouts = [
         "id": "m5",
         "type": "packing",
         "variant": "L",
-        "rotation": 1,
-        "x": 5,
+        "rotation": 2,
+        "x": 3,
         "y": 4
       }
     ],
@@ -806,8 +812,8 @@ export const forwardLayouts = [
       "w19": null,
       "w20": "outbound"
     },
-    "referenceMeanSeconds": 25.5349,
-    "targetPerMinute": 2.3
+    "referenceMeanSeconds": 29.2032,
+    "targetPerMinute": 2
   },
   {
     "width": 8,
@@ -859,7 +865,8 @@ export const forwardLayouts = [
       "6,2",
       "7,2",
       "5,1",
-      "6,1"
+      "6,1",
+      "2,0"
     ],
     "pillars": [
       {
@@ -1008,9 +1015,9 @@ export const forwardLayouts = [
         "id": "m5",
         "type": "packing",
         "variant": "S",
-        "rotation": 1,
-        "x": 4,
-        "y": 4
+        "rotation": 0,
+        "x": 3,
+        "y": 2
       }
     ],
     "referenceAssignments": {
@@ -1035,8 +1042,8 @@ export const forwardLayouts = [
       "w19": null,
       "w20": "outbound"
     },
-    "referenceMeanSeconds": 21.2699,
-    "targetPerMinute": 2.8
+    "referenceMeanSeconds": 23.1349,
+    "targetPerMinute": 2.5
   },
   {
     "width": 11,
@@ -1254,15 +1261,15 @@ export const forwardLayouts = [
         "variant": "L",
         "rotation": 2,
         "x": 3,
-        "y": 0
+        "y": 1
       },
       {
         "id": "m6",
         "type": "packing",
         "variant": "S",
-        "rotation": 1,
-        "x": 7,
-        "y": 0
+        "rotation": 0,
+        "x": 6,
+        "y": 1
       }
     ],
     "referenceAssignments": {
@@ -1287,7 +1294,7 @@ export const forwardLayouts = [
       "w19": null,
       "w20": "outbound"
     },
-    "referenceMeanSeconds": 19.5414,
-    "targetPerMinute": 3
+    "referenceMeanSeconds": 20.9048,
+    "targetPerMinute": 2.8
   }
 ];

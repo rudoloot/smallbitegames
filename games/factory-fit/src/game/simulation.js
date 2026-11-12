@@ -38,7 +38,6 @@ export function outputColor(item,stage) {
   const [destination]=outputDestinations(item,stage);
   return destination==='outbound' ? stage.fixtures.find(f=>f.id==='outbound').color : EQUIPMENT[destination]?.color??'#65757c';
 }
-const warehouse = sim => sim.stage.fixtures.find(item => item.id === 'outbound');
 const ownPlace = (sim, worker) => (isOutbound(worker.machineId) || isInlet(worker.machineId)) ? { id: 'outbound', work: [worker.home] } : sim.machines.find(m => m.id === worker.machineId);
 export function createSimulation(layout, assignments = createAssignments(layout), stage = STAGE) {
   // Keep stored docks in the editable layout, but disable their material supply.
@@ -113,12 +112,10 @@ export function reconfigureSimulation(sim, layout, assignments, stage = sim.stag
     } else if (old.carrying) {
       worker.carrying = true;
       worker.cargo = old.cargo;
-      if(old.job?.phase==='shipment') worker.job=structuredClone(old.job);
       worker.load = [...old.load];
       worker.carriedWeight = old.carriedWeight;
     }
 
-    if(stage.paired && isOutbound(worker.machineId)) continue;
     if(stage.forward){
       if(worker.job && (worker.job.phase==='home' || worker.job.destination==='outbound' || next.machines.some(m=>m.id===worker.job.destination && !m.parked))){
         const dest=next.machines.find(m=>m.id===worker.job.destination);
@@ -128,10 +125,6 @@ export function reconfigureSimulation(sim, layout, assignments, stage = sim.stag
       worker.path=[];worker.job=null;continue;
     }
     const job = worker.job;
-    if(job?.phase==='shipment'){
-      restoreRoute(next,worker,shippingGoals(next),blocked);
-      continue;
-    }
     if (job?.phase === 'pickup') {
       const object = job.sourceKind === 'machine' ? next.machines.find(m=>m.id===job.source)
         : job.sourceKind === 'belt' ? next.belts.find(b=>b.id===job.source) : null;
@@ -227,41 +220,6 @@ function assignJob(sim, worker, collecting = false) {
     const path = pathTo(sim, worker, own.work); if (path) { worker.path = path; worker.job = { phase: 'home', goals: own.work, target: own.work[0] }; } return;
   }
   const storing = own.id === 'outbound', recipe = storing ? null : recipeFor(own, sim.stage);
-  if(sim.stage.paired && storing){
-    if(worker.cargo){
-      if(worker.receivedTick<sim.tick){
-        worker.transfers.push({x:worker.x,y:worker.y,from:'hand',to:'outbound',id:'outbound',stage:worker.cargo.stage});
-        sim.warehouse.stock++;recordShipment(sim,1);
-        worker.cargo=null;worker.carrying=false;worker.metrics.transfers++;
-      }
-      return;
-    }
-    const adjacent=sim.machines.filter(m=>!m.parked && m.output>0 &&
-      recipeFor(m,sim.stage).output===sim.stage.product && trayAtReceiver(m,worker.home));
-    const last=adjacent.findIndex(m=>m.id===worker.lastPickup);
-    const source=adjacent.length ? adjacent[(last+1)%adjacent.length] : null;
-    if(source){
-      const recipe=recipeFor(source,sim.stage);
-      source.output--;
-      worker.lastPickup=source.id;
-      worker.cargo=itemData(sim,recipe.output,recipe.outputStage);
-      worker.carrying=true;worker.receivedTick=sim.tick;worker.metrics.transfers++;
-      worker.transfers.push({x:worker.x,y:worker.y,from:'output',to:'hand',id:source.id,stage:recipe.outputStage});
-    }
-    return;
-  }
-  if(sim.stage.paired && recipe.output===sim.stage.product && own.output && !trayAtReceiver(own,warehouse(sim).access)){
-    const goals=shippingGoals(sim),path=pathTo(sim,worker,goals);
-    if(path===null)return;
-    own.output--;
-    worker.carrying=true;
-    worker.cargo=itemData(sim,recipe.output,recipe.outputStage);
-    worker.transfers.push({x:worker.x,y:worker.y,from:'output',to:'hand',id:own.id,stage:recipe.outputStage});
-    worker.path=path;
-    worker.job={phase:'shipment',goals,target:path.at(-1)??{x:worker.x,y:worker.y}};
-    worker.status='완제품을 출고 담당자에게 전달하는 중';
-    return;
-  }
   if (!storing && (own.pendingOutput || own.processing > 0 || (!sim.stage.paired && (own.input > 0 || own.input + own.incoming >= BUFFER)))) return;
   const wanted = storing ? sim.stage.product : recipe.input, sources = [];
   const needs=recipe?.needs ?? {[wanted]:1};
@@ -313,24 +271,9 @@ function recordShipment(sim,count) {
   sim.shipped = sim.warehouse.stock; sim.firstShipment ??= sim.productionTime;
 }
 
-function trayAtReceiver(machine,home) {
-  const tray=footprint(machine).output;
-  return tray && Math.abs(tray.x-home.x)+Math.abs(tray.y-home.y)===1;
-}
-function shippingGoals(sim) {
-  return neighbors(warehouse(sim).access,sim.stage);
-}
 function arrive(sim, worker) {
   const job = worker.job; if (!job || worker.path.length || cellKey(worker) !== cellKey(job.target)) return;
   if (job.phase === 'home') { worker.job = null; return; }
-  if(job.phase==='shipment'){
-    const receiver=sim.workers.find(w=>w.machineId==='outbound');
-    if(receiver.carrying || receiver.transfers.length)return;
-    worker.transfers.push({x:worker.x,y:worker.y,from:'hand',to:'receiver',id:'outbound',stage:worker.cargo.stage});
-    receiver.receivedTick=sim.tick;receiver.carrying=true;receiver.cargo=worker.cargo;
-    worker.metrics.transfers++;worker.carrying=false;worker.cargo=null;worker.job=null;
-    return;
-  }
   if(sim.stage.forward)return deliver(sim,worker);
   if (job.phase === 'pickup') {
     const own = ownPlace(sim, worker), path = pathTo(sim, worker, own.work); if (path === null) return;
@@ -344,7 +287,7 @@ function arrive(sim, worker) {
     if (own.id === 'outbound') {
       worker.load.push(job.cargo); worker.carriedWeight += job.cargo.weight;
       // Collect available goods from other tables before returning, within the weight budget.
-      assignJob(sim, worker, true);
+      if(!sim.stage.paired)assignJob(sim, worker, true);
     }
   } else {
     worker.transfers.push({x:worker.x,y:worker.y,from:'hand',to:job.destination==='outbound'?'outbound':'process',id:job.destination,

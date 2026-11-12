@@ -13,6 +13,6 @@ export function forwardStage(base,spec,index){
     processSummary:inlets.map(d=>d[0]+' 입고').join(' · ')+' → '+steps.map(s=>s[1]).join(' → '),
     revision:factory==='glasses'?'collection-v2':'collection-v1',region:index<3?'meadow':'snow',number:index+1,shape:'custom',playbackGoals:true,
     playerPlacesInbound:false,unlimitedEquipment:false,startLayout:[],holes:[],sampleCount:10,batch:null,
-    hint:'작업대마다 담당자가 함께 설치됩니다. 담당자가 필요한 재료를 가져오면 가공하고 마지막 작업자가 완제품을 출고 담당자에게 전달합니다.'};
+    hint:'작업대마다 담당자가 함께 설치됩니다. 담당자가 필요한 재료를 가져오면 가공하고 출고 담당자가 마지막 작업대의 출력 트레이에서 완제품을 수거합니다.'};
 }
 export const buildStages=base=>forwardLayouts.map((s,i)=>forwardStage(base,s,i));

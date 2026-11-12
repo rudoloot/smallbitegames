@@ -264,10 +264,6 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     return model;
   }
   function surfacePoint(kind, event, sim) {
-    if(kind==='receiver'){
-      const cell=sim.stage.fixtures.find(f=>f.id==='outbound').access;
-      return new THREE.Vector3(cell.x+.5,.52,cell.y+.5);
-    }
     const model=modelMap.get(event.id);
     const anchor=kind==='output' ? model?.userData.inventory?.outputItem :
       kind==='process' ? model?.userData.inventory?.processingItem : null;
@@ -339,7 +335,6 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       else if (own?.pendingOutput) heldStage = recipeFor(own,sim.stage).outputStage ?? 4;
       const stack=event?.stack ?? 0;
       const count=event ? event.count ?? stack+1 : worker.carrying ? Math.max(1,worker.load.length) : 1;
-      if(worker.receivedTick===sim.tick && !events.length) heldStage=undefined;
       if(event) heldStage=event.stage;
       else if(action) heldStage=events[index].from==='hand' || events[index].stack ? events[index].stage : undefined;
       const offset=new THREE.Vector3();

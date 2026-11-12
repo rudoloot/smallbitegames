@@ -11,7 +11,7 @@ const inboundPlans={
 
 export function workshopConfig(doc){
   const config=processConfig(doc.factory,doc.steps),plan=inboundPlans[doc.factory];
-  const hint='작업대를 배치하면 담당자가 함께 설치됩니다. 작업자가 재료를 수거하고 마지막 작업자가 완제품을 출고 담당자에게 전달합니다.';
+  const hint='작업대를 배치하면 담당자가 함께 설치됩니다. 작업자가 재료를 수거하고 출고 담당자가 마지막 작업대의 출력 트레이에서 완제품을 수거합니다.';
   if(!plan)return {...config,paired:true,hint};
   const labels=plan.labels;
   const parts=plan.parts.filter(([id])=>config.stepRecipes[id]);
