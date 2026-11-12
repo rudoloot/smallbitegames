@@ -92,8 +92,8 @@ export const firstBoxStage = {
       "rotation": 0
     }
   ],
-  "referenceMeanSeconds": 16.1548,
-  "targetPerMinute": 3.7,
+  "referenceMeanSeconds": 12.0366,
+  "targetPerMinute": 4.9,
   "cells": [
     "0,0",
     "1,0",

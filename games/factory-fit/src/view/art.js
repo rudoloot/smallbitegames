@@ -1,11 +1,14 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { EQUIPMENT, TYPES } from '../game/config.js';
+import { FACTORIES } from '../game/products.js';
+import { workshopProduct } from './workshop-product-models.js';
+import { buildProduct } from './product-models.js';
+import { EQUIPMENT, TYPES, STAGE } from '../game/config.js';
 import { shapeFor } from '../game/equipment-shapes.js';
 import { buildEquipment } from './equipment-models.js';
 
 // The approved concept image is the visual reference. Geometry stays in tile units.
-export function createArtKit(renderer) {
+export function createArtKit(renderer, factory=STAGE) {
   const materials = new Map(), geometries = new Map();
   let seed = 12771;
   const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
@@ -139,12 +142,21 @@ export function createArtKit(renderer) {
       const item = templates.get(key).clone(); item.position.set(x, y, z); group.add(item); return item;
     }
     let item;
-    if (stage < 2) {
+    const name=factory.goods?.[stage];
+    const workshopStep=factory.modelSteps?.[stage];
+    const boxStep=workshopStep??stage;
+    if((name || workshopStep!==undefined) && factory.factory!=='box'){
+      item=new THREE.Group();group.add(item);item.position.set(x,y,z);
+      const miniature=new THREE.Group();item.add(miniature);miniature.scale.setScalar(size);
+      const kit={box,sphere,cylinder,ring};
+      if(workshopStep==null && name)buildProduct(name,miniature,kit);
+      else workshopProduct(FACTORIES[factory.factory],workshopStep,miniature,kit);
+    } else if (boxStep < 2) {
       item = new THREE.Group(); item.position.set(x, y, z); group.add(item);
-      for (let i = 0; i < 3; i++) wood(item, size * (stage ? 0.87 : 1.35), size * 0.16, size * 0.25, 0, size * 0.08 + (stage ? i * size * 0.16 : 0), stage ? 0 : (i - 1) * size * 0.27, i % 2 ? '#e3b681' : '#cda069');
+      for (let i = 0; i < 3; i++) wood(item, size * (boxStep ? 0.87 : 1.35), size * 0.16, size * 0.25, 0, size * 0.08 + (boxStep ? i * size * 0.16 : 0), boxStep ? 0 : (i - 1) * size * 0.27, i % 2 ? '#e3b681' : '#cda069');
     } else {
-      item = crate(group, x, y, z, size, stage >= 3 ? '#80a9d1' : '#c99c60');
-      if (stage === 4) {
+      item = crate(group, x, y, z, size, boxStep >= 3 ? '#80a9d1' : '#c99c60');
+      if (stage === 4 || workshopStep===3 || name==='띠 두른 상자') {
         for (let i = 0; i < 3; i++) wood(item, size, size * 0.07, size / 3 - 0.01, 0, size * 0.81, (i - 1) * size / 3, '#87afd5');
         box(item, size * 0.16, size * 0.86, size + 0.065, 0, size * 0.43, 0, '#f3d9a9');
         box(item, size + 0.065, size * 0.86, size * 0.16, 0, size * 0.43, 0, '#f3d9a9');
@@ -169,9 +181,12 @@ export function createArtKit(renderer) {
     wood(group, w - .22, .13, d - .3, 0, .76, 0, '#bc9260');
     for (let i = 0; i < 4; i++) wood(group, w - .12, .23, (d - .13) / 4 - .012, 0, .92, (i - 1.5) * (d - .13) / 4, i % 2 ? shade(color, .045) : color);
   }
-  function inbound({x=0,y=0,width=2,height=2}) {
+  function inbound({x=0,y=0,width=2,height=2,supplies}) {
     const group=new THREE.Group();
-    for(let row=0;row<height;row++) for(let layer=0;layer<3;layer++){
+    if(supplies || factory.modelSteps){
+      wood(group,width-.12,.16,height-.12,width/2,.12,height/2,'#aa835a');
+      for(let i=0;i<(supplies?.length===0?0:4);i++)goods(group,supplies?factory.goods.indexOf(supplies[i%supplies.length]):0,.52+(i%2)*.93,.23,.53+(i>>1)*.9,.7);
+    }else for(let row=0;row<height;row++) for(let layer=0;layer<3;layer++){
       wood(group,width-.22,.16,.66,width/2,.17+layer*.17,row+.5,layer%2?'#d2a36c':'#bd8d53');
     }
     group.position.set(x,0,y);
@@ -179,7 +194,7 @@ export function createArtKit(renderer) {
   }
   function machine(item, spec = EQUIPMENT[item.type]) {
     if (EQUIPMENT[item.type]?.mask) {
-      spec = {...spec, ...shapeFor(item)};
+      spec = {...spec, ...shapeFor(item),inputTray:factory.forward};
       const group = new THREE.Group();
       const model = buildEquipment(item, spec, { box, wood, cylinder, sphere, material, cached });
       const output = model.userData.outputAnchor.clone(), process = model.userData.processAnchor.clone();
@@ -190,7 +205,15 @@ export function createArtKit(renderer) {
       const processingItem = goods(model, spec.inputStage ?? 0, process.x, process.y, process.z, .45); processingItem.visible = false;
       const outputItem = goods(model,spec.outputStage ?? 4,output.x,output.y,output.z,.45);
       outputItem.visible = false;
-      group.userData.inventory = { processingItem, outputItem };
+      const stockItems=[];
+      const slots=Object.entries(spec.needs??{}).flatMap(([product,count])=>Array(count).fill(product));
+      slots.forEach((product,i)=>{
+        const cols=Math.min(slots.length,3),rows=Math.ceil(slots.length/cols);
+        const piece=goods(model,factory.goods.indexOf(product),output.x+(i%cols-(cols-1)/2)*.26,
+          output.y,output.z+(Math.floor(i/cols)-(rows-1)/2)*.33,slots.length===1?.48:.25);
+        piece.visible=false;stockItems.push({product,piece,quantity:slots.slice(0,i+1).filter(p=>p===product).length});
+      });
+      group.userData.inventory = { processingItem, outputItem,stockItems };
       group.traverse(obj=>{if(obj.isMesh)obj.userData.machineId=item.id;}); return group;
     }
     const group = new THREE.Group(), model = new THREE.Group(); group.add(model);
@@ -309,10 +332,10 @@ export function createArtKit(renderer) {
     for (const sign of [-1, 1]) { box(body, .055, .3, .045, sign * .115, .73, .18, '#7297b1'); box(body, .055, .35, .045, sign * .115, .65, -.17, '#7297b1'); sphere(body, .018, sign * .115, .66, .211, '#ebcf8a'); }
     const legs = [-.115, .115].map(x => { const leg = new THREE.Group(); leg.position.set(x, .38, 0); body.add(leg); box(leg, .17, .27, .18, 0, -.12, 0, '#668ba4', true, 'cloth'); box(leg, .2, .14, .29, 0, -.31, .045, '#627375'); return leg; });
     const arms = [-1, 1].map(sign => { const arm = new THREE.Group(); arm.position.set(sign * .235, .75, 0); body.add(arm); sphere(arm, .105, 0, -.08, 0, '#e0ddcd', [.85, 1.35, 1]); sphere(arm, .085, 0, -.28, .045, appearance.skin ?? '#edc39a', [.9, 1.1, 1]); return arm; });
-    const cargo = Array.from({ length: 5 }, (_, stage) => { const item = goods(body, stage, 0, .4, .4, .43); item.visible = false; return item; });
+    const cargo = Array.from({ length: factory.goods?.length??factory.modelSteps?.length??5 }, (_, stage) => { const item = goods(body, stage, 0, .4, .4, .43); item.visible = false; return item; });
     const marker = sphere(group, .09, 0, 1.85, 0, '#f1c366'); marker.visible = false;
     const extraCargo = [1, 2].map(i => {
-      const item = goods(body, 4, 0, .4 + i * .24, .4, .43); item.visible = false; return item;
+      const item = goods(body, factory.modelSteps?factory.modelSteps.length-1:4, 0, .4 + i * .24, .4, .43); item.visible = false; return item;
     });
     return { group, body, head, arms, legs, cargo, extraCargo, marker };
   }

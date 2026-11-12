@@ -38,7 +38,7 @@ export function editorScene(frame, callbacks) {
     previewKey=key;view?.setPreview(result?.item,!!result?.valid);paint();
   }
   function update(stage,plan,selected,worker){
-    const terrain=JSON.stringify([stage.width,stage.height,stage.cells,stage.pillars,stage.holes,stage.fixtures.find(f=>f.id==='outbound'),stage.processSummary]);
+    const terrain=JSON.stringify([stage.width,stage.height,stage.cells,stage.pillars,stage.holes,stage.fixtures.find(f=>f.id==='outbound'),stage.processSummary,stage.fixtures.map(f=>f.id)]);
     if(terrain!==previousTerrain){
       const camera=view?.cameraState();
       view?.dispose();host=document.createElement('div');host.className='editor-scene';frame.replaceChildren(host);

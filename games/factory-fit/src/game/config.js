@@ -1,4 +1,4 @@
-import {processConfig} from './products.js';
+import {workshopConfig} from './workshop-inlets.js';
 import {expandDocks} from './docks.js';
 import { buildStages } from './stages.js';
 import { EQUIPMENT_SHAPES } from './equipment-shapes.js';
@@ -38,7 +38,7 @@ function previewStage() {
   try {
     const data=JSON.parse(sessionStorage.getItem('factory-fit.editor.preview'));
     if (!data || !Array.isArray(data.cells) || !Array.isArray(data.startLayout)) return null;
-    return {...LEGACY_STAGE,...data,...processConfig(data.factory,data.steps),id:'editor-preview',number:0,shape:'custom',region:'meadow'};
+    return {...LEGACY_STAGE,...data,...workshopConfig(data),id:'editor-preview',number:0,shape:'custom',region:'meadow'};
   } catch { return null; }
 }
 export const STAGE = previewStage() ?? STAGES.find(stage => stage.id === (selectedStage === 'first-workflow-01' ? 'sample-01' : selectedStage)) ?? expandDocks(LEGACY_STAGE);

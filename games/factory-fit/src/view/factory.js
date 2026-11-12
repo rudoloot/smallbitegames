@@ -1,6 +1,6 @@
 import {motionFrame,transferSeconds} from '../game/motion.js';
 import {recipeFor} from '../game/simulation.js';
-import { dockBody, dockSlots, isOutbound } from '../game/docks.js';
+import { dockBody, dockSlots, isInlet, isOutbound } from '../game/docks.js';
 import * as THREE from 'three';
 import { EQUIPMENT, STAGE } from '../game/config.js';
 import { createArtKit } from './art.js';
@@ -34,7 +34,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   sun.shadow.radius = 4; sun.shadow.intensity = 0.62;
   scene.add(sun, sun.target);
   const fill = new THREE.DirectionalLight('#e9f2ff', 0.4); fill.position.set(18, 10, -4); scene.add(fill);
-  const art = createArtKit(renderer);
+  const art = createArtKit(renderer,stage);
   const { box, wood, sphere, cylinder, goods, material: colorMaterial } = art;
   function outline(cells, color, parent, dashed = true) {
     for (const cell of cells) {
@@ -52,7 +52,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   }
   const environment = new THREE.Group(); scene.add(environment);
   const labels = [], warehouseBoxes = [];
-  let warehouseLabel, inletLabel;
+  let warehouseLabel;
   const cx = MAP.width / 2, cz = MAP.height / 2;
   box(environment, 200, .15, 200, cx, -.52, cz, '#b8c1c2', false, 'concrete');
   const rectangularFloor = !stage.cells || (stage.cells.length === stage.width * stage.height && stage.cells.every(k=>{const [x,y]=k.split(',').map(Number);return x>=0&&x<stage.width&&y>=0&&y<stage.height;}));
@@ -146,22 +146,24 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     box(environment,.62,1.65,.62,pillar.x+.5,.93,pillar.y+.5,'#c8c8bb');
     box(environment,.72,.12,.72,pillar.x+.5,1.78,pillar.y+.5,'#e0dfd1');
   }
-  const inletGroup = new THREE.Group(); scene.add(inletGroup);
+  const inletModels=new Map();
   let currentFixtures = FIXED;
   for (const fixture of FIXED) {
+    const inletGroup=new THREE.Group();
+    if(isInlet(fixture.id))scene.add(inletGroup);
     const cells = Array.from({ length: fixture.width * fixture.height }, (_, i) => ({ x: fixture.x + i % fixture.width, y: fixture.y + Math.floor(i / fixture.width) }));
-    outline(cells, fixture.color, fixture.id==='inbound'?inletGroup:scene, false);
-    if (fixture.id === 'inbound') {
+    outline(cells, fixture.color, isInlet(fixture.id)?inletGroup:scene, false);
+    if (isInlet(fixture.id)) {
       inletGroup.add(art.inbound(fixture));
     } else {
       wood(environment, fixture.width - .15, .15, fixture.height - .16, fixture.x + fixture.width / 2, .15, fixture.y + fixture.height / 2, '#b88b5b');
-      for (let i = 0; i < 4; i++) { const item = goods(scene, 4, fixture.x + .5, .24 + Math.floor(i / 2) * .49, fixture.y + (fixture.height === 1 ? .28 + (i % 2) * .44 : .55 + (i % 2) * .8), .6); warehouseBoxes.push(item); }
+      for (let i = 0; i < 4; i++) { const item = goods(scene, (stage.goods?.length??stage.modelSteps?.length??5)-1, fixture.x + .5, .24 + Math.floor(i / 2) * .49, fixture.y + (fixture.height === 1 ? .28 + (i % 2) * .44 : .55 + (i % 2) * .8), .6); warehouseBoxes.push(item); }
     }
-    const el = label(fixture.id === 'outbound' ? '출고장' : '입고장', 'fixed-label');
+    const el = label(fixture.id === 'outbound' ? '출고장' : fixture.label, 'fixed-label');
     el.hidden = true;
     if (fixture.id === 'outbound') { warehouseLabel = el; el.id = 'warehouse-stock'; }
     const entry={ el, pos: new THREE.Vector3(fixture.x + fixture.width / 2, 1.2, fixture.y + fixture.height / 2) };
-    labels.push(entry);if(fixture.id==='inbound') inletLabel=entry;
+    labels.push(entry);if(isInlet(fixture.id)){entry.group=inletGroup;inletModels.set(fixture.id,entry);}
   }
   for (const [x, z] of [[MAP.width + .8, -.2], [MAP.width + .8, MAP.height + .2]]) art.plant(environment, x, z);
   art.compact(environment, 'environment');
@@ -174,11 +176,10 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   }
   function setLayout(next, selection = null, assignments = {}, pendingWorker = null, waiting = {}, liveStage = stage) {
     currentFixtures=liveStage.fixtures;
-    const inlet=currentFixtures.find(f=>f.id==='inbound'), original=FIXED.find(f=>f.id==='inbound');
-    inletGroup.visible=!!inlet;
-    if (inlet) {
-      inletLabel.pos.set(inlet.x+inlet.width/2,1.2,inlet.y+inlet.height/2);
-      inletGroup.position.set(inlet.x-original.x,0,inlet.y-original.y);
+    for(const [id,entry] of inletModels){
+      const inlet=currentFixtures.find(f=>f.id===id),original=FIXED.find(f=>f.id===id);
+      entry.group.visible=!!inlet;
+      if(inlet){entry.pos.set(inlet.x+1,1.2,inlet.y+1);entry.group.position.set(inlet.x-original.x,0,inlet.y-original.y);}
     }
     waitingWorkers = waiting;
     layout = next; selectedId = selection; clear(equipmentGroup); clear(marks); modelMap = new Map();
@@ -205,9 +206,9 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     const operator=WORKERS.find(w=>assignments[w.key]===id);
     box(marks, 0.9, 0.035, 0.9, place.x + 0.5, 0.082, place.y + 0.5, operator ? '#a8c6e6' : '#d1ddec', false);
     outline([place], pendingWorker || selection === WAREHOUSE.id ? '#4b823a' : '#779b5b', marks, false);
-    slotLabels.push({ el: label(operator ? operator.name : '＋ 창고 직원', `slot-label ${operator ? 'assigned' : 'empty'}${selection === WAREHOUSE.id || pendingWorker ? ' active' : ''}`), pos: new THREE.Vector3(place.x + 0.5, operator ? 1.8 : 0.35, place.y + 0.5) });
+    slotLabels.push({ el: label(operator ? operator.name : stage.forward?'＋ 입고 담당':'＋ 창고 직원', `slot-label ${operator ? 'assigned' : 'empty'}${selection === WAREHOUSE.id || pendingWorker ? ' active' : ''}`), pos: new THREE.Vector3(place.x + 0.5, operator ? 1.8 : 0.35, place.y + 0.5) });
     const target = document.createElement('button'); target.type = 'button'; target.className = 'slot-target'; target.dataset.workId = id;
-    target.setAttribute('aria-label', `창고 직원 자리 · ${operator?.name ?? '미배치'}`);
+    target.setAttribute('aria-label', `${stage.forward?"입고 담당":"창고 직원"} 자리 · ${operator?.name ?? '미배치'}`);
     target.addEventListener('click', event => { if (event.detail === 0) callbacks.onPick?.({ cell: place, workId: id }); }); host.append(target);
     slotTargets.push({ el: target, pos: new THREE.Vector3(place.x + 0.5, 0.12, place.y + 0.5) });
   }
@@ -233,6 +234,10 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     previewState = { id: item.id, x: item.x, y: item.y, rotation: item.rotation, valid, opacity: .36 };
     outline(inlet ? dockBody(item) : footprint(item).body, valid ? '#477c55' : '#ef4238', preview);
     if(!inlet) outline(footprint(item).work, valid ? '#477c55' : '#ab5544', preview);
+    else if(item.supplies){
+      const original=FIXED.find(f=>f.id===item.id);
+      outline([{x:item.x+original.access.x-original.x,y:item.y+original.access.y-original.y}], '#7298c1',preview);
+    }
   }
   const workerBubbles = [];
   function workerModel(worker, index) {
@@ -249,7 +254,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       kind==='process' ? model?.userData.inventory?.processingItem : null;
     if(anchor) return anchor.getWorldPosition(new THREE.Vector3());
     if(kind==='belt' && model) return model.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.38,0));
-    const dock=sim.stage.fixtures.find(f=>f.id===kind);
+    const dock=sim.stage.fixtures.find(f=>f.id===(kind==='inbound'?event.id:kind));
     if(!dock) return null;
     return new THREE.Vector3(
       THREE.MathUtils.clamp(event.x+.5,dock.x+.5,dock.x+dock.width-.5),
@@ -258,8 +263,8 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   }
   const playbackDuration=sim=>motionFrame(sim).duration;
   function update(sim, alpha, seconds, paused = false) {
-    for (const entry of labels) entry.el.hidden = !paused || (entry===inletLabel && !inletGroup.visible);
-    const receivingOutput=new Set(), receivingInput=new Set();
+    for (const entry of labels) entry.el.hidden = !paused || entry.group?.visible===false;
+    const receivingOutput=new Set(), receivingInput=new Set(), arrivingStock=new Map();
     if (!workerModels.length) workerModels = sim.workers.map((worker, index) => workerModel(worker, index));
     const {motions,duration}=motionFrame(sim);
     const elapsed=THREE.MathUtils.clamp(alpha,0,1)*duration;
@@ -276,7 +281,11 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       const pose=motion.segments.find(s=>elapsed<s.start+s.duration) ?? motion.segments.at(-1);
       const blend=THREE.MathUtils.clamp((elapsed-pose.start)/pose.duration,0,1);
       for(let i=index;i<events.length;i++){
-        if(events[i].to==='output') receivingOutput.add(events[i].id);
+        if(events[i].to==='output'){
+          receivingOutput.add(events[i].id);
+          const key=events[i].id+'/'+events[i].stage;
+          arrivingStock.set(key,(arrivingStock.get(key)??0)+1);
+        }
         if(events[i].to==='process') receivingInput.add(events[i].id);
       }
       obj.body.rotation.x = event ? Math.sin(fraction*Math.PI)*.12 : 0;
@@ -290,7 +299,8 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       const own = sim.machines.find(machine => machine.id === worker.machineId);
       const processingHere = !own?.parked && own?.processing > 0 && !worker.job && cellKey(worker) === cellKey(own.work[0]);
       obj.bubble.el.hidden = !worker.machineId || processingHere || worker.idleSeconds < 10;
-      const working = !event && !own?.parked && own?.processing > 0 && !worker.job && !(dx || dy);
+      const turning=blend<1 && Math.abs(pose.delta)>1e-8;
+      const working = !turning && !event && !own?.parked && own?.processing > 0 && !worker.job && !(dx || dy);
       // Drive work gestures from simulation time so pausing also freezes the hands.
       const workTime = Math.max(0, sim.time - .2 + alpha * .2);
       const workPhase = workTime * 7 + worker.id * 1.7;
@@ -331,7 +341,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
         }
       });
       while(obj.extraCargo.length<count-1){
-        const item=art.goods(obj.body,4,0,0,0,.43);
+        const item=art.goods(obj.body,(stage.modelSteps?.length??5)-1,0,0,0,.43);
         obj.extraCargo.push(item);
       }
       obj.extraCargo.forEach((item,i)=>{
@@ -354,8 +364,13 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       const count = machine.output + machine.reserved;
       entry.el.hidden = true; entry.el.textContent = ''; entry.el.dataset.outputCount = String(count);
       const inventory = modelMap.get(machine.id)?.userData.inventory;
+      for(const slot of inventory?.stockItems??[]){
+        const key=machine.id+'/'+stage.goods.indexOf(slot.product);
+        slot.piece.visible=(machine.stock[slot.product]??0)-(arrivingStock.get(key)??0)>=slot.quantity;
+      }
       if (inventory) { inventory.processingItem.visible = machine.processing > 0 && !receivingInput.has(machine.id); inventory.outputItem.visible = count > 0 && !receivingOutput.has(machine.id); }
     }
+    if(stage.forward)warehouseBoxes.forEach((box,i)=>box.visible=i<sim.shipped);
     warehouseLabel.textContent = '출고장'; warehouseLabel.dataset.count = String(sim.warehouse.stock); warehouseLabel.dataset.displayBoxes = String(warehouseBoxes.length);
   }
   function showHeat(sim, visible) {
@@ -393,7 +408,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     const cell = point ? { x: Math.floor(point.x), y: Math.floor(point.z) } : null;
     const hit = raycaster.intersectObjects(equipmentGroup.children, true)[0];
     const fixture = cell && currentFixtures.find(item => cell.x >= item.x && cell.x < item.x + item.width && cell.y >= item.y && cell.y < item.y + item.height);
-    const workId = cell && (slotTargets.find(t=>t.el.dataset.workId && isOutbound(t.el.dataset.workId) && Math.floor(t.pos.x)===cell.x && Math.floor(t.pos.z)===cell.y)?.el.dataset.workId ?? layout.find(item => footprint(item).work.some(place => cellKey(place) === cellKey(cell)))?.id);
+    const workId = cell && (slotTargets.find(t=>t.el.dataset.workId && (isInlet(t.el.dataset.workId)||isOutbound(t.el.dataset.workId)) && Math.floor(t.pos.x)===cell.x && Math.floor(t.pos.z)===cell.y)?.el.dataset.workId ?? layout.find(item => footprint(item).work.some(place => cellKey(place) === cellKey(cell)))?.id);
     const bodyId = cell && layout.find(item => footprint(item).body.some(place => cellKey(place) === cellKey(cell)))?.id;
     return { cell, id: hit?.object.userData.machineId ?? bodyId, fixedId: fixture?.id, workId };
   }

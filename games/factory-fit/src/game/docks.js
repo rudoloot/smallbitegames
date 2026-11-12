@@ -15,8 +15,10 @@ export function dockSides({ x, y, width, height }) {
   ];
 }
 export const atWall = (dock,stage) => dockSides(dock).some(side=>side.every(c=>!onFloor(c,stage)));
+export const isInlet=id=>typeof id==='string' && (id==='inbound'||id.startsWith('inbound-'));
 export const isOutbound = id => id === 'outbound' || (typeof id === 'string' && id.startsWith('outbound@'));
 export function dockSlots(stage) {
+  if(stage.forward)return stage.fixtures.filter(f=>isInlet(f.id)).map(f=>({id:f.id,cell:f.access}));
   const dock=stage.fixtures.find(f=>f.id==='outbound');
   if(dock.width!==2 || dock.height!==2) return [{id:'outbound',cell:dock.access}];
   const blocked=new Set([...stage.holes,...(stage.pillars??[]),...stage.fixtures.flatMap(dockBody)].map(keyOf));
@@ -39,6 +41,14 @@ export function expandDocks(stage) {
   return {...stage,cells:[...cells],fixtures};
 }
 export function sessionStage(stage, state) {
+  if(stage.forward && state){
+    const fixtures=stage.fixtures.flatMap(f=>{
+      if(!isInlet(f.id))return [f];
+      const pos=f.id==='inbound'?(stage.workshopInlets && state.inbound===undefined?f:state.inbound):state.inlets?.[f.id];
+      return pos?[{...f,...pos,access:{x:pos.x+f.access.x-f.x,y:pos.y+f.access.y-f.y}}]:[];
+    });
+    return {...stage,fixtures};
+  }
   // Existing saves without this field used the authored inlet.
   if (state?.inbound === null) return {...stage,fixtures:stage.fixtures.filter(f=>f.id!=='inbound')};
   if (!state?.inbound) return stage;

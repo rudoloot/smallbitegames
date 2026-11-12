@@ -3,10 +3,11 @@ import { restoreLayoutVariants } from './game/restore-variants.js';
 import { showShapeOptions } from './view/shape-options.js';
 import { shapeFor } from './game/equipment-shapes.js';
 import { icon } from './view/ui-icons.js';
+import { workshopConfig } from './game/workshop-inlets.js';
 import { FACTORIES, processConfig } from './game/products.js';
 import { STAGE, EQUIPMENT, createAssignments } from './game/config.js';
 import { footprint, validateLayout, cellKey } from './game/layout.js';
-import { sessionStage, atWall, dockBody, dockSides, dockSlots } from './game/docks.js';
+import { sessionStage, isInlet, atWall, dockBody, dockSides, dockSlots } from './game/docks.js';
 import { validSession } from './game/session.js';
 import { createSimulation, stepSimulation, DT } from './game/simulation.js';
 
@@ -29,7 +30,7 @@ function blank() {
 let doc=blank(),mode='start',tool='cutter',rotation=0,variant='O',history=[];
 let group='machines', grid=false, moving=null, scene, graphics;
 const sharedStage = d => ({...STAGE,id:'editor-preview',name:d.name,width:d.width,height:d.height,cells:d.cells,
-  holes:d.holes,pillars:d.pillars,fixtures:d.fixtures,targetPerMinute:d.target,minuteGoal:false,...processConfig(d.factory,d.steps)});
+  holes:d.holes,pillars:d.pillars,fixtures:d.fixtures,targetPerMinute:d.target,minuteGoal:false,...workshopConfig(d)});
 const stageFor = (d, key = mode) => sessionStage(sharedStage(d), d[key]);
 function issue(d) {
   if(d?.version!==1 || typeof d.name!=='string' || !Number.isFinite(d.target) || d.target<=0 ||
@@ -55,6 +56,22 @@ function issue(d) {
 }
 function restoreDocument(value) {
   if (!value?.start || !value.reference) return value;
+  if(value.factory==='dumbbell'){
+    const retired=id=>['m3','m4','m5'].includes(id?.split('-')[0]);
+    if(value.steps){
+      const kept=value.steps.filter(id=>!retired(id));
+      value.steps=kept.length?kept:FACTORIES.dumbbell.steps.map(s=>s.id);
+    }
+    for(const plan of [value.start,value.reference]){
+      plan.layout=plan.layout.filter(m=>!retired(m.id));
+      for(const key of Object.keys(plan.assignments))if(retired(plan.assignments[key]))plan.assignments[key]=null;
+    }
+  }
+  if(workshopConfig(value).forward){
+    for(const plan of [value.start,value.reference])for(const key of Object.keys(plan.assignments)){
+      if(plan.assignments[key]?.startsWith('outbound'))plan.assignments[key]=null;
+    }
+  }
   const stage=sharedStage(value);
   return {...value,start:restoreLayoutVariants(value.start,stage),reference:restoreLayoutVariants(value.reference,stage)};
 }
@@ -66,7 +83,7 @@ function cellMap(d) {
   const map=new Map(),mark=(c,kind,text,id,color)=>map.set(cellKey(c),{kind,text,id,color});
   for(const c of d.pillars)mark(c,'pillar','■');
   for(const c of d.holes)mark(c,'hole','×');
-  for(const f of stageFor(d).fixtures) dockBody(f).forEach((c,i)=>mark(c,f.id,i?'':(f.id==='inbound'?'입':'출'),f.id));
+  for(const f of stageFor(d).fixtures) dockBody(f).forEach((c,i)=>mark(c,isInlet(f.id)?'inbound':f.id,i?'':(isInlet(f.id)?(f.id==='inbound'?'입':'입2'):'출'),f.id));
   for(const {id,cell} of dockSlots(stageFor(d))) if(!map.has(cellKey(cell)))mark(cell,'work','○',id);
   const plan=d[mode];
   for(const m of plan.layout){const f=footprint(m);f.body.forEach((c,i)=>{
@@ -133,7 +150,8 @@ function editCell(x,y,centered=false) {
   else if(tool==='hole'||tool==='pillar'){
     if(!next.cells.includes(key)||at && !['floor','work'].includes(at.kind)){ $('status').textContent='빈 바닥을 선택하세요.';return;}
     next[tool==='hole'?'holes':'pillars'].push(cell);
-  }else if(tool==='inbound'||tool==='outbound'){
+  }else if(isInlet(tool)||tool==='outbound'){
+    if(tool==='inbound-2'){(plan.inlets??={})[tool]=cell;accept(next);return;}
     if(tool==='inbound'){plan.inbound=cell;accept(next);return;}
     const f=next.fixtures.find(v=>v.id===tool);Object.assign(f,cell);
     for(const access of dockSides(f).flat()){f.access=access;if(!issue(next)){accept(next);return;}}
@@ -168,7 +186,10 @@ function draw(){
     label.append(input,s.label+' · '+EQUIPMENT[s.type].name);$('steps').append(label);
   }
   const buttons=Object.fromEntries(steps.map(s=>[toolKey(doc,s),factory.key==='box'?EQUIPMENT[s.type].name:s.label]));
-  if(!Object.hasOwn({...names,...buttons},tool)) tool=toolKey(doc,steps[0]);
+  const dockTools={...terrain};
+  for(const f of sharedStage(doc).fixtures.filter(f=>isInlet(f.id)))dockTools[f.id]=f.label;
+  $('terrain').replaceChildren();addTools('terrain',dockTools);
+  if(!Object.hasOwn({...names,...dockTools,...buttons},tool)) tool=toolKey(doc,steps[0]);
   $('equipment').replaceChildren();addTools('equipment',buttons);
   $('width').value=doc.width;$('height').value=doc.height;
   $('name').value=doc.name;$('target').value=doc.target;$('undo').disabled=!history.length;
@@ -177,7 +198,7 @@ function draw(){
   $('rotate').textContent='회전 '+rotation*90+'°';$('rotate').disabled=!Object.hasOwn(buttons,tool) && !moving;
   document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===mode));
   document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===tool));
-  $('hint').textContent=(names[tool]??buttons[tool])+' · '+(tool==='worker'?'담당 자리를 누르세요':tool==='move'?(moving?'새 위치를 누르세요':'옮길 설비를 누르세요'):'설치·편집할 칸을 누르세요');$('count').textContent=doc.cells.length+'칸';
+  $('hint').textContent=(dockTools[tool]??names[tool]??buttons[tool])+' · '+(tool==='worker'?'담당 자리를 누르세요':tool==='move'?(moving?'새 위치를 누르세요':'옮길 설비를 누르세요'):'설치·편집할 칸을 누르세요');$('count').textContent=doc.cells.length+'칸';
   $('terrain').hidden=group!=='terrain';$('worker-panel').hidden=group!=='workers';$('equipment').hidden=group!=='machines';
   document.querySelectorAll('[data-group]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.group===group));
   $('grid-toggle').setAttribute('aria-pressed',grid);
@@ -220,6 +241,10 @@ function changeRoute(key, ids) {
   if(!ids.length){$('status').textContent='공정을 하나 이상 선택하세요.';draw();return;}
   const next=structuredClone(doc), changed=key!==factoryOf(doc).key;
   next.factory=key;next.steps=ids;
+  if(changed)for(const plan of [next.start,next.reference]){
+    delete plan.inlets;
+    for(const key of Object.keys(plan.assignments))if(isInlet(plan.assignments[key])||plan.assignments[key]?.startsWith('outbound'))plan.assignments[key]=null;
+  }
   let removed=0;
   for(const plan of [next.start,next.reference]){
     const obsolete=plan.layout.filter(m=>changed || !ids.includes(m.id.split('-')[0]));
@@ -252,7 +277,7 @@ $('simulate').onclick=()=>{const plan=doc[mode],sim=createSimulation(plan.layout
   for(let i=0;i<ticks;i++)stepSimulation(sim);
   $('status').textContent='5분 예열 후 5분간 '+(sim.shipped-before)+'개 입고 · '+((sim.shipped-before)/5).toFixed(1)+'개/분 · 목표 '+doc.target+'개/분';};
 $('play').onclick=()=>{const p=doc[mode];
-  sessionStorage.setItem('factory-fit.editor.preview',JSON.stringify({factory:doc.factory,steps:doc.steps,name:doc.name,width:doc.width,height:doc.height,cells:doc.cells,holes:doc.holes,pillars:doc.pillars,fixtures:stageFor(doc).fixtures,targetPerMinute:doc.target,startLayout:p.layout,startAssignments:p.assignments}));
+  sessionStorage.setItem('factory-fit.editor.preview',JSON.stringify({factory:doc.factory,steps:doc.steps,name:doc.name,width:doc.width,height:doc.height,cells:doc.cells,holes:doc.holes,pillars:doc.pillars,fixtures:sharedStage(doc).forward?doc.fixtures:stageFor(doc).fixtures,startInbound:p.inbound,startInlets:p.inlets,targetPerMinute:doc.target,startLayout:p.layout,startAssignments:p.assignments}));
   save();location.href=sitePath('./?stage=editor-preview');};
 draw();
 try{

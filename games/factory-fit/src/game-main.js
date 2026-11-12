@@ -1,6 +1,7 @@
 import {sitePath} from './site-path.js';
+import { showReference } from './view/reference-layout.js';
 import { FACTORIES } from './game/products.js';
-import {sessionStage,isOutbound} from './game/docks.js';
+import {sessionStage,isInlet,isOutbound} from './game/docks.js';
 import { inBounds, cellKey, outsideFactory } from './game/layout.js';
 import { shapeLabel, showShapeOptions } from './view/shape-options.js';
 import { icon } from './view/ui-icons.js';
@@ -13,6 +14,7 @@ for (const [id, name] of [['map-exit', 'map'], ['undo', 'undo'], ['redo', 'redo'
 $('#rotate').innerHTML = icon('rotate') + '<span>회전</span>';
 const openingSession = createSession();
 if (STAGE.id === 'editor-preview') {
+  if(STAGE.workshopInlets){openingSession.inbound=STAGE.startInbound;openingSession.inlets=STAGE.startInlets??{};}
   openingSession.layout = structuredClone(STAGE.startLayout);
   Object.assign(openingSession.assignments,STAGE.startAssignments);
 }
@@ -42,7 +44,7 @@ function shapeGrid(spec) {
   }
   return rows.flat().map(c => {
     const kind = {'.':'empty','#':'body',O:'output',W:'worker'}[c];
-    return `<span class="cell-${kind}">${c==='O'||c==='W'?c:''}</span>`;
+    return `<span class="cell-${kind}">${c==='O'&&STAGE.forward?'I':c==='O'||c==='W'?c:''}</span>`;
   }).join('');
 }
 for (const {type} of catalogInventory) {
@@ -104,7 +106,7 @@ function persist(record = true) {
 }
 const currentResult = () => draft && draft.x !== null ? transact(session, draft) : null;
 const currentState = () => session;
-const nameOf = id => isOutbound(id) ? '출고장' : EQUIPMENT[session.layout.find(m => m.id === id)?.type]?.short ?? '미배치';
+const nameOf = id => isInlet(id)?STAGE.fixtures.find(f=>f.id===id)?.label:isOutbound(id) ? '출고장' : EQUIPMENT[session.layout.find(m => m.id === id)?.type]?.short ?? '미배치';
 function refresh({ model = true } = {}) {
   const result = currentResult(), working = currentState();
   $('#onboarding').hidden = session.layout.length > 0 || !!draft || !canEdit();
@@ -114,18 +116,18 @@ function refresh({ model = true } = {}) {
   $('#worker-guidance').hidden = !pendingWorker;
   const inlet=draft?.type==='moveInbound';
   $('#machine-stats').hidden = !draft || inlet;
-  $('#move-inbound').hidden = !inlet || session.inbound===null;
+  $('#move-inbound').hidden = !inlet || !placedInlet(draft?.id);
   $('#rotate').hidden = inlet;
   $('#undo').disabled = !undoStack.length; $('#redo').disabled = !redoStack.length;
   $('#machine-actions').hidden = !draft; $('#worker-actions').hidden = !pendingWorker;
   $('#run').innerHTML = icon(running ? 'pause' : 'play');
   $('#run').setAttribute('aria-label', running ? '일시정지' : '재생');
   if(inlet){
-    $('#selected-name').textContent='입고장';
+    $('#selected-name').textContent=STAGE.fixtures.find(f=>f.id===draft.id).label;
     $('#shape').hidden=true;
     $('#placement-status').textContent=draft.x===null ? '빈 2×2칸을 누른 뒤 설치하세요.' : result?.ok ? '배치 가능 · 설치를 눌러 확정하세요.' : result.error;
     $('#confirm').disabled=!result?.ok;
-    $('#remove').hidden=session.inbound===null;
+    $('#remove').hidden=!placedInlet(draft?.id);
   } else if (draft) {
     const item = suppliedEquipment(draft.id);
     showShapeOptions($('#shape'), item.type, draft.variant); $('#shape').hidden = !!item.variant || !EQUIPMENT[item.type].variants; $('#selected-name').textContent = (recipeFor(item,STAGE).operation ?? EQUIPMENT[item.type].name) + (item.variant ? ' · '+shapeLabel(item.variant) : '');
@@ -137,7 +139,7 @@ function refresh({ model = true } = {}) {
     view.setLayout(working.layout, selectedId, working.assignments, pendingWorker, working.waitingWorkers,sessionStage(STAGE,working));
     if (mode === 'edit') sim = createLiveSimulation(working.layout, working.assignments);
     const given = draft && suppliedEquipment(draft.id);
-    view.setPreview(draft && draft.x !== null ? inlet ? {...inboundFixture,x:draft.x,y:draft.y,type:'inbound'} : { ...draft, type: given.type } : null, !!result?.ok);
+    view.setPreview(draft && draft.x !== null ? inlet ? {...STAGE.fixtures.find(f=>f.id===draft.id),x:draft.x,y:draft.y,type:'inbound'} : { ...draft, type: given.type } : null, !!result?.ok);
   }
   updateProduction();
   updateEquipmentInfo();
@@ -178,15 +180,16 @@ function moveDraft(cell) {
   if (draft.x === x && draft.y === y) return; Object.assign(draft, { x, y }); refresh();
 }
 function assign(workId) {
-  if (!pendingWorker || !workId) { notice('작업대 또는 창고 앞의 한 칸을 선택하세요.', true); return; }
+  if (!pendingWorker || !workId) { notice('담당할 설비의 파란 자리를 선택하세요.', true); return; }
   const result = transact(session, { type: 'assign', workerId: pendingWorker, machineId: workId });
   if (!result.ok) { notice(result.error, true); return; }
   session = result.state; pendingWorker = null; persist(); refresh();
 }
-const inboundFixture=STAGE.fixtures.find(f=>f.id==='inbound');
-function beginInbound() {
+const inboundFixtures=STAGE.fixtures.filter(f=>isInlet(f.id));
+const placedInlet=id=>sessionStage(STAGE,session).fixtures.some(f=>f.id===id);
+function beginInbound(id) {
   pendingWorker=null; selectedId=null;
-  draft={type:'moveInbound',id:'inbound',x:null,y:null};
+  draft={type:'moveInbound',id,x:null,y:null};
   refresh();
 }
 function pick(hit) {
@@ -200,7 +203,7 @@ function pick(hit) {
     if (!result.ok) { notice(result.error, true); return; }
     session = result.state; pendingWorker = null; persist(); refresh(); notice('작업자가 공장 밖에서 대기합니다.'); return;
   }
-  if (pendingWorker) { assign(hit.workId ?? (hit.fixedId === 'outbound' ? 'outbound' : null)); return; }
+  if (pendingWorker) { assign(hit.workId ?? ((STAGE.forward ? isInlet(hit.fixedId) : isOutbound(hit.fixedId)) ? hit.fixedId : null)); return; }
   if (draft && hit.cell) {
     moveDraft(hit.cell);
     const stored = outsideFactory({ ...draft, type: suppliedEquipment(draft.id).type });
@@ -209,7 +212,7 @@ function pick(hit) {
   }
   const waiting = hit.cell && Object.entries(session.waitingWorkers ?? {}).find(([,cell]) => cellKey(cell) === cellKey(hit.cell));
   if (waiting) { chooseWorker(waiting[0]); return; }
-  if(hit.fixedId==='inbound') {beginInbound();return;}
+  if(isInlet(hit.fixedId)) {beginInbound(hit.fixedId);return;}
   if (hit.id) beginMachine(hit.id);
   else if (hit.workId) { const key = Object.keys(session.assignments).find(key => session.assignments[key] === hit.workId); if (key) chooseWorker(key); else { selectInventory('workers'); notice('아래 작업자를 고른 뒤 이 자리에 배치하세요.'); } }
 }
@@ -244,7 +247,7 @@ function updateCards() {
     const card=slot.firstElementChild;
     if (!card) continue;
     const {fixture,supplyId,workerKey}=card.dataset;
-    const used=fixture==='inbound' ? session.inbound!==null : workerKey
+    const used=isInlet(fixture) ? placedInlet(fixture) : workerKey
       ? session.assignments[workerKey] || session.waitingWorkers?.[workerKey]
       : !STAGE.unlimitedEquipment && session.layout.some(m=>m.id===supplyId);
     card.disabled=!canEdit() || !!used;
@@ -278,17 +281,18 @@ if(STAGE.processTitle){
   $('#onboarding strong').textContent=STAGE.processTitle+' 공장';
   $('#onboarding span').textContent=STAGE.processSummary;
 }
-if (inboundFixture) {
+for(const fixture of inboundFixtures){
   const card=document.createElement('button');
-  card.type='button';card.className='supply-card';card.dataset.fixture='inbound';
+  card.type='button';card.className='supply-card';card.dataset.fixture=fixture.id;
   card.innerHTML='<img data-inbound-preview alt="" draggable="false"><span>입고장</span>';
+  card.querySelector('span').textContent=fixture.label;
   card.onclick=()=>{
     if (performance.now()<=suppressClickUntil || !canEdit()) return;
-    beginInbound();
+    beginInbound(fixture.id);
   };
   appendSlot('equipment',card);
 }
-const route = FACTORIES[STAGE.factory ?? 'box'].steps.filter(step => !STAGE.steps || STAGE.steps.includes(step.id));
+const route = STAGE.forward?(STAGE.referenceLayout??STAGE.inventory):FACTORIES[STAGE.factory ?? 'box'].steps.filter(step => !STAGE.steps || STAGE.steps.includes(step.id));
 const typeOrder = [...new Set([...route, ...STAGE.inventory].map(item => item.type))];
 const sortedEquipment = [...STAGE.inventory].sort((a,b) =>
   typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type) ||
@@ -378,7 +382,7 @@ $('#speed').addEventListener('click', () => {
 });
 $('#confirm').addEventListener('click', commitDraft); $('#cancel').addEventListener('click', cancel); $('#worker-cancel').addEventListener('click', cancel);
 $('#shape').onchange = event => { if (draft) { draft.variant = event.target.value; refresh(); } };
-$('#move-inbound').onclick=()=>{beginInbound();notice('이동할 위치를 누른 뒤 설치하세요.');};
+$('#move-inbound').onclick=()=>{beginInbound(draft.id);notice('이동할 위치를 누른 뒤 설치하세요.');};
 $('#rotate').addEventListener('click', () => { if (draft?.type==='place') { draft.rotation = (draft.rotation + 1) % 4; refresh(); } });
 $('#remove').addEventListener('click', () => { if (!draft) return; const result = transact(session, { type: draft.type==='moveInbound'?'removeInbound':'remove', id: draft.id }); if (result.ok) { session = result.state; persist(); cancel(); } });
 $('#unassign').addEventListener('click', () => { const result = transact(session, { type: 'assign', workerId: pendingWorker, machineId: null }); if (result.ok) { session = result.state; persist(); cancel(); } });
@@ -396,6 +400,15 @@ for (const stage of STAGES) {
   button.addEventListener('click', () => { location.href = stageUrl(stage.id); }); $('#stage-list').append(button);
 }
 if (STAGE.playbackGoals) $('#goal-help').append(' 생산량과 목표는 회전·운반을 포함한 1배속 시간으로 계산합니다.');
+if(STAGE.forward){
+  $('#reference-open').hidden=!STAGE.referenceLayout;
+  $('#reference-open').onclick=()=>{showReference($('#reference-content'),STAGE);$('#options-dialog').close();$('#reference-dialog').showModal();};
+  $('#reference-close').onclick=()=>$('#reference-dialog').close();
+  $('#catalog-dialog p').textContent='I 입력 칸 · W 작업자 자리 · 한 칸 50cm';
+  $('#worker-guidance').textContent='입고장이나 설비의 파란 작업자 자리를 누르세요.';
+  $('#help-dialog ol li:nth-child(4)').textContent=STAGE.hint;
+  $('#goal-help').textContent='완제품 설비가 한 대면 최근 '+STAGE.sampleCount+'개 출고 간격의 평균으로 목표를 판정합니다.';
+}
 if (STAGE.minuteGoal) $('#goal-help').textContent = '가동 60초 후부터 최근 60초 동안 창고에 입고된 수량으로 목표를 판정합니다.';
 $('#help').addEventListener('click', () => { $('#options-dialog').close(); $('#help-dialog').showModal(); }); $('#help-close').addEventListener('click', () => $('#help-dialog').close());
 $('#options-reset').addEventListener('click', () => { $('#options-dialog').close(); $('#reset-dialog').showModal(); });
@@ -422,8 +435,8 @@ async function boot() {
     const previews = createEquipmentPreviews(catalogInventory);
     for (const [type,image] of previews) previewCache.set(type+'/'+(EQUIPMENT[type].defaultVariant ?? ''), image);
     for (const img of document.querySelectorAll('#catalog-grid [data-equipment-type]')) img.src = previews.get(img.dataset.equipmentType);
-    const inventoryImages = createEquipmentPreviews([...sortedEquipment,{...inboundFixture,type:'inbound'}], {inventoryView:true});
-    if(inboundFixture) $('[data-inbound-preview]').src=inventoryImages.get('inbound/');
+    const inventoryImages = createEquipmentPreviews([...sortedEquipment,...inboundFixtures.map(f=>({...f,type:'inbound'}))], {inventoryView:true});
+    for(const f of inboundFixtures) document.querySelector('[data-fixture="'+f.id+'"] img').src=inventoryImages.get(f.id);
     for (const img of document.querySelectorAll('#equipment-list [data-equipment-type]')) {
       img.src = inventoryImages.get(img.dataset.equipmentType+'/'+img.dataset.variant);
     }

@@ -1,4 +1,5 @@
-import {isOutbound,dockSlots} from './docks.js';
+import {dispatch,deliver,processBatch} from './forward-production.js';
+import {isInlet,isOutbound,dockSlots} from './docks.js';
 import { STAGE, EQUIPMENT, DIRECTIONS, createAssignments } from './config.js';
 import { inboundPickupCells, outsideFactory, footprint, blockedCells, findPath, cellKey, neighbors, validateLayout } from './layout.js';
 import {DT,motionFrame} from './motion.js';
@@ -7,13 +8,13 @@ const BUFFER = 2;
 import { shapeFor } from './equipment-shapes.js';
 export const recipeFor = (item, stage = STAGE) => ({ ...EQUIPMENT[item.type], ...shapeFor(item), ...stage.recipes?.[item.type], ...stage.stepRecipes?.[item.id?.split('-')[0]] });
 const warehouse = sim => sim.stage.fixtures.find(item => item.id === 'outbound');
-const ownPlace = (sim, worker) => isOutbound(worker.machineId) ? { id: 'outbound', work: [worker.home] } : sim.machines.find(m => m.id === worker.machineId);
+const ownPlace = (sim, worker) => (isOutbound(worker.machineId) || isInlet(worker.machineId)) ? { id: 'outbound', work: [worker.home] } : sim.machines.find(m => m.id === worker.machineId);
 export function createSimulation(layout, assignments = createAssignments(layout), stage = STAGE) {
-  const machines = layout.filter(item => !EQUIPMENT[item.type].belt).map(item => ({ ...item, parked: outsideFactory(item, stage), input: 0, incoming: 0, output: 0, reserved: 0, pendingOutput: false, processing: 0, progress: 0, cycleStartedAt: null, totalCycleSeconds: 0, completedCycles: 0, work: footprint(item).work }));
+  const machines = layout.filter(item => !EQUIPMENT[item.type].belt).map(item => ({ ...item, parked: outsideFactory(item, stage), stock:{}, input: 0, incoming: 0, output: 0, reserved: 0, pendingOutput: false, processing: 0, progress: 0, cycleStartedAt: null, totalCycleSeconds: 0, completedCycles: 0, work: footprint(item).work }));
   const belts = layout.filter(item => EQUIPMENT[item.type].belt).map(item => ({ ...item, parked: outsideFactory(item, stage), item: null, reserved: false, remaining: 0 }));
   const slots = dockSlots(stage);
   const workers = stage.workers.map((worker, id) => {
-    const machineId = assignments[worker.key], place = isOutbound(machineId) ? slots.find(s=>s.id===machineId)?.cell : machines.find(m => m.id === machineId)?.work[0];
+    const machineId = assignments[worker.key], place = (isOutbound(machineId)||isInlet(machineId)) ? slots.find(s=>s.id===machineId)?.cell : machines.find(m => m.id === machineId)?.work[0];
     const spawn = place ?? { x: -3 - id, y: -3 };
     return { ...worker, transfers: [], ...spawn, home: spawn, id, machineId, from: { ...spawn }, path: [], job: null, carrying: false, cargo: null, load: [], carriedWeight: 0, wait: 0, idleSeconds: 0, metrics: { moving: 0, collision: 0, working: 0, transfers: 0 }, status: place ? '자리 대기' : '미배치' };
   });
@@ -43,6 +44,7 @@ export function reconfigureSimulation(sim, layout, assignments, stage = sim.stag
     const old = sim.machines.find(m => m.id === machine.id && m.type === machine.type);
     if (!old) continue;
     for (const key of ['input', 'processing', 'progress', 'pendingOutput', 'cycleStartedAt', 'totalCycleSeconds', 'completedCycles']) machine[key] = old[key];
+    machine.stock={...old.stock};
     machine.output = old.output + old.reserved;
   }
   for (const belt of next.belts) {
@@ -73,6 +75,14 @@ export function reconfigureSimulation(sim, layout, assignments, stage = sim.stag
       worker.carriedWeight = old.carriedWeight;
     }
 
+    if(stage.forward){
+      if(worker.job && (worker.job.phase==='home' || worker.job.destination==='outbound' || next.machines.some(m=>m.id===worker.job.destination && !m.parked))){
+        const dest=next.machines.find(m=>m.id===worker.job.destination);
+        const goals=dest?neighbors(footprint(dest).output,stage):worker.job.phase==='home'?[worker.home]:worker.job.goals;
+        if(restoreRoute(next,worker,goals,blocked))continue;
+      }
+      worker.path=[];worker.job=null;continue;
+    }
     const job = worker.job;
     if (job?.phase === 'pickup') {
       const object = job.sourceKind === 'machine' ? next.machines.find(m=>m.id===job.source)
@@ -158,6 +168,7 @@ function sourceGoals(sim, worker, source) {
   return [...new Map(cells.flatMap(c => neighbors(c, sim.stage)).filter(c => !blocked.has(cellKey(c))).map(c => [cellKey(c), c])).values()];
 }
 function assignJob(sim, worker, collecting = false) {
+  if(sim.stage.forward)return dispatch(sim,worker,pathTo);
   worker.waitingForSource = null;
   const own = ownPlace(sim, worker); if (!own) return;
   if (!collecting && cellKey(worker) !== cellKey(own.work[0])) {
@@ -196,6 +207,7 @@ function assignJob(sim, worker, collecting = false) {
 function arrive(sim, worker) {
   const job = worker.job; if (!job || worker.path.length || cellKey(worker) !== cellKey(job.target)) return;
   if (job.phase === 'home') { worker.job = null; return; }
+  if(sim.stage.forward)return deliver(sim,worker);
   if (job.phase === 'pickup') {
     const own = ownPlace(sim, worker), path = pathTo(sim, worker, own.work); if (path === null) return;
     if (job.sourceKind === 'machine') sim.machines.find(m => m.id === job.source).reserved--;
@@ -245,7 +257,7 @@ export function stepSimulation(sim) {
   const previousActivity = sim.workers.map(worker => activityState(sim, worker));
   sim.productionTime=sim.stage.playbackGoals ? sim.productionTime+motionFrame(sim).duration : Number(((sim.tick+1)*DT).toFixed(4));
   for (const worker of sim.workers) worker.transfers.length = 0;
-  sim.tick++; sim.time = Number((sim.tick * DT).toFixed(4)); updateBelts(sim);
+  sim.tick++; sim.time = Number((sim.tick * DT).toFixed(4)); if(!sim.stage.forward) updateBelts(sim);
   for (const worker of sim.workers) { worker.from = { x: worker.x, y: worker.y }; if (ownPlace(sim, worker)?.parked) { worker.status = '공장 밖 대기'; continue; } if (!worker.job) assignJob(sim, worker); arrive(sim, worker); }
   const occupied = new Set(sim.workers.filter(w => w.machineId).map(cellKey));
   for (let i = 0; i < sim.workers.length; i++) {
@@ -278,6 +290,7 @@ export function stepSimulation(sim) {
   for (const machine of sim.machines) {
     const worker = sim.workers.find(w => w.machineId === machine.id), recipe = recipeFor(machine, sim.stage);
     if (machine.parked || !worker || worker.job || cellKey(worker) !== cellKey(machine.work[0])) continue;
+    if(sim.stage.forward){processBatch(sim,machine,worker,recipe);continue;}
     if (machine.processing > 0) {
       machine.processing = Math.max(0, Number((machine.processing - DT).toFixed(4))); machine.progress = 1 - machine.processing / recipe.seconds; worker.metrics.working += DT; worker.status = '작업 중';
       if (!machine.processing) {

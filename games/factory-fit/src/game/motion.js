@@ -10,7 +10,7 @@ function machineCenter(item){
 }
 function surfacePoint(kind,event,sim){
   if(kind==='inbound' || kind==='outbound'){
-    const dock=sim.stage.fixtures.find(f=>f.id===kind);
+    const dock=sim.stage.fixtures.find(f=>f.id===(kind==='inbound'?event.id:kind));
     return dock && {x:clamp(event.x+.5,dock.x+.5,dock.x+dock.width-.5),
       y:clamp(event.y+.5,dock.y+.5,dock.y+dock.height-.5)};
   }
@@ -21,8 +21,9 @@ function surfacePoint(kind,event,sim){
   const cell=kind==='output'?shape.output:shape.process;
   return cell && {x:cell.x+.5,y:cell.y+.5};
 }
-const turnRate=Math.PI; // 180 degrees per second at normal playback speed.
-export const transferSeconds=.65;
+const turnRate=1.5*Math.PI; // Radians per second at normal playback speed.
+const secondsPerTile=.60; // One 0.5 m tile while handling goods.
+export const transferSeconds=.65/1.5;
 const shortestTurn=(from,to)=>Math.atan2(Math.sin(to-from),Math.cos(to-from));
 export function motionFrame(sim) {
   if(sim.motion?.tick===sim.tick) return sim.motion;
@@ -37,17 +38,21 @@ export function motionFrame(sim) {
       if(duration>0) segments.push({start:time,duration,angle,delta:toAngle-angle,x,y,toX,toY});
       time+=duration;angle=toAngle;x=toX;y=toY;
     }
+    function turnTo(target,available=Infinity) {
+      const turn=clamp(shortestTurn(angle,target),-available*turnRate,available*turnRate);
+      segment(Math.abs(turn)/turnRate,angle+turn);
+    }
     function walk(toX,toY) {
       if(x===toX && y===toY) return;
       const target=Math.atan2(toX-x,toY-y);
-      segment(DT,angle+clamp(shortestTurn(angle,target),-turnRate*DT,turnRate*DT),toX,toY);
+      turnTo(target);
+      segment(Math.hypot(toX-x,toY-y)*secondsPerTile,angle,toX,toY);
     }
     for(const event of worker.transfers){
       walk(event.x,event.y);
       const point=surfacePoint(event.from==='hand'?event.to:event.from,event,sim);
-      const turn=point ? shortestTurn(angle,Math.atan2(point.x-x-.5,point.y-y-.5)) : 0;
       const start=time;
-      segment(Math.abs(turn)/turnRate,angle+turn);
+      if(point) turnTo(Math.atan2(point.x-x-.5,point.y-y-.5));
       events.push({start,moveStart:time,end:time+transferSeconds});
       segment(transferSeconds,angle);
     }
@@ -59,8 +64,11 @@ export function motionFrame(sim) {
       const source=supplier && machineCenter(supplier);
       const target=source ? Math.atan2(source.x-x-.5,source.y-y-.5) :
         facing ? Math.atan2(facing.x,facing.y) : angle;
-      const turn=shortestTurn(angle,target);
-      segment(DT,angle+(sim.tick ? clamp(turn,-turnRate*DT,turnRate*DT) : turn));
+      // Spawn already looking at the station. Replaying tick zero must not spin
+      // from world north after the edit view has shown the worker in position.
+      if(!old && !sim.tick) angle=target;
+      turnTo(target,DT);
+      segment(Math.max(0,DT-time),angle);
     }
     frameDuration=Math.max(frameDuration,time);
     return {segments,events,angle};

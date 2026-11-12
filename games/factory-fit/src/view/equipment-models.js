@@ -74,6 +74,7 @@ export function buildEquipment(item, spec, kit) {
   }
   tray.position.set(trayX,0,trayZ);
   tray.rotation.y = outputX === 0 ? -Math.PI/2 : Math.PI/2;
+  if(spec.inputTray)tray.rotation.y+=Math.PI;
   group.add(tray);
   const toolStart = group.children.length;
   if(type==='cutter') {

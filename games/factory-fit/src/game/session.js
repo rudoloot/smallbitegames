@@ -1,4 +1,4 @@
-import {atWall,sessionStage,dockSlots,dockBody,isOutbound} from './docks.js';
+import {isInlet,atWall,sessionStage,dockSlots,dockBody,isOutbound} from './docks.js';
 import { STAGE, createAssignments, EQUIPMENT, suppliedEquipment } from './config.js';
 import { validateLayout, inboundPickupCells, cellKey, footprint, inBounds } from './layout.js';
 export function createSession(stage = STAGE) { return { version: 5, stageId: stage.id, ...(stage.playerPlacesInbound ? { inbound: null } : {}), layout: [], assignments: createAssignments([], stage) }; }
@@ -6,7 +6,7 @@ function validFacilities(state, stage) {
   const fixtures = stage.fixtures, inlet = fixtures.find(f=>f.id==='inbound');
   const outlet = fixtures.find(f=>f.id==='outbound');
   if (outlet.width===2 && outlet.height===2 && !atWall(outlet,stage)) return false;
-  if (state.inbound && (!Number.isInteger(inlet.x) || !Number.isInteger(inlet.y))) return false;
+  if (state.inbound && inlet && (!Number.isInteger(inlet.x) || !Number.isInteger(inlet.y))) return false;
   const used = new Set([...stage.holes,...(stage.pillars??[]),...Object.values(state.waitingWorkers??{})].map(cellKey));
   for (const dock of fixtures) for (const cell of dockBody(dock)) {
     if (!inBounds(cell,stage) || used.has(cellKey(cell))) return false;
@@ -17,13 +17,20 @@ function validFacilities(state, stage) {
   }
   if (inlet && !inboundPickupCells(stage,used).length) return false;
   for (const item of state.layout) for (const c of footprint(item).work) used.add(cellKey(c));
-  return Object.values(state.assignments).filter(isOutbound).every(id=>{
+  if(stage.forward){
+    for(const {cell} of dockSlots(stage)){
+      if(!inBounds(cell,stage)||used.has(cellKey(cell)))return false;
+      used.add(cellKey(cell));
+    }
+    return true;
+  }
+  return Object.values(state.assignments).filter(id=>isOutbound(id)||isInlet(id)).every(id=>{
     const slot=dockSlots(stage).find(s=>s.id===id);
-    return slot && !used.has(cellKey(slot.cell));
+    return slot && inBounds(slot.cell,stage) && !used.has(cellKey(slot.cell));
   });
 }
 export function validSession(state, stage = STAGE) {
-  try { stage=sessionStage(stage,state); return state?.version === 5 && state.stageId === stage.id && validateLayout(state.layout, { stage, allowOutside: true }).valid && Object.keys(state.assignments).length === stage.workers.length && stage.workers.every(worker => Object.hasOwn(state.assignments, worker.key) && (state.assignments[worker.key] === null || isOutbound(state.assignments[worker.key]) || state.layout.some(item => item.id === state.assignments[worker.key] && !EQUIPMENT[item.type].belt))) && validFacilities(state,stage) && validWaitingWorkers(state, stage) && new Set(Object.values(state.assignments).filter(Boolean)).size === Object.values(state.assignments).filter(Boolean).length; } catch { return false; }
+  try { stage=sessionStage(stage,state); return state?.version === 5 && state.stageId === stage.id && validateLayout(state.layout, { stage, allowOutside: true }).valid && Object.keys(state.assignments).length === stage.workers.length && stage.workers.every(worker => Object.hasOwn(state.assignments, worker.key) && (state.assignments[worker.key] === null || dockSlots(stage).some(s=>s.id===state.assignments[worker.key]) || state.layout.some(item => item.id === state.assignments[worker.key] && !EQUIPMENT[item.type].belt))) && validFacilities(state,stage) && validWaitingWorkers(state, stage) && new Set(Object.values(state.assignments).filter(Boolean)).size === Object.values(state.assignments).filter(Boolean).length; } catch { return false; }
 }
 function validWaitingWorkers(state, stage) {
   const occupied = new Set(state.layout.flatMap(item => {
@@ -40,6 +47,14 @@ function validWaitingWorkers(state, stage) {
 export function transact(state, action, stage = STAGE) {
   if (!validSession(state, stage)) return { ok: false, error: '저장 상태를 확인해 주세요.' };
   const next = structuredClone(state);
+  if(stage.forward && ['moveInbound','removeInbound'].includes(action.type)){
+    const id=action.id??'inbound';
+    if(!stage.fixtures.some(f=>f.id===id && isInlet(id)))return {ok:false,error:'지급된 입고장을 선택하세요.'};
+    const pos=action.type==='removeInbound'?null:{x:action.x,y:action.y};
+    if(id==='inbound')next.inbound=pos;else (next.inlets??={})[id]=pos;
+    if(!pos)for(const key of Object.keys(next.assignments))if(next.assignments[key]===id)next.assignments[key]=null;
+    return validSession(next,stage)?{ok:true,state:next}:{ok:false,error:'입고장과 담당자 자리를 비워 주세요.'};
+  }
   if (action.type === 'removeInbound') {
     if (state.inbound===null) return {ok:false,error:'설치된 입고장이 없습니다.'};
     next.inbound=null;
@@ -65,7 +80,7 @@ export function transact(state, action, stage = STAGE) {
     (next.waitingWorkers ??= {})[action.workerId] = { x: action.x, y: action.y };
   } else if (action.type === 'assign') {
     if (next.waitingWorkers) delete next.waitingWorkers[action.workerId];
-    if (!stage.workers.some(worker => worker.key === action.workerId) || (action.machineId !== null && !isOutbound(action.machineId) && !next.layout.some(item => item.id === action.machineId && !EQUIPMENT[item.type].belt))) return { ok: false, error: '작업자와 작업대 자리를 선택해 주세요.' };
+    if (!stage.workers.some(worker => worker.key === action.workerId) || (action.machineId !== null && !dockSlots(sessionStage(stage,state)).some(s=>s.id===action.machineId) && !next.layout.some(item => item.id === action.machineId && !EQUIPMENT[item.type].belt))) return { ok: false, error: '작업자와 작업대 자리를 선택해 주세요.' };
     const previous = next.assignments[action.workerId], other = stage.workers.find(worker => worker.key !== action.workerId && next.assignments[worker.key] === action.machineId);
     if (action.machineId && other) next.assignments[other.key] = previous; next.assignments[action.workerId] = action.machineId;
   } else return { ok: false, error: '지원하지 않는 조작입니다.' };
@@ -76,5 +91,6 @@ export function transact(state, action, stage = STAGE) {
 }
 export function validateStaffing(state, stage = STAGE) {
   const errors = state.layout.filter(item => !stage.unlimitedEquipment && !EQUIPMENT[item.type].belt && !Object.values(state.assignments).includes(item.id)).map(item => `${EQUIPMENT[item.type].name}에 작업자를 배치해 주세요.`);
-  if (!Object.values(state.assignments).some(isOutbound)) errors.push('창고 직원을 배치해 주세요.'); return { valid: errors.length === 0, errors };
+  if(stage.forward){for(const f of stage.fixtures.filter(f=>isInlet(f.id)))if(!Object.values(state.assignments).includes(f.id))errors.push(f.label+' 담당자를 배치해 주세요.');}
+  else if (!Object.values(state.assignments).some(isOutbound)) errors.push('창고 직원을 배치해 주세요.'); return { valid: errors.length === 0, errors };
 }

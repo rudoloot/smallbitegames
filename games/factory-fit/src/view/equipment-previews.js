@@ -66,14 +66,16 @@ export function createEquipmentPreviews(inventory, {inventoryView=false}={}) {
   const tile=inventoryView ? workerTile() : null;
   try {
     for (const item of inventory) {
-      const key=inventoryView ? item.type+'/'+(item.variant ?? '') : item.type;
+      const key=inventoryView && item.type==='inbound'?item.id:inventoryView ? item.type+'/'+(item.variant ?? '') : item.type;
       if(images.has(key)) continue;
       const model = item.type==='inbound' ? art.inbound({...item,x:0,y:0}) : art.machine({ ...item, x: 0, y: 0, rotation: 0 });
       scene.add(model);
       if (inventoryView) {
-        const work=shapeFor(item)?.workCell;
+        const dockWork=item.supplies && [item.access.x-item.x,item.access.y-item.y];
+        const work=dockWork || shapeFor(item)?.workCell;
         if(work) {
-          const facing=operatorFacing(footprint({...item,x:0,y:0,rotation:0}));
+          const facing=dockWork ? {x:Math.max(0,Math.min(1,work[0]))-work[0],y:Math.max(0,Math.min(1,work[1]))-work[1]} :
+            operatorFacing(footprint({...item,x:0,y:0,rotation:0}));
           // The unrotated toes point toward grid north (negative world Z).
           tile.rotation.z=Math.atan2(-facing.x,-facing.y);
           tile.position.set(work[0]+.5,.025,work[1]+.5);
