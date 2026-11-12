@@ -1,9 +1,10 @@
-import {DT,recipeFor} from '../game/simulation.js';
+import {motionFrame,transferSeconds} from '../game/motion.js';
+import {recipeFor} from '../game/simulation.js';
 import { dockBody, dockSlots, isOutbound } from '../game/docks.js';
 import * as THREE from 'three';
 import { EQUIPMENT, STAGE } from '../game/config.js';
 import { createArtKit } from './art.js';
-import { operatorFacing, footprint, cellKey } from '../game/layout.js';
+import { footprint, cellKey } from '../game/layout.js';
 
 export function createFactoryView(host, callbacks, stage = STAGE) {
   const MAP = { width: stage.width, height: stage.height }, FIXED = stage.fixtures, WORKERS = stage.workers, WAREHOUSE = FIXED.find(f => f.id === 'outbound');
@@ -255,58 +256,13 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       kind==='inbound' ? .65 : .72,
       THREE.MathUtils.clamp(event.y+.5,dock.y+.5,dock.y+dock.height-.5));
   }
-  const turnRate=Math.PI; // 180 degrees per second at normal playback speed.
-  const transferSeconds=.65;
-  const shortestTurn=(from,to)=>Math.atan2(Math.sin(to-from),Math.cos(to-from));
-  let lastMotionSim, lastMotionTick, motions=[], frameDuration=DT;
-  function playbackDuration(sim) {
-    if(lastMotionSim===sim && lastMotionTick===sim.tick) return frameDuration;
-    const previous=motions;
-    const continuous=lastMotionSim===sim && sim.tick===lastMotionTick+1;
-    lastMotionSim=sim;lastMotionTick=sim.tick;frameDuration=DT;
-    motions=sim.workers.map(worker=>{
-      const old=previous[worker.id];
-      let angle=continuous && old ? old.angle : workerModels[worker.id]?.body.rotation.y ?? 0;
-      let x=worker.from.x,y=worker.from.y,time=0;
-      const segments=[], events=[];
-      function segment(duration,toAngle,toX=x,toY=y) {
-        if(duration>0) segments.push({start:time,duration,angle,delta:toAngle-angle,x,y,toX,toY});
-        time+=duration;angle=toAngle;x=toX;y=toY;
-      }
-      function walk(toX,toY) {
-        if(x===toX && y===toY) return;
-        const target=Math.atan2(toX-x,toY-y);
-        segment(DT,angle+THREE.MathUtils.clamp(shortestTurn(angle,target),-turnRate*DT,turnRate*DT),toX,toY);
-      }
-      for(const event of worker.transfers){
-        walk(event.x,event.y);
-        const point=surfacePoint(event.from==='hand'?event.to:event.from,event,sim);
-        const turn=point ? shortestTurn(angle,Math.atan2(point.x-x-.5,point.z-y-.5)) : 0;
-        const start=time;
-        segment(Math.abs(turn)/turnRate,angle+turn);
-        events.push({start,moveStart:time,end:time+transferSeconds,point});
-        segment(transferSeconds,angle);
-      }
-      walk(worker.x,worker.y);
-      if(!segments.length){
-        const own=sim.machines.find(m=>m.id===worker.machineId);
-        const facing=own && cellKey(worker)===cellKey(own.work[0]) && operatorFacing(footprint(own));
-        const source=modelMap.get(worker.waitingForSource);
-        const target=source ? Math.atan2(source.position.x-x-.5,source.position.z-y-.5) :
-          facing ? Math.atan2(facing.x,facing.y) : angle;
-        const turn=shortestTurn(angle,target);
-        segment(DT,angle+(sim.tick ? THREE.MathUtils.clamp(turn,-turnRate*DT,turnRate*DT) : turn));
-      }
-      frameDuration=Math.max(frameDuration,time);
-      return {segments,events,angle};
-    });
-    return frameDuration;
-  }
+  const playbackDuration=sim=>motionFrame(sim).duration;
   function update(sim, alpha, seconds, paused = false) {
     for (const entry of labels) entry.el.hidden = !paused || (entry===inletLabel && !inletGroup.visible);
     const receivingOutput=new Set(), receivingInput=new Set();
     if (!workerModels.length) workerModels = sim.workers.map((worker, index) => workerModel(worker, index));
-    const elapsed=THREE.MathUtils.clamp(alpha,0,1)*playbackDuration(sim);
+    const {motions,duration}=motionFrame(sim);
+    const elapsed=THREE.MathUtils.clamp(alpha,0,1)*duration;
     for (const worker of sim.workers) {
       const obj = workerModels[worker.id];
       // A pickup and deposit may both finish in one tick when the operator
@@ -358,7 +314,8 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       const offset=new THREE.Vector3();
       if(event){
         const hand=new THREE.Vector3(0,.4+stack*.24,.4);
-        const surface=action.point ? obj.body.worldToLocal(action.point.clone()) : hand;
+        const point=surfacePoint(event.from==='hand'?event.to:event.from,event,sim);
+        const surface=point ? obj.body.worldToLocal(point) : hand;
         const start=event.from==='hand' ? hand : surface;
         const end=event.to==='hand' ? hand : surface;
         const t=fraction*fraction*(3-2*fraction);

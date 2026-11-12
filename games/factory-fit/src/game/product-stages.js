@@ -153,8 +153,8 @@ export const productStages = [
       "w4": "m4",
       "w5": "outbound"
     },
-    "referenceMeanSeconds": 5.8,
-    "targetPerMinute": 10.3
+    "referenceMeanSeconds": 20.7476,
+    "targetPerMinute": 2.8
   },
   {
     "factory": "slipper",
@@ -337,8 +337,8 @@ export const productStages = [
       "w5": "m5",
       "w6": "outbound"
     },
-    "referenceMeanSeconds": 8.2,
-    "targetPerMinute": 7.3
+    "referenceMeanSeconds": 25.6452,
+    "targetPerMinute": 2.3
   },
   {
     "factory": "desk",
@@ -541,8 +541,8 @@ export const productStages = [
       "w6": "m6",
       "w7": "outbound"
     },
-    "referenceMeanSeconds": 5.8,
-    "targetPerMinute": 10.3
+    "referenceMeanSeconds": 26.0976,
+    "targetPerMinute": 2.2
   },
   {
     "factory": "speaker",
@@ -769,8 +769,8 @@ export const productStages = [
       "w7": "m7",
       "w8": "outbound"
     },
-    "referenceMeanSeconds": 6.8,
-    "targetPerMinute": 8.8
+    "referenceMeanSeconds": 28.8946,
+    "targetPerMinute": 2
   },
   {
     "factory": "plush",
@@ -1010,7 +1010,7 @@ export const productStages = [
       "w8": "m8",
       "w9": "outbound"
     },
-    "referenceMeanSeconds": 5.8,
-    "targetPerMinute": 10.3
+    "referenceMeanSeconds": 22.7848,
+    "targetPerMinute": 2.6
   }
 ];

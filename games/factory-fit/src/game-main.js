@@ -395,6 +395,7 @@ for (const stage of STAGES) {
   const button = document.createElement('button'); button.textContent = String(stage.number).padStart(2, '0') + ' · ' + stage.name;
   button.addEventListener('click', () => { location.href = stageUrl(stage.id); }); $('#stage-list').append(button);
 }
+if (STAGE.playbackGoals) $('#goal-help').append(' 생산량과 목표는 회전·운반을 포함한 1배속 시간으로 계산합니다.');
 if (STAGE.minuteGoal) $('#goal-help').textContent = '가동 60초 후부터 최근 60초 동안 창고에 입고된 수량으로 목표를 판정합니다.';
 $('#help').addEventListener('click', () => { $('#options-dialog').close(); $('#help-dialog').showModal(); }); $('#help-close').addEventListener('click', () => $('#help-dialog').close());
 $('#options-reset').addEventListener('click', () => { $('#options-dialog').close(); $('#reset-dialog').showModal(); });
@@ -431,7 +432,7 @@ async function boot() {
     if (session.layout.length) { mode='run'; running=true; }
     $('#loading').remove(); $('#scene').dataset.ready = 'true'; $('#run').disabled = false; refresh();
     // Read-only diagnostics for authoring and browser QA; no solution or mutating hook is exposed.
-    window.factoryFit = Object.freeze({ snapshot: () => structuredClone({ session, simulationLayout: sim.layout, machines: sim.machines, preview: view.inspectPreview(), mode, outcome: sim.outcome, shipped: sim.shipped, productionRate: sim.productionRate, averageProductionSeconds: sim.averageProductionSeconds, shipmentTimes: sim.shipmentTimes, targetPerMinute: STAGE.targetPerMinute, time: sim.time, running, playbackSpeed, reason: sim.reason, draft }), projectCell: (x, y) => view.projectCell({ x, y }) });
+    window.factoryFit = Object.freeze({ snapshot: () => structuredClone({ session, simulationLayout: sim.layout, machines: sim.machines, preview: view.inspectPreview(), mode, outcome: sim.outcome, shipped: sim.shipped, productionRate: sim.productionRate, averageProductionSeconds: sim.averageProductionSeconds, shipmentTimes: sim.shipmentTimes, targetPerMinute: STAGE.targetPerMinute, time: sim.time, productionTime: sim.productionTime, running, playbackSpeed, reason: sim.reason, draft }), projectCell: (x, y) => view.projectCell({ x, y }) });
     function frame(now) {
       const elapsed = lastTime ? Math.min(.15, (now - lastTime) / 1000) : 0; lastTime = now;
       let duration=view.playbackDuration(sim);

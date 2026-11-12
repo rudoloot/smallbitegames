@@ -1,7 +1,8 @@
 import {isOutbound,dockSlots} from './docks.js';
 import { STAGE, EQUIPMENT, DIRECTIONS, createAssignments } from './config.js';
 import { inboundPickupCells, outsideFactory, footprint, blockedCells, findPath, cellKey, neighbors, validateLayout } from './layout.js';
-export const DT = 0.2;
+import {DT,motionFrame} from './motion.js';
+export {DT};
 const BUFFER = 2;
 import { shapeFor } from './equipment-shapes.js';
 export const recipeFor = (item, stage = STAGE) => ({ ...EQUIPMENT[item.type], ...shapeFor(item), ...stage.recipes?.[item.type], ...stage.stepRecipes?.[item.id?.split('-')[0]] });
@@ -18,20 +19,21 @@ export function createSimulation(layout, assignments = createAssignments(layout)
   });
   const staffed = new Set(Object.values(assignments));
   const parallel = machines.filter(m => !m.parked && staffed.has(m.id) && recipeFor(m, stage).output === stage.product).length > 1;
-  const rateWindow = parallel ? { startTick: 0, startStock: 0, minutes: [] } : null;
-  return { stage, layout, assignments, machines, belts, workers, rateWindow, blocked: blockedCells(layout, stage), tick: 0, time: 0, supplied: 0, shipped: 0, productionRate: 0, averageProductionSeconds: null, measurementStart: 0, shipmentTimes: [], minuteShipmentTicks: [], warehouse: { stock: 0, incoming: 0 }, firstShipment: null, complete: false, outcome: null, reason: '', heat: {} };
+  const rateWindow = parallel ? { startTime: 0, startStock: 0, minutes: [] } : null;
+  return { stage, layout, assignments, machines, belts, workers, rateWindow, blocked: blockedCells(layout, stage), tick: 0, time: 0, productionTime: 0, supplied: 0, shipped: 0, productionRate: 0, averageProductionSeconds: null, measurementStart: 0, shipmentTimes: [], minuteShipmentTicks: [], warehouse: { stock: 0, incoming: 0 }, firstShipment: null, complete: false, outcome: null, reason: '', heat: {} };
 }
 // Commit a layout edit without discarding the factory's production state.
 // Reconcile in-flight work against the edited floor before the next tick.
 export function reconfigureSimulation(sim, layout, assignments, stage = sim.stage) {
   const next = createSimulation(layout, assignments, stage);
-  for (const key of ['tick', 'time', 'supplied', 'shipped', 'firstShipment', 'productionRate', 'averageProductionSeconds', 'continueAfterSuccess', 'complete', 'outcome']) next[key] = sim[key];
+  for (const key of ['tick', 'time', 'productionTime', 'supplied', 'shipped', 'firstShipment', 'productionRate', 'averageProductionSeconds', 'continueAfterSuccess', 'complete', 'outcome']) next[key] = sim[key];
   if (next.rateWindow && sim.rateWindow) next.rateWindow = structuredClone(sim.rateWindow);
   else if (next.rateWindow || sim.rateWindow) {
     next.productionRate = 0;
     next.averageProductionSeconds = null;
-    if (next.rateWindow) Object.assign(next.rateWindow, { startTick: sim.tick, startStock: sim.shipped });
+    if (next.rateWindow) Object.assign(next.rateWindow, { startTime: sim.productionTime, startStock: sim.shipped });
   }
+  if(sim.motion) next.motion={...sim.motion,tick:-1};
   next.heat = {...sim.heat};
   next.warehouse.stock = sim.warehouse.stock;
   next.measurementStart = sim.measurementStart;
@@ -215,15 +217,15 @@ function arrive(sim, worker) {
       const count = worker.load.length; sim.warehouse.stock += count;
       const sampleCount = sim.stage.sampleCount ?? 5;
       for (let i = 0; i < count; i++) {
-        sim.shipmentTimes.push(sim.time);
+        sim.shipmentTimes.push(sim.productionTime);
         if (sim.stage.minuteGoal) sim.minuteShipmentTicks.push(sim.tick);
         if (sim.shipmentTimes.length > sampleCount) sim.measurementStart = sim.shipmentTimes.shift();
       }
       if (count > 0 && !sim.rateWindow) {
-        sim.averageProductionSeconds = (sim.time - sim.measurementStart) / sim.shipmentTimes.length;
+        sim.averageProductionSeconds = (sim.productionTime - sim.measurementStart) / sim.shipmentTimes.length;
         sim.productionRate = 60 / sim.averageProductionSeconds;
       }
-      sim.warehouse.incoming -= count; sim.shipped = sim.warehouse.stock; sim.firstShipment ??= sim.time;
+      sim.warehouse.incoming -= count; sim.shipped = sim.warehouse.stock; sim.firstShipment ??= sim.productionTime;
       worker.load = []; worker.carriedWeight = 0;
     }
     else { const machine = ownPlace(sim, worker); machine.input++; machine.incoming--; }
@@ -239,7 +241,9 @@ function activityState(sim, worker) {
 export function stepSimulation(sim) {
   if (sim.complete && !(sim.continueAfterSuccess && sim.outcome === 'success')) return sim;
   if (!sim.tick) { const check = validateRun(sim.layout, sim.assignments, sim.stage); if (!check.valid) return fail(sim, check.errors[0]); }
+  const priorStock=sim.shipped;
   const previousActivity = sim.workers.map(worker => activityState(sim, worker));
+  sim.productionTime=sim.stage.playbackGoals ? sim.productionTime+motionFrame(sim).duration : Number(((sim.tick+1)*DT).toFixed(4));
   for (const worker of sim.workers) worker.transfers.length = 0;
   sim.tick++; sim.time = Number((sim.tick * DT).toFixed(4)); updateBelts(sim);
   for (const worker of sim.workers) { worker.from = { x: worker.x, y: worker.y }; if (ownPlace(sim, worker)?.parked) { worker.status = '공장 밖 대기'; continue; } if (!worker.job) assignJob(sim, worker); arrive(sim, worker); }
@@ -299,11 +303,12 @@ export function stepSimulation(sim) {
   // Count complete simulation minutes so the timing of a grouped delivery cannot
   // inflate throughput. Empty minutes also enter the rolling average.
   const window = sim.rateWindow;
-  if (window && sim.tick - window.startTick >= Math.round(60 / DT)) {
-    window.minutes.push(sim.shipped - window.startStock);
+  while (window && sim.productionTime + 1e-9 >= window.startTime + 60) {
+    const stock=sim.productionTime > window.startTime+60+1e-9 ? priorStock : sim.shipped;
+    window.minutes.push(stock - window.startStock);
     if (window.minutes.length > 3) window.minutes.shift();
-    window.startTick = sim.tick;
-    window.startStock = sim.shipped;
+    window.startTime += 60;
+    window.startStock = stock;
     sim.productionRate = window.minutes.reduce((sum, count) => sum + count, 0) / window.minutes.length;
     sim.averageProductionSeconds = sim.productionRate > 0 ? 60 / sim.productionRate : null;
   }

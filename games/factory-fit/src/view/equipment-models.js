@@ -1,3 +1,4 @@
+import {processCell} from '../game/equipment-shapes.js';
 import * as THREE from 'three';
 const floorMachines = new Set(['cutter','machining','injection','press','joining','painting','heating','casting','filling']);
 
@@ -179,7 +180,7 @@ export function buildEquipment(item, spec, kit) {
     ball(.16,1,1.2,0,cream);
   }
   const workingCells = spec.mask.flatMap((row,y) => [...row].flatMap((c,x) => c === '#' ? [[x,y]] : []));
-  let process = workingCells[0];
+  const process = processCell(spec,item.variant);
   if (workingCells.length === 2) {
     // Fit the recognizable tool assembly to the two non-tray tiles.
     const tools = new THREE.Group();
@@ -196,14 +197,12 @@ export function buildEquipment(item, spec, kit) {
     holder.rotation.y = vertical ? Math.PI/2 : 0;
     holder.position.set((ax+bx+1-spec.width)/2, cabinetTop, (ay+by+1-spec.height)/2);
     group.add(holder);
-    process = workingCells.find(([x,y]) => Math.abs(x-spec.workCell[0])+Math.abs(y-spec.workCell[1])===1) ?? process;
   } else if (item.variant === 'mirror') {
     for (const part of group.children.slice(toolStart)) {
       part.position.x *= -1;
       part.rotation.y *= -1;
       part.rotation.z *= -1;
     }
-    process = [spec.width-1,0];
   }
   // Fixed production anchors are independent from camera and rotation.
   group.userData.outputAnchor = new THREE.Vector3(outputX+.5-spec.width/2, cabinetTop+.08, outputY+.5-spec.height/2);

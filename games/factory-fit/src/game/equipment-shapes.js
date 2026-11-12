@@ -46,3 +46,9 @@ export function shapeFor(item) {
   const spec = EQUIPMENT_SHAPES[item.type];
   return spec?.variants[item.variant ?? spec.defaultVariant];
 }
+
+export function processCell(spec,variant) {
+  const cells=spec.mask.flatMap((row,y)=>[...row].flatMap((c,x)=>c==='#'?[[x,y]]:[]));
+  if(cells.length===2) return cells.find(([x,y])=>Math.abs(x-spec.workCell[0])+Math.abs(y-spec.workCell[1])===1) ?? cells[0];
+  return variant==='mirror' ? [spec.width-1,0] : cells[0];
+}

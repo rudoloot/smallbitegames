@@ -1,6 +1,6 @@
 import {onFloor,dockSides,dockSlots} from './docks.js';
 import { EQUIPMENT, STAGE, suppliedEquipment } from './config.js';
-import { shapeFor } from './equipment-shapes.js';
+import { shapeFor,processCell } from './equipment-shapes.js';
 export const cellKey = ({ x, y }) => `${x},${y}`;
 export const inBounds = ({ x, y }, stage = STAGE) => Number.isInteger(x) && Number.isInteger(y) && onFloor({x,y},stage);
 export const isHole = (cell, stage = STAGE) => stage.holes.some(hole => cellKey(hole) === cellKey(cell));
@@ -12,7 +12,7 @@ export function footprint(item) {
   const cells = spec.mask ? spec.mask.flatMap((row, y) => [...row].flatMap((c, x) => c === '.' ? [] : [[x, y]])) : Array.from({ length: spec.width * spec.height }, (_, i) => [i % spec.width, Math.floor(i / spec.width)]);
   const outputY = spec.mask?.findIndex(row => row.includes('O'));
   const output = outputY >= 0 ? transform(spec.mask[outputY].indexOf('O'), outputY) : null;
-  return { body: cells.map(([x,y]) => transform(x,y)), work: spec.belt ? [] : [transform(...(spec.workCell ?? [Math.floor((spec.width - 1) / 2), spec.height]))], output, outlet: outputY >= 0 ? transform(spec.mask[outputY].indexOf('O') + (spec.mask[outputY].indexOf('O') === 0 ? -1 : 1), outputY) : transform(spec.width, spec.height - 1) };
+  return { process: spec.mask ? transform(...processCell(spec,item.variant)) : null, body: cells.map(([x,y]) => transform(x,y)), work: spec.belt ? [] : [transform(...(spec.workCell ?? [Math.floor((spec.width - 1) / 2), spec.height]))], output, outlet: outputY >= 0 ? transform(spec.mask[outputY].indexOf('O') + (spec.mask[outputY].indexOf('O') === 0 ? -1 : 1), outputY) : transform(spec.width, spec.height - 1) };
 }
 export function operatorFacing(shape) {
   const work = shape.work[0];
