@@ -1,4 +1,4 @@
-import {recipeFor} from '../game/simulation.js';
+import {DT,recipeFor} from '../game/simulation.js';
 import { dockSlots, isOutbound } from '../game/docks.js';
 import * as THREE from 'three';
 import { EQUIPMENT, STAGE } from '../game/config.js';
@@ -241,58 +241,98 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     const bubble = { el, pos: new THREE.Vector3() }; workerBubbles.push(bubble); model.bubble = bubble;
     return model;
   }
-  function transferEndpoint(kind, event, sim, worker, body) {
-    const hand=new THREE.Vector3(0,.4+(event.stack ?? 0)*.24,.4);
-    if(kind==='hand') return hand;
+  function surfacePoint(kind, event, sim) {
     const model=modelMap.get(event.id);
     const anchor=kind==='output' ? model?.userData.inventory?.outputItem :
       kind==='process' ? model?.userData.inventory?.processingItem : null;
-    let point;
-    if(anchor) point=anchor.getWorldPosition(new THREE.Vector3());
-    else if(kind==='belt' && model) point=model.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.38,0));
-    else {
-      const dock=sim.stage.fixtures.find(f=>f.id===kind);
-      if(!dock) return hand;
-      point=new THREE.Vector3(
-        THREE.MathUtils.clamp(worker.x+.5,dock.x+.5,dock.x+dock.width-.5),
-        kind==='inbound' ? .65 : .72,
-        THREE.MathUtils.clamp(worker.y+.5,dock.y+.5,dock.y+dock.height-.5));
-    }
-    return body.worldToLocal(point);
+    if(anchor) return anchor.getWorldPosition(new THREE.Vector3());
+    if(kind==='belt' && model) return model.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.38,0));
+    const dock=sim.stage.fixtures.find(f=>f.id===kind);
+    if(!dock) return null;
+    return new THREE.Vector3(
+      THREE.MathUtils.clamp(event.x+.5,dock.x+.5,dock.x+dock.width-.5),
+      kind==='inbound' ? .65 : .72,
+      THREE.MathUtils.clamp(event.y+.5,dock.y+.5,dock.y+dock.height-.5));
+  }
+  const turnRate=Math.PI; // 180 degrees per second at normal playback speed.
+  const transferSeconds=.65;
+  const shortestTurn=(from,to)=>Math.atan2(Math.sin(to-from),Math.cos(to-from));
+  let lastMotionSim, lastMotionTick, motions=[], frameDuration=DT;
+  function playbackDuration(sim) {
+    if(lastMotionSim===sim && lastMotionTick===sim.tick) return frameDuration;
+    const previous=motions;
+    const continuous=lastMotionSim===sim && sim.tick===lastMotionTick+1;
+    lastMotionSim=sim;lastMotionTick=sim.tick;frameDuration=DT;
+    motions=sim.workers.map(worker=>{
+      const old=previous[worker.id];
+      let angle=continuous && old ? old.angle : workerModels[worker.id]?.body.rotation.y ?? 0;
+      let x=worker.from.x,y=worker.from.y,time=0;
+      const segments=[], events=[];
+      function segment(duration,toAngle,toX=x,toY=y) {
+        if(duration>0) segments.push({start:time,duration,angle,delta:toAngle-angle,x,y,toX,toY});
+        time+=duration;angle=toAngle;x=toX;y=toY;
+      }
+      function walk(toX,toY) {
+        if(x===toX && y===toY) return;
+        const target=Math.atan2(toX-x,toY-y);
+        segment(DT,angle+THREE.MathUtils.clamp(shortestTurn(angle,target),-turnRate*DT,turnRate*DT),toX,toY);
+      }
+      for(const event of worker.transfers){
+        walk(event.x,event.y);
+        const point=surfacePoint(event.from==='hand'?event.to:event.from,event,sim);
+        const turn=point ? shortestTurn(angle,Math.atan2(point.x-x-.5,point.z-y-.5)) : 0;
+        const start=time;
+        segment(Math.abs(turn)/turnRate,angle+turn);
+        events.push({start,moveStart:time,end:time+transferSeconds,point});
+        segment(transferSeconds,angle);
+      }
+      walk(worker.x,worker.y);
+      if(!segments.length){
+        const own=sim.machines.find(m=>m.id===worker.machineId);
+        const facing=own && cellKey(worker)===cellKey(own.work[0]) && operatorFacing(footprint(own));
+        const source=modelMap.get(worker.waitingForSource);
+        const target=source ? Math.atan2(source.position.x-x-.5,source.position.z-y-.5) :
+          facing ? Math.atan2(facing.x,facing.y) : angle;
+        const turn=shortestTurn(angle,target);
+        segment(DT,angle+(sim.tick ? THREE.MathUtils.clamp(turn,-turnRate*DT,turnRate*DT) : turn));
+      }
+      frameDuration=Math.max(frameDuration,time);
+      return {segments,events,angle};
+    });
+    return frameDuration;
   }
   function update(sim, alpha, seconds, paused = false) {
     for (const entry of labels) entry.el.hidden = !paused || (entry===inletLabel && !inletGroup.visible);
     const receivingOutput=new Set(), receivingInput=new Set();
     if (!workerModels.length) workerModels = sim.workers.map((worker, index) => workerModel(worker, index));
+    const elapsed=THREE.MathUtils.clamp(alpha,0,1)*playbackDuration(sim);
     for (const worker of sim.workers) {
       const obj = workerModels[worker.id];
       // A pickup and deposit may both finish in one tick when the operator
       // stands next to both surfaces. Play those transfers in simulation order.
       const events=worker.transfers;
-      const phase=Math.max(0,Math.min(1,alpha))*events.length;
-      const index=Math.floor(phase), event=events[index], fraction=phase-index;
+      const motion=motions[worker.id];
+      const index=motion.events.filter(action=>action.end<=elapsed).length;
+      const action=motion.events[index];
+      const event=action && elapsed>=action.start ? events[index] : null;
+      const fraction=event ? THREE.MathUtils.clamp((elapsed-action.moveStart)/transferSeconds,0,1) : 0;
+      const pose=motion.segments.find(s=>elapsed<s.start+s.duration) ?? motion.segments.at(-1);
+      const blend=THREE.MathUtils.clamp((elapsed-pose.start)/pose.duration,0,1);
       for(let i=index;i<events.length;i++){
         if(events[i].to==='output') receivingOutput.add(events[i].id);
         if(events[i].to==='process') receivingInput.add(events[i].id);
       }
       obj.body.rotation.x = event ? Math.sin(fraction*Math.PI)*.12 : 0;
       const waiting = waitingWorkers[worker.key];
-      const x = waiting?.x ?? THREE.MathUtils.lerp(worker.from.x, worker.x, alpha), y = waiting?.y ?? THREE.MathUtils.lerp(worker.from.y, worker.y, alpha);
+      const x = waiting?.x ?? THREE.MathUtils.lerp(pose.x,pose.toX,blend), y = waiting?.y ?? THREE.MathUtils.lerp(pose.y,pose.toY,blend);
       obj.group.visible = !!worker.machineId || !!waiting;
       obj.group.position.set(x + 0.5, 0.07, y + 0.5);
       obj.bubble.pos.set(x + .5, 2.05, y + .5);
-      const dx = worker.x - worker.from.x, dy = worker.y - worker.from.y;
-      if (dx || dy) obj.body.rotation.y = Math.atan2(dx, dy);
-      else if (!sim.tick) obj.body.rotation.y = 1.1;
+      const dx=blend<1 ? pose.toX-pose.x : 0, dy=blend<1 ? pose.toY-pose.y : 0;
+      obj.body.rotation.y=pose.angle+pose.delta*blend;
       const own = sim.machines.find(machine => machine.id === worker.machineId);
       const processingHere = !own?.parked && own?.processing > 0 && !worker.job && cellKey(worker) === cellKey(own.work[0]);
       obj.bubble.el.hidden = !worker.machineId || processingHere || worker.idleSeconds < 10;
-      const waitingSource = worker.waitingForSource && modelMap.get(worker.waitingForSource);
-      if (sim.tick && !(dx || dy) && waitingSource) obj.body.rotation.y = Math.atan2(waitingSource.position.x - (x + .5), waitingSource.position.z - (y + .5));
-      if (!(dx || dy) && own && !waitingSource && cellKey(worker) === cellKey(own.work[0])) {
-        const facing = operatorFacing(footprint(own));
-        if (facing) obj.body.rotation.y = Math.atan2(facing.x,facing.y);
-      }
       const working = !event && !own?.parked && own?.processing > 0 && !worker.job && !(dx || dy);
       // Drive work gestures from simulation time so pausing also freezes the hands.
       const workTime = Math.max(0, sim.time - .2 + alpha * .2);
@@ -313,10 +353,13 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       const stack=event?.stack ?? 0;
       const count=event ? event.count ?? stack+1 : worker.carrying ? Math.max(1,worker.load.length) : 1;
       if(event) heldStage=event.stage;
+      else if(action) heldStage=events[index].from==='hand' || events[index].stack ? events[index].stage : undefined;
       const offset=new THREE.Vector3();
       if(event){
-        const start=transferEndpoint(event.from,event,sim,worker,obj.body);
-        const end=transferEndpoint(event.to,event,sim,worker,obj.body);
+        const hand=new THREE.Vector3(0,.4+stack*.24,.4);
+        const surface=action.point ? obj.body.worldToLocal(action.point.clone()) : hand;
+        const start=event.from==='hand' ? hand : surface;
+        const end=event.to==='hand' ? hand : surface;
         const t=fraction*fraction*(3-2*fraction);
         offset.copy(start).lerp(end,t);
         offset.y+=Math.sin(t*Math.PI)*.14;
@@ -472,6 +515,6 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   }
   const cameraState=()=>({panX,panZ,zoom:camera.zoom});
   function restoreCamera(state){panX=state.panX;panZ=state.panZ;camera.zoom=state.zoom;positionCamera();camera.updateProjectionMatrix();}
-  return { dispose, cameraState, restoreCamera, setLayout, setPreview, inspectPreview: () => previewState, update, showHeat, render, renderer, camera, fit, audit: art.audit, projectCell, pickAt: (clientX, clientY) => pick({ clientX, clientY }) };
+  return { dispose, playbackDuration, cameraState, restoreCamera, setLayout, setPreview, inspectPreview: () => previewState, update, showHeat, render, renderer, camera, fit, audit: art.audit, projectCell, pickAt: (clientX, clientY) => pick({ clientX, clientY }) };
 }
 

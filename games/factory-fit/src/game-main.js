@@ -22,7 +22,7 @@ let historyPresent = structuredClone(session);
 const createLiveSimulation = (layout, assignments) => Object.assign(createSimulation(layout, assignments, sessionStage(STAGE,session)), { continueAfterSuccess: true });
 let goalAchieved = false, lastMeasurement = null;
 let sim = createLiveSimulation(session.layout, session.assignments), mode = 'edit', running = false, accumulator = 0, lastTime = 0, noticeTimer;
-let pausedRun = null;
+let pausedRun = null, playbackSpeed = 1, playbackTime = 0;
 const catalogInventory = Object.keys(EQUIPMENT).map(type => ({ id: `catalog-${type}`, type }));
 const previewCache = new Map();
 let generatePreviews;
@@ -359,6 +359,11 @@ function restoreHistory(direction) {
 $('#undo').addEventListener('click', () => restoreHistory('undo'));
 $('#redo').addEventListener('click', () => restoreHistory('redo'));
 $('#run').addEventListener('click', start);
+$('#speed').addEventListener('click', () => {
+  playbackSpeed=playbackSpeed%3+1;
+  $('#speed').textContent=playbackSpeed+'×';
+  $('#speed').setAttribute('aria-label','재생 속도 '+playbackSpeed+'배');
+});
 $('#confirm').addEventListener('click', commitDraft); $('#cancel').addEventListener('click', cancel); $('#worker-cancel').addEventListener('click', cancel);
 $('#shape').onchange = event => { if (draft) { draft.variant = event.target.value; refresh(); } };
 $('#rotate').addEventListener('click', () => { if (draft) { draft.rotation = (draft.rotation + 1) % 4; refresh(); } });
@@ -412,11 +417,21 @@ async function boot() {
     if (session.layout.length) { mode='run'; running=true; }
     $('#loading').remove(); $('#scene').dataset.ready = 'true'; $('#run').disabled = false; refresh();
     // Read-only diagnostics for authoring and browser QA; no solution or mutating hook is exposed.
-    window.factoryFit = Object.freeze({ snapshot: () => structuredClone({ session, simulationLayout: sim.layout, machines: sim.machines, preview: view.inspectPreview(), mode, outcome: sim.outcome, shipped: sim.shipped, productionRate: sim.productionRate, averageProductionSeconds: sim.averageProductionSeconds, shipmentTimes: sim.shipmentTimes, targetPerMinute: STAGE.targetPerMinute, time: sim.time, running, reason: sim.reason, draft }), projectCell: (x, y) => view.projectCell({ x, y }) });
+    window.factoryFit = Object.freeze({ snapshot: () => structuredClone({ session, simulationLayout: sim.layout, machines: sim.machines, preview: view.inspectPreview(), mode, outcome: sim.outcome, shipped: sim.shipped, productionRate: sim.productionRate, averageProductionSeconds: sim.averageProductionSeconds, shipmentTimes: sim.shipmentTimes, targetPerMinute: STAGE.targetPerMinute, time: sim.time, running, playbackSpeed, reason: sim.reason, draft }), projectCell: (x, y) => view.projectCell({ x, y }) });
     function frame(now) {
       const elapsed = lastTime ? Math.min(.15, (now - lastTime) / 1000) : 0; lastTime = now;
-      if (running) { accumulator += elapsed; while (accumulator >= DT && (!sim.complete || sim.outcome === 'success')) { stepSimulation(sim); accumulator -= DT; } if (sim.complete && (sim.outcome !== 'success' || !goalAchieved)) finish(); updateProduction(); }
-      view.update(sim, mode === 'run' ? accumulator / DT : 1, now / 1000, !running && canEdit()); updateEquipmentInfo(); view.render(); requestAnimationFrame(frame);
+      let duration=view.playbackDuration(sim);
+      if (running) {
+        const delta=elapsed*playbackSpeed;
+        playbackTime+=delta;
+        accumulator+=delta;
+        while(accumulator>=duration && (!sim.complete || sim.outcome==='success')){
+          accumulator-=duration;stepSimulation(sim);duration=view.playbackDuration(sim);
+        }
+        if(sim.complete && (sim.outcome!=='success' || !goalAchieved)) finish();
+        updateProduction();
+      }
+      view.update(sim, mode==='run' ? accumulator/duration : 1, playbackTime, !running && canEdit()); updateEquipmentInfo(); view.render(); requestAnimationFrame(frame);
     } requestAnimationFrame(frame);
   } catch (error) { const el = $('#loading') ?? $('#notice'); el.hidden = false; el.classList.add('error'); el.textContent = '3D 화면을 열지 못했어요. 페이지를 새로고침해 주세요.'; console.error(error); }
 }

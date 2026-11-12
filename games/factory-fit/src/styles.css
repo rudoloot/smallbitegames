@@ -143,3 +143,5 @@ button{font-weight:500;letter-spacing:-.02em;transition:background-color .15s,bo
 
 #equipment-list .supply-card{padding:0 1px 1px;overflow:hidden}
 #equipment-list [data-fixture=inbound] .ui-icon{place-self:center;width:72%;height:86%;color:#936735}
+
+.run-controls #speed{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}

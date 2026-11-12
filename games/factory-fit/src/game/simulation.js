@@ -199,7 +199,7 @@ function arrive(sim, worker) {
     if (job.sourceKind === 'machine') sim.machines.find(m => m.id === job.source).reserved--;
     else if (job.sourceKind === 'belt') { const belt = sim.belts.find(b => b.id === job.source); belt.item = null; belt.reserved = false; }
     else sim.supplied++;
-    worker.transfers.push({from:job.sourceKind==='machine'?'output':job.sourceKind,to:'hand',id:job.source,
+    worker.transfers.push({x:worker.x,y:worker.y,from:job.sourceKind==='machine'?'output':job.sourceKind,to:'hand',id:job.source,
       stage:job.cargo.stage,stack:worker.load.length});
     worker.metrics.transfers++;
     worker.carrying = true; worker.cargo = job.cargo; worker.path = path; job.phase = 'delivery'; job.goals = own.work; job.target = own.work[0]; worker.status = '물건을 운반하는 중';
@@ -209,7 +209,7 @@ function arrive(sim, worker) {
       assignJob(sim, worker, true);
     }
   } else {
-    worker.transfers.push({from:'hand',to:job.destination==='outbound'?'outbound':'process',id:job.destination,
+    worker.transfers.push({x:worker.x,y:worker.y,from:'hand',to:job.destination==='outbound'?'outbound':'process',id:job.destination,
       stage:worker.cargo.stage,count:Math.max(1,worker.load.length)});
     if (job.destination === 'outbound') {
       const count = worker.load.length; sim.warehouse.stock += count;
@@ -278,13 +278,13 @@ export function stepSimulation(sim) {
       machine.processing = Math.max(0, Number((machine.processing - DT).toFixed(4))); machine.progress = 1 - machine.processing / recipe.seconds; worker.metrics.working += DT; worker.status = '작업 중';
       if (!machine.processing) {
         machine.pendingOutput = true;
-        worker.transfers.push({from:'process',to:'hand',id:machine.id,stage:recipe.outputStage ?? 4});
+        worker.transfers.push({x:worker.x,y:worker.y,from:'process',to:'hand',id:machine.id,stage:recipe.outputStage ?? 4});
       }
     } else if (!machine.pendingOutput && machine.input > 0) { machine.input--; machine.processing = recipe.seconds; machine.cycleStartedAt = sim.time; worker.status = '작업 시작'; }
     // A reserved item still occupies the tray until its collector physically picks it up.
     if (machine.pendingOutput) {
       if (machine.output + machine.reserved === 0) {
-        worker.transfers.push({from:'hand',to:'output',id:machine.id,stage:recipe.outputStage ?? 4});
+        worker.transfers.push({x:worker.x,y:worker.y,from:'hand',to:'output',id:machine.id,stage:recipe.outputStage ?? 4});
         machine.output = 1; machine.pendingOutput = false; machine.progress = 0;
         if (machine.cycleStartedAt != null) { machine.totalCycleSeconds += sim.time - machine.cycleStartedAt; machine.completedCycles++; machine.cycleStartedAt = null; } worker.status = '출력칸에 올려놓음';
       } else worker.status = '출력칸이 비기를 기다리는 중';
