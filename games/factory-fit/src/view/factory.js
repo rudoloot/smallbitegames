@@ -339,7 +339,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       else if (own?.pendingOutput) heldStage = recipeFor(own,sim.stage).outputStage ?? 4;
       const stack=event?.stack ?? 0;
       const count=event ? event.count ?? stack+1 : worker.carrying ? Math.max(1,worker.load.length) : 1;
-      if(worker.receivedTick===sim.tick) heldStage=undefined;
+      if(worker.receivedTick===sim.tick && !events.length) heldStage=undefined;
       if(event) heldStage=event.stage;
       else if(action) heldStage=events[index].from==='hand' || events[index].stack ? events[index].stage : undefined;
       const offset=new THREE.Vector3();

@@ -236,14 +236,29 @@ function assignJob(sim, worker, collecting = false) {
   }
   const storing = own.id === 'outbound', recipe = storing ? null : recipeFor(own, sim.stage);
   if(sim.stage.paired && storing){
-    if(worker.cargo && worker.receivedTick<sim.tick){
-      worker.transfers.push({x:worker.x,y:worker.y,from:'hand',to:'outbound',id:'outbound',stage:worker.cargo.stage});
-      sim.warehouse.stock++;recordShipment(sim,1);
-      worker.cargo=null;worker.carrying=false;worker.metrics.transfers++;
+    if(worker.cargo){
+      if(worker.receivedTick<sim.tick){
+        worker.transfers.push({x:worker.x,y:worker.y,from:'hand',to:'outbound',id:'outbound',stage:worker.cargo.stage});
+        sim.warehouse.stock++;recordShipment(sim,1);
+        worker.cargo=null;worker.carrying=false;worker.metrics.transfers++;
+      }
+      return;
+    }
+    const adjacent=sim.machines.filter(m=>!m.parked && m.output>0 &&
+      recipeFor(m,sim.stage).output===sim.stage.product && trayAtReceiver(m,worker.home));
+    const last=adjacent.findIndex(m=>m.id===worker.lastPickup);
+    const source=adjacent.length ? adjacent[(last+1)%adjacent.length] : null;
+    if(source){
+      const recipe=recipeFor(source,sim.stage);
+      source.output--;
+      worker.lastPickup=source.id;
+      worker.cargo=itemData(sim,recipe.output,recipe.outputStage);
+      worker.carrying=true;worker.receivedTick=sim.tick;worker.metrics.transfers++;
+      worker.transfers.push({x:worker.x,y:worker.y,from:'output',to:'hand',id:source.id,stage:recipe.outputStage});
     }
     return;
   }
-  if(sim.stage.paired && recipe.output===sim.stage.product && own.output){
+  if(sim.stage.paired && recipe.output===sim.stage.product && own.output && !trayAtReceiver(own,warehouse(sim).access)){
     const goals=shippingGoals(sim),path=pathTo(sim,worker,goals);
     if(path===null)return;
     own.output--;
@@ -306,6 +321,10 @@ function recordShipment(sim,count) {
   sim.shipped = sim.warehouse.stock; sim.firstShipment ??= sim.productionTime;
 }
 
+function trayAtReceiver(machine,home) {
+  const tray=footprint(machine).output;
+  return tray && Math.abs(tray.x-home.x)+Math.abs(tray.y-home.y)===1;
+}
 function shippingGoals(sim) {
   return neighbors(warehouse(sim).access,sim.stage);
 }

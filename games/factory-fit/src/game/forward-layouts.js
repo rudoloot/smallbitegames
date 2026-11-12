@@ -358,8 +358,8 @@ export const forwardLayouts = [
       "w19": null,
       "w20": "outbound"
     },
-    "referenceMeanSeconds": 28.6984,
-    "targetPerMinute": 2
+    "referenceMeanSeconds": 27.4,
+    "targetPerMinute": 2.1
   },
   {
     "width": 10,
