@@ -112,12 +112,21 @@ function refresh({ model = true } = {}) {
   $('#catalog-panel').hidden = !!draft || !!pendingWorker;
   $('#context').classList.toggle('machine-detail', !!draft || !!pendingWorker);
   $('#worker-guidance').hidden = !pendingWorker;
-  $('#machine-stats').hidden = !draft;
+  const inlet=draft?.type==='moveInbound';
+  $('#machine-stats').hidden = !draft || inlet;
+  $('#move-inbound').hidden = !inlet || session.inbound===null;
+  $('#rotate').hidden = inlet;
   $('#undo').disabled = !undoStack.length; $('#redo').disabled = !redoStack.length;
   $('#machine-actions').hidden = !draft; $('#worker-actions').hidden = !pendingWorker;
   $('#run').innerHTML = icon(running ? 'pause' : 'play');
   $('#run').setAttribute('aria-label', running ? '일시정지' : '재생');
-  if (draft) {
+  if(inlet){
+    $('#selected-name').textContent='입고장';
+    $('#shape').hidden=true;
+    $('#placement-status').textContent=draft.x===null ? '빈 2×2칸을 누른 뒤 설치하세요.' : result?.ok ? '배치 가능 · 설치를 눌러 확정하세요.' : result.error;
+    $('#confirm').disabled=!result?.ok;
+    $('#remove').hidden=session.inbound===null;
+  } else if (draft) {
     const item = suppliedEquipment(draft.id);
     showShapeOptions($('#shape'), item.type, draft.variant); $('#shape').hidden = !!item.variant || !EQUIPMENT[item.type].variants; $('#selected-name').textContent = (recipeFor(item,STAGE).operation ?? EQUIPMENT[item.type].name) + (item.variant ? ' · '+shapeLabel(item.variant) : '');
     $('#placement-status').textContent = draft.x === null ? '설치할 위치를 누르세요 · 공장 밖은 임시 대기' : result?.ok ? `${draft.rotation * 90}° · 배치 가능` : `${draft.rotation * 90}° · 간섭 — 위치나 방향을 바꿔 주세요`;
@@ -128,14 +137,14 @@ function refresh({ model = true } = {}) {
     view.setLayout(working.layout, selectedId, working.assignments, pendingWorker, working.waitingWorkers,sessionStage(STAGE,working));
     if (mode === 'edit') sim = createLiveSimulation(working.layout, working.assignments);
     const given = draft && suppliedEquipment(draft.id);
-    view.setPreview(draft && draft.x !== null ? { ...draft, type: given.type } : null, !!result?.ok);
+    view.setPreview(draft && draft.x !== null ? inlet ? {...inboundFixture,x:draft.x,y:draft.y,type:'inbound'} : { ...draft, type: given.type } : null, !!result?.ok);
   }
   updateProduction();
   updateEquipmentInfo();
   updateCards();
 }
 function updateEquipmentInfo() {
-  if (!draft) return;
+  if (!draft || draft.type==='moveInbound') return;
   const type = suppliedEquipment(draft.id).type;
   const recipe = recipeFor({ ...draft, type }, STAGE), machine = sim.machines.find(m => m.id === draft.id);
   $('#machine-cycle').textContent = recipe.seconds + '초';
@@ -146,7 +155,7 @@ function commitDraft() {
   const result = currentResult(); if (!result?.ok) { notice(result?.error ?? '설비를 놓을 위치를 선택해 주세요.', true); return false; }
   session = result.state; draft = null; selectedId = null; persist(); refresh(); return true;
 }
-function cancel() { movingInbound=false; draft = null; pendingWorker = null; selectedId = null; refresh(); }
+function cancel() {  draft = null; pendingWorker = null; selectedId = null; refresh(); }
 function beginSupply(baseId) {
   if (!STAGE.unlimitedEquipment) { beginMachine(baseId); return; }
   let id = baseId, n = 1;
@@ -154,14 +163,14 @@ function beginSupply(baseId) {
   beginMachine(id);
 }
 function beginMachine(id) {
-  movingInbound=false;
+  
   if (!canEdit() || draft?.id === id) return;
   if (draft && !commitDraft()) return;
   pendingWorker = null; selectedId = id;
   const placed = session.layout.find(item => item.id === id);
   draft = { type: 'place', id, variant: placed?.variant ?? suppliedEquipment(id).variant ?? EQUIPMENT[suppliedEquipment(id).type].defaultVariant, x: placed?.x ?? null, y: placed?.y ?? null, rotation: placed?.rotation ?? 0 }; refresh();
 }
-function chooseWorker(key) { movingInbound=false; if (!canEdit() || (draft && !commitDraft())) return; draft = null; selectedId = null; pendingWorker = key; refresh(); }
+function chooseWorker(key) {  if (!canEdit() || (draft && !commitDraft())) return; draft = null; selectedId = null; pendingWorker = key; refresh(); }
 function moveDraft(cell) {
   if (!draft || !cell) return;
   const given = suppliedEquipment(draft.id), spec = recipeFor({...draft, type:given.type}, STAGE), w = draft.rotation % 2 ? spec.height : spec.width, h = draft.rotation % 2 ? spec.width : spec.height;
@@ -174,13 +183,17 @@ function assign(workId) {
   if (!result.ok) { notice(result.error, true); return; }
   session = result.state; pendingWorker = null; persist(); refresh();
 }
-let movingInbound=false;
+const inboundFixture=STAGE.fixtures.find(f=>f.id==='inbound');
+function beginInbound() {
+  pendingWorker=null; selectedId=null;
+  draft={type:'moveInbound',id:'inbound',x:null,y:null};
+  refresh();
+}
 function pick(hit) {
   if (!canEdit()) return;
-  if (movingInbound && !pendingWorker && !draft && hit.cell) {
-    const result=transact(session,{type:'moveInbound',...hit.cell});
-    if (!result.ok) { notice(result.error,true); return; }
-    movingInbound=false;session=result.state;persist();refresh();return;
+  if (draft?.type==='moveInbound' && hit.cell) {
+    Object.assign(draft,hit.cell);
+    refresh();return;
   }
   if (pendingWorker && !hit.workId && hit.cell && !inBounds(hit.cell)) {
     const result = transact(session, { type: 'waitOutside', workerId: pendingWorker, ...hit.cell });
@@ -196,14 +209,14 @@ function pick(hit) {
   }
   const waiting = hit.cell && Object.entries(session.waitingWorkers ?? {}).find(([,cell]) => cellKey(cell) === cellKey(hit.cell));
   if (waiting) { chooseWorker(waiting[0]); return; }
-  if(hit.fixedId==='inbound') { movingInbound=true;notice('입고장을 옮길 위치를 누르세요. 선택한 칸부터 2×2칸을 사용합니다.');return; }
+  if(hit.fixedId==='inbound') {beginInbound();return;}
   if (hit.id) beginMachine(hit.id);
   else if (hit.workId) { const key = Object.keys(session.assignments).find(key => session.assignments[key] === hit.workId); if (key) chooseWorker(key); else { selectInventory('workers'); notice('아래 작업자를 고른 뒤 이 자리에 배치하세요.'); } }
 }
 const inventories = {equipment:{slots:[],page:0},workers:{slots:[],page:0}};
 let activeInventory='equipment';
 function selectInventory(name) {
-  movingInbound=false;
+  
   activeInventory=name;
   for (const key of Object.keys(inventories)) {
     const active=key===name, tab=$('#'+key+'-tab');
@@ -265,14 +278,13 @@ if(STAGE.processTitle){
   $('#onboarding strong').textContent=STAGE.processTitle+' 공장';
   $('#onboarding span').textContent=STAGE.processSummary;
 }
-if (STAGE.playerPlacesInbound) {
+if (inboundFixture) {
   const card=document.createElement('button');
   card.type='button';card.className='supply-card';card.dataset.fixture='inbound';
-  card.innerHTML=icon('timber')+'<span>입고장</span>';
+  card.innerHTML='<img data-inbound-preview alt="" draggable="false"><span>입고장</span>';
   card.onclick=()=>{
     if (performance.now()<=suppressClickUntil || !canEdit()) return;
-    draft=null;pendingWorker=null;selectedId=null;movingInbound=true;refresh();
-    notice('입고장을 설치할 빈 2×2칸의 시작 칸을 누르세요.');
+    beginInbound();
   };
   appendSlot('equipment',card);
 }
@@ -347,12 +359,12 @@ function start() {
 function pauseRun() {
   pausedRun = { sim, layout: JSON.stringify(session), accumulator }; running = false; refresh();
 }
-function edit() { movingInbound=false; pausedRun = null; mode = 'edit'; running = false; accumulator = 0; draft = null; pendingWorker = null; selectedId = null; refresh(); }
+function edit() {  pausedRun = null; mode = 'edit'; running = false; accumulator = 0; draft = null; pendingWorker = null; selectedId = null; refresh(); }
 function restoreHistory(direction) {
   const from = direction === 'undo' ? undoStack : redoStack;
   const to = direction === 'undo' ? redoStack : undoStack;
   if (!from.length) return;
-  movingInbound=false;to.push(structuredClone(session)); session = from.pop();
+  to.push(structuredClone(session)); session = from.pop();
   draft = null; pendingWorker = null; selectedId = null;
   persist(false); refresh();
 }
@@ -366,8 +378,9 @@ $('#speed').addEventListener('click', () => {
 });
 $('#confirm').addEventListener('click', commitDraft); $('#cancel').addEventListener('click', cancel); $('#worker-cancel').addEventListener('click', cancel);
 $('#shape').onchange = event => { if (draft) { draft.variant = event.target.value; refresh(); } };
-$('#rotate').addEventListener('click', () => { if (draft) { draft.rotation = (draft.rotation + 1) % 4; refresh(); } });
-$('#remove').addEventListener('click', () => { if (!draft) return; const result = transact(session, { type: 'remove', id: draft.id }); if (result.ok) { session = result.state; persist(); cancel(); } });
+$('#move-inbound').onclick=()=>{beginInbound();notice('이동할 위치를 누른 뒤 설치하세요.');};
+$('#rotate').addEventListener('click', () => { if (draft?.type==='place') { draft.rotation = (draft.rotation + 1) % 4; refresh(); } });
+$('#remove').addEventListener('click', () => { if (!draft) return; const result = transact(session, { type: draft.type==='moveInbound'?'removeInbound':'remove', id: draft.id }); if (result.ok) { session = result.state; persist(); cancel(); } });
 $('#unassign').addEventListener('click', () => { const result = transact(session, { type: 'assign', workerId: pendingWorker, machineId: null }); if (result.ok) { session = result.state; persist(); cancel(); } });
 for (const [id, direction] of [['previous', -1], ['next', 1]]) $('#'+id).addEventListener('click', () => { turnCard(direction); });
 $('#fit-view').addEventListener('click', () => view?.fit()); $('#retry').addEventListener('click', () => $('#result-dialog').close());
@@ -408,7 +421,8 @@ async function boot() {
     const previews = createEquipmentPreviews(catalogInventory);
     for (const [type,image] of previews) previewCache.set(type+'/'+(EQUIPMENT[type].defaultVariant ?? ''), image);
     for (const img of document.querySelectorAll('#catalog-grid [data-equipment-type]')) img.src = previews.get(img.dataset.equipmentType);
-    const inventoryImages = createEquipmentPreviews(sortedEquipment, {inventoryView:true});
+    const inventoryImages = createEquipmentPreviews([...sortedEquipment,{...inboundFixture,type:'inbound'}], {inventoryView:true});
+    if(inboundFixture) $('[data-inbound-preview]').src=inventoryImages.get('inbound/');
     for (const img of document.querySelectorAll('#equipment-list [data-equipment-type]')) {
       img.src = inventoryImages.get(img.dataset.equipmentType+'/'+img.dataset.variant);
     }

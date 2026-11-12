@@ -40,6 +40,11 @@ function validWaitingWorkers(state, stage) {
 export function transact(state, action, stage = STAGE) {
   if (!validSession(state, stage)) return { ok: false, error: '저장 상태를 확인해 주세요.' };
   const next = structuredClone(state);
+  if (action.type === 'removeInbound') {
+    if (state.inbound===null) return {ok:false,error:'설치된 입고장이 없습니다.'};
+    next.inbound=null;
+    return {ok:true,state:next};
+  }
   if (action.type === 'moveInbound') {
     if (!Number.isInteger(action.x) || !Number.isInteger(action.y)) return {ok:false,error:'입고장 위치를 선택해 주세요.'};
     next.inbound={x:action.x,y:action.y};

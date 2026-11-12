@@ -68,7 +68,7 @@ export function createEquipmentPreviews(inventory, {inventoryView=false}={}) {
     for (const item of inventory) {
       const key=inventoryView ? item.type+'/'+(item.variant ?? '') : item.type;
       if(images.has(key)) continue;
-      const model = art.machine({ ...item, x: 0, y: 0, rotation: 0 });
+      const model = item.type==='inbound' ? art.inbound({...item,x:0,y:0}) : art.machine({ ...item, x: 0, y: 0, rotation: 0 });
       scene.add(model);
       if (inventoryView) {
         const work=shapeFor(item)?.workCell;

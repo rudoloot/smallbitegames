@@ -1,5 +1,5 @@
 import {DT,recipeFor} from '../game/simulation.js';
-import { dockSlots, isOutbound } from '../game/docks.js';
+import { dockBody, dockSlots, isOutbound } from '../game/docks.js';
 import * as THREE from 'three';
 import { EQUIPMENT, STAGE } from '../game/config.js';
 import { createArtKit } from './art.js';
@@ -151,7 +151,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     const cells = Array.from({ length: fixture.width * fixture.height }, (_, i) => ({ x: fixture.x + i % fixture.width, y: fixture.y + Math.floor(i / fixture.width) }));
     outline(cells, fixture.color, fixture.id==='inbound'?inletGroup:scene, false);
     if (fixture.id === 'inbound') {
-      for (let row = 0; row < fixture.height; row++) for (let layer = 0; layer < 3; layer++) wood(inletGroup, fixture.width - .22, .16, .66, fixture.x + fixture.width / 2, .17 + layer * .17, fixture.y + .5 + row, layer % 2 ? '#d2a36c' : '#bd8d53');
+      inletGroup.add(art.inbound(fixture));
     } else {
       wood(environment, fixture.width - .15, .15, fixture.height - .16, fixture.x + fixture.width / 2, .15, fixture.y + fixture.height / 2, '#b88b5b');
       for (let i = 0; i < 4; i++) { const item = goods(scene, 4, fixture.x + .5, .24 + Math.floor(i / 2) * .49, fixture.y + (fixture.height === 1 ? .28 + (i % 2) * .44 : .55 + (i % 2) * .8), .6); warehouseBoxes.push(item); }
@@ -216,7 +216,8 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   function setPreview(item, valid) {
     clear(preview); previewState = null;
     if (!item) return;
-    const model = art.machine(item,recipeFor(item,stage));
+    const inlet=item.type==='inbound';
+    const model = inlet ? art.inbound(item) : art.machine(item,recipeFor(item,stage));
     model.traverse(mesh => {
       if (!mesh.isMesh) return;
       const original = mesh.material, key = original.uuid + '/' + valid;
@@ -229,8 +230,8 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     });
     preview.add(model);
     previewState = { id: item.id, x: item.x, y: item.y, rotation: item.rotation, valid, opacity: .36 };
-    outline(footprint(item).body, valid ? '#477c55' : '#ef4238', preview);
-    outline(footprint(item).work, valid ? '#477c55' : '#ab5544', preview);
+    outline(inlet ? dockBody(item) : footprint(item).body, valid ? '#477c55' : '#ef4238', preview);
+    if(!inlet) outline(footprint(item).work, valid ? '#477c55' : '#ab5544', preview);
   }
   const workerBubbles = [];
   function workerModel(worker, index) {

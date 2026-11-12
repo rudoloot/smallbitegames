@@ -169,6 +169,14 @@ export function createArtKit(renderer) {
     wood(group, w - .22, .13, d - .3, 0, .76, 0, '#bc9260');
     for (let i = 0; i < 4; i++) wood(group, w - .12, .23, (d - .13) / 4 - .012, 0, .92, (i - 1.5) * (d - .13) / 4, i % 2 ? shade(color, .045) : color);
   }
+  function inbound({x=0,y=0,width=2,height=2}) {
+    const group=new THREE.Group();
+    for(let row=0;row<height;row++) for(let layer=0;layer<3;layer++){
+      wood(group,width-.22,.16,.66,width/2,.17+layer*.17,row+.5,layer%2?'#d2a36c':'#bd8d53');
+    }
+    group.position.set(x,0,y);
+    return group;
+  }
   function machine(item, spec = EQUIPMENT[item.type]) {
     if (EQUIPMENT[item.type]?.mask) {
       spec = {...spec, ...shapeFor(item)};
@@ -330,5 +338,5 @@ export function createArtKit(renderer) {
     for (const map of maps) map.dispose();
     for (const geometry of geometries.values()) geometry.dispose();
   }
-  return { box, wood, sphere, cylinder, ring, crate, goods, material, contactShadow, compact, machine, worker, plant, audit, dispose };
+  return { box, wood, sphere, cylinder, ring, crate, goods, material, contactShadow, compact, inbound, machine, worker, plant, audit, dispose };
 }
