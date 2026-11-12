@@ -1,7 +1,7 @@
 import {sitePath} from './site-path.js';
 import { showReference } from './view/reference-layout.js';
 import { FACTORIES } from './game/products.js';
-import {sessionStage,isInlet,isOutbound} from './game/docks.js';
+import {sessionStage,dockSlots,inletId,isInlet,isOutbound} from './game/docks.js';
 import { inBounds, cellKey, outsideFactory } from './game/layout.js';
 import { shapeLabel, showShapeOptions } from './view/shape-options.js';
 import { icon } from './view/ui-icons.js';
@@ -106,7 +106,7 @@ function persist(record = true) {
 }
 const currentResult = () => draft && draft.x !== null ? transact(session, draft) : null;
 const currentState = () => session;
-const nameOf = id => isInlet(id)?STAGE.fixtures.find(f=>f.id===id)?.label:isOutbound(id) ? '출고장' : EQUIPMENT[session.layout.find(m => m.id === id)?.type]?.short ?? '미배치';
+const nameOf = id => isInlet(id)?STAGE.fixtures.find(f=>f.id===inletId(id))?.label:isOutbound(id) ? '출고장' : EQUIPMENT[session.layout.find(m => m.id === id)?.type]?.short ?? '미배치';
 function refresh({ model = true } = {}) {
   const result = currentResult(), working = currentState();
   $('#onboarding').hidden = session.layout.length > 0 || !!draft || !canEdit();
@@ -202,6 +202,13 @@ function pick(hit) {
     const result = transact(session, { type: 'waitOutside', workerId: pendingWorker, ...hit.cell });
     if (!result.ok) { notice(result.error, true); return; }
     session = result.state; pendingWorker = null; persist(); refresh(); notice('작업자가 공장 밖에서 대기합니다.'); return;
+  }
+  if(pendingWorker && STAGE.forward && !hit.workId && isInlet(hit.fixedId)){
+    const slots=dockSlots(sessionStage(STAGE,session)).filter(s=>inletId(s.id)===hit.fixedId);
+    const slot=slots.find(s=>!Object.values(session.assignments).includes(s.id) &&
+      transact(session,{type:'assign',workerId:pendingWorker,machineId:s.id}).ok);
+    if(slot)assign(slot.id);else notice('교대할 입고 담당자의 자리를 선택하세요.');
+    return;
   }
   if (pendingWorker) { assign(hit.workId ?? ((STAGE.forward ? isInlet(hit.fixedId) : isOutbound(hit.fixedId)) ? hit.fixedId : null)); return; }
   if (draft && hit.cell) {
@@ -406,7 +413,7 @@ if(STAGE.forward){
   $('#reference-close').onclick=()=>$('#reference-dialog').close();
   $('#catalog-dialog p').textContent='I 입력 칸 · W 작업자 자리 · 한 칸 50cm';
   $('#worker-guidance').textContent='입고장이나 설비의 파란 작업자 자리를 누르세요.';
-  $('#help-dialog ol li:nth-child(4)').textContent=STAGE.hint;
+  $('#help-dialog ol li:nth-child(4)').textContent=STAGE.hint+' 입고장 네 면의 빈칸에는 여러 명을 배치할 수 있어요.';
   $('#goal-help').textContent='완제품 설비가 한 대면 최근 '+STAGE.sampleCount+'개 출고 간격의 평균으로 목표를 판정합니다.';
 }
 if (STAGE.minuteGoal) $('#goal-help').textContent = '가동 60초 후부터 최근 60초 동안 창고에 입고된 수량으로 목표를 판정합니다.';

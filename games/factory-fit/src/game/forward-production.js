@@ -1,43 +1,81 @@
-import {dockSides, isInlet, keyOf} from './docks.js';
+import {dockSides, inletId, isInlet, keyOf} from './docks.js';
 import {footprint, neighbors} from './layout.js';
 import {DT} from './motion.js';
 
+function startTrip(worker,destination,goals,path){
+  worker.path=path;
+  worker.job={phase:'send',destination,goals,target:path.at(-1)??{x:worker.x,y:worker.y}};
+  worker.status='납품 중';
+}
+
+function requests(sim,products){
+  const open=[];
+  for(const machine of sim.machines){
+    if(machine.parked)continue;
+    const recipe=sim.stage.stepRecipes[machine.id.split('-')[0]];
+    for(const product of products){
+      const needed=recipe.needs[product];
+      if(!needed)continue;
+      const reserved=sim.workers.filter(w=>w.job?.destination===machine.id && w.cargo?.product===product).length;
+      const remaining=needed-(machine.stock[product]??0)-reserved;
+      if(remaining>0)open.push({machine,product,remaining,goals:neighbors(footprint(machine).output,sim.stage)});
+    }
+  }
+  return open;
+}
+
+// Assign all available hands at this dock together. The oldest unserved
+// destination/material goes first; walking distance breaks equivalent ties.
+function supplyDock(sim,dock,pathTo){
+  const idle=sim.workers.filter(w=>inletId(w.machineId)===dock.id && !w.carrying && !w.job && keyOf(w)===keyOf(w.home));
+  const pairs=[];
+  for(const request of requests(sim,dock.supplies)){
+    for(const worker of idle){
+      const path=pathTo(sim,worker,request.goals);
+      if(path)pairs.push({worker,request,path});
+    }
+  }
+  const last=({request:r})=>r.machine.lastSupply?.[r.product]??-1;
+  while(pairs.length){
+    pairs.sort((a,b)=>last(a)-last(b)||a.path.length-b.path.length);
+    const {worker,request,path}=pairs.shift();
+    if(worker.job || request.remaining===0)continue;
+    const {machine,product,goals}=request;
+    request.remaining--;
+    (machine.lastSupply??={})[product]=sim.tick;
+    worker.carrying=true;worker.cargo={product,stage:sim.stage.goods.indexOf(product),weight:1};
+    worker.transfers.push({x:worker.x,y:worker.y,from:'inbound',to:'hand',id:dock.id,stage:worker.cargo.stage});
+    sim.supplied++;
+    startTrip(worker,machine.id,goals,path);
+  }
+}
+
 export function dispatch(sim,w,pathTo) {
-  if(!w.machineId) return;
-  if(!w.carrying && keyOf(w)!==keyOf(w.home)) {
-    const path=pathTo(sim,w,[w.home]);
-    if(path){w.path=path;w.job={phase:'home',goals:[w.home],target:w.home};}
+  if(!w.machineId)return;
+  if(!w.carrying){
+    if(keyOf(w)!==keyOf(w.home)){
+      const path=pathTo(sim,w,[w.home]);
+      if(path){w.path=path;w.job={phase:'home',goals:[w.home],target:w.home};}
+    }else if(isInlet(w.machineId)){
+      const dock=sim.stage.fixtures.find(f=>f.id===inletId(w.machineId));
+      // Each idle peer has already been considered on this tick.
+      const checked=sim.supplyTicks??={};
+      if(dock && checked[dock.id]!==sim.tick){
+        checked[dock.id]=sim.tick;supplyDock(sim,dock,pathTo);
+      }
+    }
     return;
   }
-  const dock=sim.stage.fixtures.find(f=>f.id===w.machineId);
-  if(!w.carrying && !isInlet(dock?.id)) return;
-  const available=w.carrying?[w.cargo.product]:dock.supplies;
-  for(let i=0;i<available.length;i++){
-    const product=available[((w.cursor??0)+i)%available.length];
-    const options=[];
-    if(product===sim.stage.product){
-      const outlet=sim.stage.fixtures.find(f=>f.id==='outbound');
-      options.push({id:outlet.id,goals:dockSides(outlet).flat()});
-    } else for(const m of sim.machines){
-      if(m.parked) continue;
-      const amount=sim.stage.stepRecipes[m.id.split('-')[0]].needs[product]??0;
-      const incoming=sim.workers.filter(other=>other.job?.destination===m.id && other.cargo?.product===product).length;
-      if((m.stock[product]??0)+incoming<amount) options.push({id:m.id,goals:neighbors(footprint(m).output,sim.stage)});
-    }
-    let best;
-    for(const opt of options){
-      const path=pathTo(sim,w,opt.goals);
-      if(path && (!best || path.length<best.path.length)) best={...opt,path};
-    }
-    if(!best) continue;
-    if(!w.carrying){
-      w.cursor=((w.cursor??0)+i+1)%available.length;
-      w.carrying=true;w.cargo={product,stage:sim.stage.goods.indexOf(product),weight:1};
-      w.transfers.push({x:w.x,y:w.y,from:'inbound',to:'hand',id:dock.id,stage:w.cargo.stage});sim.supplied++;
-    }
-    w.path=best.path;w.job={phase:'send',destination:best.id,goals:best.goals,target:best.path.at(-1)??{x:w.x,y:w.y}};
-    w.status='납품 중';return;
+  const product=w.cargo.product;
+  const options=product===sim.stage.product
+    ? [{machine:sim.stage.fixtures.find(f=>f.id==='outbound')}]
+    : requests(sim,[product]);
+  let best;
+  for(const {machine,goals=dockSides(machine).flat()} of options){
+    const path=pathTo(sim,w,goals);
+    if(path && (!best || path.length<best.path.length))best={machine,goals,path};
   }
+  if(best)startTrip(w,best.machine.id,best.goals,best.path);
 }
 export function deliver(sim,w){
   const id=w.job.destination;

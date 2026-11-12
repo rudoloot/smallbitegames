@@ -1,3 +1,4 @@
+import {dockSides} from '../game/docks.js';
 import * as THREE from 'three';
 import { footprint, operatorFacing } from '../game/layout.js';
 import { shapeFor } from '../game/equipment-shapes.js';
@@ -71,18 +72,19 @@ export function createEquipmentPreviews(inventory, {inventoryView=false}={}) {
       const model = item.type==='inbound' ? art.inbound({...item,x:0,y:0}) : art.machine({ ...item, x: 0, y: 0, rotation: 0 });
       scene.add(model);
       if (inventoryView) {
-        const dockWork=item.supplies && [item.access.x-item.x,item.access.y-item.y];
-        const work=dockWork || shapeFor(item)?.workCell;
-        if(work) {
-          const facing=dockWork ? {x:Math.max(0,Math.min(1,work[0]))-work[0],y:Math.max(0,Math.min(1,work[1]))-work[1]} :
+        const machineWork=shapeFor(item)?.workCell;
+        const cells=item.supplies?dockSides({...item,x:0,y:0}).flat():
+          machineWork?[{x:machineWork[0],y:machineWork[1]}]:[];
+        const markers=cells.map(({x,y})=>{
+          const marker=tile.clone();
+          const facing=item.supplies?{x:Math.max(0,Math.min(item.width-1,x))-x,y:Math.max(0,Math.min(item.height-1,y))-y}:
             operatorFacing(footprint({...item,x:0,y:0,rotation:0}));
-          // The unrotated toes point toward grid north (negative world Z).
-          tile.rotation.z=Math.atan2(-facing.x,-facing.y);
-          tile.position.set(work[0]+.5,.025,work[1]+.5);
-          scene.add(tile);
-        }
+          marker.rotation.z=Math.atan2(-facing.x,-facing.y);
+          marker.position.set(x+.5,.025,y+.5);scene.add(marker);
+          return marker;
+        });
         const bounds=new THREE.Box3().setFromObject(model);
-        if(work) bounds.expandByObject(tile);
+        for(const marker of markers)bounds.expandByObject(marker);
         const center=bounds.getCenter(new THREE.Vector3());
         const radius=bounds.getBoundingSphere(new THREE.Sphere()).radius*1.03;
         const topCamera=new THREE.OrthographicCamera(-radius,radius,radius,-radius,.1,50);
@@ -90,7 +92,7 @@ export function createEquipmentPreviews(inventory, {inventoryView=false}={}) {
         topCamera.lookAt(center);
         renderer.render(scene,topCamera);
         images.set(key,trimmedImage(renderer.domElement));
-        scene.remove(model,tile);
+        scene.remove(model,...markers);
         continue;
       }
       model.position.set(0,0,0);

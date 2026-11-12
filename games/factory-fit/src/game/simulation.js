@@ -45,6 +45,7 @@ export function reconfigureSimulation(sim, layout, assignments, stage = sim.stag
     if (!old) continue;
     for (const key of ['input', 'processing', 'progress', 'pendingOutput', 'cycleStartedAt', 'totalCycleSeconds', 'completedCycles']) machine[key] = old[key];
     machine.stock={...old.stock};
+    if(old.lastSupply)machine.lastSupply={...old.lastSupply};
     machine.output = old.output + old.reserved;
   }
   for (const belt of next.belts) {

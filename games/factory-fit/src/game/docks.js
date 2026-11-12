@@ -15,10 +15,17 @@ export function dockSides({ x, y, width, height }) {
   ];
 }
 export const atWall = (dock,stage) => dockSides(dock).some(side=>side.every(c=>!onFloor(c,stage)));
-export const isInlet=id=>typeof id==='string' && (id==='inbound'||id.startsWith('inbound-'));
+export const inletId=id=>typeof id==='string'?id.split('@')[0]:null;
+export const isInlet=id=>/^inbound(?:-|$)/.test(inletId(id));
 export const isOutbound = id => id === 'outbound' || (typeof id === 'string' && id.startsWith('outbound@'));
 export function dockSlots(stage) {
-  if(stage.forward)return stage.fixtures.filter(f=>isInlet(f.id)).map(f=>({id:f.id,cell:f.access}));
+  if(stage.forward){
+    const blocked=new Set([...stage.holes,...(stage.pillars??[]),...stage.fixtures.flatMap(dockBody)].map(keyOf));
+    return stage.fixtures.filter(f=>isInlet(f.id)).flatMap(f=>dockSides(f).flat()
+      .filter(cell=>onFloor(cell,stage)&&!blocked.has(keyOf(cell)))
+      .map(cell=>({cell,id:keyOf(cell)===keyOf(f.access)?f.id:
+        f.id+'@'+keyOf({x:cell.x-f.x,y:cell.y-f.y})})));
+  }
   const dock=stage.fixtures.find(f=>f.id==='outbound');
   if(dock.width!==2 || dock.height!==2) return [{id:'outbound',cell:dock.access}];
   const blocked=new Set([...stage.holes,...(stage.pillars??[]),...stage.fixtures.flatMap(dockBody)].map(keyOf));

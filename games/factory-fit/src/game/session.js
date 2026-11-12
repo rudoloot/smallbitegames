@@ -1,4 +1,4 @@
-import {isInlet,atWall,sessionStage,dockSlots,dockBody,isOutbound} from './docks.js';
+import {inletId,isInlet,atWall,sessionStage,dockSlots,dockBody,isOutbound} from './docks.js';
 import { STAGE, createAssignments, EQUIPMENT, suppliedEquipment } from './config.js';
 import { validateLayout, inboundPickupCells, cellKey, footprint, inBounds } from './layout.js';
 export function createSession(stage = STAGE) { return { version: 5, stageId: stage.id, ...(stage.playerPlacesInbound ? { inbound: null } : {}), layout: [], assignments: createAssignments([], stage) }; }
@@ -18,9 +18,14 @@ function validFacilities(state, stage) {
   if (inlet && !inboundPickupCells(stage,used).length) return false;
   for (const item of state.layout) for (const c of footprint(item).work) used.add(cellKey(c));
   if(stage.forward){
-    for(const {cell} of dockSlots(stage)){
-      if(!inBounds(cell,stage)||used.has(cellKey(cell)))return false;
-      used.add(cellKey(cell));
+    const slots=dockSlots(stage);
+    for(const dock of fixtures.filter(f=>isInlet(f.id))){
+      if(!slots.some(s=>inletId(s.id)===dock.id && !used.has(cellKey(s.cell))))return false;
+    }
+    for(const id of Object.values(state.assignments).filter(isInlet)){
+      const slot=slots.find(s=>s.id===id);
+      if(!slot || used.has(cellKey(slot.cell)))return false;
+      used.add(cellKey(slot.cell));
     }
     return true;
   }
@@ -52,7 +57,7 @@ export function transact(state, action, stage = STAGE) {
     if(!stage.fixtures.some(f=>f.id===id && isInlet(id)))return {ok:false,error:'지급된 입고장을 선택하세요.'};
     const pos=action.type==='removeInbound'?null:{x:action.x,y:action.y};
     if(id==='inbound')next.inbound=pos;else (next.inlets??={})[id]=pos;
-    if(!pos)for(const key of Object.keys(next.assignments))if(next.assignments[key]===id)next.assignments[key]=null;
+    if(!pos)for(const key of Object.keys(next.assignments))if(inletId(next.assignments[key])===id)next.assignments[key]=null;
     return validSession(next,stage)?{ok:true,state:next}:{ok:false,error:'입고장과 담당자 자리를 비워 주세요.'};
   }
   if (action.type === 'removeInbound') {
@@ -91,6 +96,6 @@ export function transact(state, action, stage = STAGE) {
 }
 export function validateStaffing(state, stage = STAGE) {
   const errors = state.layout.filter(item => !stage.unlimitedEquipment && !EQUIPMENT[item.type].belt && !Object.values(state.assignments).includes(item.id)).map(item => `${EQUIPMENT[item.type].name}에 작업자를 배치해 주세요.`);
-  if(stage.forward){for(const f of stage.fixtures.filter(f=>isInlet(f.id)))if(!Object.values(state.assignments).includes(f.id))errors.push(f.label+' 담당자를 배치해 주세요.');}
+  if(stage.forward){for(const f of stage.fixtures.filter(f=>isInlet(f.id)))if(!Object.values(state.assignments).some(id=>inletId(id)===f.id))errors.push(f.label+' 담당자를 배치해 주세요.');}
   else if (!Object.values(state.assignments).some(isOutbound)) errors.push('창고 직원을 배치해 주세요.'); return { valid: errors.length === 0, errors };
 }

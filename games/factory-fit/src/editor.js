@@ -84,7 +84,7 @@ function cellMap(d) {
   for(const c of d.pillars)mark(c,'pillar','■');
   for(const c of d.holes)mark(c,'hole','×');
   for(const f of stageFor(d).fixtures) dockBody(f).forEach((c,i)=>mark(c,isInlet(f.id)?'inbound':f.id,i?'':(isInlet(f.id)?(f.id==='inbound'?'입':'입2'):'출'),f.id));
-  for(const {id,cell} of dockSlots(stageFor(d))) if(!map.has(cellKey(cell)))mark(cell,'work','○',id);
+  for(const {id,cell} of dockSlots(stageFor(d)).sort((a,b)=>Number(Object.values(d[mode].assignments).includes(b.id))-Number(Object.values(d[mode].assignments).includes(a.id)))) if(!map.has(cellKey(cell)))mark(cell,'work','○',id);
   const plan=d[mode];
   for(const m of plan.layout){const f=footprint(m);f.body.forEach((c,i)=>{
       const output=f.output && cellKey(c)===cellKey(f.output);

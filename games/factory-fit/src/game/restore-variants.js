@@ -1,12 +1,12 @@
 import { validateLayout, footprint, cellKey, inBounds } from './layout.js';
-import { sessionStage, dockSlots, isOutbound } from './docks.js';
+import { sessionStage, dockSlots, isInlet, isOutbound } from './docks.js';
 import { EQUIPMENT } from './config.js';
 
 // Old saves and editor exports only recorded a type and rotation.
 export function restoreLayoutVariants(plan, stage) {
   if (!Array.isArray(plan?.layout) || !plan.layout.some(item => EQUIPMENT[item.type]?.variants && item.variant === undefined)) return plan;
   const live = sessionStage(stage,plan);
-  const assignedDocks = new Set(Object.values(plan.assignments ?? {}).filter(isOutbound));
+  const assignedDocks = new Set(Object.values(plan.assignments ?? {}).filter(id=>isInlet(id)||isOutbound(id)));
   const reserved = new Set(dockSlots(live).filter(s => assignedDocks.has(s.id)).map(s=>cellKey(s.cell)));
   for (const cell of Object.values(plan.waitingWorkers ?? {})) reserved.add(cellKey(cell));
   const layout = plan.layout.filter(item => item.variant !== undefined || !EQUIPMENT[item.type]?.variants);

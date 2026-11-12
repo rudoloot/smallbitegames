@@ -1,6 +1,6 @@
 import {motionFrame,transferSeconds} from '../game/motion.js';
 import {recipeFor} from '../game/simulation.js';
-import { dockBody, dockSlots, isInlet, isOutbound } from '../game/docks.js';
+import { inletId, dockBody, dockSlots, isInlet, isOutbound } from '../game/docks.js';
 import * as THREE from 'three';
 import { EQUIPMENT, STAGE } from '../game/config.js';
 import { createArtKit } from './art.js';
@@ -201,8 +201,11 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       stockLabels.push({ el: stockLabel, pos: new THREE.Vector3(model.position.x + 0.65, 1.65, model.position.z + 0.6), id: item.id });
     }
     const occupied=new Set(layout.flatMap(m=>{const f=footprint(m);return [...f.body,...f.work];}).map(cellKey));
-    for (const {id,cell:place} of dockSlots(liveStage)) {
+    const slots=dockSlots(liveStage);
+    slots.sort((a,b)=>Number(Object.values(assignments).includes(b.id))-Number(Object.values(assignments).includes(a.id)));
+    for (const {id,cell:place} of slots) {
     if (occupied.has(cellKey(place))) continue;
+    occupied.add(cellKey(place));
     const operator=WORKERS.find(w=>assignments[w.key]===id);
     box(marks, 0.9, 0.035, 0.9, place.x + 0.5, 0.082, place.y + 0.5, operator ? '#a8c6e6' : '#d1ddec', false);
     outline([place], pendingWorker || selection === WAREHOUSE.id ? '#4b823a' : '#779b5b', marks, false);
@@ -236,7 +239,10 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
     if(!inlet) outline(footprint(item).work, valid ? '#477c55' : '#ab5544', preview);
     else if(item.supplies){
       const original=FIXED.find(f=>f.id===item.id);
-      outline([{x:item.x+original.access.x-original.x,y:item.y+original.access.y-original.y}], '#7298c1',preview);
+      const ghost={...original,x:item.x,y:item.y};
+      const fixtures=[...currentFixtures.filter(f=>f.id!==item.id),ghost];
+      const occupied=new Set(layout.flatMap(m=>[...footprint(m).body,...footprint(m).work]).map(cellKey));
+      outline(dockSlots({...stage,fixtures}).filter(s=>inletId(s.id)===item.id && !occupied.has(cellKey(s.cell))).map(s=>s.cell),'#7298c1',preview);
     }
   }
   const workerBubbles = [];
