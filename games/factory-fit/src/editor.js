@@ -9,7 +9,8 @@ import { STAGE, EQUIPMENT, createAssignments } from './game/config.js';
 import { footprint, validateLayout, cellKey } from './game/layout.js';
 import { sessionStage, isInlet, atWall, dockBody, dockSides, dockSlots } from './game/docks.js';
 import { validSession } from './game/session.js';
-import { inletColors, inletCellColor, createSimulation, stepSimulation, DT } from './game/simulation.js';
+import { TRAY_GREEN, markTrayCell } from './view/tray-flag.js';
+import { outputColor, inletColors, inletCellColor, createSimulation, stepSimulation, DT } from './game/simulation.js';
 
 const $ = id => document.getElementById(id);
 const storageKey = 'factory-fit.editor.v1';
@@ -86,7 +87,7 @@ function save(){try{localStorage.setItem(storageKey,JSON.stringify(doc));}catch{
 function accept(next){pairPlans(next);const error=issue(next);if(error){$('status').textContent=error;return false;}
   history.push(doc);if(history.length>60)history.shift();doc=next;$('status').textContent='';save();draw();return true;}
 function cellMap(d) {
-  const map=new Map(),mark=(c,kind,text,id,color)=>map.set(cellKey(c),{kind,text,id,color});
+  const map=new Map(),mark=(c,kind,text,id,color,flag)=>map.set(cellKey(c),{kind,text,id,color,flag});
   for(const c of d.pillars)mark(c,'pillar','■');
   for(const c of d.holes)mark(c,'hole','×');
   const stage=stageFor(d);
@@ -98,7 +99,7 @@ function cellMap(d) {
   const plan=d[mode];
   for(const m of plan.layout){const f=footprint(m);f.body.forEach((c,i)=>{
       const output=f.output && cellKey(c)===cellKey(f.output);
-      mark(c,'machine',output?'O':i?'':EQUIPMENT[m.type].name[0],m.id,output?'#278f88':EQUIPMENT[m.type].color);
+      mark(c,'machine',output?'O':i?'':EQUIPMENT[m.type].name[0],m.id,output?TRAY_GREEN:EQUIPMENT[m.type].color,output?outputColor(m,stage):null);
     });
     for(const c of f.work)mark(c,'work','○',m.id);}
   for(const val of map.values())if(val.kind==='work'){
@@ -231,6 +232,7 @@ function draw(){
   for(let y=0;y<doc.height;y++)for(let x=0;x<doc.width;x++){const k=x+','+y,v=map.get(k),b=document.createElement('button');
     b.className='cell '+(v?.kind??(floor.has(k)?'floor':''));b.dataset.cell=k;b.textContent=v?.text??'';
     if (v?.color) b.style.backgroundColor = v.color;
+    if (v?.flag) markTrayCell(b,v.flag);
     b.setAttribute('aria-label',k+' '+(v?.id??v?.kind??(floor.has(k)?'바닥':'부지 밖')));fragment.append(b);}
   board.replaceChildren(fragment);
 }
