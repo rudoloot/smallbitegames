@@ -235,27 +235,47 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
   const workerBubbles = [];
   function workerModel(worker, index) {
     const model = art.worker(worker.color, index, worker); crowd.add(model.group);
+    for(const [stage,item] of model.cargo.entries()) item.name=worker.key+'-cargo-'+stage;
     const el = label('...', 'worker-bubble'); el.hidden = true;
     el.dataset.workerBubble = worker.key; el.setAttribute('aria-label', worker.name + ' · 10초 이상 작업 대기');
     const bubble = { el, pos: new THREE.Vector3() }; workerBubbles.push(bubble); model.bubble = bubble;
     return model;
   }
-  let previousSim = null;
-  const deliveries = new Map();
+  function transferEndpoint(kind, event, sim, worker, body) {
+    const hand=new THREE.Vector3(0,.4+(event.stack ?? 0)*.24,.4);
+    if(kind==='hand') return hand;
+    const model=modelMap.get(event.id);
+    const anchor=kind==='output' ? model?.userData.inventory?.outputItem :
+      kind==='process' ? model?.userData.inventory?.processingItem : null;
+    let point;
+    if(anchor) point=anchor.getWorldPosition(new THREE.Vector3());
+    else if(kind==='belt' && model) point=model.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.38,0));
+    else {
+      const dock=sim.stage.fixtures.find(f=>f.id===kind);
+      if(!dock) return hand;
+      point=new THREE.Vector3(
+        THREE.MathUtils.clamp(worker.x+.5,dock.x+.5,dock.x+dock.width-.5),
+        kind==='inbound' ? .65 : .72,
+        THREE.MathUtils.clamp(worker.y+.5,dock.y+.5,dock.y+dock.height-.5));
+    }
+    return body.worldToLocal(point);
+  }
   function update(sim, alpha, seconds, paused = false) {
     for (const entry of labels) entry.el.hidden = !paused || (entry===inletLabel && !inletGroup.visible);
-    if (previousSim !== sim) { deliveries.clear(); previousSim = sim; }
+    const receivingOutput=new Set(), receivingInput=new Set();
     if (!workerModels.length) workerModels = sim.workers.map((worker, index) => workerModel(worker, index));
     for (const worker of sim.workers) {
       const obj = workerModels[worker.id];
-      let delivery = deliveries.get(worker.id);
-      if (!delivery) { delivery = { carrying: false, started: -Infinity, stage: 4 }; deliveries.set(worker.id, delivery); }
-      if (delivery.carrying && !worker.carrying && isOutbound(worker.machineId)) delivery.started = seconds;
-      if (worker.carrying) delivery.stage = worker.cargo?.stage ?? 4;
-      delivery.carrying = worker.carrying;
-      const deposit = Math.max(0, Math.min(1, (seconds - delivery.started) / .45));
-      const placing = deposit < 1;
-      obj.body.rotation.x = placing ? Math.sin(deposit * Math.PI) * .18 : 0;
+      // A pickup and deposit may both finish in one tick when the operator
+      // stands next to both surfaces. Play those transfers in simulation order.
+      const events=worker.transfers;
+      const phase=Math.max(0,Math.min(1,alpha))*events.length;
+      const index=Math.floor(phase), event=events[index], fraction=phase-index;
+      for(let i=index;i<events.length;i++){
+        if(events[i].to==='output') receivingOutput.add(events[i].id);
+        if(events[i].to==='process') receivingInput.add(events[i].id);
+      }
+      obj.body.rotation.x = event ? Math.sin(fraction*Math.PI)*.12 : 0;
       const waiting = waitingWorkers[worker.key];
       const x = waiting?.x ?? THREE.MathUtils.lerp(worker.from.x, worker.x, alpha), y = waiting?.y ?? THREE.MathUtils.lerp(worker.from.y, worker.y, alpha);
       obj.group.visible = !!worker.machineId || !!waiting;
@@ -273,7 +293,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
         const facing = operatorFacing(footprint(own));
         if (facing) obj.body.rotation.y = Math.atan2(facing.x,facing.y);
       }
-      const working = !own?.parked && own?.processing > 0 && !worker.job && !(dx || dy);
+      const working = !event && !own?.parked && own?.processing > 0 && !worker.job && !(dx || dy);
       // Drive work gestures from simulation time so pausing also freezes the hands.
       const workTime = Math.max(0, sim.time - .2 + alpha * .2);
       const workPhase = workTime * 7 + worker.id * 1.7;
@@ -283,19 +303,43 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       obj.arms.forEach((arm, index) => {
         const phase = workPhase + index * Math.PI;
         arm.position.y = working ? .82 : .75;
-        arm.rotation.x = working ? -1.85 + Math.sin(phase) * .16 : placing ? -1.05 + deposit * .65 : (worker.carrying || own?.pendingOutput) ? -1.05 : (dx || dy) ? Math.sin(seconds * 15 + index * Math.PI) * -0.32 : -.08;
+        arm.rotation.x = working ? -1.85 + Math.sin(phase) * .16 : event ? -1.05 - Math.sin(fraction*Math.PI)*.25 : (worker.carrying || own?.pendingOutput) ? -1.05 : (dx || dy) ? Math.sin(seconds * 15 + index * Math.PI) * -0.32 : -.08;
         arm.rotation.y = working ? (index ? -.12 : .12) + Math.sin(phase * .5) * .06 : 0;
         arm.rotation.z = working ? (index ? .10 : -.10) : 0;
       });
       let heldStage;
       if (worker.carrying) heldStage = worker.cargo.stage;
       else if (own?.pendingOutput) heldStage = recipeFor(own,sim.stage).outputStage ?? 4;
-      else if (placing) heldStage = delivery.stage;
+      const stack=event?.stack ?? 0;
+      const count=event ? event.count ?? stack+1 : worker.carrying ? Math.max(1,worker.load.length) : 1;
+      if(event) heldStage=event.stage;
+      const offset=new THREE.Vector3();
+      if(event){
+        const start=transferEndpoint(event.from,event,sim,worker,obj.body);
+        const end=transferEndpoint(event.to,event,sim,worker,obj.body);
+        const t=fraction*fraction*(3-2*fraction);
+        offset.copy(start).lerp(end,t);
+        offset.y+=Math.sin(t*Math.PI)*.14;
+        offset.sub(new THREE.Vector3(0,.4+stack*.24,.4));
+      }
       obj.cargo.forEach((item, stage) => {
         item.visible = stage === heldStage;
-        item.position.y = placing && !worker.carrying ? .4 - deposit * .25 : .4;
+        if(item.visible){
+          item.position.set(0,.4,.4);
+          if(!stack) item.position.add(offset);
+        }
       });
-      obj.extraCargo.forEach((item, index) => { item.visible = worker.carrying && worker.load.length > index + 1; });
+      while(obj.extraCargo.length<count-1){
+        const item=art.goods(obj.body,4,0,0,0,.43);
+        obj.extraCargo.push(item);
+      }
+      obj.extraCargo.forEach((item,i)=>{
+        item.visible=i+1<count;
+        if(item.visible){
+          item.position.set(0,.4+(i+1)*.24,.4);
+          if(!stack || stack===i+1) item.position.add(offset);
+        }
+      });
       obj.marker.visible = worker.wait > 0;
       obj.marker.position.y = 1.85 + Math.sin(seconds * 3) * 0.05;
     }
@@ -309,7 +353,7 @@ export function createFactoryView(host, callbacks, stage = STAGE) {
       const count = machine.output + machine.reserved;
       entry.el.hidden = true; entry.el.textContent = ''; entry.el.dataset.outputCount = String(count);
       const inventory = modelMap.get(machine.id)?.userData.inventory;
-      if (inventory) { inventory.processingItem.visible = machine.processing > 0; inventory.outputItem.visible = count > 0; }
+      if (inventory) { inventory.processingItem.visible = machine.processing > 0 && !receivingInput.has(machine.id); inventory.outputItem.visible = count > 0 && !receivingOutput.has(machine.id); }
     }
     warehouseLabel.textContent = '출고장'; warehouseLabel.dataset.count = String(sim.warehouse.stock); warehouseLabel.dataset.displayBoxes = String(warehouseBoxes.length);
   }

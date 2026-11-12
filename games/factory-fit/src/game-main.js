@@ -416,7 +416,7 @@ async function boot() {
     function frame(now) {
       const elapsed = lastTime ? Math.min(.15, (now - lastTime) / 1000) : 0; lastTime = now;
       if (running) { accumulator += elapsed; while (accumulator >= DT && (!sim.complete || sim.outcome === 'success')) { stepSimulation(sim); accumulator -= DT; } if (sim.complete && (sim.outcome !== 'success' || !goalAchieved)) finish(); updateProduction(); }
-      view.update(sim, running ? accumulator / DT : 1, now / 1000, !running && canEdit()); updateEquipmentInfo(); view.render(); requestAnimationFrame(frame);
+      view.update(sim, mode === 'run' ? accumulator / DT : 1, now / 1000, !running && canEdit()); updateEquipmentInfo(); view.render(); requestAnimationFrame(frame);
     } requestAnimationFrame(frame);
   } catch (error) { const el = $('#loading') ?? $('#notice'); el.hidden = false; el.classList.add('error'); el.textContent = '3D 화면을 열지 못했어요. 페이지를 새로고침해 주세요.'; console.error(error); }
 }
