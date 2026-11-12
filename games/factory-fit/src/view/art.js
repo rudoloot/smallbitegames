@@ -6,7 +6,7 @@ import { buildProduct } from './product-models.js';
 import { EQUIPMENT, TYPES, STAGE } from '../game/config.js';
 import {outputColor, inletColors} from '../game/simulation.js';
 import { shapeFor } from '../game/equipment-shapes.js';
-import { TRAY_GREEN, flagCanvas } from './tray-flag.js';
+import { flagCanvas } from './tray-flag.js';
 import { buildEquipment } from './equipment-models.js';
 
 // The approved concept image is the visual reference. Geometry stays in tile units.
@@ -183,27 +183,39 @@ export function createArtKit(renderer, factory=STAGE) {
     wood(group, w - .22, .13, d - .3, 0, .76, 0, '#bc9260');
     for (let i = 0; i < 4; i++) wood(group, w - .12, .23, (d - .13) / 4 - .012, 0, .92, (i - 1.5) * (d - .13) / 4, i % 2 ? shade(color, .045) : color);
   }
+  function destinationFlag(parent,anchor,colors,name){
+    const key='destination-flag/'+colors.join(',');
+    if(!materials.has(key)){
+      const map=new THREE.CanvasTexture(flagCanvas(colors));
+      map.colorSpace=THREE.SRGBColorSpace;
+      materials.set(key,new THREE.SpriteMaterial({map,toneMapped:false,depthTest:false,depthWrite:false}));
+    }
+    const flag=new THREE.Sprite(materials.get(key));
+    flag.name=name;
+    flag.position.copy(anchor);
+    flag.scale.set(.66,.66*112/128,1);
+    flag.center.set(-.40,-.36);
+    flag.renderOrder=5;
+    flag.raycast=()=>{};
+    parent.add(flag);
+  }
   function inbound(dock) {
     const {x=0,y=0,width=2,height=2,supplies}=dock;
     const colors=inletColors(dock,factory);
     const group=new THREE.Group();
     if(supplies || factory.modelSteps){
-      const columns = new Set(colors).size === 1 ? 1 : width;
-      const rows = colors.length > columns && columns > 1 ? height : 1;
-      const w = (width-.12)/columns, d = (height-.12)/rows;
-      for (let row=0; row<rows; row++) for (let col=0; col<columns; col++) {
-        wood(group,w,.16,d,.06+(col+.5)*w,.12,.06+(row+.5)*d,colors[(row*columns+col)%colors.length]);
-      }
+      wood(group,width-.12,.16,height-.12,width/2,.12,height/2,'#aa835a');
       for(let i=0;i<(supplies?.length===0?0:4);i++)goods(group,supplies?factory.goods.indexOf(supplies[i%supplies.length]):0,.52+(i%2)*.93,.23,.53+(i>>1)*.9,.7);
     }else for(let row=0;row<height;row++) for(let layer=0;layer<3;layer++){
-      wood(group,width-.22,.16,.66,width/2,.17+layer*.17,row+.5,colors[0]);
+      wood(group,width-.22,.16,.66,width/2,.17+layer*.17,row+.5,layer%2?'#d2a36c':'#bd8d53');
     }
+    destinationFlag(group,new THREE.Vector3(width/2,.65,height/2),colors,'inbound-destination-flag');
     group.position.set(x,0,y);
     return group;
   }
   function machine(item, spec = EQUIPMENT[item.type]) {
     if (EQUIPMENT[item.type]?.mask) {
-      spec = {...spec, ...shapeFor(item),trayColor:TRAY_GREEN,inputTray:factory.forward};
+      spec = {...spec, ...shapeFor(item),trayColor:spec.color,inputTray:factory.forward};
       const group = new THREE.Group();
       const model = buildEquipment(item, spec, { box, wood, cylinder, sphere, material, cached });
       const output = model.userData.outputAnchor.clone(), process = model.userData.processAnchor.clone();
@@ -211,22 +223,8 @@ export function createArtKit(renderer, factory=STAGE) {
       model.rotation.y = -item.rotation * Math.PI / 2;
       // Merge local-space geometry before applying the machine rotation.
       model.rotation.y = 0; compact(model, `reference/${item.type}/${item.variant ?? spec.defaultVariant}/${spec.trayColor}`); model.rotation.y = -item.rotation * Math.PI / 2;
-      if (!spec.inputTray) {
-        const color = outputColor(item, factory), key = 'tray-flag/' + color;
-        if (!materials.has(key)) {
-          const map = new THREE.CanvasTexture(flagCanvas(color));
-          map.colorSpace = THREE.SRGBColorSpace;
-          materials.set(key, new THREE.SpriteMaterial({map, toneMapped:false, depthTest:false, depthWrite:false}));
-        }
-        const flag = new THREE.Sprite(materials.get(key));
-        flag.name = 'output-destination-flag';
-        flag.position.copy(output);
-        // Sprite offsets use camera right/up, even when the parent machine turns.
-        flag.scale.set(.55, .55 * 112 / 128, 1);
-        flag.center.set(-.5, -.44);
-        flag.renderOrder = 5;
-        flag.raycast = () => {};
-        model.add(flag);
+      if(!spec.inputTray && factory.inventory.some(given=>given.id===item.id || given.id===item.id?.split('-')[0])){
+        destinationFlag(model,output,[outputColor(item,factory)],'output-destination-flag');
       }
       const processingItem = goods(model, spec.inputStage ?? 0, process.x, process.y, process.z, .45); processingItem.visible = false;
       const outputItem = goods(model,spec.outputStage ?? 4,output.x,output.y,output.z,.45);

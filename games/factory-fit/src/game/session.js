@@ -58,6 +58,7 @@ function validWaitingWorkers(state, stage) {
 export function transact(state, action, stage = STAGE) {
   if (!validSession(state, stage)) return { ok: false, error: '저장 상태를 확인해 주세요.' };
   if (stage.paired && ['assign','waitOutside'].includes(action.type)) return {ok:false,error:'작업자는 작업대와 함께 배치됩니다.'};
+  if(stage.playerPlacesInbound===false && ['moveInbound','removeInbound'].includes(action.type))return {ok:false,error:'입고장은 지정된 위치에 고정되어 있어요.'};
   const next = structuredClone(state);
   if((stage.forward || stage.paired) && ['moveInbound','removeInbound'].includes(action.type)){
     const id=action.id??'inbound';

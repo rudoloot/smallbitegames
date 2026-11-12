@@ -51,6 +51,7 @@ export function expandDocks(stage) {
   return {...stage,cells:[...cells],fixtures};
 }
 export function sessionStage(stage, state) {
+  if(stage.playerPlacesInbound===false)return stage;
   if((stage.forward || stage.paired && (stage.playerPlacesInbound || stage.workshopInlets)) && state){
     const fixtures=stage.fixtures.flatMap(f=>{
       if(!isInlet(f.id))return [f];

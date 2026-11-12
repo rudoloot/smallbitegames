@@ -1,5 +1,5 @@
 import {workshopConfig} from './workshop-inlets.js';
-import {expandDocks} from './docks.js';
+import {expandDocks,sessionStage} from './docks.js';
 import { buildStages } from './stages.js';
 import { EQUIPMENT_SHAPES } from './equipment-shapes.js';
 const RECIPES = {
@@ -38,7 +38,9 @@ function previewStage() {
   try {
     const data=JSON.parse(sessionStorage.getItem('factory-fit.editor.preview'));
     if (!data || !Array.isArray(data.cells) || !Array.isArray(data.startLayout)) return null;
-    return {...LEGACY_STAGE,...data,...workshopConfig(data),id:'editor-preview',number:0,shape:'custom',region:'meadow'};
+    const authored={...LEGACY_STAGE,...data,...workshopConfig(data)};
+    const resolved=sessionStage(authored,{inbound:data.startInbound,inlets:data.startInlets});
+    return {...resolved,playerPlacesInbound:false,id:'editor-preview',number:0,shape:'custom',region:'meadow'};
   } catch { return null; }
 }
 export const STAGE = previewStage() ?? STAGES.find(stage => stage.id === (selectedStage === 'first-workflow-01' ? 'sample-01' : selectedStage)) ?? expandDocks(LEGACY_STAGE);

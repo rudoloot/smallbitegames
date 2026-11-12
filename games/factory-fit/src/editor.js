@@ -9,8 +9,8 @@ import { STAGE, EQUIPMENT, createAssignments } from './game/config.js';
 import { footprint, validateLayout, cellKey } from './game/layout.js';
 import { sessionStage, isInlet, atWall, dockBody, dockSides, dockSlots } from './game/docks.js';
 import { validSession } from './game/session.js';
-import { TRAY_GREEN, markTrayCell } from './view/tray-flag.js';
-import { outputColor, inletColors, inletCellColor, createSimulation, stepSimulation, DT } from './game/simulation.js';
+import {markTrayCell} from './view/tray-flag.js';
+import { outputColor, inletColors, createSimulation, stepSimulation, DT } from './game/simulation.js';
 
 const $ = id => document.getElementById(id);
 const storageKey = 'factory-fit.editor.v1';
@@ -93,13 +93,13 @@ function cellMap(d) {
   const stage=stageFor(d);
   for(const f of stage.fixtures) {
     const colors=isInlet(f.id)?inletColors(f,stage):null;
-    dockBody(f).forEach((c,i)=>mark(c,isInlet(f.id)?'inbound':f.id,i?'':(isInlet(f.id)?(f.id==='inbound'?'입':'입2'):'출'),f.id,colors?inletCellColor(f,c,colors):undefined));
+    dockBody(f).forEach((c,i)=>mark(c,isInlet(f.id)?'inbound':f.id,i?'':(isInlet(f.id)?(f.id==='inbound'?'입':'입2'):'출'),f.id,f.color,colors && i===f.width-1?colors:null));
   }
   for(const {id,cell} of dockSlots(stageFor(d)).sort((a,b)=>Number(Object.values(d[mode].assignments).includes(b.id))-Number(Object.values(d[mode].assignments).includes(a.id)))) if(!map.has(cellKey(cell)))mark(cell,'work','○',id);
   const plan=d[mode];
   for(const m of plan.layout){const f=footprint(m);f.body.forEach((c,i)=>{
       const output=f.output && cellKey(c)===cellKey(f.output);
-      mark(c,'machine',output?'O':i?'':EQUIPMENT[m.type].name[0],m.id,output?TRAY_GREEN:EQUIPMENT[m.type].color,output?outputColor(m,stage):null);
+      mark(c,'machine',output?'O':i?'':EQUIPMENT[m.type].name[0],m.id,EQUIPMENT[m.type].color,output?[outputColor(m,stage)]:null);
     });
     for(const c of f.work)mark(c,'work','○',m.id);}
   for(const val of map.values())if(val.kind==='work'){
@@ -232,7 +232,7 @@ function draw(){
   for(let y=0;y<doc.height;y++)for(let x=0;x<doc.width;x++){const k=x+','+y,v=map.get(k),b=document.createElement('button');
     b.className='cell '+(v?.kind??(floor.has(k)?'floor':''));b.dataset.cell=k;b.textContent=v?.text??'';
     if (v?.color) b.style.backgroundColor = v.color;
-    if (v?.flag) markTrayCell(b,v.flag);
+    if(v?.flag)markTrayCell(b,v.flag);
     b.setAttribute('aria-label',k+' '+(v?.id??v?.kind??(floor.has(k)?'바닥':'부지 밖')));fragment.append(b);}
   board.replaceChildren(fragment);
 }

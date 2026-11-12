@@ -14,7 +14,6 @@ for (const [id, name] of [['map-exit', 'map'], ['undo', 'undo'], ['redo', 'redo'
 $('#rotate').innerHTML = icon('rotate') + '<span>회전</span>';
 const openingSession = createSession();
 if (STAGE.id === 'editor-preview') {
-  if(STAGE.workshopInlets){openingSession.inbound=STAGE.startInbound;openingSession.inlets=STAGE.startInlets??{};}
   openingSession.layout = structuredClone(STAGE.startLayout);
   openingSession.assignments=STAGE.paired?createAssignments(openingSession.layout,STAGE):{...openingSession.assignments,...STAGE.startAssignments};
 }
@@ -188,9 +187,10 @@ function assign(workId) {
   if (!result.ok) { notice(result.error, true); return; }
   session = result.state; pendingWorker = null; persist(); refresh();
 }
-const inboundFixtures=STAGE.fixtures.filter(f=>isInlet(f.id));
+const inboundFixtures=STAGE.playerPlacesInbound===false?[]:STAGE.fixtures.filter(f=>isInlet(f.id));
 const placedInlet=id=>sessionStage(STAGE,session).fixtures.some(f=>f.id===id);
 function beginInbound(id) {
+  if(STAGE.playerPlacesInbound===false)return;
   pendingWorker=null; selectedId=null;
   draft={type:'moveInbound',id,x:null,y:null};
   refresh();
@@ -417,7 +417,7 @@ if(STAGE.paired){
   $('#reference-open').hidden=!STAGE.referenceLayout;
   $('#reference-open').onclick=()=>{showReference($('#reference-content'),STAGE);$('#options-dialog').close();$('#reference-dialog').showModal();};
   $('#reference-close').onclick=()=>$('#reference-dialog').close();
-  $('#help-dialog ol li:nth-child(4)').textContent=STAGE.hint+' 입고장은 설비 탭에서 골라 설치하세요.';
+  $('#help-dialog ol li:nth-child(4)').textContent=STAGE.hint+' 입고장의 깃발을 보고 첫 작업대를 배치하세요.';
   $('#goal-help').textContent='완제품 설비가 한 대면 최근 '+STAGE.sampleCount+'개 출고 간격의 평균으로 목표를 판정합니다.';
 }
 if (STAGE.minuteGoal) $('#goal-help').textContent = '가동 60초 후부터 최근 60초 동안 창고에 입고된 수량으로 목표를 판정합니다.';

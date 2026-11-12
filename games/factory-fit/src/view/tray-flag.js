@@ -1,7 +1,7 @@
-export const TRAY_GREEN = '#398552';
 const flags = new Map();
 
-export function flagCanvas(color) {
+export function flagCanvas(colors) {
+  const color=colors.join(",");
   if (flags.has(color)) return flags.get(color);
   const canvas = document.createElement('canvas');
   canvas.width = 128;
@@ -23,8 +23,14 @@ export function flagCanvas(color) {
   pen.lineTo(119, 71);
   pen.lineTo(8, 71);
   pen.closePath();
-  pen.fillStyle = color;
-  pen.fill();
+  pen.save();
+  pen.clip();
+  const stripe=62/colors.length;
+  colors.forEach((shade,i)=>{
+    pen.fillStyle=shade;
+    pen.fillRect(8,9+i*stripe,112,stripe+1);
+  });
+  pen.restore();
   pen.lineWidth = 3;
   pen.stroke();
   pen.beginPath();
@@ -46,10 +52,11 @@ export function flagCanvas(color) {
 }
 
 const images = new Map();
-export function markTrayCell(cell, color) {
-  if (!images.has(color)) images.set(color, flagCanvas(color).toDataURL());
+export function markTrayCell(cell, colors) {
+  const color=colors.join(",");
+  if (!images.has(color)) images.set(color, flagCanvas(colors).toDataURL());
   cell.style.backgroundImage = 'url(' + images.get(color) + ')';
   cell.style.backgroundPosition = 'right top';
-  cell.style.backgroundSize = '48% auto';
+  cell.style.backgroundSize = '58% auto';
   cell.style.backgroundRepeat = 'no-repeat';
 }
