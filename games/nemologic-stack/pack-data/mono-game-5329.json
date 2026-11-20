@@ -1,6 +1,6 @@
 {
-  "id": "1009",
-  "title": "흑백 문제 027",
+  "id": "5329",
+  "title": "흑백 문제 813",
   "width": 10,
   "height": 10,
   "channels": 1,
@@ -14,22 +14,9 @@
   ],
   "rule": "height-runs-max",
   "omitAllZeros": true,
-  "noGivens": true,
   "givens": [],
   "cells": [
     [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
       3
     ],
     [
@@ -40,57 +27,6 @@
     ],
     [
       0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      1
     ],
     [
       2
@@ -99,28 +35,73 @@
       2
     ],
     [
-      3
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      3
+      2
     ],
     [
       2
     ],
     [
+      2
+    ],
+    [
+      0
+    ],
+    [
       1
     ],
     [
       1
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
     ],
     [
       2
@@ -132,13 +113,25 @@
       1
     ],
     [
-      3
+      2
     ],
     [
-      0
+      2
     ],
     [
-      3
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
     ],
     [
       2
@@ -159,194 +152,200 @@
       2
     ],
     [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
       1
     ],
     [
       1
     ],
     [
-      3
+      1
     ],
     [
-      3
+      1
     ],
     [
-      3
+      1
     ],
     [
-      3
+      1
     ],
     [
-      3
+      1
     ],
     [
-      3
+      1
     ],
     [
-      3
+      2
     ],
     [
-      3
+      2
     ],
     [
-      3
+      1
     ],
     [
-      3
+      1
     ],
     [
-      3
+      1
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
     ],
     [
-      3
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
     ],
     [
-      3
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      1
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      3
+      2
     ],
     [
-      0
+      1
     ],
     [
-      3
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      0
+      2
     ],
     [
-      3
+      2
     ],
     [
-      3
+      2
     ],
     [
-      3
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
+      2
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-1009-4a3b108d793af3c0",
+  "storageKey": "nonogram-stack-approved-v1-5329-fec6cf6d240a836e",
   "clueCountLimit": 12,
   "adjustment": {
-    "targetEmptyPercent": 53
+    "targetEmptyPercent": 7
   },
   "source": {
     "kind": "human-approved-handoff",
-    "subject": "우산",
-    "categoryId": "10",
-    "category": "생활+주방용품",
-    "rank": 9,
-    "versionId": "b2e0e33d-20cf-4eb0-be61-97398e6bd55d",
-    "imageSha256": "4a3b108d793af3c011bc021c8638ef98dc9c1631c9c8f2f27fc51cb6cdfaef6f",
-    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/1009",
-    "approvedAt": "2026-10-24T14:37:44.147Z",
+    "subject": "제리캔",
+    "categoryId": "53",
+    "category": "안전과 진료 도구",
+    "rank": 29,
+    "versionId": "2ac76a26-511e-4d55-b7e8-6bb80c4059c5",
+    "imageSha256": "fec6cf6d240a836eb33b63f762d92260488dd651269506b3c67b0969f5570468",
+    "folder": "art-handoff/releases/8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7/approved/5329",
+    "approvedAt": "2026-11-20T06:52:06.708Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
-      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
-      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+      "releaseId": "8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7",
+      "manifest": "releases/8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7/manifest.json",
+      "manifestSha256": "2ef8bce50ff8a538b634eec60676a8a5bef7681e3c2592ad236eafb7305cf893"
     },
     "colorPalette": [
-      "#f3f7fc",
-      "#a7c7e7",
-      "#3780c8",
-      "#183858"
+      "#f7f7f8",
+      "#c4c6ca",
+      "#797d86",
+      "#35373b"
     ],
-    "colorFamily": "blue"
+    "colorFamily": "silver"
   },
   "omitOuterZeros": true
 }

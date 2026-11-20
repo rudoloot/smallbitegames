@@ -1,6 +1,6 @@
 {
-  "id": "1605",
-  "title": "흑백 문제 657",
+  "id": "5026",
+  "title": "흑백 문제 810",
   "width": 10,
   "height": 10,
   "channels": 1,
@@ -14,7 +14,6 @@
   ],
   "rule": "height-runs-max",
   "omitAllZeros": true,
-  "noGivens": true,
   "givens": [],
   "cells": [
     [
@@ -78,67 +77,31 @@
       0
     ],
     [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      2
-    ],
-    [
       3
     ],
     [
-      2
+      1
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
     ],
     [
       0
@@ -150,76 +113,28 @@
       2
     ],
     [
-      3
+      2
     ],
     [
       2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
     ],
     [
       3
     ],
     [
       0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      2
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      2
     ],
     [
       3
@@ -231,40 +146,112 @@
       2
     ],
     [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
       0
     ],
     [
-      2
+      3
     ],
     [
-      2
+      1
     ],
     [
-      2
+      1
     ],
     [
-      2
+      1
     ],
     [
-      2
+      1
     ],
     [
-      2
+      1
     ],
     [
-      0
+      1
     ],
     [
-      0
+      1
     ],
     [
-      2
-    ],
-    [
-      0
-    ],
-    [
-      2
+      3
     ],
     [
       0
@@ -276,7 +263,19 @@
       0
     ],
     [
-      2
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
     ],
     [
       0
@@ -318,35 +317,35 @@
       0
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-1605-0f010999c58f9d32",
+  "storageKey": "nonogram-stack-approved-v1-5026-fdbaf9dd5b4a186d",
   "clueCountLimit": 12,
   "adjustment": {
-    "targetEmptyPercent": 66
+    "targetEmptyPercent": 44
   },
   "source": {
     "kind": "human-approved-handoff",
-    "subject": "아르마딜로",
-    "categoryId": "16",
-    "category": "포유류",
-    "rank": 5,
-    "versionId": "0303f68c-dd8b-413a-8e18-22220c1f144e",
-    "imageSha256": "0f010999c58f9d32ed05200ea2642c057899d62ead420da66c633a60ba859bb4",
-    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/1605",
-    "approvedAt": "2026-10-26T08:10:30.776Z",
+    "subject": "배터리잔량기호",
+    "categoryId": "50",
+    "category": "전기와 전자 부품",
+    "rank": 26,
+    "versionId": "10044561-62c6-4439-bee1-f24c85c7328b",
+    "imageSha256": "fdbaf9dd5b4a186d49e3f69687f07fbc3d6c5bb747bdb87c104f782796aa2a59",
+    "folder": "art-handoff/releases/8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7/approved/5026",
+    "approvedAt": "2026-11-20T06:52:06.547Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
-      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
-      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+      "releaseId": "8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7",
+      "manifest": "releases/8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7/manifest.json",
+      "manifestSha256": "2ef8bce50ff8a538b634eec60676a8a5bef7681e3c2592ad236eafb7305cf893"
     },
     "colorPalette": [
-      "#faf7f5",
-      "#dbc6b3",
-      "#ac7d53",
-      "#4c3724"
+      "#f7f7f8",
+      "#c4c6ca",
+      "#797d86",
+      "#35373b"
     ],
-    "colorFamily": "brown"
+    "colorFamily": "silver"
   },
   "omitOuterZeros": true
 }

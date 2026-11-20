@@ -1,6 +1,6 @@
 {
-  "id": "0611",
-  "title": "흑백 문제 401",
+  "id": "0347",
+  "title": "흑백 문제 814",
   "width": 10,
   "height": 10,
   "channels": 1,
@@ -14,23 +14,19 @@
   ],
   "rule": "height-runs-max",
   "omitAllZeros": true,
-  "noGivens": true,
   "givens": [],
   "cells": [
     [
       0
     ],
     [
-      1
+      0
     ],
     [
       1
     ],
     [
       1
-    ],
-    [
-      3
     ],
     [
       1
@@ -51,93 +47,6 @@
       0
     ],
     [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      0
-    ],
-    [
       0
     ],
     [
@@ -150,7 +59,7 @@
       1
     ],
     [
-      3
+      1
     ],
     [
       1
@@ -168,72 +77,192 @@
       0
     ],
     [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
       0
     ],
     [
       1
     ],
     [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      3
-    ],
-    [
       3
     ],
     [
@@ -261,92 +290,62 @@
       0
     ],
     [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      3
-    ],
-    [
-      0
-    ],
-    [
       0
     ],
     [
       1
     ],
     [
-      2
-    ],
-    [
-      2
+      3
     ],
     [
       3
     ],
     [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
+      3
     ],
     [
       3
+    ],
+    [
+      3
+    ],
+    [
+      0
     ],
     [
       0
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-0611-084b8a7b7d0420b8",
+  "storageKey": "nonogram-stack-approved-v1-0347-014514444141a047",
   "clueCountLimit": 12,
   "adjustment": {
-    "targetEmptyPercent": 20
+    "targetEmptyPercent": 12
   },
   "source": {
     "kind": "human-approved-handoff",
-    "subject": "초콜릿",
-    "categoryId": "06",
-    "category": "디저트",
-    "rank": 11,
-    "versionId": "488907ef-bf94-44ca-a97a-ca65c654d931",
-    "imageSha256": "084b8a7b7d0420b8add7ce7c55d93da6740779e9880604e1fa3616d85551c9c1",
-    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/0611",
-    "approvedAt": "2026-10-24T14:01:09.257Z",
+    "subject": "음양문양",
+    "categoryId": "03",
+    "category": "자연",
+    "rank": 47,
+    "versionId": "46696034-5cc7-4147-8e19-5cb37ded6ea7",
+    "imageSha256": "014514444141a047d0abdd838e37a37eb1a3233b26cd0220db5540520532dbdf",
+    "folder": "art-handoff/releases/8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7/approved/0347",
+    "approvedAt": "2026-11-20T06:52:05.296Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
-      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
-      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+      "releaseId": "8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7",
+      "manifest": "releases/8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7/manifest.json",
+      "manifestSha256": "2ef8bce50ff8a538b634eec60676a8a5bef7681e3c2592ad236eafb7305cf893"
     },
     "colorPalette": [
-      "#faf7f5",
-      "#dbc6b3",
-      "#ac7d53",
-      "#4c3724"
+      "#f7f7f8",
+      "#c4c6ca",
+      "#797d86",
+      "#35373b"
     ],
-    "colorFamily": "brown"
+    "colorFamily": "silver"
   },
   "omitOuterZeros": true
 }

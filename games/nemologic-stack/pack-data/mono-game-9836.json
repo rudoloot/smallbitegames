@@ -1,6 +1,6 @@
 {
-  "id": "2214",
-  "title": "흑백 문제 156",
+  "id": "9836",
+  "title": "흑백 문제 815",
   "width": 10,
   "height": 10,
   "channels": 1,
@@ -14,14 +14,133 @@
   ],
   "rule": "height-runs-max",
   "omitAllZeros": true,
-  "noGivens": true,
   "givens": [],
   "cells": [
     [
       0
     ],
     [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
       2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
     ],
     [
       2
@@ -34,6 +153,36 @@
     ],
     [
       2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
     ],
     [
       2
@@ -60,40 +209,10 @@
       1
     ],
     [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
       2
     ],
     [
-      0
-    ],
-    [
-      0
-    ],
-    [
       2
-    ],
-    [
-      0
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
     ],
     [
       1
@@ -120,40 +239,10 @@
       1
     ],
     [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
       2
     ],
     [
-      2
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
+      3
     ],
     [
       1
@@ -168,37 +257,10 @@
       0
     ],
     [
-      0
-    ],
-    [
-      2
-    ],
-    [
-      0
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
       2
     ],
     [
       2
-    ],
-    [
-      0
-    ],
-    [
-      0
     ],
     [
       2
@@ -213,82 +275,7 @@
       1
     ],
     [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      2
-    ],
-    [
-      0
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      2
-    ],
-    [
-      0
-    ],
-    [
-      0
+      3
     ],
     [
       2
@@ -315,38 +302,50 @@
       2
     ],
     [
-      0
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-2214-76aacf3670efa6cd",
+  "storageKey": "nonogram-stack-approved-v1-9836-b7fa4eeaf8cfbfb6",
   "clueCountLimit": 12,
   "adjustment": {
-    "targetEmptyPercent": 23
+    "targetEmptyPercent": 22
   },
   "source": {
     "kind": "human-approved-handoff",
-    "subject": "바인더",
-    "categoryId": "22",
-    "category": "문구와 독서",
-    "rank": 14,
-    "versionId": "a384eba5-5536-40d7-b0b4-5e2a8e5e4308",
-    "imageSha256": "76aacf3670efa6cda5be7fb339434219545f1355c5070064e3770edd71588e70",
-    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/2214",
-    "approvedAt": "2026-10-26T08:04:31.883Z",
+    "subject": "다이얼전화기",
+    "categoryId": "98",
+    "category": "친숙한 생활 물건",
+    "rank": 36,
+    "versionId": "754c5420-9cb4-4326-8624-7c8680cf7838",
+    "imageSha256": "b7fa4eeaf8cfbfb6eff4b55a980d8594c7144605436322766e76afe2363ed198",
+    "folder": "art-handoff/releases/8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7/approved/9836",
+    "approvedAt": "2026-11-20T06:52:06.895Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
-      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
-      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+      "releaseId": "8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7",
+      "manifest": "releases/8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7/manifest.json",
+      "manifestSha256": "2ef8bce50ff8a538b634eec60676a8a5bef7681e3c2592ad236eafb7305cf893"
     },
     "colorPalette": [
-      "#f3f7fc",
-      "#a7c7e7",
-      "#3780c8",
-      "#183858"
+      "#f7f7f8",
+      "#c4c6ca",
+      "#797d86",
+      "#35373b"
     ],
-    "colorFamily": "blue"
+    "colorFamily": "silver"
   },
   "omitOuterZeros": true
 }

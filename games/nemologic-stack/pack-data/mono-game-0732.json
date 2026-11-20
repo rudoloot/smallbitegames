@@ -1,6 +1,6 @@
 {
-  "id": "1430",
-  "title": "흑백 문제 315",
+  "id": "0732",
+  "title": "흑백 문제 811",
   "width": 10,
   "height": 10,
   "channels": 1,
@@ -14,55 +14,9 @@
   ],
   "rule": "height-runs-max",
   "omitAllZeros": true,
-  "noGivens": true,
   "givens": [],
   "cells": [
     [
-      3
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      3
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
       0
     ],
     [
@@ -93,34 +47,25 @@
       0
     ],
     [
-      2
+      0
     ],
     [
-      2
+      0
     ],
     [
-      2
-    ],
-    [
-      2
+      0
     ],
     [
       3
     ],
     [
+      0
+    ],
+    [
+      0
+    ],
+    [
       3
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
     ],
     [
       0
@@ -135,10 +80,28 @@
       0
     ],
     [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
       3
     ],
     [
       3
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
     ],
     [
       0
@@ -165,22 +128,7 @@
       2
     ],
     [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
+      0
     ],
     [
       0
@@ -195,10 +143,145 @@
       0
     ],
     [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
       3
     ],
     [
       3
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      0
     ],
     [
       0
@@ -225,24 +308,6 @@
       2
     ],
     [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
       0
     ],
     [
@@ -250,103 +315,37 @@
     ],
     [
       0
-    ],
-    [
-      0
-    ],
-    [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      2
-    ],
-    [
-      3
-    ],
-    [
-      3
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      1
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      0
-    ],
-    [
-      3
     ]
   ],
-  "storageKey": "nonogram-stack-approved-v1-1430-857aaedb29204eba",
+  "storageKey": "nonogram-stack-approved-v1-0732-0c10f99f140b8aad",
   "clueCountLimit": 12,
   "adjustment": {
-    "targetEmptyPercent": 40
+    "targetEmptyPercent": 50
   },
   "source": {
     "kind": "human-approved-handoff",
-    "subject": "횡단보도",
-    "categoryId": "14",
-    "category": "교통+안내",
-    "rank": 30,
-    "versionId": "392993fb-82ec-4168-a8b6-80538ff7ec38",
-    "imageSha256": "857aaedb29204ebaa004a65bb89026bb09774df8703b3115628fc0a71a84c78b",
-    "folder": "art-handoff/releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/approved/1430",
-    "approvedAt": "2026-10-28T12:49:13.367Z",
+    "subject": "회중시계",
+    "categoryId": "07",
+    "category": "의류+소품",
+    "rank": 32,
+    "versionId": "d6b18910-7846-4981-9d06-daaf745bc01b",
+    "imageSha256": "0c10f99f140b8aadedad3e39ba3452a93cc9e1de127b5ccb5288952deeda8c20",
+    "folder": "art-handoff/releases/8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7/approved/0732",
+    "approvedAt": "2026-11-20T06:52:05.646Z",
     "artHandoff": {
       "root": "art-handoff",
       "schemaVersion": 1,
-      "releaseId": "fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5",
-      "manifest": "releases/fdd56d6a5331ed3183a0bfbc1ba8dfef8c11b76c183c5c0dc28bad620d53b8b5/manifest.json",
-      "manifestSha256": "2c0d1f56a6ae805bdfeb02726cf2a39dc1c6d6eac3e6c2c557508c8eca9b5137"
+      "releaseId": "8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7",
+      "manifest": "releases/8591f27d5d73625de2d7aa9be8c68ce675988616a92b5f90a71750098d0299a7/manifest.json",
+      "manifestSha256": "2ef8bce50ff8a538b634eec60676a8a5bef7681e3c2592ad236eafb7305cf893"
     },
     "colorPalette": [
-      "#f8f8f7",
-      "#cbc9c2",
-      "#8a8575",
-      "#3d3a34"
+      "#f7f7f8",
+      "#c4c6ca",
+      "#797d86",
+      "#35373b"
     ],
-    "colorFamily": "ivory"
+    "colorFamily": "silver"
   },
   "omitOuterZeros": true
 }
