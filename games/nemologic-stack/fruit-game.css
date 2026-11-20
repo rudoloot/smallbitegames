@@ -75,14 +75,14 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 .stack-sum-game #height-picker [data-value].held{filter:brightness(.9)}
 .stack-sum-game #board-viewport,.stack-sum-game .overview-stage{flex:none;min-width:0;min-height:0;margin:0;overflow:hidden;touch-action:none}
 .stack-sum-game #board{flex:none}
-/* Lift the three control rows into thumb reach; flex recenters the board above them. */
-.stack-sum-game .input-dock{position:static;inset:auto;flex:0 0 25dvh;height:25dvh;min-height:0;margin-top:0;margin-bottom:max(var(--control-lift),env(safe-area-inset-bottom));padding:6px 6px max(6px,env(safe-area-inset-bottom));box-shadow:none}
+/* Size the dock from four square keys; the pad takes the remaining width. */
+.stack-sum-game .input-dock{position:static;inset:auto; --key-side:min(18vw,8.4dvh,76px);flex:0 0 auto;height:auto;min-height:0;margin-top:0;margin-bottom:max(var(--control-lift),env(safe-area-inset-bottom));padding:6px 6px max(6px,env(safe-area-inset-bottom));box-shadow:none}
 .stack-sum-game .input-panel{width:100%;height:100%;min-height:0}
-.stack-sum-game .gamepad{--control-padding:clamp(4px,1.2dvh,12px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;width:100%;height:100%;max-width:none;margin:0}
-.dpad-area{display:grid;place-items:center;min-width:0;min-height:0;padding:var(--control-padding)}
+.stack-sum-game .gamepad{--control-padding:clamp(4px,1.2dvh,12px);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;width:100%;height:auto;max-width:none;margin:0}
+.dpad-area{display:grid;place-items:center;min-width:0;min-height:0;padding:clamp(8px,2vw,16px)}
 .stack-sum-game .dpad{width:var(--dpad-size,100px);height:var(--dpad-size,100px)}
 .touch-input-mode .dpad{opacity:.4}
-.stack-sum-game .input-dock .height-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:4px;width:100%;height:100%;min-width:0;min-height:0;padding:var(--control-padding)}
+.stack-sum-game .input-dock .height-picker{display:grid;grid-template-columns:repeat(2,var(--key-side));grid-template-rows:repeat(4,var(--key-side));gap:4px;width:auto;height:auto;min-width:0;min-height:0;padding:var(--control-padding)}
 .stack-sum-game .input-dock .height-picker button{width:100%;height:100%;min-width:0;min-height:0;padding:0;gap:0;border-radius:clamp(6px,1dvh,12px)}
 .stack-sum-game .height-picker strong{font-size:clamp(16px,3dvh,30px);line-height:1}
 .stack-sum-game .height-picker span{font-size:clamp(7px,.9dvh,10px);line-height:1}
@@ -94,3 +94,7 @@ html,body{height:100%;min-height:0;overflow:hidden;scroll-padding:0}
 }
 @media(max-height:450px){.play-area{gap:6px}.stack-sum-game .height-picker #undo strong{font-size:14px}.stack-sum-game .height-picker span{font-size:6px}}
 @media(orientation:landscape) and (max-height:450px){.stack-sum-game .app{--control-lift:clamp(12px,4dvh,24px)}}
+
+
+.stack-sum-game .dpad-area{position:relative;align-self:stretch}
+.stack-sum-game .dpad-area .dpad{position:absolute;inset:0;margin:auto}

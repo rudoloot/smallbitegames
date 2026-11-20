@@ -9,7 +9,7 @@ const CLUE_SLOTS={row:Math.max(1,...allClues.filter(c=>c.axis==='row').map(c=>c.
 document.documentElement.style.setProperty('--n',N);
 const fixed=Array.from({length:N*N},()=>Array(CHANNEL_COUNT).fill(false));
 GIVEN_DATA.forEach(g=>fixed[g.index][g.channel]=true);
-let boardState=fresh(), tab=0, selected=0, history=[], pendingHint=null, errors=new Set(), completed=false, storageOK=true;
+let boardState=fresh(), tab=0, selected=0, history=[], redoHistory=[], pendingHint=null, errors=new Set(), completed=false, storageOK=true;
 let hintWallet=null;
 try{if(MONO&&window.StackHintWallet){hintWallet=StackHintWallet.create(globalThis.StackStorage||localStorage);hintWallet.recover();}}catch{storageOK=false;}
 let paintValue=0, stroke=null;
@@ -203,6 +203,10 @@ function render(){
   $('erase').classList.toggle('current',channel!==null&&paintValue===null);
   $('erase').setAttribute('aria-pressed',channel!==null&&paintValue===null);
   $('undo').disabled=history.length===0;
+  $('redo').disabled=redoHistory.length===0;
+  const pad=inputMode==='dpad',modeButton=$('input-mode'),label=pad?'십자키 입력':'터치 입력';
+  modeButton.setAttribute('aria-pressed',String(pad));
+  modeButton.querySelector('span').textContent=window.StackI18n?.translate(label)||label;
   if(typeof window.renderTerrain==='function')window.renderTerrain();
   if(window.syncLargeUI)window.syncLargeUI();
 }
@@ -211,7 +215,7 @@ function edit(value){
   if(value!==null&&(!Number.isInteger(value)||value<0||value>MAX_STACK))return;
   if(tab==='all'||value==='select'||selected===null||fixed[selected][tab])return;
   const before=boardState[selected][tab];if(before===value){render();return;}
-  history.push({channel:tab,changes:[{index:selected,before,after:value}]});
+  recordEdit({channel:tab,changes:[{index:selected,before,after:value}]});
   boardState[selected][tab]=value;window.StackInputSound?.play(value);errors.clear();cancelHint();save();render();checkWin(history.at(-1));
 }
 function checkWin(action=null){
@@ -221,18 +225,29 @@ function checkWin(action=null){
     boardState.forEach((cell,index)=>{if(cell[0]===null){changes.push({index,before:null,after:0});cell[0]=0;}});
     if(changes.length){
       if(action?.channel===0)action.changes.push(...changes);
-      else history.push({channel:0,changes});
+      else recordEdit({channel:0,changes});
     }
   }
   if(!isSolved())return;
   cancelHint();terrainSelection=null;render();save();say(`완성! ${N*N*CHANNEL_COUNT}개의 높이가 모두 맞아요.`);
   if(completed)return;completed=true;
-  if(window.StackRuntime)StackRuntime.completion=StackRuntime.ads.recordCompletion().catch(()=>{});
   drawCompletedPicture();
   $('win-dialog').showModal();
   if(!storageOK)window.StackRuntime?.reportStorageFailure?.();
 }
-function undo(){finishStroke();const action=history.pop();if(!action)return;for(const change of action.changes)boardState[change.index][action.channel]=change.before;selected=action.changes[0].index;tab=action.channel;completed=false;errors.clear();cancelHint();save();render();say(`${action.changes.length}칸의 입력을 되돌렸어요.`);}
+function recordEdit(action){history.push(action);redoHistory.length=0;}
+function replayEdit(forward){
+  finishStroke();
+  const action=(forward?redoHistory:history).pop();
+  if(!action)return;
+  for(const change of action.changes)boardState[change.index][action.channel]=forward?change.after:change.before;
+  (forward?history:redoHistory).push(action);
+  selected=action.changes[0].index;tab=action.channel;completed=false;errors.clear();cancelHint();save();render();
+  if(forward)checkWin(action);
+  else say(`${action.changes.length}칸의 입력을 되돌렸어요.`);
+}
+function undo(){replayEdit(false);}
+function redo(){replayEdit(true);}
 function findMistakes(){const result=[];boardState.forEach((cell,i)=>cell.forEach((v,c)=>{if(v!==null&&v!==C.solution[i][c])result.push({index:i,channel:c});}));return result;}
 window.getStackHintBalance=()=>{if(!hintWallet)throw Error('Hint storage unavailable');return hintWallet.balance();};
 window.getStackHintChoices=()=>MONO?StackHintWallet.clueHints(boardState,C.solution,N):[];
@@ -243,7 +258,7 @@ window.useStackHint=clue=>{
   const result=hintWallet.spend({storageKey:key,statusKey:StackPuzzle.statusKey,cells:boardState,solution:C.solution,size:N,clue});
   if(!result)return false;
   const h=result.hint,action={channel:0,changes:h.changes.map(change=>({index:change.index,before:change.before,after:change.value}))};
-  boardState=result.cells;selected=h.changes[0].index;tab=0;history.push(action);completed=false;errors.clear();cancelHint();
+  boardState=result.cells;selected=h.changes[0].index;tab=0;recordEdit(action);completed=false;errors.clear();cancelHint();
   render();save();checkWin(action);if(window.revealBoardCell)window.revealBoardCell(selected);
   return true;
 };
@@ -335,7 +350,7 @@ function finishStroke(){
   const finished=stroke;stroke=null;
   $('board').classList.remove('is-painting');
   if($('board').hasPointerCapture(finished.pointerId))$('board').releasePointerCapture(finished.pointerId);
-  if(finished.changes.length){history.push({channel:finished.channel,changes:finished.changes});save();}
+  if(finished.changes.length){recordEdit({channel:finished.channel,changes:finished.changes});save();}
   render();if(finished.changes.length)checkWin(history.at(-1));
 }
 $('board').addEventListener('pointerdown',e=>{
@@ -383,6 +398,8 @@ $('board').addEventListener('click',e=>{
   terrainSelection=null;selected=Number(cell.dataset.index);cancelHint();
   if(tab==='all'||paintValue==='select')render();else edit(paintValue);
 });
+$('redo').onclick=redo;
+$('input-mode').onclick=()=>{if(inputMode==='touch')selected??=0;setInputMode(inputMode==='touch'?'dpad':'touch');};
 $('undo').onclick=undo;$('erase').onclick=()=>choosePaint(null);if($('hint'))$('hint').onclick=hint;
 if($('check'))$('check').onclick=()=>{
   const mistakes=findMistakes();errors=new Set(mistakes.map(e=>`${e.index}:${e.channel}`));cancelHint();
@@ -403,10 +420,10 @@ document.querySelectorAll('dialog').forEach(d=>{
     if(beganOutside&&outside(e))d.close();
   });
 });
-$('confirm-reset').onclick=()=>{finishStroke();boardState=fresh();history=[];errors.clear();selected=null;tab=0;paintValue=0;completed=false;cancelHint();save();render();$('reset-dialog').close();say('빈 보드에서 시작해요. 같은 값의 구간 합과 최대 높이를 살펴보세요.');};
+$('confirm-reset').onclick=()=>{finishStroke();boardState=fresh();history=[];redoHistory=[];errors.clear();selected=null;tab=0;paintValue=0;completed=false;cancelHint();save();render();$('reset-dialog').close();say('빈 보드에서 시작해요. 같은 값의 구간 합과 최대 높이를 살펴보세요.');};
 document.addEventListener('keydown',e=>{
   if(document.querySelector('dialog[open]')||e.target.closest('.tabs,#terrain-panel')||e.target.matches('input,select'))return;
-  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();if(e.shiftKey)redo();else undo();return;}
   if(e.ctrlKey||e.metaKey||e.altKey)return;
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
     setInputMode('dpad');

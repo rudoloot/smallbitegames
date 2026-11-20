@@ -1,0 +1,126 @@
+{
+  "id": "0883",
+  "title": "흑백 문제 011",
+  "width": 5,
+  "height": 5,
+  "channels": 1,
+  "maxStack": 3,
+  "paletteSize": 4,
+  "levels": [
+    0,
+    0.3333333333333333,
+    0.6666666666666666,
+    1
+  ],
+  "rule": "height-runs-max",
+  "omitAllZeros": true,
+  "givens": [],
+  "cells": [
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ]
+  ],
+  "storageKey": "nonogram-stack-approved-v1-0883-a421005aeb8a80ab",
+  "clueCountLimit": 12,
+  "adjustment": {
+    "targetEmptyPercent": 60
+  },
+  "source": {
+    "kind": "human-approved-handoff",
+    "subject": "기폭장치",
+    "categoryId": "08",
+    "category": "놀이+게임",
+    "rank": 83,
+    "versionId": "cff0503f-a2f9-464d-b50d-a0108db67c51",
+    "imageSha256": "a421005aeb8a80ab2b2f65de409d996d71894cbda1a57a2ea758e3424ea5905b",
+    "folder": "art-handoff/releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/approved/0883",
+    "approvedAt": "2026-11-19T13:30:08.016Z",
+    "artHandoff": {
+      "root": "art-handoff",
+      "schemaVersion": 1,
+      "releaseId": "2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8",
+      "manifest": "releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/manifest.json",
+      "manifestSha256": "a1e84d56ceba93711b1d2bd538c78d10fb0e1cd77cd4de0a4063d02dcf3e0dfa"
+    },
+    "colorPalette": [
+      "#fcf3f3",
+      "#eaa6a4",
+      "#d0352f",
+      "#5b1715"
+    ],
+    "colorFamily": "red"
+  },
+  "omitOuterZeros": true
+}

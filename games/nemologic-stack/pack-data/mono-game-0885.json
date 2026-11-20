@@ -1,0 +1,126 @@
+{
+  "id": "0885",
+  "title": "흑백 문제 013",
+  "width": 5,
+  "height": 5,
+  "channels": 1,
+  "maxStack": 3,
+  "paletteSize": 4,
+  "levels": [
+    0,
+    0.3333333333333333,
+    0.6666666666666666,
+    1
+  ],
+  "rule": "height-runs-max",
+  "omitAllZeros": true,
+  "givens": [],
+  "cells": [
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      0
+    ]
+  ],
+  "storageKey": "nonogram-stack-approved-v1-0885-b76bdd9dcadf57c8",
+  "clueCountLimit": 12,
+  "adjustment": {
+    "targetEmptyPercent": 64
+  },
+  "source": {
+    "kind": "human-approved-handoff",
+    "subject": "막대차트",
+    "categoryId": "08",
+    "category": "놀이+게임",
+    "rank": 85,
+    "versionId": "9fd8318a-8e47-4c18-815a-22d3288625c8",
+    "imageSha256": "b76bdd9dcadf57c8ebd0e4e979f50115e16e1b5c5089dab495188fdda62c096b",
+    "folder": "art-handoff/releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/approved/0885",
+    "approvedAt": "2026-11-19T13:30:08.072Z",
+    "artHandoff": {
+      "root": "art-handoff",
+      "schemaVersion": 1,
+      "releaseId": "2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8",
+      "manifest": "releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/manifest.json",
+      "manifestSha256": "a1e84d56ceba93711b1d2bd538c78d10fb0e1cd77cd4de0a4063d02dcf3e0dfa"
+    },
+    "colorPalette": [
+      "#f4faf5",
+      "#b1ddb6",
+      "#4eb159",
+      "#224e27"
+    ],
+    "colorFamily": "green"
+  },
+  "omitOuterZeros": true
+}

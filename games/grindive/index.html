@@ -1,0 +1,2474 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Grindive · 옥상에서 거리까지</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#121e29;color:#f5f3dd;font-family:Barlow,"Malgun Gothic",sans-serif}main{width:min(100vw,540px);height:100vh;height:100dvh;position:relative;margin:auto;overflow:hidden;background:#98c5cd;touch-action:none;user-select:none}canvas{width:100%;height:100%;display:block}header{position:absolute;top:max(16px,env(safe-area-inset-top));left:16px;right:16px;display:flex;align-items:center;gap:14px;color:#fff;text-shadow:0 2px 5px #203644;font-variant-numeric:tabular-nums}header div{display:grid}small{font-size:11px;letter-spacing:.12em}strong{font-size:25px}button{border:0;border-radius:8px;cursor:pointer;font:inherit}#pause{background:#173244c9;color:white;padding:10px}#cue{position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;border-radius:6px;pointer-events:none}#cue{top:13%;padding:6px 12px;background:#193344d9;font-size:14px}#overlay{position:absolute;inset:0;background:linear-gradient(180deg,#10283822,#0b202bdc 65%);display:flex;align-items:flex-end;padding:7% 7% max(7%,env(safe-area-inset-bottom))}#overlay[hidden]{display:none}.card{width:100%;text-shadow:0 1px 2px #234}em{color:#ffe09a;font-size:13px;font-style:normal;letter-spacing:.18em;font-weight:bold}h1{font-size:clamp(36px,8vw,55px);letter-spacing:-.07em;line-height:1.12;margin:12px 0}p{line-height:1.65;font-size:14px;white-space:pre-line}#play{background:#ffe09a;color:#16272c;font-weight:bold;width:100%;padding:15px}#cue:empty{display:none}
+#difficultyLabel:not([hidden]){display:flex;align-items:center;gap:8px;margin:8px 0;color:#d3e9e9}#diveDifficulty{font:inherit;background:#203747;color:white;border:1px solid #608382;border-radius:5px;padding:4px 8px}
+main{width:100vw} 
+.music-stage #overlay{background:linear-gradient(90deg,#131125f2,#17152bd4 42%,#17152b08 83%)}
+.music-stage .card{max-width:430px}.music-stage #play{background:#aef4d7;color:#14242c}
+.music-stage #tag{color:#ffdf9d}
+#overlay:has(#stages:not([hidden])){background:linear-gradient(110deg,#121421fa,#191a2bea 75%,#222334de);padding:14px max(5%,env(safe-area-inset-left))}
+#overlay:has(#stages:not([hidden])) .card{max-width:960px;margin:auto}
+#stages:not([hidden]){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;max-height:50dvh;overflow-y:auto;margin:10px 0;align-content:start}
+.stageTile{display:grid;position:relative;align-content:space-between;gap:8px;min-height:64px;padding:9px 12px;text-align:left;border-radius:5px;border:1px solid #515166;background:#26283a;color:#eee8de}
+.stageTile strong{font-size:clamp(12px,1.7vw,17px);overflow-wrap:anywhere;line-height:1.15}
+.stageTile small{font-weight:bold;font-variant-numeric:tabular-nums;color:#c3b6a6}
+.stageTile[aria-pressed=true]{border-color:#e8bc80;box-shadow:inset 3px 0 #e8bc80;background:#433841}
+.stageTile:disabled{color:#aaaaba;border-color:#393944;background:#21222c;cursor:default}
+.stageTile:disabled::after{content:"";position:absolute;right:11px;top:10px;width:6px;height:7px;border:1.5px solid #9491a2;border-radius:4px 4px 0 0;border-bottom-width:4px}
+.stageTile:focus-visible{outline:2px solid #aef4d7;outline-offset:-3px}
+#overlay:has(#stages:not([hidden])) #description{display:none}
+#overlay{overflow:auto;align-items:safe center;padding:12px 9%}.card h1{font-size:28px;margin:5px 0}.card p{margin:6px 0;font-size:13px}
+header{inset-inline:max(12px,env(safe-area-inset-left),env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top));z-index:2;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;pointer-events:none}
+#stats,#hudActions{display:flex;align-items:center;gap:8px}
+#stats{min-width:0}#zone{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#hudActions{grid-column:3;justify-self:end;pointer-events:auto}
+#balance{grid-column:2;grid-row:1}#full{background:#173244;color:white;padding:10px;white-space:nowrap}
+#mainMenu{width:100%;margin-top:8px;padding:12px;background:#263444;color:white}
+main:has(#overlay:not([hidden])) #stats,main:has(#overlay:not([hidden])) #pause{visibility:hidden}
+
+
+#pad,#touchAction{
+ --control-size:clamp(66px,19dvh,96px);
+ position:absolute;width:var(--control-size);aspect-ratio:1;padding:0;border-radius:50%;
+ border:1px solid #e1f6ff80;background:radial-gradient(circle at 35% 25%,#cce9ff36,#29455655 68%);
+ box-shadow:inset 0 0 0 4px #253d481c,0 2px 8px #14252c35;
+ touch-action:none;user-select:none;
+}
+#pad{pointer-events:none;transform:translate(-50%,-50%);left:calc(env(safe-area-inset-left) + 20px + var(--control-size)/2);top:calc(100% - env(safe-area-inset-bottom) - 16px - var(--control-size)/2)}
+#pad span{position:absolute;left:50%;top:50%;width:40%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:1px solid #effaffae;background:radial-gradient(circle at 35% 25%,#effaff80,#aacddd40);box-shadow:0 2px 5px #182b3840}
+#touchAction{display:none;right:calc(20px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));color:#edfbffe0}
+#touchAction svg{width:38%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#touchAction:active{background-color:#b4dce54d}
+#touchAction:focus-visible{outline:2px solid white;outline-offset:3px}
+@media(pointer:coarse) and (orientation:landscape){
+ header strong{font-size:18px}
+ #full,#pause{min-height:44px}
+ #touchAction:not([hidden]){display:grid;place-items:center}
+}
+#overlay.cleared{background:linear-gradient(180deg,#101827ce,transparent 53%,#101827df);padding:clamp(14px,5dvh,42px) max(5%,env(safe-area-inset-left))}
+#overlay.cleared .card{max-width:680px;width:100%;height:100%;margin:auto;display:grid;text-align:center;align-content:stretch;align-items:start;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto 1fr auto;gap:8px}
+.cleared #tag{display:none}.cleared #titleText,.cleared #description{grid-column:1/-1;white-space:pre-line}.cleared #titleText{font-size:clamp(28px,7dvh,54px);color:#d8fffa}
+#overlay.cleared button{grid-row:3;width:100%;margin:0;align-self:end;min-height:44px;padding:10px 4px;font-weight:bold}
+.cleared #mainMenu{grid-column:1}.cleared #nextStage{grid-column:2;background:#aef4d7;color:#14242c}.cleared #nextStage:disabled{opacity:.45}.cleared #play{grid-column:3;background:#354a60;color:white}
+#settingsButton{background:#173244;color:white;padding:10px;min-height:40px}
+#settingsDialog{width:min(320px,85vw);border:1px solid #657785;border-radius:12px;background:#172533;color:#f2f4ec;padding:20px}
+#settingsDialog::backdrop{background:#0a101bb5}.settingsHead{display:flex;align-items:center;justify-content:space-between}
+.settingsHead h2{margin:0;font-size:20px}#closeSettings{color:white;background:transparent;font-size:24px;padding:4px 10px}
+#resetTrail{width:100%;padding:12px;color:#13282a;background:#aef4d7}#resetTrail:disabled{opacity:.5}
+#settingsStatus:empty{display:none}
+#rotate{display:none} @media(orientation:portrait){#rotate{position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:#162936;text-align:center}main>:not(#rotate){visibility:hidden}}
+#balance[hidden]{display:none}#balance{width:clamp(88px,14vw,140px);font-size:12px;line-height:1;text-align:center;font-weight:bold;color:white;text-shadow:0 1px 4px #132d36;pointer-events:none}#balance svg{display:block;width:100%;overflow:visible}</style><main><div id="rotate">기기를 가로로 돌려 주세요.</div><canvas id="scene"></canvas><header><div id="stats"><div id="gapHud" style="display:none"><small>작살 거리</small><strong id="gapDistance"></strong></div><div id="elapsedHud" style="display:none"><small>플레이 타임</small><strong id="elapsed">0:00.0</strong></div><small id="zone">옥상</small></div><div id="balance" role="img" aria-label="그라인드 균형" hidden><svg viewBox="0 0 120 24" aria-hidden="true"><defs><linearGradient id="balanceInk"><stop stop-color="#e87957"/><stop offset=".3" stop-color="#edd18b"/><stop offset=".5" stop-color="#5fd8bb"/><stop offset=".7" stop-color="#edd18b"/><stop offset="1" stop-color="#e87957"/></linearGradient></defs><path d="M5 18 Q60 -2 115 18" fill="none" stroke="url(#balanceInk)" stroke-width="6" stroke-linecap="round"/><circle id="needle" r="4" fill="white" stroke="#263943"/></svg></div><div id="hudActions"><button id="settingsButton" type="button" aria-haspopup="dialog">설정</button><button id="pause" aria-label="일시정지">Ⅱ</button><button id="full">전체화면</button></div></header><dialog id="settingsDialog" aria-labelledby="settingsTitle"><div class="settingsHead"><h2 id="settingsTitle">설정</h2><button id="closeSettings" type="button" aria-label="설정 닫기">×</button></div><p id="settingsStage"></p><button id="resetTrail" type="button">블록 색상 초기화</button><button id="siteExit" type="button" hidden style="width:100%;padding:12px;margin-top:10px;background:#324b5e;color:white">게임 종료하기</button><p id="settingsStatus" role="status"></p></dialog><div id="cue"></div><button id="touchAction" type="button" aria-label="점프" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 7-7 7 7M5 18l7-7 7 7"/></svg></button><div id="pad" hidden aria-hidden="true"><span></span></div><div id="overlay"><div class="card"><em id="tag">GRINDIVE　/　TRACK 01</em><h1 id="titleText">옥상에서 거리까지</h1><p id="description">제한 시간 150초 · 완주 기준 2분<br>왼쪽 조이스틱으로 이동하고 아래로 밀어 숙이세요. 오른쪽 화면으로 점프합니다.<br>키보드: 방향키 + 스페이스</p><div id="stages" role="group" aria-label="스테이지 목록" hidden></div> <label id="difficultyLabel" hidden>난이도 <select id="diveDifficulty"><option value="easy">초급 · 작살 5개</option><option value="normal">중급 · 작살 3개</option><option value="hard">상급 · 작살 2개</option></select></label> <button id="play">출발하기　→</button> <button id="nextStage" hidden>다음 스테이지</button> <button id="mainMenu" hidden>메인으로 나가기</button></div></div></main>
+<script src="course-depth.js?v=6d19a64ca488"></script>
+<script src="course.js?v=45f32065be2d"></script>
+<script src="music-tracks.js?v=1f68380419ac"></script>
+<script src="song-course.js?v=350c96bd1cf0"></script>
+<script src="iona-mesh.js?v=233e388d451b"></script>
+<script src="iona-motion.js?v=2331a706cf9e"></script>
+<script src="iona-rider.js?v=6bfeb4d1f782"></script>
+<script src="taxi-city.js?v=ff7234b67385"></script>
+<script src="skyline-city.js?v=12d17cce161f"></script>
+<script src="iron-portcullis.js?v=00e6345a25b6"></script>
+<script src="prairie-express.js?v=2935b02c6f3b"></script>
+<script src="rails-under-fire.js?v=ebf8395b47ab"></script>
+<script src="track-blocks.js?v=6c2db1c9bdc9"></script>
+<script src="ride-music.js?v=304c78f0aa38"></script>
+<script src="dive.js?v=667fc0d4ecb9"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), canvas=$('scene'),ctx=canvas.getContext('2d');
+const testMode=new URLSearchParams(location.search).get('test')??'combo';
+const diveMission=testMode==='dive';
+function loadEditorSections(){
+ if(diveMission)return [diveSection()];
+ if(testMode!=='editor')return [];
+ const data=JSON.parse(decodeURIComponent(location.hash.slice(1)));
+ const sections=Array.isArray(data)?[{origin:{x:0,y:0,z:0,yaw:0,pitch:0,width:12},
+   pieces:data.map(([length,turn,tilt,ramp])=>({length,turn,tilt,ramp}))}]:data.sections;
+ return sections.filter(r=>r.pieces.length).map(({origin,pieces})=>{
+   const route=buildCourseSection(origin,pieces);
+   const points=route.path.map(p=>({x:p.x,z:p.z,h:-p.y,yaw:p.yaw*Math.PI/180,pitch:p.pitch*Math.PI/180,width:p.width}));
+   const objects=new Map();
+   for(const k of route.ramps)for(let m=k.a;m<k.b;m++){
+     if(!objects.has(m))objects.set(m,[]);objects.get(m).push(k);
+   }
+   const buses=[],busMetres=new Map();
+   route.pieces.forEach((piece,i)=>{
+     if(piece.bus==null)return;
+     const bus=courseBus(route.spans[i]-1,piece.length,piece.bus);
+     buses.push(bus);
+     for(let m=bus.a;m<bus.b;m++)busMetres.set(m,bus);
+   });
+   const railMetres=new Map();
+   for(const r of route.railRuns)for(let m=r.a;m<r.b;m++){
+     if(!railMetres.has(m))railMetres.set(m,[]);
+     railMetres.get(m).push(r);
+   }
+   return {points,ramps:route.ramps,objects,buses,busMetres,railMetres,railRuns:route.railRuns};
+ });
+}
+const editorSections=loadEditorSections(),editorRun=editorSections.length>0;
+const lowestEditorSurface=editorSections.reduce((min,r)=>r.points.reduce((h,p)=>Math.min(h,-p.h),min),Infinity);
+let ridingSection=0,editorPath=editorSections[0]?.points;
+const depthView=diveMission?new DiveDepthView():editorRun?new CourseDepthView():null;
+const comboReview=testMode==='combo',trapReview=comboReview||testMode==='traps',routeReview=editorRun||trapReview||testMode==='route';
+let songCourse=null;
+const railGap={a:926,b:962,restart:848};
+let roadHalf=editorRun?6:comboReview?5.25:4.3;
+const flatJumpHeight=2,normalGravity=14;
+const jumpVelocity=Math.sqrt(2*normalGravity*flatJumpHeight);
+const rails=[['A',3.15,14.6,18.25,0.65],['B',-2.35,30.6,34.22,0.85],['C',-2.35,34.86,38.25,0.55],['D',3.15,53.6,56.23,0.7],['E',2.45,65,68,.68],['F',-2.2,78,81,.70],['G',-2.2,81.65,84,.52],['H',2.65,97,100,.75],['I',-2.15,112,115,.65]].map(([name,x,a,b,h])=>({name,x,a:a*12,b:b*12,h}));
+const fastRoute=routeReview&&!editorRun;
+let FINISH=editorRun?editorPath.length-1:routeReview?2660:1440;
+const lateralSpeed=7;
+function steerAcross(vx,dt){
+ const acceleration=editorRun?24:35;
+ return vx+clamp(inputX*lateralSpeed-vx,-acceleration*dt,acceleration*dt);
+}
+const SPEED=rideStartSpeed;
+let LIMIT=editorRun?Math.max(150,Math.ceil(FINISH/SPEED)+30):150;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+let mode='intro',s,inputX=0,duck=false,activePointer=null,camX=0,camY=0,W,H,frameTime=0,audio;
+
+const normalSpeedLimit=Math.max(120/3.6,rideStartSpeed);
+function fresh(){return {dive:diveMission?startDive():null,normalSpeed:SPEED,travelYaw:editorRun?editorPath[0].yaw:0,z:0,x:0,y:diveMission?harpoonTop:0,vy:0,time:0,air:false,rail:null,trick:'',trickAge:0,score:0,base:0,types:new Set(),chain:[],grace:0,falls:0,lost:0,recover:0,claimed:new Set(),pending:new Set(),message:'',messageAt:0,slow:0,best:0,speed:SPEED,wall:null,vx:0,airVX:0,airForward:SPEED,roll:0,balance:0,edgeTime:0}}
+s=fresh();
+function tone(hz,length=.09,slide=1){if(!audio||audio.state!=='running')return;let o=audio.createOscillator(),g=audio.createGain();o.type='triangle';o.frequency.value=hz;o.frequency.exponentialRampToValueAtTime(hz*slide,audio.currentTime+length);g.gain.value=.075;g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+length);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+length)}
+function buzz(n){navigator.vibrate?.(n)}
+function tell(m){s.message=m;s.messageAt=s.time+1.3}
+function skill(name,value,key){if(s.claimed.has(key)||s.pending.has(key))return;s.pending.add(key);s.base+=value;s.types.add(name);s.chain.push(name);s.grace=.9;tone(230+65*s.types.size)}
+function clearChain(){s.base=0;s.types.clear();s.chain=[];s.pending.clear();s.grace=0}
+function bank(){if(!s.base)return;let gain=s.base*s.types.size;s.score+=gain;s.best=Math.max(s.best,gain);for(const key of s.pending)s.claimed.add(key);clearChain();tell('착지 성공　+'+gain);tone(120,.16,.5);buzz(18)}
+const kickers=[
+ {a:65,b:72,x:.55,width:1.65,h:.85},
+ {a:260,b:269,x:.15,width:2.1,h:1.25},
+ {a:148,b:156,x:2.9,width:1.6,h:1},
+ {a:320,b:327,x:-.8,width:1.5,h:.95},
+ {a:470,b:478,x:.25,width:1.6,h:1.1},
+ {a:624,b:632,x:2.8,width:1.6,h:1.2},
+ {a:545,b:555,x:-1.1,width:2.3,h:1.5}
+];
+for(const [a,x,h] of [[752,2.45,1.05],[829,-.4,1.25],[914,-2.2,1.2],[1024,.7,1.35],[1142,2.65,1.12],[1238,-.55,1.45],[1321,-2.15,1.15],[1394,.25,1.25]])
+ kickers.push({a,b:a+8,x,width:1.8,h});
+function kickerAt(x,z,foot=s?.y){
+ return kickers.find(k=>Math.abs(x-k.x)<=k.width/2 && z>=k.a && z<=k.b &&
+   (!k.mini||(foot>=reviewSurface(x,z)+(k.base??0)-.12&&foot<=reviewSurface(x,z)+(k.base??0)+k.h+.12)));
+}
+function rampProgress(k,z){return clamp((z-k.a)/(k.b-k.a),0,1)}
+function rampHeight(k,z,x=k.x){
+ if(k.sideDirection){
+   const across=clamp(.5+k.sideDirection*(x-k.x)/k.width,0,1);
+   return k.base+k.h*across*clamp((z-k.a)/3,0,1);
+ }
+ return (k.base??0)+k.h*rampProgress(k,z)**(k.mini?2:k.angle?1:3)}
+function launchFromRamp(k,z,pop=0){
+ recordTrail(true,k,z);
+ if(k.mini){
+   if(k.jumpTransfer){
+     // An ollie adds the lift needed to reach the elevated landing.
+     if(s.rail?.ramp===k&&pop){
+       const t=k.flight,z=s.z+s.speed*t;
+       const landingY=k.landingHeight+reviewSurface(k.landingEdgeX,z);
+       launch((landingY-s.y)/t+.5*normalGravity*t,(k.landingEdgeX-s.x)/t,s.speed);
+     }else{
+       const t=k.flight,landingX=k.landingEdgeX+.78*k.sideDirection;
+       const target=k.landingHeight+reviewSurface(landingX,s.z+s.speed*t);
+       launch((target-s.y)/t+.5*normalGravity*t+(pop-jumpVelocity),(landingX-s.x)/t,s.speed);
+     }
+     s.sideLaunchDrift=true;
+     return;
+   }
+   const rise=clamp(s.speed*.12,2.8,3.8);
+   launch(k.launchVelocity??(Math.sqrt(2*normalGravity*rise)+pop),s.vx,s.speed);
+   return;
+ }
+ const slope=k.angle?k.h/(k.b-k.a):3*k.h*rampProgress(k,z)**2/(k.b-k.a);
+ const forward=s.speed/Math.hypot(1,slope);
+ launch(forward*slope+pop+(k.spring?3:0),s.vx,forward);
+}
+const roofs=[[106,144],[180,218],[224,255],[332,366],[438,470],[568,606],[726,752],[814,848],[880,911],[1038,1074],[1194,1230],[1270,1306],[1380,1410]];
+function roofAt(z){return roofs.find(([a,b])=>z>=a&&z<b)}
+function surface(x,z){if(routeReview){
+ const floor=reviewSurface(x,z);
+ const support=s.contactDeck;
+ const onContact=support&&x>=support.l&&x<=support.r&&z>=support.a&&z<=support.b;
+ if(editorRun){
+   const ramp=kickerAt(x,z),bus=editorSections[ridingSection].busMetres.get(Math.floor(z));
+   const roof=bus&&x>=bus.l&&x<=bus.r?bus.h:0;
+   return floor+Math.max(roof,ramp?rampHeight(ramp,z):0);
+ }
+ if(!comboReview)return floor+(onContact?support.hi:0);
+ const block=trackBlockSupport(x,z,s.y);
+ const blockHeight=block?trackBlockTop(block,x,z):0;
+ const k=kickerAt(x,z);let lift=Math.max(k?rampHeight(k,z,x):0,sideRampHeight(x,z));
+ for(const o of streetSlices.get(Math.floor(z/2)*2)||[]){
+   if(x<o.left||x>o.right)continue;
+   if(['인도','경계석','버스','차양막'].includes(o.kind)&&s.y>=floor+o.h-.035)lift=Math.max(lift,o.h);
+ }
+ return floor+Math.max(lift,onContact?support.hi:0,blockHeight);
+}const d=deckAt(x,z);if(onBus(x,z))return Math.max(bus.h,d?deckHeight(d,z):0);if(d)return deckHeight(d,z);const k=kickerAt(x,z);if(k)return rampHeight(k,z);const r=x < -2.78 && roofAt(z);return r?2.35*Math.min(1,(z-r[0])/9,(r[1]-z)/7):0}
+const holes=[
+ {a:232,b:237,l:-1.5,r:1.8},{a:675,b:681,l:1.55,r:3.48},
+ {a:988,b:994,l:-4.1,r:.6},{a:1352,b:1358,l:-1,r:3.5}
+];
+const poles=[{z:198,x:.6},{z:506,x:-.8},{z:788,x:1.2},{z:1290,x:-.4}];
+const alleys=[454,1000,1300];
+function roadLimit(z){
+ for(const a of alleys)if(z>=a && z<=a+40)
+   return 4.1-2*clamp(Math.min(z-a,a+40-z)/10,0,1);
+ return 4.1;
+}
+function gap(x,z){return holes.some(h=>x>h.l && x<h.r && z>h.a && z<h.b)}
+// Heights are relative to the downhill road. Leave a clear bypass beside each set.
+const decks=[];
+for(const [start,x] of [[278,-1.25],[846,.65],[1098,-1.25]]){
+ const add=(name,a,b,h1,h2,color)=>decks.push({name,a:start+a,b:start+b,l:x-1.18,r:x+1.18,h1,h2,color});
+ add('옥상 진입로',0,16,0,3.6,'#68abaa');
+ add('도약 옥상',16,26,3.6,4.6,'#83c8bf');
+ add('낮은 지붕',26,32,1.25,1.25,'#aa755e');
+ add('건너편 옥상',32,46,3.2,3.2,'#8ac4be');
+ add('상가 차양막',46,61,2.5,2.0,'#ec926a');
+ add('상가 계단',61,76,1.75,0,'#acacaa');
+}
+function deckHeight(d,z){
+ let t=clamp((z-d.a)/(d.b-d.a),0,1);
+ if(d.name==='상가 계단')t=Math.floor(t*10)/10;
+ if(d.name==='도약 옥상')t=t*t*t;
+ return d.h1+(d.h2-d.h1)*t;
+}
+function deckAt(x,z){return decks.find(d=>x>=d.l&&x<=d.r&&z>=d.a&&z<d.b)}
+const bus={l:-2.35,r:-.15,h:1.65,length:10};
+function busRear(){return 1149+3.8*((s.time-(s.busStart??s.time)))}
+function onBus(x,z){return s.busStart!==undefined && x>=bus.l && x<=bus.r && z>=busRear() && z<=busRear()+bus.length}
+
+function clearAir(){s.edgeJumpUntil=-Infinity;s.sideLaunchDrift=false;s.jumpElapsed=null;s.balanceDrop=false;s.modelPitch=0;s.trick='';s.trickAge=0}
+function launch(vy,side=s.vx,forward=s.speed){
+ if(editorRun){
+   s.editorTakeoff=s.time;s.editorRestart={route:ridingSection,station:clamp(s.z-9,0,FINISH-1)};
+   s.flightRoadYaw=reviewSample(s.z).yaw;
+   const along=Math.cos(s.travelYaw-s.flightRoadYaw);
+   if(!diveMission)vy+=forward*Math.sin(editorPath[clamp(Math.round(s.z),0,FINISH)].pitch)*along;
+ }
+ s.contactDeck=null;
+ const fromGrind=s.rail||s.wall==='edge';
+ if(fromGrind){s.skipRail=s.rail;s.skipLip=s.wall==='edge'?(s.roofEdge?roofAt(s.z):s.wallRun):null;
+ s.grindExitAt=s.time}
+ s.takeoffYaw=fromGrind?s.grindYaw:entryYaw();s.wall=null;s.rail=null;s.roll=0;s.air=true;s.vy=vy;s.airVX=side;
+ s.normalSpeed=songCourse?forward:Math.min(normalSpeedLimit,forward);
+ s.speed=s.normalSpeed;s.airForward=s.speed;clearAir()
+}
+// Blend a parabola with a quartic arc. Both halves meet smoothly at the apex.
+const ollieHalfTime=jumpVelocity/normalGravity;
+function ollieHeight(u){return flatJumpHeight*(1-.35*u*u-.65*u**4);}
+function ollieVelocity(u){return -flatJumpHeight*(.7*u+2.6*u**3)/ollieHalfTime;}
+function advanceJump(dt,gravity,exact){
+ if(s.jumpElapsed!=null){
+   const end=2*ollieHalfTime;
+   const elapsed=s.jumpElapsed;
+   const ascent=Math.min(dt,Math.max(0,ollieHalfTime-elapsed));
+   const descentRate=airDescentRate();
+   const next=Math.min(end,elapsed+ascent+(dt-ascent)*descentRate);
+   const u=elapsed/ollieHalfTime-1,v=next/ollieHalfTime-1;
+   s.y+=ollieHeight(v)-ollieHeight(u)+s.jumpDrift*(next-elapsed);
+   s.vy=(ollieVelocity(v)+s.jumpDrift)*(next>ollieHalfTime?descentRate:1);
+   s.jumpElapsed=next;
+   if(next<end)return;
+   s.jumpElapsed=null;
+   dt=Math.max(0,dt-ascent-(next-elapsed-ascent)/descentRate);
+ }
+ if(s.vy<=0)gravity*=airDescentRate()**2;
+ s.y+=(s.vy-(exact ? .5 : 1)*gravity*dt)*dt;
+ s.vy-=gravity*dt;
+}
+function action(dir){if(mode!=='run'||s.recover)return;
+ if(!s.air&&dir==='up'){
+ recordTrail(true);
+ const k=s.rail?.ramp??(!grinding()&&kickerAt(s.x,s.z));
+ if(routeReview&&rampTravel(s.z)>0){
+   const u=rampTravel(s.z),slope=arcSlope(u)-reviewGrade(s.z)*(1-u/arcRun);
+   const forward=s.speed/Math.hypot(1,slope);
+   launch(forward*slope+jumpVelocity,s.vx,forward);s.skyFlight=true;
+ }
+ else if(k)launchFromRamp(k,s.z,jumpVelocity);
+ else {
+   launch(jumpVelocity,s.vx);
+   s.jumpElapsed=0;
+   s.jumpDrift=s.vy-jumpVelocity;
+   s.vy=s.jumpDrift+ollieVelocity(-1);
+ }
+ skill('올리',20,'jump'+Math.floor(s.z/8));tone(190,.07,1.5);return}
+ 
+}
+
+const taxiDouble={id:'midnight-taxi-2x',title:'Midnight Taxi · 2배속',track:sampleTracks.find(t=>t.id==='midnight-taxi'),taxiTrapVariant:true};
+const stages=sampleTracks.slice(0,5);
+const progressKey='grindive.cleared-stages.v1';
+function readStageClears(){
+ try{const ids=JSON.parse(localStorage.getItem(progressKey));return Array.isArray(ids)?ids:[];}catch{return [];}
+}
+const clearedStages=new Set(readStageClears());
+function isStageOpen(index){return stages[index]===taxiDouble||index===0||clearedStages.has(stages[index-1].id);}
+let selectedStage=Math.max(0,stages.findIndex((stage,i)=>isStageOpen(i)&&!clearedStages.has(stage.id)));
+function showStages(){
+ const list=$('stages');
+ list.hidden=false;
+ $('tag').textContent='GRINDIVE';$('titleText').textContent='스테이지 선택';
+ list.replaceChildren(...stages.map((stage,i)=>{
+   const tile=document.createElement('button'),number=document.createElement('small'),title=document.createElement('strong');
+   tile.className='stageTile';tile.disabled=!isStageOpen(i);
+   tile.setAttribute('aria-pressed',String(i===selectedStage));
+   number.textContent=String(i+1).padStart(2,'0')+(clearedStages.has(stage.id)?' · 클리어':'');
+   title.textContent=stage.title;tile.append(number,title);
+   tile.onclick=()=>{
+     if(mode!=='intro'||!isStageOpen(i))return;
+     list.children[selectedStage].setAttribute('aria-pressed','false');selectedStage=i;
+     tile.setAttribute('aria-pressed','true');configureSongCourse();
+     $('play').textContent=stage.title+' 출발';
+   };
+   return tile;
+ }));
+ configureSongCourse();
+ $('play').textContent=stages[selectedStage].title+' 출발';
+}
+function recordStageClear(){
+ finishTrail();
+ for(const id of readStageClears())clearedStages.add(id);
+ clearedStages.add(stages[selectedStage].id);
+ try{localStorage.setItem(progressKey,JSON.stringify([...clearedStages]));}catch{}
+}
+function beginAttempt(){
+ resetInput();
+ if(editorRun)rideSection(0);
+ s=fresh();camX=camY=0;
+ if(songCourse?.trail)s.runTrail={best:-1,cells:new Map()};
+ recordTrail();
+ mode='run';$('overlay').classList.remove('cleared');$('overlay').hidden=true;frameTime=performance.now();
+}
+function retryRun(){
+ finishTrail();
+ mode='retry';
+ queueMicrotask(()=>{
+   if(mode!=='retry')return;
+   beginAttempt();
+   if(comboReview)rideMusic.play(false);
+   if(document.hidden||portrait.matches)pauseGame();
+ });
+}
+const impactDuration=.55;
+function endRun(reason,impact=false){
+ if(mode!=='run')return;
+ tone(140,.24,.3);buzz(50);
+ if(impact){
+   if(routeReview)prepareReviewCamera();
+   mode='impact';s.impactAge=0;resetInput();rideMusic.pause();
+   return;
+ }
+ result(false,'게임 오버 · '+reason);
+}
+function bestRecord(update){if(routeReview)return null;try{let prev=JSON.parse(localStorage.getItem('grindive.track01.1440m.v1')||'null');if(update&&(!prev||s.score>prev.score||(s.score===prev.score&&s.time<prev.time))){prev={score:s.score,time:s.time};localStorage.setItem('grindive.track01.1440m.v1',JSON.stringify(prev))}return prev}catch{return null}}
+function returnToEditor(finished=false){parent.postMessage({type:'grindive-return',finished,score:s.score,elapsed:s.time},'*')}
+function result(won,reason='시간 초과'){if(!won){if(mode==='run')retryRun();return}bank();if(editorRun&&won){mode='result';returnToEditor(true);return}if(comboReview&&!editorRun&&!diveMission)recordStageClear();mode='result';let record=bestRecord(won);panel('스테이지 클리어', (songCourse?''+songCourse.title+'\n':'')+'점수 '+s.score+'점　·　주행 '+s.time.toFixed(1)+'초\n최고 콤보 '+s.best+'점　·　도달 '+Math.floor(s.z/FINISH*100)+'%'+(record?'\n개인 최고 '+record.score+'점 / '+record.time.toFixed(1)+'초':''),'다시 하기','GRINDIVE　/　RESULT')}
+// A quarter circle joins the floor tangent to the vertical face.
+const wallRamp={toe:2.55,radius:1.45,lip:2.65},walls=[[84,106],[274,310],[378,410],[426,458],[494,528],[598,626],[738,764],[846,880],[964,996],[1086,1120],[1208,1238],[1302,1334],[1400,1434]],wallAt=z=>walls.find(([a,b])=>a<=z&&z<b);
+function placeOnWall(distance){
+ const r=wallRamp.radius,arc=r*Math.PI/2,angle=Math.min(distance/r,Math.PI/2);
+ s.x=wallRamp.toe+r*Math.sin(angle);
+ s.y=r*(1-Math.cos(angle))+Math.max(0,distance-arc);
+ // On the right wall the surface normal points left, into the track.
+ s.roll=angle;
+}
+const AIR_TRICK_SECONDS=.33;
+function airDescentRate(){return airInput>0?1.45:airInput<0?.70:1}
+function advanceAirControl(dt){
+ if(inputX)s.sideLaunchDrift=false;
+ if(!s.sideLaunchDrift)s.airVX=s.balanceDrop?0:steerAcross(s.airVX,dt);
+ const targetPitch=airInput*Math.PI/15;
+ s.modelPitch+=(targetPitch-s.modelPitch)*(1-Math.exp(-15*dt));
+ if(!s.trick)return;
+ s.trickAge+=dt;
+ if(s.trickAge+1e-9<AIR_TRICK_SECONDS)return;
+ // Each completed move joins the pending combo before the next gesture.
+ skill(s.trick,100,'air:'+s.trick+':'+Math.floor(s.z/2));
+ s.trick=''
+}
+// Every exposed course rim is described in the same coordinates as its riding surface.
+const rims=[];
+function outline(name,left,right,a,b,height,exposedSides=[left,right]){
+ for(const x of exposedSides)rims.push({name,x,a,b,height,key:name+a+':'+x});
+ for(const z of [a,b])rims.push({name,left,right,z,height,key:name+a+'@'+z})
+}
+for(const k of kickers){
+ const first=rims.length;
+ outline('점프대',k.x-k.width/2,k.x+k.width/2,k.a,k.b,z=>rampHeight(k,z));
+ for(const edge of rims.slice(first))if(edge.x!==undefined)edge.ramp=k;
+}
+for(const [a,b] of roofs)outline('지붕',-4.12,-2.78,a,b,
+ z=>2.35*clamp(Math.min((z-a)/9,(b-z)/7),0,1),[-2.78]);
+const boundaryHeight=3.05;
+for(const x of [-4.1,4.1])rims.push({name:'외벽',x,a:0,b:FINISH,height:()=>boundaryHeight,key:'road'+x});
+outline('덕트',-.25,1.35,74,75,()=>.54);
+for(const h of holes)outline('틈새',h.l,h.r,h.a,h.b,()=>0);
+for(const d of decks)outline(d.name,d.l,d.r,d.a,d.b,z=>deckHeight(d,z));
+if(routeReview){
+ for(const features of [rails,kickers,roofs,holes,poles,alleys,decks,walls,rims])features.length=0;
+ if(editorRun)loadSectionObjects();
+ $('tag').textContent='TRACK 01　/　1단계';
+ $('titleText').textContent='경사와 방향 테스트';
+ $('description').textContent='2.66km · 목표 주행 2분 · 제한 시간 150초\n급경사 직선에서 속도를 올리고, 세 번의 도약 뒤 민트색 도로에 착지하세요. 왼쪽으로 조향하고 오른쪽 화면으로 점프합니다.';
+ if(trapReview){
+   $('tag').textContent='TRACK 01　/　2단계';
+   $('titleText').textContent='함정 코스';
+   $('description').textContent='버스 옆의 빈 길로 지나가고, 배관 턱과 끊어진 도로는 점프해 넘으세요.\n2.66km · 제한 시간 150초';
+ }
+ if(comboReview){
+   $('tag').textContent='TRACK 01　/　3단계';$('titleText').textContent='콤보 루트';
+   $('description').textContent='왼쪽 화면을 드래그해 이동하고 아래로 숙이면 가속합니다. 오른쪽 화면을 터치해 점프하세요. 926m 단절 구간은 중앙 레일로 건넙니다.';
+   for(const [a,x,h] of [[886,0,.74],[1386,4.1,.9],[1770,1.4,.8]])kickers.push({a,b:a+8,x,width:1.8,h});
+ }
+}
+function loadSectionObjects(){
+   const placedRamps=editorSections[ridingSection].ramps;
+   kickers.length=rims.length=0;
+   kickers.push(...placedRamps);
+   const edges=new Map();
+   for(const ramp of placedRamps)for(const x of [ramp.x-ramp.width/2,ramp.x+ramp.width/2]){
+     const key='ramp-edge:'+ridingSection+':'+ramp.a+','+x;
+     const previous=edges.get(key);
+     // Equal-height neighbours form one continuous top; only an exposed lip grinds.
+     if(previous?.ramp.h===ramp.h){edges.delete(key);continue;}
+     if(!previous||ramp.h>previous.ramp.h)edges.set(key,{
+       key,name:'점프대 모서리',a:ramp.a,b:ramp.b,x,ramp,height:z=>rampHeight(ramp,z)
+     });
+   }
+   rims.push(...edges.values());
+   const section=editorSections[ridingSection];
+   for(const bus of section.buses)for(const x of [bus.l,bus.r]){
+     rims.push({a:bus.a,b:bus.b,x,name:'버스 모서리',key:'bus:'+ridingSection+':'+bus.a+':'+x,height:()=>bus.h});
+   }
+   for(const run of section.railRuns){
+     const sideAt=m=>railSide(run.anchor,run.inset,sectionSample(section.points,m).width);
+     rims.push({...run,sideAt,name:'레일',key:'course-rail:'+ridingSection+':'+run.a+':'+run.anchor,
+       height:()=>grindRailHeight});
+   }
+}
+function rideSection(index){
+ ridingSection=index;editorPath=editorSections[index].points;FINISH=editorPath.length-1;
+ loadSectionObjects();
+}
+function entryYaw(){
+ if(editorRun)return 1.06+reviewSample(s.z).yaw-s.travelYaw;
+ return (s.air?s.takeoffYaw:1.06) + (s.air?0:-Math.atan2(s.vx,s.speed))
+}
+function faceGrind(){
+ s.grindYaw=Math.PI/2;
+ s.stance='앞';
+}
+const GRIND_RADIUS=.20, GRIND_COS=Math.cos(30*Math.PI/180);
+const BOARD_HALF_LENGTH=.52, BOARD_HALF_WIDTH=.134, BOARD_HEIGHT=.103;
+const RIDER_SCALE=1.8/1.416;
+// Use the deck footprint. Cosmetic flips do not swing the hitbox.
+function boardContact(x,y,z,edge){
+ const cross=edge.z!==undefined;
+ const lateral=s.air?s.airVX:s.vx,forward=s.air?s.airForward:s.speed;
+ const speed=Math.hypot(lateral,forward);
+ if(!speed||Math.abs(cross?lateral:forward)<speed*GRIND_COS-1e-9)return null;
+ const reach=BOARD_HALF_LENGTH+BOARD_HALF_WIDTH+GRIND_RADIUS;
+ if(Math.abs(cross?z-edge.z:x-(edge.sideAt?edge.sideAt(z):edge.x))>reach)return null;
+ const along=cross?x:z;
+ let lo=Math.max(cross?edge.left:edge.a,along-reach);
+ let hi=Math.min(cross?edge.right:edge.b,along+reach);
+ if(lo>hi)return null;
+ const height=t=>edge.height?edge.height(cross?edge.z:t):edge.h;
+ // Clip the segment to the upper half-space of the board/edge contact.
+ const top=y+BOARD_HEIGHT,h0=height(lo),h1=height(hi);
+ if(Math.min(h0,h1)>top+1e-9)return null;
+ if((h0>top)!==(h1>top)){
+   const cut=lo+(hi-lo)*(top-h0)/(h1-h0);
+   if(h0>top)lo=cut;else hi=cut
+ }
+ const yaw=entryYaw(),cos=Math.cos(yaw),sin=Math.sin(yaw);
+ function distance(t){
+   const dx=(cross?t:edge.sideAt?edge.sideAt(t):edge.x)-x,dz=(cross?edge.z:t)-z;
+   const length=Math.max(0,Math.abs(dx*cos+dz*sin)-BOARD_HALF_LENGTH);
+   const width=Math.max(0,Math.abs(-dx*sin+dz*cos)-BOARD_HALF_WIDTH);
+   return Math.hypot(length,width,Math.max(0,y-height(t)))
+ }
+ // Distance to the rotated box is convex on a straight edge.
+ let left=lo,right=hi;
+ for(let i=0;i<18;i++){
+   const step=(right-left)/3;
+   if(distance(left+step)<=distance(right-step))right-=step;else left+=step
+ }
+ const nearest=Math.min(distance(lo),distance(hi),distance(clamp(along,lo,hi)),distance((left+right)/2));
+ return nearest<=GRIND_RADIUS+1e-8?nearest:null
+}
+function canCatchGrind(){
+ if(grinding() || s.balanceDrop || (s.air && s.vy>=0))return false;
+ return s.grindExitAt===undefined || s.time-s.grindExitAt>=.16
+}
+function catchRim(before,dt){
+ if(s.wall||!canCatchGrind())return false;
+ let best=null,nearest=Infinity;
+ const x=s.x+(s.air?s.airVX:s.vx)*dt;
+
+ for(const edge of rims){
+   if((edge.block?.red||isSingleBeatStage(songCourse?.id)&&edge.block?.beatPlatform)&&edge.x!==undefined&&Math.abs(x-edge.x)>.32)continue;
+   if(edge.block&&(!s.air||s.vy>=0))continue;
+   if(edge===s.skipRail)continue;
+   if(routeReview&&(edge.ramp||edge.sideAt)&&Math.cos(s.travelYaw-reviewSample(s.z).yaw)<GRIND_COS)continue;
+   if(edge.name==='외벽' && edge.x>0 && wallAt(s.z) && x<=wallRamp.toe+wallRamp.radius)continue;
+   const cross=edge.z!==undefined;
+   // Let a rider travelling straight up the middle of a ramp launch normally.
+   if(cross&&!s.air&&Math.abs(s.vx)<1)continue;
+   if(!cross&&s.z>=edge.b)continue;
+   let contactY=s.y;
+   if(songCourse?.beatRoute&&edge.block&&!cross&&s.air&&s.vy<0){
+     const top=edge.height(s.z);
+     if(s.y>=top)contactY=Math.max(top,s.y+s.vy*dt);
+   }
+   const score=boardContact(x,contactY,s.z,edge);
+   if(score===null)continue;
+   if(score>=nearest)continue;
+   best=edge;nearest=score
+ }
+ if(!best)return false;
+ faceGrind();absorbLanding();clearAir();s.rail=best;s.air=false;s.balance=0;s.edgeTime=0;
+ s.crossSign=Math.sign(s.airVX||s.vx||Math.cos(s.grindYaw)||1);
+ s.vy=s.airVX=s.vx=0;s.skipLip=null;s.skipRail=null;
+ if(best.z!==undefined){s.z=best.z;s.x=clamp(x,best.left,best.right)}else {s.z=Math.max(s.z,best.a);s.x=best.sideAt?best.sideAt(s.z):best.x;}
+ s.y=best.height(s.z);skill(best.name+' 그라인드',130,best.key);return true
+}
+function absorbLanding(){
+ if(s.air){s.landingSide=Math.abs(s.airVX)>.15?-Math.sign(s.airVX):clamp(-Math.cos(entryYaw()),-1,1);s.landedAt=s.time;s.impact=clamp(-s.vy/9,0,1)}
+}
+function attachLip(roof=false){
+ faceGrind();absorbLanding();
+
+ clearAir();s.vx=0;s.roofEdge=roof;
+ s.wall='edge';s.air=false;s.trick='';s.airVX=0;s.vy=0;
+ s.x=roof?-2.80:wallRamp.toe+wallRamp.radius;s.y=roof?surface(-4,s.z):wallRamp.lip;s.edgeEntryRoll=s.roll;s.balance=0;s.edgeTime=0;
+ s.lipKey=roof?'지붕'+roofAt(s.z)[0]+':-2.78':'yard-edge'+s.wallRun[0];
+ skill(roof?'지붕 그라인드':'모서리',160,s.lipKey);tell('모서리 연결');tone(710,.15);buzz(16)
+}
+// A ramp can start on top of a block before the block's own rim ends.
+function followRampEdge(before){
+ const current=s.rail;
+ if(!current||current.ramp||current.z!==undefined)return;
+ const candidates=editorRun||!routeReview?rims:rails;
+ for(const edge of candidates){
+   if(!edge.ramp||edge.x===undefined||edge.a<before||edge.a>s.z||edge.a>current.b+.02)continue;
+   const x=current.sideAt?current.sideAt(edge.a):current.x;
+   const height=current.height?current.height(edge.a):current.h;
+   if(Math.abs(edge.x-x)>.08||Math.abs(edge.height(edge.a)-height)>.12)continue;
+   s.rail=edge;s.x=edge.x;
+   s.y=edge.height(Math.min(s.z,edge.b));
+   return;
+ }
+}
+function grinding(){return !!s.rail||s.wall==='edge'}
+function releaseGrind(side){
+ if(mode!=='run'||!grinding())return;
+ const edge=s.rail,block=edge?.block;
+ if(!block||block.red||edge.z!==undefined)return;
+ const x=s.x+side*.22;
+ if(!trackBlockAt(block,x,s.z))return;
+ const top=reviewSurface(x,s.z)+trackBlockTop(block,x,s.z);
+ launch(0,0);
+ s.x=x;s.y=top;s.trackBlock=block;
+ s.air=false;s.vx=s.vy=s.airVX=s.balance=0;
+ s.grace=.9;
+}
+function balanceGrind(dt,label){
+   s.edgeTime+=dt;
+   const yawChange=routeReview?reviewSample(s.z+2).yaw-reviewSample(Math.max(0,s.z-2)).yaw:0;
+   const outward=clamp(-Math.atan2(Math.sin(yawChange),Math.cos(yawChange))*s.speed*2,-.75,.75);
+   s.balance+=(inputX*1.12+s.balance*.62+outward+.22*Math.sin(s.edgeTime*2))*dt;
+   if(Math.abs(s.balance)<1)return true;
+   launch(0,0);
+   s.balanceDrop=true;s.vx=s.vy=0;
+   s.falls++;s.lost+=s.base*s.types.size;clearChain();
+   tell(label+' 균형 실패');tone(140,.24,.3);buzz(50);
+   return false
+}
+function rideWall(dt){
+ const w=wallRamp,arc=w.radius*Math.PI/2,top=arc+w.lip-w.radius;
+ if(!s.wall){
+   const run=wallAt(s.z);if(!run||s.rail||s.skipLip===run)return false;s.wallRun=run;
+   const lipX=w.toe+w.radius;
+   const nearLip=s.x<=lipX && boardContact(s.x,s.y,s.z,{x:lipX,a:run[0],b:run[1],h:w.lip})!==null;
+   if(canCatchGrind()&&nearLip){attachLip();return true}
+   if(s.air||s.z>run[1]-6||Math.abs(s.x-w.toe)>.12||inputX<=.12)return false;
+   s.roofEdge=false;s.wall='curve';s.climb=0;s.climbSpeed=s.speed*.73;
+ }
+ if(s.wall==='edge'){
+   if(s.roofEdge){
+     const height=surface(-4,s.z);
+     if(height<=0){launch(0,0);return true}
+     s.y=height
+   }
+   if(!balanceGrind(dt,'모서리'))return true;
+   const settle=Math.min(1,s.edgeTime/.38);
+   const blend=settle*settle*(3-2*settle);
+   s.roll=s.edgeEntryRoll*(1-blend)+(-.24-s.balance*.52)*blend;
+ }else{
+   s.climbSpeed-=8*dt;s.climb+=s.climbSpeed*dt;
+   if(s.climb<=0){s.wall=null;s.roll=0;s.x=w.toe-.3;s.y=0;return true}
+   placeOnWall(s.climb);
+   if(s.climb>=arc && s.wall==='curve'){s.wall='face';skill('벽타기',115,'yard-wall'+s.wallRun[0])}
+   // Carry the remaining climb speed into the air at the top of the curve.
+   if(s.climb>=top && s.climbSpeed>0){
+     placeOnWall(top);
+     launch(clamp(s.climbSpeed+1.2,4.6,7),-.32);
+     return true
+   }
+ }
+ if(!s.roofEdge && s.z>=s.wallRun[1]){launch(.65,-1.2)}
+ return true
+}
+function startEdgeFall(){
+ if(songCourse?.blocks){endRun('발판 추락');return;}
+ const candidate=Math.max(0,s.z-9);
+ const crossing=flightGaps.find(g=>candidate>=g.lip-arcRun&&candidate<=g.end+3);
+ const terrain=trapReview&&terrainSections.find(t=>s.z>=t.start&&s.z<=t.end+10);
+ const missedRail=comboReview&&candidate>=railGap.a-5&&candidate<=railGap.b+2;
+ const floor=floorSlice(songCourse,s.z);
+ s.edgeFall={time:0,floorTrap:!!floor,restart:floor?floor.restart:missedRail?railGap.restart:terrain?terrain.start-26:crossing?crossing.lip-arcRun-4:candidate,
+   sideSpeed:Math.sign(s.x)*Math.max(2,Math.abs(s.air?s.airVX:s.vx))};
+ s.air=true;s.vy=Math.min(0,s.vy);
+ resetInput();
+}
+// Resolve side contacts in road coordinates so the walls follow bends and tapers.
+function editorSideContact(startX,startM,endX,endM,dt){
+ const dm=endM-startM,dx=endX-startX;
+ let side=endX;
+ for(const run of editorSections[ridingSection].railRuns){
+   let enter=0,leave=1;
+   if(dm){
+     const a=(run.a-startM)/dm,b=(run.b-startM)/dm;
+     enter=Math.max(0,Math.min(a,b));leave=Math.min(1,Math.max(a,b));
+   }else if(startM<run.a||startM>run.b)continue;
+   if(enter>leave)continue;
+   const offset=t=>railSide(run.anchor,run.inset,reviewSample(startM+dm*t).width);
+   const gap=BOARD_HALF_WIDTH+.085;
+   const initial=startX+dx*enter-offset(enter);
+   const final=side-offset(leave);
+   const sign=Math.sign(initial);
+   if(!sign||sign*final>=Math.min(gap,Math.abs(initial)))continue;
+   const at=enter+(leave-enter)*clamp((Math.abs(initial)-gap)/(Math.abs(initial)-sign*final),0,1);
+   const height=s.y+(s.air?(reviewSample(startM+dm*at).h-reviewSample(startM).h+s.vy*dt*at):0);
+   if(height>=grindRailHeight-.001)continue;
+   side=offset(leave)+sign*Math.min(gap,Math.abs(initial));
+ }
+ if(endM>=0&&endM<=FINISH){
+   const limit=reviewSample(endM).width/2-BOARD_HALF_WIDTH;
+   side=clamp(side,-limit,limit);
+ }
+ return side;
+}
+// Match the original five metres per radian at 60 km/h.
+function cornerDrift(turn,speed){return 5*turn*speed/(60/3.6)}
+function advanceEditorRider(dt){
+ const from=reviewSample(s.z);
+ if(!s.air){
+   const station=s.z+s.speed*dt;
+   s.vx=steerAcross(s.vx,dt);
+   const roadYaw=reviewSample(station).yaw;
+   const startX=s.x;
+   const intended=startX+s.vx*dt-cornerDrift(roadYaw-from.yaw,s.speed);
+   s.x=editorSideContact(startX,s.z,intended,station,dt);
+   if(s.x!==intended)s.vx=0;
+   s.z=station;
+   s.travelYaw=roadYaw+Math.atan2(s.x-startX,s.speed*dt);
+   return;
+ }
+ // Keep the forward launch axis in world space. The lateral velocity already
+ // includes sideways momentum at takeoff and is applied once in the road frame.
+ const forwardYaw=s.flightRoadYaw??s.travelYaw;
+ const vx=s.speed*Math.sin(forwardYaw)+s.airVX*Math.cos(from.yaw);
+ const vz=s.speed*Math.cos(forwardYaw)-s.airVX*Math.sin(from.yaw);
+ s.travelYaw=Math.atan2(vx,vz);
+ const x=from.x+s.x*Math.cos(from.yaw)+vx*dt;
+ const z=from.z-s.x*Math.sin(from.yaw)+vz*dt;
+ let station=s.z;
+ // Find the local cross-section containing the new world position. Differentiating
+ // the moving cross-section also accounts for the shorter inside of a bend.
+ for(let i=0;i<5;i++){
+   const p=reviewSample(station),sin=Math.sin(p.yaw),cos=Math.cos(p.yaw);
+   const ahead=(x-p.x)*sin+(z-p.z)*cos;
+   if(Math.abs(ahead)<1e-7)break;
+   const index=clamp(Math.floor(station),0,FINISH-1);
+   const a=editorPath[index],b=editorPath[index+1];
+   const side=(x-p.x)*cos-(z-p.z)*sin;
+   const rate=(b.x-a.x)*sin+(b.z-a.z)*cos-side*(b.yaw-a.yaw);
+   if(Math.abs(rate)<1e-5)break;
+   station+=clamp(ahead/rate,-2,2);
+ }
+ const p=reviewSample(station);
+ const intended=(x-p.x)*Math.cos(p.yaw)-(z-p.z)*Math.sin(p.yaw);
+ s.x=editorSideContact(s.x,s.z,intended,station,dt);s.z=station;
+ s.vx=vx*Math.cos(p.yaw)-vz*Math.sin(p.yaw);
+ if(s.x!==intended){s.vx=0;if(s.air)s.airVX=0;}
+}
+function editorWorld(side,height,m){
+ const p=reviewSample(m);
+ return {x:p.x+side*Math.cos(p.yaw),z:p.z-side*Math.sin(p.yaw),y:height-p.h};
+}
+// A landing must cross a top face from above. Barycentric coordinates map
+// that physical contact back to the receiving ribbon's station and lane.
+function findEditorLanding(from,to){
+ let first=null;
+ for(const [route,r] of editorSections.entries()){
+   for(let m=0;m<r.points.length-1;m++){
+     const a=r.points[m],b=r.points[m+1];
+     if(Math.abs(to.x-a.x)>Math.max(a.width,b.width)/2+2+Math.abs(to.x-from.x)||
+        Math.abs(to.z-a.z)>Math.max(a.width,b.width)/2+2+Math.abs(to.z-from.z))continue;
+     const top=[[-a.width/2,m,0],[a.width/2,m,0],[b.width/2,m+1,0],[-b.width/2,m+1,0]];
+     const surfaces=[top,...(r.objects.get(m)??[]).map(k=>rampFaces(k,m)[0].vertices)];
+     const bus=r.busMetres.get(m);
+     if(bus)surfaces.push(busFaces(bus,m)[0].vertices);
+     for(const face of surfaces){
+       const vertices=face.map(([side,station,h])=>{
+         const p=r.points[station];return {x:p.x+side*Math.cos(p.yaw),z:p.z-side*Math.sin(p.yaw),y:h-p.h,side,station};
+       });
+       for(const j of [1,2]){
+         const [v,w,q]=[vertices[0],vertices[j],vertices[j+1]];
+         const bx=w.x-v.x,bz=w.z-v.z,cx=q.x-v.x,cz=q.z-v.z,det=bx*cz-bz*cx;
+         if(Math.abs(det)<1e-9)continue;
+         function relative(p){
+           const x=p.x-v.x,z=p.z-v.z,u=(x*cz-z*cx)/det,t=(bx*z-bz*x)/det;
+           return {u,t,h:p.y-v.y-u*(w.y-v.y)-t*(q.y-v.y)};
+         }
+         const left=relative(from),right=relative(to);
+         if(left.h<-.00001||right.h>.00001||left.h-right.h<1e-8)continue;
+         const f=clamp(left.h/(left.h-right.h),0,1);
+         if(first&&first.f<=f)continue;
+         const u=left.u+(right.u-left.u)*f,t=left.t+(right.t-left.t)*f;
+         if(u<-.00001||t<-.00001||u+t>1.00001)continue;
+         first={route,f,station:v.station+u*(w.station-v.station)+t*(q.station-v.station),
+           side:v.side+u*(w.side-v.side)+t*(q.side-v.side)};
+       }
+     }
+   }
+ }
+ return first;
+}
+function moveAcross(dx){
+ const limit=roadLimit(s.z);
+ const enclosed=comboReview&&!openSpan(s.z)&&!terrainSections.some(t=>s.z>=t.start&&s.z<t.end);
+ const x=enclosed?clamp(s.x+dx,-roadHalf-.69,roadHalf+.69):routeReview?s.x+dx:clamp(s.x+dx,-limit,limit);
+ const floor=surface(s.x,s.z),next=surface(x,s.z);
+ // A vertical side blocks lateral movement below the top of the platform.
+ if(!routeReview && next>Math.max(floor,s.y)+.045){
+   if(s.air)s.airVX=0;else s.vx=0;
+   return
+ }
+ s.x=x
+}
+function update(dt){
+ updateRide(dt);
+ if(mode==='run'&&!s.recover&&!s.air&&s.time<=s.jumpQueuedUntil){
+   s.jumpQueuedUntil=-Infinity;
+   action('up');
+ }
+}
+function stepOffBlock(side=s.vx){
+ launch(0,side);
+ s.edgeJumpUntil=s.time+.08;
+}
+function updateRide(dt){
+ if(diveMission){updateDive(dt);return;}let remaining=LIMIT-s.time;dt=Math.min(dt,remaining);let before=s.z;const previousX=s.x,previousY=s.y,wasAirborne=s.air;s.time+=dt;
+ if(s.contactDeck&&(s.x<s.contactDeck.l||s.x>s.contactDeck.r||s.z<s.contactDeck.a||s.z>s.contactDeck.b))s.contactDeck=null;
+ if(routeReview && s.edgeFall){
+   const f=s.edgeFall;
+   f.time+=dt;
+   if(editorRun)advanceEditorRider(dt);
+   else {s.x+=f.sideSpeed*dt;s.z+=s.speed*dt;}
+   s.vy-=14*dt;s.y+=s.vy*dt;
+   if(f.time>=.16){endRun(f.floorTrap?'발판 추락':'도로 이탈');s.edgeFall=null;s.flightView=0}
+   if(mode==='run'&&s.time>=LIMIT)result(false);
+   return;
+ }
+ if(routeReview){
+   const blend=1-Math.exp(-dt*(s.air?3:14));
+   const rampAngle=comboReview?Math.atan2(sideRampHeight(s.x+.01,s.z)-sideRampHeight(s.x-.01,s.z),.02):0;
+   const targetRoll=s.air?0:Math.atan(bankSlope(s.z))+rampAngle;
+   const u=rampTravel(s.z);
+   const ramp=editorRun&&!s.air&&kickerAt(s.x,s.z);
+   const groundPitch=Math.atan(reviewGrade(s.z)*(1-u/arcRun)-arcSlope(u)+landingGrade(s.z)-(ramp?ramp.h/(ramp.b-ramp.a):0));
+   const targetPitch=s.air?(s.skyFlight?Math.atan2(-s.vy,s.airForward):0):groundPitch;
+   s.roadRoll=(s.roadRoll||0)+(targetRoll-(s.roadRoll||0))*blend;
+   s.roadPitch=(s.roadPitch||0)+(targetPitch-(s.roadPitch||0))*blend;
+ }
+ s.chestTurn=(s.chestTurn??.86)+((s.air?.15:.86)-(s.chestTurn??.86))*(1-Math.exp(-12*dt));
+ const targetTuck=duck&&!s.air?.65:s.air?.20:.035;
+ s.tuck=(s.tuck??.035)+(targetTuck-(s.tuck??.035))*(1-Math.exp(-(duck?40:24)*dt));
+ if(s.recover>0){s.recover=Math.max(0,s.recover-dt)}
+ else {s.slow=Math.max(0,s.slow-dt);
+
+ if(songCourse)s.normalSpeed=songPosition(songCourse,s.z).speed;
+ else if(!s.air)s.normalSpeed=Math.min(normalSpeedLimit,groundSpeed(s.normalSpeed,dt,duck&&!s.rail));
+ s.speed=s.normalSpeed;
+ if(s.rail?.z!==undefined){
+   s.x+=s.crossSign*s.speed*dt;
+   if(s.x<=s.rail.left||s.x>=s.rail.right){s.x=clamp(s.x,s.rail.left,s.rail.right);launch(.7,s.crossSign*1.5)}
+ }else if(editorRun&&s.rail){
+   s.z+=s.speed*dt;
+   s.x=s.rail.sideAt?s.rail.sideAt(s.z):s.rail.x;
+   const p=reviewSample(s.z);
+   s.travelYaw=p.yaw;
+   if(s.rail.sideAt){
+     const next=reviewSample(s.z+.05),off=s.rail.sideAt(s.z+.05);
+     s.travelYaw=Math.atan2(next.x+off*Math.cos(next.yaw)-p.x-s.x*Math.cos(p.yaw),
+       next.z-off*Math.sin(next.yaw)-p.z+s.x*Math.sin(p.yaw));
+   }
+ }else if(!s.balanceDrop){
+   if(editorRun)advanceEditorRider(dt);
+   else s.z+=s.speed*dt;
+ }
+ if(s.rail&&s.z>before)followRampEdge(before);
+ if(!routeReview && before<1144 && s.z>=1144)s.busStart=s.time;
+ if(editorRun&&!s.rail){
+   const section=editorSections[ridingSection];
+   for(const bus of section.buses){
+     if(Math.max(s.z,before)<bus.a||Math.min(s.z,before)>bus.b)continue;
+     // Intersect the swept horizontal segment with both pairs of bus walls.
+     let enter=0,exit=1;
+     for(const [v,d,lo,hi] of [[previousX,s.x-previousX,bus.l,bus.r],[before,s.z-before,bus.a,bus.b]]){
+       if(!d){if(v<lo||v>hi){exit=-1;break;}continue;}
+       const a=(lo-v)/d,b=(hi-v)/d;
+       enter=Math.max(enter,Math.min(a,b));exit=Math.min(exit,Math.max(a,b));
+     }
+     if(enter>exit||exit<=0)continue;
+     const height=previousY+(s.air?s.vy*dt*enter+reviewSample(before+(s.z-before)*enter).h-reviewSample(before).h:0);
+     if(height<bus.h-.04){endRun('버스 충돌',true);return;}
+   }
+ }
+ if(onBus(s.x,s.z)&&s.y<bus.h-.24 && Math.abs(s.z-busRear())<.35){
+   endRun('버스 뒤 충돌',true);return
+ }
+ const pole=poles.find(p=>Math.abs(s.z-p.z)<.34 && Math.abs(s.x-p.x)<.44 && s.y<4.4);
+ if(pole){endRun('전봇대 충돌',true);return}
+ if(routeReview){
+   const lip=flightGaps.find(g=>before<g.lip&&s.z>=g.lip);
+   const autoLaunch=lip&&!s.air;
+   if(autoLaunch){
+     const slope=arcSlope(arcRun);
+     const forward=s.speed/Math.hypot(1,slope);
+     s.y=reviewSurface(s.x,lip.lip);
+     s.skyFlight=true;
+     launch(forward*slope,s.vx,forward);
+   }
+   if(!s.air)s.skyFlight=false;
+   if(s.air){
+     // y is road-relative. Keep the airborne arc in world space as the road drops away.
+     s.y+=editorRun?reviewSample(s.z).h-reviewSample(before).h:s.skyFlight?reviewSample(s.z).h-reviewSample(autoLaunch?lip.lip:before).h:flightOffset(s.z)-flightOffset(before);
+   }
+   const view=s.skyFlight?clamp((3-s.vy)/14,0,1)*1.12-.12*Math.min(1,Math.max(0,s.vy)/5):0;
+   s.flightView=(s.flightView||0)+(view-(s.flightView||0))*(1-Math.exp(-dt*3));
+ }
+ if(s.air){
+   advanceAirControl(dt);
+   const edge=s.skipRail;
+   if(edge&&!s.balanceDrop){
+     const station=edge.z??clamp(s.z,edge.a,edge.b);
+     const top=edge.height?edge.height(station):edge.h;
+     if(s.y>top+GRIND_RADIUS)s.skipRail=null;
+   }
+ }
+ if(!rideWall(dt)&&!catchRim(before,dt)){
+ if(routeReview&&!editorRun&&!s.rail){
+   // A bend rotates the road underneath the rider. Accumulate the outward
+   // displacement from the signed heading change, including during an ollie.
+   const turn=reviewSample(s.z).yaw-reviewSample(before).yaw;
+   moveAcross(-cornerDrift(turn,s.speed));
+ }
+ if(!editorRun&&!s.rail&&!s.air){s.vx=steerAcross(s.vx,dt);moveAcross(s.vx*dt)}
+ if(comboReview&&!s.air&&!s.rail&&sideRampHeight(s.x,s.z)>1.62&&s.vx*Math.sign(s.x)>2){
+   s.y=surface(s.x,s.z);launch(Math.min(8,Math.abs(s.vx)+1),-Math.sign(s.x)*1.2);
+   skill('벽타기',115,'wall'+Math.floor(s.z/100));tell('벽타기 도약');
+ }
+ if(comboReview&&!s.air&&!s.rail&&s.z>=railGap.a&&s.z<railGap.b){endRun('레일 구간 추락');return}
+ if(songCourse?.blocks){
+   if(resolveTrackBlockWalls(previousX,previousY,before))return;
+   if(!s.air&&!s.rail&&s.trackBlock&&!trackBlockAt(s.trackBlock,s.x,s.z)){
+     s.trackBlock=trackBlockSupport(s.x,s.z,s.y);if(!s.trackBlock)stepOffBlock();
+   }
+ }
+ if(routeReview&&!s.air&&!s.rail&&!onRouteDeck(s.x,s.z)){
+   if(editorRun){if(ridingSection!==0||s.z<FINISH||Math.abs(s.x)>editorPath.at(-1).width/2)launch(0);}
+   else if(songCourse?.blocks)stepOffBlock();
+   else {startEdgeFall();return;}
+ }
+ let g=surface(s.x,s.z),oldY=s.y;
+ if(!routeReview&&s.x>-.25&&s.x<1.35&&before<74&&s.z>=74&&s.y<.54){endRun('덕트 충돌',true);return}
+ else{
+ if(s.rail)balanceGrind(dt,'난간');
+ if(s.rail&&s.z>s.rail.b){
+   if(comboReview)skill('레일 완주',180,'exit'+s.rail.a+s.rail.x);
+   const next=comboReview&&rails.find(r=>r.a===s.rail.b&&r.x===s.rail.x&&r.h===s.rail.h);
+   if(next)s.rail=next;else if(s.rail.ramp){const k=s.rail.ramp;if(k.sideDirection)launch(0,0);else{s.y=(routeReview?reviewSurface(s.x,k.b):0)+rampHeight(k,k.b,s.x);launchFromRamp(k,k.b);}}else if(s.rail.block)stepOffBlock(0);else launch(0,0)
+ }
+ const deck=deckAt(s.x,before);
+ if(!s.air&&!s.rail&&deck?.name==='도약 옥상'&&s.z>=deck.b){
+   s.y=deck.h2;launch(s.speed*.30);tell('옥상 도약');
+ }
+ const lip=kickerAt(s.x,before,previousY);
+ if(!s.air&&!s.rail&&lip&&!lip.sideDirection&&s.z>lip.b&&(!lip.mini||previousY<=reviewSurface(s.x,before)+(lip.base??0)+lip.h+.12)){s.y=lip.mini?reviewSurface(s.x,lip.b)+(lip.base??0)+lip.h:lip.h;launchFromRamp(lip,lip.b);if(comboReview)skill('램프 도약',45,'ramp'+lip.a);tell('점프대 이륙')}
+ if(!s.air&&!s.rail&&oldY>g+.22){if(songCourse?.blocks)stepOffBlock();else launch(0)}
+ if(s.air){if(!editorRun)moveAcross((s.airVX||0)*dt);
+ const gravity=routeReview&&s.skyFlight?24:normalGravity;
+ advanceJump(dt,gravity,false);
+ if(songCourse?.blocks)landOnTrackBlock(oldY);
+ g=surface(s.x,s.z);
+ if(editorRun){
+   const from=editorWorld(previousX,previousY,before),to=editorWorld(s.x,s.y,s.z);
+   const contact=wasAirborne&&findEditorLanding(from,to);
+   if(contact){
+     if(contact.route!==ridingSection)rideSection(contact.route);
+     s.z=contact.station;s.x=contact.side;s.y=surface(s.x,s.z);
+     absorbLanding();clearAir();s.air=false;s.vy=0;s.airVX=0;s.skipLip=s.skipRail=null;s.grace=.9;
+   }else if(s.time-(s.editorTakeoff??s.time)>1&&to.y<lowestEditorSurface-10&&s.vy<0){
+     const restart=s.editorRestart??{route:0,station:0};
+     rideSection(restart.route);endRun('도로 이탈');return;
+   }
+ }
+ if(comboReview&&s.z>=railGap.a&&s.z<railGap.b&&s.y<=0&&s.vy<=0){endRun('레일 구간 추락');return}
+ if(routeReview){
+   const receiving=flightGaps.find(gap=>before<gap.end&&s.z>=gap.end);
+   if(receiving){
+     // Intersect the flight segment with the front edge in world coordinates.
+     const t=(receiving.end-before)/(s.z-before);
+     const from=previousY-reviewSample(before).h,to=s.y-reviewSample(s.z).h;
+     const edge=reviewSurface(s.x,receiving.end)-reviewSample(receiving.end).h;
+     if(from+(to-from)*t<edge-.015){
+       endRun('착지 램프에 닿지 못함');s.skyFlight=false;s.flightView=0;return;
+     }
+   }
+ }
+ if(!(s.time<=s.edgeJumpUntil)&&songCourse?.beatRoute&&s.vy<0&&belowRemainingTrack(s.z,s.y)){startEdgeFall();return}
+ if(!(s.time<=s.edgeJumpUntil)&&!editorRun&&routeReview && !onRouteDeck(s.x,s.z) && s.y<=g && s.vy<=0){startEdgeFall();return}
+ let r=canCatchGrind()&&rails.find(r=>r!==s.skipRail&&s.z<=r.b&&boardContact(s.x,Math.min(oldY,s.y),s.z,r)!==null);
+ if(gap(s.x,s.z)&&s.y<0){endRun('틈새 추락')}else if(r||(!editorRun&&(!(routeReview&&openSpan(s.z))||s.trackBlock&&trackBlockAt(s.trackBlock,s.x,s.z))&&!gap(s.x,s.z)&&s.y<=g&&s.vy<=0)){if(r)faceGrind();absorbLanding();clearAir();s.vx=r?0:s.airVX*.75;s.airVX=0;s.skipLip=s.skipRail=null;s.air=false;s.vy=0;s.grindExitAt=undefined;s.rail=r||null;s.y=r?(r.height?r.height(s.z):r.h):g;s.grace=.9;if(r){s.balance=0;s.edgeTime=0;s.x=r.x;s.z=Math.max(s.z,r.a);skill('그라인드',130,'rail'+r.name+r.a+r.x);tell('난간 '+r.name);tone(630,.18,.7);buzz(10)}else{tone(110,.08,.5);buzz(12)}}
+ }else s.y=s.rail?(s.rail.height?s.rail.height(s.z):s.rail.h):g;
+ if(trapReview&&!s.recover&&resolveModelContact(previousX,previousY,before))return;
+ if(!s.air&&!s.rail&&gap(s.x,s.z))endRun('틈새 추락');
+ if(!s.air&&!s.rail&&!s.recover&&s.base){s.grace-=dt;if(s.grace<=0)bank()}
+ }}}
+ if(mode!=='run')return;
+ for(const hazard of songCourse?.blockHazards??[]){
+   if(hazard.ring){
+     if(s.z>=hazard.z&&before<hazard.z+hazard.length&&hitsRingBlock(hazard,before,previousX,previousY)){
+       endRun('링 블록 충돌',true);return;
+     }
+     continue;
+   }
+   if(s.z<hazard.z||before>=hazard.z+hazard.length||Math.abs(s.x-hazard.x)>=hazard.width/2+.18)continue;
+   const feet=s.y-reviewSurface(s.x,s.z),head=feet+(duck&&!s.air?.74:1.65);
+   if(feet<hazard.top&&head>hazard.bottom+.02){endRun(hazard.width===1?'기둥 충돌':'부유 블록 충돌',true);return;}
+ }
+ for(const ring of songCourse?.rings??[]){
+   const exit=ring.z+TRACK_CELL;
+   if(before>=exit||s.z<exit)continue;
+   const fraction=(exit-before)/(s.z-before);
+   const x=previousX+(s.x-previousX)*fraction;
+   const feet=previousY+(s.y-previousY)*fraction-reviewSurface(x,exit);
+   const halfOpening=1.5*TRACK_CELL;
+   const inside=Math.abs(x-ring.x)+.18<=halfOpening&&feet>=ring.y-halfOpening&&feet+(duck&&!s.air?.74:1.65)<=ring.y+halfOpening;
+   if(!inside)continue;
+   skill('공중 링',120,'ring-'+ring.z);buzz(12);
+ }
+ if(songCourse?.beatRoute&&checkRedBlockContact())return;
+ if(songCourse&&!s.recover){collectAirBonus(before,previousX,previousY);}
+ if(mode==='run')recordTrail();
+ if(comboReview&&!editorRun&&s.z>=FINISH){
+   const gate=songCourse?.portal??roadPortal,t=clamp((FINISH-before)/Math.max(.0001,s.z-before),0,1);
+   const x=previousX+(s.x-previousX)*t,y=previousY+(s.y-previousY)*t-reviewSurface(x,FINISH);
+   if(Math.abs(x-gate.x)>gate.half||y<gate.bottom||y>gate.top){endRun('차원문 이탈',true);return;}
+ }
+ if(s.z>=FINISH&&(!editorRun||ridingSection===0&&(!s.air||s.y>=-.05)&&Math.abs(s.x)<=editorPath.at(-1).width/2)){s.time-=Math.max(0,s.z-FINISH)/s.speed;s.z=FINISH;result(true)}else if(s.time>=LIMIT)result(false)}
+function panel(title,desc,button,tag){
+ const cleared=mode==='result';
+ $('overlay').classList.toggle('cleared',cleared);
+ $('nextStage').hidden=!cleared;
+ $('nextStage').disabled=!comboReview||selectedStage+1>=stages.length||!isStageOpen(selectedStage+1);
+ $('mainMenu').textContent=cleared?'메인으로':'메인으로 나가기';
+ $('mainMenu').hidden=mode!=='paused'&&mode!=='result';$('stages').hidden=true;rideMusic.pause();$('difficultyLabel').hidden=!diveMission||mode==='paused';$('titleText').textContent=title;$('description').textContent=desc;$('play').textContent=button;$('tag').textContent=tag;$('overlay').hidden=false;resetInput()}
+function pauseGame(){if(mode==='run'){mode='paused';panel('일시정지',diveMission?'빛길 돌파 · 주행 '+formatRideTime(s.time):'주행 '+formatRideTime(s.time),'계속 타기','GRINDIVE　/　PAUSE')}}
+$('play').onclick=()=>{if(portrait.matches||comboReview&&!isStageOpen(selectedStage))return;try{audio??=new (window.AudioContext||window.webkitAudioContext)();audio.resume()}catch{}if(comboReview){if(mode!=='paused')configureSongCourse();rideMusic.play(mode==='paused');}if(mode!=='paused')beginAttempt();mode='run';$('overlay').classList.remove('cleared');$('overlay').hidden=true;frameTime=performance.now()};
+$('pause').onclick=pauseGame;document.addEventListener('visibilitychange',()=>{if(document.hidden)pauseGame()});window.addEventListener('blur',pauseGame);window.addEventListener('pagehide',e=>{if(!e.persisted)finishTrail();});
+const keys=new Set(),pad=$('pad'),knob=pad.firstElementChild;
+let airInput=0;
+const playfield=canvas.parentElement;
+const portrait=matchMedia('(orientation:portrait)');
+portrait.addEventListener('change',()=>{if(portrait.matches)pauseGame()});
+const full=$('full');
+function fullscreenElement(){return document.fullscreenElement||document.webkitFullscreenElement}
+function syncFullscreen(){full.textContent=fullscreenElement()?'전체화면 종료':'전체화면'}
+document.addEventListener('fullscreenchange',syncFullscreen);
+document.addEventListener('webkitfullscreenchange',syncFullscreen);
+full.onclick=async()=>{
+ try{
+   if(fullscreenElement())await (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+   else await (playfield.requestFullscreen||playfield.webkitRequestFullscreen).call(playfield);
+   syncFullscreen();
+ }catch{full.textContent='전체화면 사용 불가'}
+};
+let originX=0,originY=0,stickRadius=0;
+const lateralSamples=[];
+let grindTap=null;
+function checkGrindFlick(x,now){
+ // Keep the held position at the start of the window even after a long pause.
+ while(lateralSamples.length>1&&lateralSamples[1].time<=now-130)lateralSamples.shift();
+ if(Math.abs(x)>=.84&&grinding()){
+   const side=Math.sign(x);
+   if(lateralSamples.some(p=>(x-p.x)*side>=.68))releaseGrind(side);
+ }
+ lateralSamples.push({x,time:now});
+}
+function resetInput(){
+ if(s)s.jumpQueuedUntil=-Infinity;
+ const pointer=activePointer;
+ activePointer=null;
+ if(pointer!==null&&playfield.hasPointerCapture(pointer))playfield.releasePointerCapture(pointer);
+ airInput=0;inputX=0;duck=false;
+ grindTap=null;lateralSamples.length=0;keys.clear();pad.style.removeProperty('top');pad.style.removeProperty('left');knob.style.translate='0 0';
+}
+function stick(e){
+ const dx=e.clientX-originX,dy=e.clientY-originY;
+ const scale=Math.max(stickRadius,Math.hypot(dx,dy));
+ const x=dx/scale,y=dy/scale;
+ knob.style.translate=x*stickRadius+'px '+y*stickRadius+'px';
+ checkGrindFlick(x,e.timeStamp);
+ inputX=Math.abs(x)>.18?x:0;
+ duck=y>.38;
+ airInput=Math.abs(y)>.38?-Math.sign(y):0;
+}
+playfield.onpointerdown=e=>{
+  if(mode!=='run'||e.button!==0||e.target.closest('button,#overlay'))return;
+  if(e.clientX>=playfield.getBoundingClientRect().left+playfield.clientWidth/2){e.preventDefault();playfield.setPointerCapture(e.pointerId);pressAction();return}
+  if(activePointer!==null)return;
+  activePointer=e.pointerId;
+  lateralSamples.length=0;
+  originX=e.clientX;
+  originY=e.clientY;
+  const bounds=playfield.getBoundingClientRect();
+  pad.style.left=originX-bounds.left+'px';
+  pad.style.top=originY-bounds.top+'px';
+  pad.hidden=false;
+  stickRadius=pad.getBoundingClientRect().width*.36;
+  playfield.setPointerCapture(e.pointerId);
+  stick(e);
+};
+playfield.onpointermove=e=>{if(e.pointerId===activePointer)stick(e)};
+playfield.onpointerup=playfield.onpointercancel=playfield.onlostpointercapture=e=>{
+ if(e.pointerId===activePointer){
+   activePointer=null;airInput=0;inputX=0;duck=false;
+   pad.style.removeProperty('top');pad.style.removeProperty('left');knob.style.translate='0 0';
+ }
+};
+function pressAction(){
+ if(mode!=='run'||s.recover||s.edgeFall||portrait.matches)return;
+ if(s.air&&s.time<=s.edgeJumpUntil){
+   s.air=false;s.vx=s.airVX;
+ }
+ if(s.air)s.jumpQueuedUntil=s.time+.10;
+ else {s.jumpQueuedUntil=-Infinity;action('up');}
+}
+const jumpButton=$('touchAction');
+jumpButton.onpointerdown=e=>{if(e.button===0){e.preventDefault();pressAction();}};
+jumpButton.onclick=e=>{if(e.detail===0)pressAction();};
+function keyInput(){
+ inputX=Number(keys.has('ArrowRight'))-Number(keys.has('ArrowLeft'));
+ duck=keys.has('ArrowDown');
+ airInput=Number(keys.has('ArrowUp'))-Number(duck);
+}
+const touchControls=matchMedia('(pointer:coarse)');
+function drawRideControls(){
+ $('touchAction').hidden=mode!=='run';
+ pad.hidden=mode!=='run'||(!touchControls.matches&&activePointer===null);
+ $('balance').hidden=mode!=='run'||diveMission||!grinding();
+ const offset=clamp(s.balance,-1,1);
+ $('needle').setAttribute('cx',60+55*offset);$('needle').setAttribute('cy',8+10*offset*offset);
+}
+const settingsDialog=$('settingsDialog');
+let resumeAfterSettings=false;
+$('settingsButton').onclick=()=>{
+ resumeAfterSettings=mode==='run';
+ if(resumeAfterSettings)pauseGame();
+ $('settingsStage').textContent=songCourse?.title??'현재 코스';
+ $('resetTrail').disabled=!songCourse?.trail;
+ $('settingsStatus').textContent='';
+ settingsDialog.showModal();
+};
+$('closeSettings').onclick=()=>settingsDialog.close();
+settingsDialog.onclose=()=>{
+ if(resumeAfterSettings&&mode==='paused'&&!document.hidden&&!portrait.matches)$('play').click();
+ resumeAfterSettings=false;
+};
+$('resetTrail').onclick=()=>{
+ const trail=songCourse?.trail;
+ if(!trail)return;
+ try{
+   localStorage.setItem(trail.key,JSON.stringify({best:-1,cells:[]}));
+   localStorage.removeItem('grindive.cell-trail.v1.'+(songCourse.stageId??songCourse.id));
+ }catch{
+   $('settingsStatus').textContent='이 브라우저에 초기화를 저장할 수 없어요.';return;
+ }
+ trail.best=-1;trail.cells.clear();delete trail.legacy;
+ s.runTrail=null;
+ $('settingsStatus').textContent='이 스테이지의 블록 색상을 초기화했어요.';
+};
+window.onkeydown=e=>{
+ if(settingsDialog.open)return;
+ if(e.key==='Escape'){if(editorRun&&!diveMission)returnToEditor();else pauseGame();return}
+ if(mode!=='run')return;
+ if(e.code==='Space'){e.preventDefault();if(!e.repeat)pressAction();return}
+ if(!e.key.startsWith('Arrow'))return;
+ e.preventDefault();
+ if(!e.repeat&&!keys.has(e.key)){
+   keys.add(e.key);keyInput();
+   if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+     const side=e.key==='ArrowLeft'?-1:1;
+     const edge=s.rail??s.wall;
+     if(grinding()&&grindTap?.edge===edge&&grindTap.side===side&&e.timeStamp-grindTap.time<=230){
+       releaseGrind(side);grindTap=null;
+     }else grindTap=grinding()?{edge,side,time:e.timeStamp}:null;
+   }
+ }
+};
+window.onkeyup=e=>{if(keys.delete(e.key))keyInput()};
+// World coordinates use metres. The road drops as it bends through the city.
+function bend(z){return 6*Math.sin(z/47)+2*Math.sin(z/22)}
+// Elevation is continuous at both entries to the steeper streets.
+function drop(z){return .10*z+.32*clamp(z,0,93)+.38*clamp(z-226,0,111)+.20*clamp(z-397,0,76)+.44*clamp(z-512,0,122)+.37*clamp(z-720,0,136)+.30*clamp(z-940,0,104)+.40*clamp(z-1132,0,126)+.34*clamp(z-1342,0,98)}
+// Sample the review route by distance; blend grades and turn rates at both ends.
+const flightGaps=[
+ {lip:348,end:382,fall:12,contact:396,slope:1.1,entryRun:14},
+ {lip:1148,end:1186,fall:19,contact:1196,slope:1.1},
+ {lip:2280,end:2334,fall:13,contact:2343,slope:1.1}
+];
+if(editorRun)flightGaps.length=0;
+const trapNames={jump:'배관 턱',block:'앰프',horizontal:'수평 레이저',vertical:'수직 레이저',diagonal:'사선 레이저'};
+const trackTraps=[252,688,1406,2060,2436].map(z=>({z,kind:'jump',left:-roadHalf,right:roadHalf,length:1.2}));
+const replacementBuses=[[136,-1.5],[502,1.5],[1018,-1.5],[1628,1.5],[2196,-1.5]];
+const terrainSections=[
+ {kind:'bridge',start:786,end:866,side:-1},
+ {kind:'diagonal',start:1496,end:1572,side:1},
+ {kind:'bridge',start:1794,end:1874,side:1},
+ {kind:'diagonal',start:1926,end:2002,side:-1}
+];
+function sectionBounds(t,z){
+ const d=z-t.start;
+ if(t.kind==='bridge'){
+   const taper=clamp(Math.min(d,t.end-z)/20,0,1);
+   const center=t.side*1.4*taper,width=roadHalf-(roadHalf-(comboReview?3:.95))*taper;
+   return [center-width,center+width];
+ }
+ const takeoff=d<32;
+ const amount=takeoff?clamp(d/16,0,1):clamp((t.end-z)/16,0,1);
+ const inner=roadHalf-(roadHalf+.45)*amount;
+ return (takeoff?t.side:-t.side)>0?[-roadHalf,inner]:[-inner,roadHalf];
+}
+function terrainGap(t,z){return t?.kind==='diagonal'&&z>=t.start+32&&z<t.start+40}
+function onRouteDeck(x,z){
+ if(editorRun)return z>=0&&z<=FINISH&&Math.abs(x)<=reviewSample(z).width/2;
+ if(s.trackBlock&&trackBlockAt(s.trackBlock,x,z)&&s.y>=reviewSurface(x,z)+trackBlockTop(s.trackBlock,x,z)-.1)return true;
+ const floor=floorSlice(songCourse,z);
+ if(floor)return Math.abs(x)<=roadHalf&&floor.row[Math.min(6,Math.floor((x+roadHalf)/(2*roadHalf/7)))]==='1';
+ const t=trapReview&&terrainSections.find(t=>z>=t.start&&z<t.end);
+ if(!t)return Math.abs(x)<=roadHalf;
+ const [l,r]=sectionBounds(t,z);
+ return !terrainGap(t,z)&&x>=l&&x<=r;
+}
+function trapParts(h,deck){
+ if(h.routeGate){deck(h.left,h.right,0,h.height);return;}
+ if(h.beamStart){
+   const [x,y]=h.beamStart,[ex,ey]=h.beamEnd;
+   if(Math.abs(ex-x)<.001){deck(x-.09,x+.09,y,ey);return;}
+   for(let i=0;i<48;i++){
+     const left=x+(ex-x)*i/48,right=x+(ex-x)*(i+1)/48;
+     deck(Math.min(left,right),Math.max(left,right),y+(ey-y)*i/48-.09,y+(ey-y)*(i+1)/48+.09);
+   }
+   return;
+ }
+ if(h.kind==='diagonal'){
+   for(let i=0;i<12;i++){
+     const width=(h.right-h.left)/12,low=.16+i*.16;
+     deck(h.left+i*width,h.left+(i+1)*width,low,low+.30);
+   }
+ }else if(h.kind==='vertical')deck(h.left,h.right,.02,2.9);
+ else if(h.kind==='horizontal')deck(h.left,h.right,.68,.88);
+ else deck(h.left,h.right,0,h.kind==='block'?.95:.46);
+}
+const hazardGradient=['#ff4c53','#a51e31','#0b080a'];
+function hazardFace(points){gradientBlockFace(points,hazardGradient);}
+function gradientBlockFace(points,[edge,middle,core]){
+     const center=points.reduce(([x,y],q)=>[x+q[0]/points.length,y+q[1]/points.length],[0,0]);
+     poly(points,core);
+     for(let i=0;i<points.length;i++){
+       const u=points[i],v=points[(i+1)%points.length],dx=v[0]-u[0],dy=v[1]-u[1],len=Math.hypot(dx,dy);
+       if(len<.01)continue;
+       const nx=-dy/len,ny=dx/len,dist=((center[0]-u[0])*nx+(center[1]-u[1])*ny)*.62;
+       if(Math.abs(dist)<.01)continue;
+       const g=ctx.createLinearGradient(u[0],u[1],u[0]+nx*dist,u[1]+ny*dist);
+       g.addColorStop(0,edge);g.addColorStop(.23,middle);g.addColorStop(1,core);
+       poly([u,v,center],g);
+     }
+   }
+
+// Clip the moving rider to the block on all three axes over the same time interval.
+function hitsRingBlock(block,oldZ,oldX,oldY){
+ const oldFeet=oldY-reviewSurface(oldX,oldZ),feet=s.y-reviewSurface(s.x,s.z);
+ const height=duck&&!s.air?.74:1.65;
+ let enter=0,exit=1;
+ for(const [start,end,low,high] of [
+   [oldZ,s.z,block.z,block.z+block.length],
+   [oldX,s.x,block.x-block.width/2-.18,block.x+block.width/2+.18],
+   [oldFeet,feet,block.bottom-height,block.top]
+ ]){
+   const delta=end-start;
+   if(!delta){if(start<low||start>high)return false;continue;}
+   const t0=(low-start)/delta,t1=(high-start)/delta;
+   enter=Math.max(enter,Math.min(t0,t1));exit=Math.min(exit,Math.max(t0,t1));
+   if(enter>exit)return false;
+ }
+ return true;
+}
+function drawBlockHazards(z){
+ for(const h of songCourse?.blockHazards??[]){
+   if(h.z!==z)continue;
+   const l=h.x-h.width/2,r=h.x+h.width/2,a=h.z,b=a+h.length;
+   const p=(x,y,m)=>point(x,reviewSurface(x,m)+y,m);
+   if(Math.abs(a-s.z)<12){
+     const ring=y=>[[l,a],[r,a],[r,b],[l,b]].map(([x,m])=>courseViewVertex(x,reviewSurface(x,m)+y,m));
+     const base=ring(h.bottom),roof=ring(h.top);
+     riderOccluders.push(base,roof);
+     for(let i=0;i<4;i++){const j=(i+1)%4;riderOccluders.push([base[i],base[j],roof[j],roof[i]]);}
+   }
+   const low=h.bottom,high=h.top;
+   const cap=y=>hazardFace([p(l,y,a),p(r,y,a),p(r,y,b),p(l,y,b)]);
+   const side=reviewCamera.sideOffset<h.x?l:r;
+   cap(low);
+   hazardFace([p(side,low,a),p(side,low,b),p(side,high,b),p(side,high,a)]);
+   hazardFace([p(l,low,a),p(r,low,a),p(r,high,a),p(l,high,a)]);
+   const eyeHeight=reviewCamera.targetY+reviewCamera.distance*reviewCamera.tiltSin;
+   if(eyeHeight>high)cap(high);
+ }
+}
+function drawTrap(h){
+ if(h.routeGate){
+   const p=(x,y)=>point(x,reviewSurface(x,h.z)+y,h.z);
+   ctx.save();ctx.globalAlpha=.16;poly([p(h.left,0),p(h.right,0),p(h.right,h.height),p(h.left,h.height)],'#ff496f');ctx.globalAlpha=1;
+   for(let y=0;y<h.height;y+=.75)poly([p(h.left,y),p(h.right,y),p(h.right,y+.065),p(h.left,y+.065)],'#ff647d');
+   for(const x of [h.left,h.right])poly([p(x-.055,0),p(x+.055,0),p(x+.055,h.height),p(x-.055,h.height)],'#ffe4b7');
+   ctx.restore();return;
+ }
+ if(h.beamStart){
+   const [x,y]=h.beamStart,[ex,ey]=h.beamEnd;
+   const p=(side,height)=>point(side,reviewSurface(side,h.z)+height,h.z);
+   const a=p(x,y),b=p(ex,ey),scale=Math.hypot(...p(x,y+.18).map((v,i)=>v-a[i]));
+   ctx.save();ctx.lineCap='round';ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);
+   ctx.strokeStyle='#ff3d68';ctx.lineWidth=Math.max(1,scale);ctx.stroke();
+   ctx.strokeStyle='#fff0da';ctx.lineWidth=Math.max(.7,scale*.35);ctx.stroke();ctx.restore();return;
+ }
+ const deck=(l,r,b,t)=>{
+   const vertex=(x,y,z)=>point(x,reviewSurface(x,z)+y,z);
+   const face=(z,y)=>[vertex(l,y,z),vertex(r,y,z)];
+   const a=h.z,beyond=a+h.length;
+   const [bl,br]=face(a,b),[tl,tr]=face(a,t),[fl,fr]=face(beyond,t);
+   if(h.beam){
+     poly([tl,tr,fr,fl],'#ff9fa9');poly([bl,br,tr,tl],'#ff496f');
+     poly([...face(a,b+(t-b)*.42),...face(a,b+(t-b)*.63).reverse()],'#fff1db');return;
+   }
+   poly([tl,tr,fr,fl],'#f4c991');
+   const side=l>0?l:r;
+   poly([vertex(side,b,a),vertex(side,b,beyond),vertex(side,t,beyond),vertex(side,t,a)],'#845039');
+   poly([bl,br,tr,tl],'#bf643d');
+   poly([...face(a,t-.12),tr,tl],'#ffe5a9');
+ };
+ trapParts(h,deck);
+}
+const landingRunout=12;
+function landingGrade(z){
+ const g=flightGaps.find(g=>z>=g.end&&z<g.contact+landingRunout);
+ if(!g)return 0;
+ const entry=g.entryRun?clamp((z-g.end)/g.entryRun,0,1):1;
+ return g.slope*entry*(1-clamp((z-g.contact)/landingRunout,0,1));
+}
+function flightOffset(z){
+ return flightGaps.reduce((sum,g)=>{
+   const approach=clamp((z-g.lip)/(g.end-g.lip),0,1);
+   const face=clamp(z-g.end,0,g.contact-g.end);
+   const out=clamp(z-g.contact,0,landingRunout);
+   const entry=g.entryRun||0;
+   const curvedFace=entry?face-Math.min(face,entry)+Math.min(face,entry)**2/(2*entry):face;
+   return sum+(g.fall-g.slope*(g.contact-g.end-entry/2))*approach+
+     g.slope*(curvedFace+out-out*out/(2*landingRunout));
+ },0);
+}
+function openSpan(z){return flightGaps.some(g=>z>=g.lip&&z<g.end)||(comboReview&&z>=railGap.a&&z<railGap.b)||(trapReview&&terrainSections.some(t=>terrainGap(t,z)))}
+const reviewHills=[[65,174,.82],[298,403,.65],[545,665,.9],[833,949,.7],[1110,1250,.88],[1310,1390,.58],
+ [1460,1685,.98],[1760,1890,.78],[1990,2110,.52],[2220,2370,.86],[2490,2620,.7]];
+const reviewTurns=[[208,308,75],[456,572,-90],[700,797,60],[974,1072,72],[1078,1130,-36],[1260,1352,70],[1362,1458,-64],
+ [1660,1790,85],[1926,2025,-78],[2070,2180,70],[2396,2480,-65],[2490,2610,65]];
+// Circular transition is tangent to the approach at its foot.
+const arcRun=8,arcRadius=10;
+function arcSlope(u){return u/Math.sqrt(arcRadius**2-u*u)}
+function rampTravel(z){
+ const gap=flightGaps.find(g=>z>=g.lip-arcRun&&z<=g.lip);
+ return gap?z-(gap.lip-arcRun):0;
+}
+function bankSlope(z){
+ if(editorRun)return 0;
+ for(const [a,b,degrees] of reviewTurns){
+   if(z>=a&&z<b)return -Math.sign(degrees)*.33*Math.sin(Math.PI*(z-a)/(b-a))**2;
+ }
+ return 0;
+}
+function reviewSurface(x,z){
+ const u=rampTravel(z);
+ return arcRadius-Math.sqrt(arcRadius**2-u*u)+reviewGrade(z)*u*u/(2*arcRun)+x*bankSlope(z);
+}
+// Effective drag per unit mass (1/m). Tucking reduces frontal area.
+const uprightDrag=.004, tuckedDrag=.00225;
+function groundSpeed(speed,dt,tucked){
+ const drag=tucked?tuckedDrag:uprightDrag;
+ // Automatic propulsion balances upright drag at the flat starting speed.
+ const slope=grade(s.z)*(editorRun?Math.cos(s.travelYaw-reviewSample(s.z).yaw):1);
+ const gravityAlongRoad=normalGravity*slope/Math.hypot(1,slope);
+ const drive=fastRoute?uprightDrag*reviewSpeed(s.z)**2:uprightDrag*SPEED**2+gravityAlongRoad;
+ const acceleration=drive-drag*speed**2;
+ return Math.max(4,speed+acceleration*dt);
+}
+function reviewSpeed(z){
+ // Anticipate the apex slightly so the speed change leads into the turn.
+ const turn=Math.abs(bankSlope(z+9))/.33;
+ const grade=reviewGrade(z);
+ return 23.6+13*grade-6*turn-3.2*clamp(1-grade/.65,0,1);
+}
+function reviewGrade(z){
+ if(editorRun)return -Math.tan(editorPath[clamp(Math.round(z),0,FINISH)].pitch);
+ if(songCourse?.grades){
+   const keys=songCourse.grades,i=keys.findIndex(k=>k[0]>=z);
+   if(i<=0)return (i<0?keys.at(-1):keys[0])[1];
+   const [a,lo]=keys[i-1],[b,hi]=keys[i],t=(z-a)/(b-a);
+   return lo+(hi-lo)*t*t*(3-2*t);
+ }
+ for(const [a,b,steep] of reviewHills){
+   if(z<a||z>b)continue;
+   const t=clamp(Math.min((z-a)/18,(b-z)/25),0,1);
+   return .055+steep*t*t*(3-2*t);
+ }
+ return .055;
+}
+const reviewPath=editorPath??[{x:0,z:0,h:0,yaw:0}];
+function buildReviewPath(){
+reviewPath.length=1;
+for(let m=1;m<=FINISH+180;m++){
+ const prev=reviewPath[m-1],at=m-.5;
+ let angle=0;
+ for(const [a,b,degrees] of reviewTurns){
+   if(at>a&&at<b)angle=degrees*Math.PI/180/(b-a)*(1-Math.cos(2*Math.PI*(at-a)/(b-a)));
+ }
+ const yaw=prev.yaw+angle;
+ reviewPath.push({x:prev.x+Math.sin(yaw-angle/2),z:prev.z+Math.cos(yaw-angle/2),h:prev.h+reviewGrade(at)+flightOffset(m)-flightOffset(m-1),yaw});
+}
+}
+if(!editorRun)buildReviewPath();
+function sectionSample(points,m){
+ const last=points.length-1;
+ const i=Math.max(0,Math.min(last-1,Math.floor(m))),t=m-i,a=points[i],b=points[i+1];
+ const k=Math.max(0,Math.min(1,t));
+ return {x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t,h:a.h+(b.h-a.h)*t,
+   yaw:a.yaw+(b.yaw-a.yaw)*k,width:a.width+(b.width-a.width)*k};
+}
+function reviewSample(m){
+ if(editorRun)return sectionSample(editorPath,m);
+ if(m<0)return {x:0,z:m,h:editorRun?0:m*.055,yaw:0};
+ const i=Math.min(Math.floor(m),reviewPath.length-2),t=clamp(m-i,0,1);
+ const a=reviewPath[i],b=reviewPath[i+1];
+ return {x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t,h:a.h+(b.h-a.h)*t,yaw:a.yaw+(b.yaw-a.yaw)*t};
+}
+let reviewCamera,sceneryCamera;
+function reviewPoint(x,y,m,c=reviewCamera){
+ const p=reviewSample(m);
+ const dx=p.x-c.x+x*Math.cos(p.yaw),dz=p.z-c.z-x*Math.sin(p.yaw);
+ const side=dx*c.cos-dz*c.sin,forward=dx*c.sin+dz*c.cos;
+ return projectReview(side,y-(p.h-c.h),forward,c);
+}
+// Orbit the rider at a fixed distance. Pitch is an orthogonal rotation in metres;
+// the same focal length projects both axes of the road and the rigid rider.
+function projectReview(side,height,forward,c=reviewCamera){
+ const down=c.targetY-height;
+ const cameraY=down*c.tiltCos-forward*c.tiltSin;
+ const depth=Math.max(.25,c.distance+forward*c.tiltCos+down*c.tiltSin);
+ const f=c.focal;
+ return [W*.5+(side-c.sideOffset)*f/depth,H*.61+cameraY*f/depth];
+
+}
+function grade(z){if(routeReview)return reviewGrade(z);return (drop(z+1)-drop(z))}
+function point(x,y,z){if(routeReview)return reviewPoint(x,y,z);let depth=(z-s.z)*1.45+4.6,f=Math.min(W*.91,H*.61);
+ return [W*.5+(bend(z)-bend(s.z)+x-camX)*f/depth,H*.37+(2.75+camY-y+drop(z)-drop(s.z))*f/depth]}
+function poly(vertices,color){ctx.fillStyle=color;ctx.beginPath();vertices.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill()}
+function strip(x1,x2,a,b,h,color,h2=h){poly([point(x1,h,a),point(x2,h,a),point(x2,h2,b),point(x1,h2,b)],color)}
+function block(x,w,a,b,h,col,top,base=0){poly([point(x,base,a),point(x+w,base,a),point(x+w,h,a),point(x,h,a)],col);let near=x>0?x:x+w;poly([point(near,base,a),point(near,base,b),point(near,h,b),point(near,h,a)],col);strip(x,x+w,a,b,h,top)}
+const marks=[[72,-.5,1.6],[168,2.35,3.95],[216,-5.2,-3.2],[360,-3.4,-1.5],[408,-2.95,-1.75],[456,-2.95,-1.75],[636,2.4,4],[672,2.45,3.85]];
+// Intersect the road triangles with the vertical plane through the camera arm.
+// Coordinates in this plane are horizontal distance behind the rider and height.
+function editorCameraTilt(camera,targetY,tilt,distance){
+ const sin=Math.sin(camera.yaw),cos=Math.cos(camera.yaw);
+ function edge(station,side){
+   const p=reviewSample(station);
+   const dx=p.x-camera.x+side*Math.cos(p.yaw),dz=p.z-camera.z-side*Math.sin(p.yaw);
+   return {x:dx*cos-dz*sin,back:-dx*sin-dz*cos,y:camera.h-p.h};
+ }
+ function check(back,y){
+   if(back<=.001||back>distance+.001)return;
+   tilt=Math.max(tilt,Math.atan2(y+.45-targetY,back));
+ }
+ function triangle(a,b,c){
+   const hits=[];
+   for(const [u,v] of [[a,b],[b,c],[c,a]]){
+     if((u.x<0)===(v.x<0))continue;
+     const t=u.x/(u.x-v.x);
+     hits.push({back:u.back+t*(v.back-u.back),y:u.y+t*(v.y-u.y)});
+   }
+   if(hits.length!==2)return;
+   const [u,v]=hits;
+   check(u.back,u.y);check(v.back,v.y);
+   // A triangle can span the entire arm with both intersections outside it.
+   for(const back of [.002,distance]){
+     if((u.back<back)===(v.back<back))continue;
+     check(back,u.y+(v.y-u.y)*(back-u.back)/(v.back-u.back));
+   }
+ }
+ // On an 80-degree slope a metre along the road covers only 0.17 m in plan.
+ const first=Math.max(-6,Math.floor(s.z)-48),last=Math.min(FINISH,Math.ceil(s.z)+48);
+ let left=edge(first,-reviewSample(first).width/2),right=edge(first,reviewSample(first).width/2);
+ for(let m=first+1;m<=last;m++){
+   const nextLeft=edge(m,-reviewSample(m).width/2),nextRight=edge(m,reviewSample(m).width/2);
+   triangle(left,right,nextRight);triangle(left,nextRight,nextLeft);
+   left=nextLeft;right=nextRight;
+ }
+ return tilt;
+}
+function cameraDeckHeight(station){
+ const route=songCourse.beatRoute,next=route.findIndex(e=>e.a>station);
+ const prev=route[next<0?route.length-1:next-1],after=route[next];
+ const climb=prev?.sideExit?3*clamp((station-prev.sideStart)/Math.max(1,prev.b-prev.sideStart),0,1):0;
+ const from=(prev?.height??0)+climb;
+ const blend=after?clamp((station-(prev?.b??0))/Math.max(1,after.a-(prev?.b??0)),0,1):0;
+ return from+((after?.height??from)-from)*blend;
+}
+function prepareReviewCamera(){
+ if(mode==='impact'&&reviewCamera)return;
+ if(portalEnding()){
+   const gate=songCourse?.portal??roadPortal,c=reviewSample(FINISH);
+   reviewCamera=sceneryCamera={...c,sin:Math.sin(c.yaw),cos:Math.cos(c.yaw),sideOffset:gate.x,
+     targetY:reviewSurface(gate.x,FINISH)+gate.bottom+2.05,tiltCos:1,tiltSin:0,distance:5.6,focal:Math.min(H*.78,W*1.05)};
+   return;
+ }
+ const camera=reviewSample(s.z);
+ if(editorRun){
+   camera.x+=s.x*Math.cos(camera.yaw);
+   camera.z-=s.x*Math.sin(camera.yaw);
+ }
+ const closeView=isSingleBeatStage(songCourse?.id);
+ const downbeat=['downbeat-dive','skyline-ignition'].includes(songCourse?.id);
+ const groundPitch=(downbeat?.285:.23)+Math.atan(reviewGrade(s.z)+landingGrade(s.z))*.6;
+ let tilt=songCourse?groundPitch:groundPitch+(1-groundPitch)*(s.flightView||0);
+ const distance=diveMission?5.9:closeView?3.55:downbeat?4.15:5.6,focusHeight=diveMission?1.7:closeView?1.28:downbeat?1.84:.8;
+ const focusBase=songCourse?reviewSurface(s.x,s.z)+(closeView?cameraDeckHeight(s.z):0):
+   (s.edgeFall?Math.max(s.y,reviewSurface(clamp(s.x,-4.3,4.3),s.z)):s.y);
+ const targetY=focusBase+focusHeight;
+ if(closeView){
+   // Aim about one second ahead. Blend the deck heights across gaps so a lip
+   // entering the look-ahead window cannot snap the camera to a new pitch.
+   const look=clamp(s.speed,21,34),station=Math.min(FINISH,s.z+look);
+   const deck=cameraDeckHeight(station);
+   const point=reviewSample(station);
+   // Keep a stable grade at the finish when the remaining look-ahead shrinks.
+   const remaining=station-s.z;
+   const extra=look-remaining;
+   const drop=point.h-camera.h+extra*reviewGrade(station)+targetY-deck;
+   const pitch=clamp(.36+Math.atan2(drop,look),.18,1.04);
+   const elapsed=Math.max(0,s.time-(s.cameraPitchTime??s.time));
+   s.cameraPitch??=pitch;
+   s.cameraPitch+=(pitch-s.cameraPitch)*(1-Math.exp(-8*elapsed));
+   s.cameraPitchTime=s.time;tilt=s.cameraPitch;
+ }
+ if(diveMission){
+   // Vertical clearance over the inclined road directly beneath the eye.
+   const eyeHeight=3;
+   tilt=diveSlope+Math.asin((eyeHeight-focusHeight)*Math.cos(diveSlope)/distance);
+ }
+ // Raise the orbit until the segment from the focus to the eye clears the track.
+ // Sampling both road edges also covers the outside of a banked bend.
+ if(editorRun)tilt=editorCameraTilt(camera,targetY,tilt,distance);
+ else for(let pass=0;pass<8;pass++){
+   let required=tilt;
+   for(let i=1;i<=12;i++){
+     const arm=distance*i/12,station=s.z-arm*Math.cos(tilt);
+     if(openSpan(station))continue;
+     const ground=camera.h-reviewSample(station).h+
+       Math.max(reviewSurface(camX-.35,station),reviewSurface(camX+.35,station));
+     const clearance=.24+.58*i/12;
+     required=Math.max(required,Math.asin(clamp((ground+clearance-targetY)/arm,0,.995)));
+   }
+   if(required<=tilt+.0001)break;
+   tilt=required;
+ }
+ reviewCamera={...camera,distance,sideOffset:editorRun?0:closeView?s.x+.50:camX,sin:Math.sin(camera.yaw),cos:Math.cos(camera.yaw),
+   focal:(diveMission?.97:closeView?1.65:1.12)*Math.min(W*.91,H*.61),targetY,tiltSin:Math.sin(tilt),tiltCos:Math.cos(tilt)};
+ sceneryCamera=reviewCamera;
+ if(songCourse){
+   // Keep the world backdrop on the course orbit while the playfield follows the board.
+   const riderY=s.edgeFall?Math.max(s.y,reviewSurface(clamp(s.x,-4.3,4.3),s.z)):s.y;
+   reviewCamera={...sceneryCamera,targetY:riderY+focusHeight};
+ }
+}
+const streetSlices=new Map();
+const sideRampRuns=[];
+function sideRampHeight(x,z){
+ if(Math.abs(x)<=3.5)return 0;
+ const run=sideRampRuns.find(a=>z>=a&&z<a+30);
+ if(run===undefined)return 0;
+ const u=clamp((Math.abs(x)-3.5)/2.15,0,1);
+ return 2.15*(1-Math.sqrt(1-u*u))*clamp(Math.min(z-run,run+30-z)/4,0,1);
+}
+function addStreet(kind,a,length,left,right,h,edges=[]){
+ const obj={kind,a,b:a+length,left,right,h};
+ for(let z=a;z<obj.b;z+=2){
+   if(!streetSlices.has(z))streetSlices.set(z,[]);
+   streetSlices.get(z).push(obj);
+ }
+ for(const x of edges)rails.push({name:kind,a,b:obj.b,x,h,height:z=>reviewSurface(x,z)+h});
+}
+function streetOpen(a,b){
+ return terrainSections.some(t=>a<t.end&&b>t.start)||flightGaps.some(g=>a<g.end&&b>g.lip)||(a<railGap.b&&b>railGap.a);
+}
+// Allow room on either side of a grinding rider for their shoulders and balance lean.
+function clearOfGrindLines(a,b,l,r,lo,hi){
+ return !rails.some(e=>a<e.b+1.4&&b>e.a-1.4&&l<e.x+.95&&r>e.x-.95&&lo<e.h+2.1&&hi>e.h-.16);
+}
+function placeStreetFeature(kind,a,length,l,r,h,edges){
+ const lo=kind==='차양막'?h-.1:0;
+ for(const sign of [1,-1]){
+   const left=sign===1?l:-r,right=sign===1?r:-l,xs=edges.map(x=>x*sign);
+   if(!clearOfGrindLines(a,a+length,left,right,lo,h))continue;
+   let clear=true;
+   for(const t of trackTraps){
+     if(t.z>a+length+2||t.z+t.length<a-2)continue;
+     trapParts(t,(tl,tr,low,high)=>{
+       if(tl<right&&tr>left&&low<h&&high>lo)clear=false;
+       if(xs.some(x=>tl<x+.95&&tr>x-.95&&low<h+2.1&&high>h-.16))clear=false;
+     });
+   }
+   for(let z=a-2;clear&&z<a+length+2;z+=2)for(const o of streetSlices.get(z)||[]){
+     const bottom=o.kind==='레일'?o.h-.16:o.kind==='차양막'||o.kind==='전선'?o.h-.1:0;
+     if(xs.some(x=>o.left<x+.95&&o.right>x-.95&&bottom<h+2.1&&o.h>h-.16))clear=false;
+   }
+   if(clear){addStreet(kind,a,length,left,right,h,xs);return}
+ }
+}
+function supportX(o){return o.kind==='전선'?Math.sign(o.left+o.right)*(roadHalf-.15):(o.left+o.right)/2}
+if(trapReview)for(const [z,x] of replacementBuses)
+ addStreet('버스',z,10,x-1.2,x+1.2,3.5,comboReview?[x-1.2,x+1.2]:[]);
+if(comboReview){
+ for(const t of trackTraps){
+   t.railX=Math.floor(t.z/300)%2?4.1:-4.1;
+   if(t.railX<0)t.left=-2.65;else t.right=2.65;
+ }
+ for(let a=20;a<FINISH-65;a+=100)
+   if(!streetOpen(a,a+60)&&!streetOpen(a+64,a+94)&&
+      !trackTraps.some(h=>h.z<a+102&&h.z+h.length>a+56)&&
+      !flightGaps.some(g=>a+64<g.lip&&a+94>g.lip-16)&&
+      !(a+64<982&&a+94>860))sideRampRuns.push(a+64);
+ // Adjacent pieces retain the same rail identity.
+ let previousRail=null;
+ for(let a=0;a<FINISH;){
+   const length=a%50===0?30:20;
+   const central=(a>=900&&a<980)||sideRampRuns.some(start=>a<start+30&&a+length>start);
+   const narrow=terrainSections.find(t=>a<t.end&&a+length>t.start);
+   const hazard=trackTraps.find(t=>a<t.z+t.length+6&&a+length>t.z-6);
+   const bus=replacementBuses.find(([z])=>a<z+12&&a+length>z-2);
+   const x=bus?-Math.sign(bus[1])*4.1:hazard?hazard.railX:central?0:narrow?narrow.side*1.4:(Math.floor(a/300)%2?4.1:-4.1);
+   addStreet('레일',a,length,x-.10,x+.10,.8,[x]);
+   const rail=rails.at(-1);
+   rail.key=previousRail?.b===a&&previousRail.x===x?previousRail.key:'street-rail:'+a;
+   previousRail=rail;a+=length;
+ }
+ for(let a=20;a<FINISH-65;a+=100){
+   if(streetOpen(a,a+60))continue;
+   const side=Math.floor(a/100)%2?1:-1;
+   const inner=side*4;
+   placeStreetFeature('인도',a,(a%200===20?60:30),side<0?-6:4,side<0?-4:6,.3,[inner]);
+   const curbLength=a%200===20?20:30;
+   if(!streetOpen(a+60,a+60+curbLength))
+     placeStreetFeature('경계석',a+60,curbLength,-.18,.18,.3,[0]);
+   placeStreetFeature('차양막',a+14,10,side<0?-6:4.8,side<0?-4.8:6,3,[side*4.8]);
+   // The wire hangs inboard of the pole, leaving room to grind on it.
+   if(!flightGaps.some(g=>a<g.contact+16&&a+62>g.lip-10))for(const sign of [-side,side]){
+     const wire=sign*4.65,pole=sign*5.85;
+     if(!clearOfGrindLines(a,a+60,pole-.16,pole+.16,0,5)||
+       !clearOfGrindLines(a,a+60,Math.min(wire,pole),Math.max(wire,pole),4.76,5.15))continue;
+     addStreet('전선',a,60,wire-.045,wire+.045,5,[wire]);break;
+   }
+   if(a%300===20)placeStreetFeature('버스',a+32,10,side*1.5-1.2,side*1.5+1.2,3.5,[side*1.5-1.2,side*1.5+1.2]);
+ }
+ // Fit short central curbs in the clear spaces between rail and wall-ramp runs.
+ for(let start=10;start<FINISH-100;start+=200){
+   for(let a=start;a<start+100;a+=10){
+     if(streetOpen(a-4,a+32)||kickers.some(k=>a<k.b+4&&a+30>k.a-4&&Math.abs(k.x)<2)||
+       trackTraps.some(t=>a<t.z+t.length+4&&a+30>t.z-4)||
+       rails.some(e=>e.name==='경계석'&&a<e.b+20&&a+30>e.a-20))continue;
+     const count=rails.length;
+     placeStreetFeature('경계석',a,start%400===10?20:30,-.18,.18,.3,[0]);
+     if(rails.length>count)break;
+   }
+ }
+ for(const side of [-1,1]){
+   for(let a=0,i=0;a<FINISH;i++){
+     const length=[10,20,30][(i+(side+1))%3],h=[4,8,4,32,8,52][(i+(side+1))%6];
+     addStreet('건물',a,length,side<0?-12:6,side<0?-6:12,h);
+     // Register only the runs where a facade is actually rendered.
+     let start=a;
+     for(let z=a;z<=a+length;z+=2){
+       if(z<a+length&&!streetOpen(z,z+2))continue;
+       if(z>start){const x=side*roadHalf;rails.push({name:'건물',a:start,b:z,x,h,height:m=>reviewSurface(x,m)+h})}
+       start=z+2;
+     }
+     a+=length;
+   }
+ }
+}
+// Preserve the original rail stage for the music-off option.
+const stageArrays=[rails,kickers,rims,flightGaps,terrainSections,trackTraps,sideRampRuns,reviewTurns,reviewHills];
+const originalStage=comboReview?{arrays:stageArrays.map(a=>a.slice()),streets:new Map(streetSlices),finish:FINISH,limit:LIMIT,gap:{...railGap}}:null;
+function configureSongCourse(){
+ const stage=stages[selectedStage];
+ const track=stage.track??sampleTracks[selectedStage];
+ rideMusic.selectTrack(track);
+ if(songCourse?.stageId===stage.id)return;
+ const next=track?makeSongCourse(track,stage.taxiTrapVariant):null;
+ if(!songCourse&&!next)return;
+ finishTrail();
+ songCourse=next;
+ if(next){next.stageId=stage.id;next.title=stage.title;}
+ if(next?.blocks){
+   next.blockHazards=[...(next.duckGates??[]),...(next.pillars??[])];
+   next.trail=loadTrail(next);
+   next.portal=finishOpening(next);
+ }
+ roadHalf=next?.blocks?3.5*TRACK_CELL:editorRun?6:comboReview?5.25:4.3;
+ document.querySelector('main').classList.toggle('music-stage',!!next);
+ for(const items of stageArrays)items.length=0;
+ streetSlices.clear();
+ if(next){
+   FINISH=next.finish;LIMIT=Infinity;
+   railGap.a=railGap.b=Infinity;
+   if(next.gap)Object.assign(railGap,next.gap);
+   reviewTurns.push(...next.turns);reviewHills.push(...next.hills);
+   trackTraps.push(...next.traps);
+   if(next.floor)for(const t of next.traps.filter(t=>t.kind==='block'&&!t.routeGate)){
+     for(const x of [t.left,t.right])rails.push({name:'블럭 모서리',trap:t,a:t.z,b:t.z+t.length,x,h:.95,height:z=>reviewSurface(x,z)+.95});
+   }
+   kickers.push(...next.ramps);
+   for(const k of next.ramps)for(const x of [k.x-k.width/2,k.x+k.width/2])
+     rails.push({name:'점프대 모서리',a:k.a,b:k.b,x,h:k.h,ramp:k,height:z=>reviewSurface(x,z)+rampHeight(k,z,x)});
+   for(const bus of next.street)addStreet('버스',bus.a,bus.b-bus.a,bus.x-1.2,bus.x+1.2,3.5,[bus.x-1.2,bus.x+1.2]);
+   for(const rail of next.rails)addStreet('레일',rail.a,rail.b-rail.a,rail.x-.1,rail.x+.1,rail.h??.8,[rail.x]);
+   for(let z=0;!isSingleBeatStage(next.id)&&z<FINISH;z+=32){
+     const side=z%64?1:-1,x=side*9;
+     addStreet('건물',z,18,x-1.5,x+1.5,4+(z/32%5)*3);
+   }
+ }else{
+   FINISH=originalStage.finish;LIMIT=originalStage.limit;Object.assign(railGap,originalStage.gap);
+   stageArrays.forEach((a,i)=>a.push(...originalStage.arrays[i]));
+   for(const [z,objects] of originalStage.streets)streetSlices.set(z,objects);
+ }
+ buildReviewPath();installTrackBlockEdges();
+}
+function collectAirBonus(before,oldX,oldY){
+ if(s.z<=before)return;
+ for(const item of songCourse.bonuses??[]){
+   const key='air-bonus:'+item.z;
+   if(item.z<before||item.z>s.z||s.claimed.has(key))continue;
+   const t=(item.z-before)/(s.z-before),x=oldX+(s.x-oldX)*t,y=oldY+(s.y-oldY)*t;
+   if(Math.abs(x-item.x)>.85||Math.abs(y-reviewSurface(x,item.z)-item.h)>.85)continue;
+   s.claimed.add(key);s.score+=item.points;tell('공중 크리스탈 +'+item.points);buzz(14);
+ }
+}
+function drawAirBonus(item){
+ const y=reviewSurface(item.x,item.z)+item.h+.65;
+ const p=(dx,dy)=>point(item.x+dx,y+dy,item.z);
+ poly([p(0,.42),p(.30,0),p(0,-.42),p(-.30,0)],'#ffe29a');
+ poly([p(0,.42),p(0,-.42),p(-.30,0)],'#e79c52');
+}
+function drawComboFeatures(z){
+ if(sideRampRuns.some(a=>z>=a&&z<a+30)){
+   for(const sign of [-1,1])for(let j=0;j<10;j++){
+     const pos=i=>sign*(3.5+2.15*Math.sin(i*Math.PI/20));
+     const l=pos(j),r=j===9?sign*6:pos(j+1),mid=pos(j+1);
+     const patch=(a,b)=>poly([[a,z],[b,z],[b,z+2],[a,z+2]].map(([x,m])=>point(x,reviewSurface(x,m)+sideRampHeight(x,m),m)),j%2?'#ac8062':'#bc9171');
+     patch(l,mid);if(r!==mid)patch(mid,r);
+   }
+ }
+ for(const o of streetSlices.get(z)||[]){
+   if(o.kind==='건물'&&streetOpen(z,z+2))continue;
+   const {left:l,right:r,h}=o;
+   const ground=(x,m)=>reviewSurface(x,m);
+   const p=(x,m,y)=>point(x,ground(x,m)+y,m);
+   const palette={'건물':songCourse?['#302b48','#605574']:['#425463','#526876'],'인도':['#677983','#a0b0ad'],'경계석':['#957b53','#ecd39c'],'레일':songCourse?['#85605b','#ffe4aa']:['#98602d','#ffd18a'],'버스':['#316c79','#a6d1c7'],'차양막':['#916056','#e3a68c'],'전선':['#444955','#6d6871']}[o.kind];
+   const near=l>=0?l:r,base=o.kind==='레일'?h-.16:o.kind==='차양막'||o.kind==='전선'?h-.1:0;
+   poly([p(near,z,base),p(near,z+2,base),p(near,z+2,h),p(near,z,h)],palette[0]);
+   poly([p(l,z,h),p(r,z,h),p(r,z+2,h),p(l,z+2,h)],palette[1]);
+   if(z===o.a)poly([p(l,z,base),p(r,z,base),p(r,z,h),p(l,z,h)],palette[0]);
+   if(o.kind==='건물')poly([p(near,z,h-.10),p(near,z+2,h-.10),p(near,z+2,h),p(near,z,h)],'#edc684');
+   if(o.kind==='버스'){
+     poly([p(near,z+.12,1.5),p(near,z+1.88,1.5),p(near,z+1.88,2.95),p(near,z+.12,2.95)],'#a8ccd1');
+     if(z===o.a)poly([p(l+.12,z,1.6),p(r-.12,z,1.6),p(r-.12,z,3.05),p(l+.12,z,3.05)],'#314955');
+   }
+   if(o.kind==='건물'&&songCourse){
+     const level=.24+.65*(.5+.5*Math.cos(z*.69))*(.76+.24*musicPulse);
+     poly([p(near,z+.3,.5),p(near,z+1.5,.5),p(near,z+1.5,h*level),p(near,z+.3,h*level)],'#877aa7');
+   }else if(o.kind==='건물'&&z%4===0)for(let y=1.6;y<h-1;y+=4)poly([p(near,z+.3,y),p(near,z+1.7,y),p(near,z+1.7,y+1),p(near,z+.3,y+1)],'#93aaae');
+   if((o.kind==='전선'&&((z-o.a)%20===0))||(o.kind==='레일'&&z%8===0&&!openSpan(z))){
+     const x=supportX(o),b=ground(x,z);block(x-.07,.14,z,z+.2,b+h,'#53606a','#a9b6b2',b);
+     if(o.kind==='전선')block(Math.min(x,(l+r)/2),Math.abs(x-(l+r)/2),z,z+.2,b+h-.04,'#53606a','#a9b6b2',b+h-.14);
+   }
+ }
+ drawKickers(z,false);
+}
+function paintRampArrow(k,start,end,project){
+ const m=(start+end)/2,w=k.width/2,span=end-start;
+ const outline=k.sideDirection
+   ? [[-.30,-.36],[.16,0],[-.30,.36],[-.07,.36],[.39,0],[-.07,-.36]]
+   : [[-.82,-.27],[0,.14],[.82,-.27],[.82,-.06],[0,.37],[-.82,-.06]];
+ poly(outline.map(([dx,dz])=>{
+   const x=k.x+dx*(k.sideDirection?k.width*k.sideDirection:w),z=m+dz*span;
+   return project(x,z,rampHeight(k,z,x)+.03);
+ }),'#fff1bd');
+}
+function drawKickers(z,elevated){
+ for(const k of kickers.filter(k=>Boolean(k.base)===elevated&&z>=k.a&&z<k.b)){
+   const x=k.x,w=k.width/2;
+   const end=Math.min(z+2,k.b);
+   if(songCourse?.blocks&&Math.abs(z-s.z)<12){
+     const at=(sx,m,top)=>courseViewVertex(sx,reviewSurface(sx,m)+(top?rampHeight(k,m,sx)+.025:(k.base??0)),m);
+     const base=[],roof=[];
+     for(const [sx,m] of [[x-w,z],[x+w,z],[x+w,end],[x-w,end]]){base.push(at(sx,m,false));roof.push(at(sx,m,true));}
+     riderOccluders.push(roof,base);
+     for(let i=0;i<4;i++){const j=(i+1)%4;riderOccluders.push([base[i],base[j],roof[j],roof[i]]);}
+   }
+   if(k.mini){
+     const p=(side,m,h)=>point(side,reviewSurface(side,m)+h,m);
+     const side=x>reviewCamera.sideOffset?x-w:x+w;
+     const mark=(sx,m)=>p(sx,m,rampHeight(k,m,sx)+.025);
+     for(let i=7;i>=0;i--){
+       const a=z+(end-z)*i/8,b=z+(end-z)*(i+1)/8;
+       poly([p(side,a,k.base??0),p(side,b,k.base??0),mark(side,b),mark(side,a)],'#955634');
+       poly([mark(x-w,a),mark(x+w,a),mark(x+w,b),mark(x-w,b)],'#dc9558');
+     }
+   }else{
+   poly([[x-w,z],[x+w,z],[x+w,end],[x-w,end]].map(([side,m])=>point(side,reviewSurface(side,m)+rampHeight(k,m)+.025,m)),k.spring?'#ad84ed':'#d69051');
+   }
+   paintRampArrow(k,z,end,(sx,m,h)=>point(sx,reviewSurface(sx,m)+h,m));
+
+ }
+}
+function drawEditorFace(vertices,color,points=editorPath,opacity=1){
+ const c=reviewCamera;
+ function vertex([side,m,lift]){
+   const p=sectionSample(points,m),dx=p.x-c.x+side*Math.cos(p.yaw),dz=p.z-c.z-side*Math.sin(p.yaw);
+   const forward=dx*c.sin+dz*c.cos,down=c.targetY-lift+p.h-c.h;
+   return {x:dx*c.cos-dz*c.sin-c.sideOffset,y:down*c.tiltCos-forward*c.tiltSin,
+     z:c.distance+forward*c.tiltCos+down*c.tiltSin};
+ }
+ depthView.face(vertices.map(vertex),color,0,opacity);
+}
+let musicPulse=0;
+function drawMusicSky(horizon){
+ const sky=ctx.createLinearGradient(0,0,0,Math.max(H*.48,horizon+H*.2));
+ sky.addColorStop(0,'#27213f');sky.addColorStop(.50,'#755477');sky.addColorStop(.83,'#d29597');sky.addColorStop(1,'#f7c69e');
+ ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+ const yaw=sceneryCamera.yaw,base=clamp(horizon,H*.12,H*.84);
+ const x=W*(.71-.22*Math.sin(yaw)),y=base-H*.085,r=H*.115;
+ ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
+ ctx.fillStyle='#ffe3b7';ctx.fillRect(x-r,y-r,2*r,r);
+ for(let i=0;i<7;i++)ctx.fillRect(x-r,y+i*r/7,2*r,r*(.118-i*.011));
+ ctx.restore();
+ for(let layer=0;layer<2;layer++){
+   const step=layer?22:12;
+   ctx.beginPath();ctx.moveTo(-step,H);
+   for(let px=-step;px<W+step;px+=step){
+     const phase=px/W*4+yaw*(layer?1.35:.75);
+     const ridge=Math.sin(phase*2.7)+.48*Math.sin(phase*6.8+.9)+.20*Math.cos(phase*12);
+     ctx.lineTo(px,base+H*(layer*.075+.043*ridge));
+   }
+   ctx.lineTo(W+step,H);ctx.closePath();ctx.fillStyle=layer?'#423750':'#986e84';ctx.fill();
+ }
+}
+// Keep the aperture and the finish test in the same road-relative coordinates.
+function finishOpening(course){
+ const z=course.finish-.05;
+ const ends=course.blocks.filter(b=>b.a<=z&&z<b.b);
+ const last=course.beatRoute?.at(-1);
+ const x=last?.sideExit??last?.x??0;
+ const deck=ends.filter(b=>x>=b.l-.01&&x<=b.l+TRACK_CELL+.01);
+ const bottom=(deck.length?Math.max(...deck.map(b=>trackBlockTop(b,x,z))):last?.height??0)-.08;
+ return {x,half:1.5*TRACK_CELL,bottom,top:bottom+5*TRACK_CELL};
+}
+const roadPortal={x:0,half:1.5*TRACK_CELL,bottom:-.08,top:4.92*TRACK_CELL};
+function portalEnding(){return mode==='result'&&comboReview&&!diveMission&&!editorRun}
+function drawFinishPortal(){
+ const gate=songCourse?.portal??roadPortal,age=s.portalAge??0;
+ const clock=s.time+age;
+ const p=(x,y)=>point(gate.x+x,y+reviewSurface(gate.x,FINISH),FINISH);
+ const outer=[p(-gate.half,gate.bottom),p(gate.half,gate.bottom),p(gate.half,gate.top),p(-gate.half,gate.top)];
+ const center=p(0,gate.bottom+(gate.top-gate.bottom)*.41);
+ const ring=k=>outer.map(([x,y])=>[center[0]+(x-center[0])*k,center[1]+(y-center[1])*k]);
+ const path=pts=>{ctx.beginPath();ctx.moveTo(...pts[0]);for(const v of pts.slice(1))ctx.lineTo(...v);ctx.closePath();};
+ const w=clamp(Math.hypot(outer[0][0]-outer[1][0],outer[0][1]-outer[1][1])*.012,.65,8);
+ ctx.save();
+ path(outer);ctx.fillStyle='#08091d';ctx.fill();
+ for(let j=0;j<4;j++)poly([outer[j],outer[(j+1)%4],center],['#282742','#182038','#211734','#13182d'][j]);
+ for(let i=0;i<14;i++){
+   const k=1/(1+i*.65),next=ring(k);
+   path(next);ctx.strokeStyle='rgba(136,161,245,'+(.09+.46*k)+')';ctx.lineWidth=Math.max(.55,w*k*.68);ctx.stroke();
+ }
+ for(const corner of outer){ctx.beginPath();ctx.moveTo(...corner);ctx.lineTo(...center);ctx.strokeStyle='#737aa1';ctx.lineWidth=w*.34;ctx.stroke();}
+ for(let i=0;i<36;i++){
+   const j=i%4,u=((i*17)%37+.5)/37;
+   const start=outer[j].map((v,k)=>v+(outer[(j+1)%4][k]-v)*u);
+   const t=(clock*(.63+i%3*.11)+i*.618)%1;
+   ctx.beginPath();
+   for(const [n,r] of [1+.52*t,1+.52*t+.08*(1-t)].entries()){
+     const x=center[0]+(start[0]-center[0])*r,y=center[1]+(start[1]-center[1])*r;
+     if(n)ctx.lineTo(x,y);else ctx.moveTo(x,y);
+   }
+   ctx.globalAlpha=(1-t)*.85;ctx.lineWidth=w*(.32+.46*(1-t));ctx.strokeStyle=i%3?'#a3efff':'#cd98ff';ctx.stroke();
+ }
+ ctx.globalAlpha=1;path(outer);ctx.lineJoin='round';ctx.shadowColor='#7defff';ctx.shadowBlur=w*2.7;
+ for(const [width,color] of [[3.8,'#7371ff77'],[1.6,'#93eaff'],[.54,'#ffffff']]){
+   ctx.lineWidth=w*width;ctx.strokeStyle=color;ctx.stroke();
+ }
+ ctx.restore();
+}
+// Nearby opaque faces in the same camera space as the board and rider.
+const riderOccluders=[];
+let riderSoftwareDepth;
+function courseViewVertex(x,y,m,path=reviewSample(m)){
+ const c=reviewCamera,dx=path.x-c.x+x*Math.cos(path.yaw),dz=path.z-c.z-x*Math.sin(path.yaw);
+ const forward=dx*c.sin+dz*c.cos,down=c.targetY-y+path.h-c.h;
+ return [dx*c.cos-dz*c.sin-c.sideOffset,down*c.tiltCos-forward*c.tiltSin,c.distance+forward*c.tiltCos+down*c.tiltSin];
+}
+function drawRoute(){
+ riderOccluders.length=0;
+ if(diveMission){drawDive();return;}
+ prepareReviewCamera();
+ const c=reviewCamera;
+ // Vanishing line of a level world plane, using the same lens as the rider.
+ const horizon=H*.61-sceneryCamera.focal*sceneryCamera.tiltSin/sceneryCamera.tiltCos;
+ if(songCourse){
+   musicPulse=rideMusic.accent();
+   if(songCourse.id==='midnight-taxi')drawTaxiCity(horizon,sceneryCamera);
+   else if(songCourse.id==='the-iron-portcullis')drawIronPortcullis(horizon,sceneryCamera);
+   else if(songCourse.id==='rails-under-fire')drawRailsUnderFire(horizon,sceneryCamera);
+   else if(songCourse.id==='prairie-express')drawPrairieExpress(horizon,sceneryCamera);
+   else if(songCourse.id==='skyline-ignition')drawSkylineCity(horizon,sceneryCamera);
+   else drawMusicSky(horizon);
+ }else{
+ ctx.fillStyle='#a9bec6';ctx.fillRect(0,0,W,H);
+ const groundTop=clamp(horizon,0,H);
+ ctx.fillStyle='#718992';ctx.fillRect(0,groundTop,W,H-groundTop);
+ if(horizon>0&&horizon<H){
+   ctx.fillStyle='#c5d2d5';ctx.fillRect(0,horizon-2,W,2);
+ }
+ }
+ if(editorRun){
+   depthView.begin(W,H,c.focal,H*.61);
+   for(const r of editorSections){
+     for(let m=0;m<r.points.length-1;m++){
+       const a=r.points[m],b=r.points[m+1];
+       if(Math.abs(a.x-c.x)>180||Math.abs(a.z-c.z)>180||Math.abs(a.h-c.h)>180)continue;
+       drawEditorFace([[-a.width/2,m,0],[a.width/2,m,0],[b.width/2,m+1,0],[-b.width/2,m+1,0]],asphaltColor,r.points);
+       if(m%6<2)drawEditorFace([[-.06,m,.02],[.06,m,.02],[.06,m+1,.02],[-.06,m+1,.02]],'#e2d9bd',r.points);
+       for(const k of r.objects.get(m)??[])for(const face of rampFaces(k,m))drawEditorFace(face.vertices,face.color,r.points);
+       const bus=r.busMetres.get(m);
+       if(bus)for(const face of busFaces(bus,m))drawEditorFace(face.vertices,face.color,r.points);
+       for(const rail of r.railMetres.get(m)??[])for(const face of railFaces(rail.anchor,rail.inset,m,a.width,b.width))
+         drawEditorFace(face.vertices,face.color,r.points);
+     }
+   }
+   rider();depthView.paint(ctx);paintIona();return;
+ }
+ const near=s.z-6,start=Math.floor(near/2)*2;
+ if(songCourse?.blockSlices){
+   ctx.save();
+   for(let grid=Math.min(start+320,2*Math.ceil(FINISH/2));grid>start+160;grid-=2){
+     drawTrackBlocks(grid);
+   }
+   ctx.restore();
+ }
+ for(let grid=start+160;grid>=start;grid-=2){
+   if(comboReview&&grid===2*Math.floor(FINISH/2))drawFinishPortal();
+   if(openSpan(grid)){if(comboReview)drawComboFeatures(grid);drawTrackBlocks(grid);drawKickers(grid,true);drawBlockHazards(grid);continue}
+   const a=Math.max(grid,near),b=grid+2;
+   const terrain=trapReview&&terrainSections.find(t=>grid>=t.start&&grid<t.end);
+   const landing=flightGaps.find(g=>grid>=g.end&&grid<g.contact+landingRunout);
+   const ramp=rampTravel(grid+1)>0;
+   const step=ramp ? .5 : 2;
+   for(let start=a;start<b;start+=step){
+     const end=Math.min(b,start+step);
+     const far=openSpan(end)?end:end+.035;
+     const surfaceStrip=(l,r,lift,color)=>poly([
+       point(l,reviewSurface(l,start)+lift,start),point(r,reviewSurface(r,start)+lift,start),
+       point(r,reviewSurface(r,far)+lift,far),point(l,reviewSurface(l,far)+lift,far)],color);
+     if(terrain){
+       const [l,r]=sectionBounds(terrain,start);
+       const [fl,fr]=sectionBounds(terrain,Math.min(end-.0001,terrain.end));
+       const band=(a,b,c,d,h,col)=>poly([[a,start],[b,start],[d,end],[c,end]].map(([x,z])=>point(x,reviewSurface(x,z)+h,z)),col);
+       const wood=terrain.kind==='bridge';
+       band(l,r,fl,fr,0,wood?(grid%4?'#937553':'#80684f'):grid<terrain.start+32?'#976c52':'#538580');
+       band(l,l+.12,fl,fl+.12,.015,'#ffe4a3');band(r-.12,r,fr-.12,fr,.015,'#ffe4a3');
+     }else if(songCourse?.floor){
+       const section=floorSlice(songCourse,grid),row=songCourse.blocks?'':section?.row??'1111111',width=2*roadHalf/7;
+       const material=stageDeckMaterial();
+       for(let i=0;i<row.length;){
+         const first=row.indexOf('1',i);
+         if(first<0)break;
+         i=first+1;
+         while(row[i]==='1')i++;
+         const l=-roadHalf+first*width,r=-roadHalf+i*width;
+         const p=(x,y,z)=>point(x,reviewSurface(x,z)+y,z);
+         for(const x of [l,r])poly([p(x,0,start),p(x,0,end),p(x,-width,end),p(x,-width,start)],material.side);
+         poly([p(l,0,start),p(r,0,start),p(r,-width,start),p(l,-width,start)],material.front);
+         surfaceStrip(l,r,0,material.top);
+       }
+     }else if(songCourse){
+       surfaceStrip(-roadHalf,roadHalf,0,stageDeckMaterial().top);
+       for(let line=-2;line<=2;line++){
+         const x=line*roadHalf*.47;
+         surfaceStrip(x-.025,x+.025,.014,'#635a72');
+       }
+       for(const x of [-roadHalf,roadHalf-.09])surfaceStrip(x,x+.09,.016,grid%8===0?'#b3dcd2':'#798693');
+     }else{
+       surfaceStrip(-roadHalf,roadHalf,0,ramp?'#b98053':landing?'#548580':'#596b78');
+       for(const x of [-roadHalf+.05,roadHalf-.2])surfaceStrip(x,x+.15,.015,'#cfdbd8');
+       if(grid%6===0)surfaceStrip(-.05,.05,.02,'#e2d9bd');
+     }
+   if(songCourse?.mergeZones?.some(m=>grid>=m.a&&grid<m.b))surfaceStrip(-roadHalf,roadHalf,.025,stageDeckMaterial().top);
+     if(grid<=FINISH&&grid+2>FINISH)surfaceStrip(-roadHalf,roadHalf,.04,'#f4e4af');
+   }
+   if(landing&&grid===landing.end)block(-roadHalf,2*roadHalf,a,a+.12,0,'#344e56','#c1e9df',-2.4);
+   if(trapReview){const h=trackTraps.find(h=>h.z===grid);if(h)for(const trap of trackTraps.filter(t=>t.z===grid))drawTrap(trap)}
+   if(trapReview)drawComboFeatures(grid);
+   drawTrackBlocks(grid);drawKickers(grid,true);drawBlockHazards(grid);
+
+   for(const item of songCourse?.bonuses??[])if(item.z===grid&&!s.claimed.has('air-bonus:'+item.z))drawAirBonus(item);
+ }
+ rider();
+ 
+}
+function scene(){if(routeReview){drawRoute();return}let sky=ctx.createLinearGradient(0,0,0,H*.53);const high=clamp(camY/4,0,1);
+ sky.addColorStop(0,'hsl('+(193+37*high)+' 38% '+(62+3*high)+'%)');
+ sky.addColorStop(.75,'hsl('+(25-9*high)+' 76% 83%)');sky.addColorStop(1,'#fad8ba');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);ctx.fillStyle='#ffe9ad';ctx.beginPath();ctx.arc(W*.73,H*.22,W*.088,0,Math.PI*2);ctx.fill();
+ for(let i=-1;i<25;i++){let top=H*(.30+.08*Math.sin(i*7.3)),x=i*W/21-(s.z*.06)%20;ctx.fillStyle='#899daa';ctx.fillRect(x,top+high*H*.08,W/21-1,H*.48-top)}
+ ctx.fillStyle='#657a85';ctx.fillRect(0,H*.49,W,H*.51);
+ let start=Math.floor((s.z-4)/2)*2,end=start+114;
+ for(let a=end;a>=start;a-=2){let b=a+2;if((a-s.z)*1.45+4.6<.55)continue;let i=Math.floor(a/2),road=i%2?'#546574':'#536471';
+ strip(-4.3,4.3,a,b,0,road);strip(-4.3,-4.16,a,b,.03,'#eac48a');strip(4.16,4.3,a,b,.03,'#eac48a');
+ for(const side of [-1,1]){
+   const x=side*(roadLimit(a)+.14),farX=side*(roadLimit(b)+.14);
+   strip(side*3.74-.045,side*3.74+.045,a,a+.85,.018,'#9aabae');
+   poly([point(x,0,a),point(x,boundaryHeight,a),point(farX,boundaryHeight,b),point(farX,0,b)],i%8===0?'#687e83':'#63777e');
+   strip(side<0?x-.21:x,side<0?x:x+.21,a,b,boundaryHeight,'#b5b4a1')
+ }
+ if(i%3===0){
+   const side=i%2?1:-1,post=side*4.08;
+   block(post,.09,a,b-.95,.67,'#345662','#ffd18c');
+   strip(post-.08,post+.16,a,b,.035,'#f8d99a')
+ }
+ if(i%3===0)strip(-.037,.037,a,b,.025,'#c2c1af');
+ if(i%6===0){for(let side of [-1,1]){let h=1.5+4*(1+Math.sin(i*1.6+side)),x=side<0?-12.6:6.7;block(x,5.9,a,b+6,h,side<0?'#916e68':'#536875',side<0?'#e1b499':'#b9b4ad');for(let k=0;k<3;k++)block(x+.6+k*1.55,.75,a-.03,a,h-.65,'#334c58','#c1b9a9',h-1.23)}}
+ let g=surface(-4,a+.01),g2=surface(-4,b-.01);
+ if(g||g2){poly([point(-2.78,0,a),point(-2.78,0,b),point(-2.78,g2,b),point(-2.78,g,a)],'#547271');strip(-4.12,-2.78,a,b,g,i%3?'#76a6a0':'#95c1b3',g2);strip(-2.92,-2.78,a,b,g+.02,'#ffcf79',g2+.02)}
+ if(wallAt(a)){
+   const w=wallRamp;
+   for(let j=0;j<7;j++){
+     const u=j*Math.PI/14,v=(j+1)*Math.PI/14;
+     const x=w.toe+w.radius*Math.sin(u),y=w.radius*(1-Math.cos(u));
+     const xx=w.toe+w.radius*Math.sin(v),yy=w.radius*(1-Math.cos(v));
+     poly([point(x,y,a),point(xx,yy,a),point(xx,yy,b),point(x,y,b)],j===3?'#84c3b7':['#739b9c','#658d92','#5d878a','#78acaa','#63848a','#587983','#4e717a'][j])
+   }
+   let x=w.toe+w.radius;
+   poly([point(x,w.radius,a),point(x,w.lip,a),point(x,w.lip,b),point(x,w.radius,b)],'#4f727a');
+   strip(x-.1,x+.15,a,b,w.lip,i%4?'#ffd282':'#fff3bd')
+ }
+ for(const k of kickers){
+   const lo=Math.max(a,k.a),hi=Math.min(b,k.b);
+   if(lo>=hi)continue;
+   const left=k.x-k.width/2,right=k.x+k.width/2;
+   const y=rampHeight(k,lo),yy=rampHeight(k,hi);
+   poly([point(left,0,lo),point(left,y,lo),point(left,yy,hi),point(left,0,hi)],'#945f44');
+   poly([point(right,0,lo),point(right,y,lo),point(right,yy,hi),point(right,0,hi)],'#614e49');
+   strip(left,right,lo,hi,y+.015,i%2?'#dc8a4d':'#e9a260',yy+.015);
+   paintRampArrow(k,lo,hi,(x,z,h)=>point(x,h,z));
+   for(const x of [left,right-.055])strip(x,x+.055,lo,hi,y+.02,'#ffcf79',yy+.02)
+ }
+ for(const r of rails){let lo=Math.max(a,r.a),hi=Math.min(b,r.b);if(hi<=lo)continue;if(i%2===0)block(r.x-.05,.1,lo,lo+.08,r.h,'#38444d','#d8b194');block(r.x-.105,.21,lo,hi,r.h+.025,'#b65c40','#ffbc75',r.h-.13)}
+ for(const [z,x1,x2] of marks)if(z>=a&&z<b){let h=surface((x1+x2)/2,z)+.035;for(let j=0;j<3;j++)strip(x1,x2,z-.95+j*.32,z-.80+j*.32,h,'#ffe093')}
+ if(a===74)block(-.25,1.6,74,75,.54,'#824f40','#ffbe89');
+ for(const h of holes)if(b>h.a&&a<h.b){
+   strip(h.l,h.r,Math.max(a,h.a),Math.min(b,h.b),.045,'#162431');
+   if(a<=h.a)strip(h.l,h.r,h.a-.3,h.a,.05,'#f6c785');
+ }
+ for(const p of poles)if(p.z>=a&&p.z<b){
+   block(p.x-.18,.36,p.z-.18,p.z+.18,4.4,'#605856','#b9a28c');
+   block(p.x-.2,.4,p.z-.2,p.z+.2,1.1,'#e8aa50','#e5ca83',.45);
+   block(p.x-.72,1.44,p.z-.1,p.z+.1,4.25,'#716666','#bba69b',4.03);
+ }
+ for(const d of decks){
+   const lo=Math.max(a,d.a),hi=Math.min(b,d.b);
+   if(lo>=hi)continue;
+   const y=deckHeight(d,lo),yy=deckHeight(d,hi);
+   poly([point(d.l,0,lo),point(d.l,y,lo),point(d.l,yy,hi),point(d.l,0,hi)],'#675f65');
+   poly([point(d.r,0,lo),point(d.r,y,lo),point(d.r,yy,hi),point(d.r,0,hi)],'#77666b');
+   if(lo===d.a)block(d.l,d.r-d.l,lo,lo+.01,y,'#796975',d.color);
+   strip(d.l,d.r,lo,hi,y+.015,d.color,yy+.015);
+   if(d.name==='상가 차양막')for(let x=d.l;x<d.r-.2;x+=.56)strip(x,x+.23,lo,hi,y+.03,'#fff0bc',yy+.03);
+   if(d.name==='상가 계단')strip(d.l,d.r,lo,lo+.16,y+.04,'#e5d9be');
+ }
+ if(s.busStart!==undefined){
+   const rear=busRear(),lo=Math.max(rear,a),hi=Math.min(rear+bus.length,b);
+   if(lo<hi){
+     block(bus.l,bus.r-bus.l,lo,hi,bus.h,'#dc895a','#f4c684');
+     block(bus.l+.02,bus.r-bus.l-.04,lo,hi,1.38,'#416075','#587b86',.76);
+     strip(bus.l,bus.r,lo,hi,bus.h+.01,'#f4c684');
+   }
+ }
+ if(a===FINISH){for(let j=0;j<12;j++)strip(-5.4+j*.9,-4.5+j*.9,a,b,.04,j%2?'#e4e2cb':'#212d34')}
+ }
+ rider()}
+// Model coordinates are in metres: x follows the deck, y is up, z crosses it.
+const boardSections=[
+     // Inner x, outer x, inner and outer half-width, lift above the foot pads.
+     [-.46,-.52,.056,.106,.018],
+     [-.34,-.34,0,.134,0],
+     [.24,.24,0,.134,0],
+     [.43,.42,0,.102,.009],
+     [.52,.485,0,.048,.032]
+   ];
+const riderPalette={jacket:[236,140,67],seam:[250,193,116],pants:[53,73,91],denim:[65,85,99],skin:[174,111,80],helmet:[62,164,160],rim:[41,75,77],rubber:[228,216,188],shoe:[56,63,70],deck:[39,48,66],armor:[133,153,173],keel:[43,57,78],flux:[99,249,242],tailLight:[255,111,87]};
+const stageRiderPalette={...riderPalette,jacket:[160,239,213],seam:[255,209,125],pants:[60,49,83],denim:[81,67,105],helmet:[228,215,247],rim:[66,54,86],shoe:[87,72,106]};
+const dot3=(a,b)=>a.reduce((sum,n,i)=>sum+n*b[i],0);
+const unit3=v=>v.map(n=>n/(Math.hypot(...v)||1));
+const cross3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+// Two rigid bones reach the target in the plane selected by the bend direction.
+function jointChain(root,target,bend,upper,lower){
+ const delta=target.map((n,i)=>n-root[i]),axis=unit3(delta);
+ const distance=clamp(Math.hypot(...delta),Math.abs(upper-lower)+.001,upper+lower-.001);
+ const along=(upper*upper-lower*lower+distance*distance)/(2*distance);
+ const across=Math.sqrt(Math.max(0,upper*upper-along*along));
+ const projection=dot3(bend,axis);
+ const normal=unit3(bend.map((n,i)=>n-projection*axis[i]));
+ return [root.map((n,i)=>n+along*axis[i]+across*normal[i]),root.map((n,i)=>n+distance*axis[i])]
+}
+// Clip a posed model face to the six planes of a solid, in road-relative metres.
+function faceTouches(vertices,box){
+ let poly=vertices;
+ for(const [axis,lo,hi] of [['x',box.l,box.r],['y',box.lo,box.hi],['z',box.a,box.b]]){
+   for(const [bound,sign] of [[lo,1],[hi,-1]]){
+     if(poly.every(v=>(v[axis]-bound)*sign>=0))continue;
+     const clipped=[];
+     let p=poly[poly.length-1],dp=(p[axis]-bound)*sign;
+     for(const q of poly){
+       const dq=(q[axis]-bound)*sign;
+       if((dp<0)!==(dq<0)){
+         const t=dp/(dp-dq);
+         clipped.push({x:p.x+t*(q.x-p.x),y:p.y+t*(q.y-p.y),z:p.z+t*(q.z-p.z)});
+       }
+       if(dq>=0)clipped.push(q);p=q;dp=dq;
+     }
+     if(!clipped.length)return false;poly=clipped;
+   }
+ }
+ return true;
+}
+function resolveModelContact(previousX,previousY,previousZ){
+ const boxes=[];
+ const add=(name,l,r,lo,hi,a,b)=>{
+   if(s.x<l-1.8||s.x>r+1.8||s.z<a-2||s.z>b+2)return;
+   boxes.push({name,l,r,lo,hi,a,b});
+ };
+ for(const t of trackTraps)if(s.rail?.trap!==t&&s.z>=t.z-2&&s.z<=t.z+t.length+2)
+   trapParts(t,(l,r,b,h)=>add(trapNames[t.kind],l,r,b,h,t.z,t.z+t.length));
+ if(trapReview){
+   const start=Math.floor((s.z-2)/2)*2;
+   for(let z=start;z<=s.z+2;z+=2)for(const o of streetSlices.get(z)||[]){
+     const {kind,left:l,right:r,h}=o;
+     if(kind==='레일')continue;
+     if(kind==='건물'&&streetOpen(z,z+2))continue;
+     const support=s.rail||(s.air&&s.vy>0&&s.time-s.grindExitAt<.16?s.skipRail:null);
+     const supporting=support&&support.name===kind&&support.x>=l&&support.x<=r&&Math.abs(support.h-h)<.01;
+     const floor=reviewSurface(s.x,s.z);
+     const onTop=s.x>=l&&s.x<=r&&!s.air&&s.y>=floor+h-.025;
+     const bottom=kind==='레일'?h-.16:kind==='전선'||kind==='차양막'?h-.1:0;
+     if(!supporting&&!onTop&&!boxes.some(box=>box.name===kind&&box.a===o.a&&box.l===l))
+       add(kind,l,r,bottom,h,o.a,o.b);
+     if((kind==='전선'&&(z-o.a)%20===0)||(kind==='레일'&&z%8===0&&!openSpan(z))){
+       const x=supportX(o);
+       if(kind==='전선'||!supporting)add(kind==='전선'?'전봇대':'레일 받침',x-.07,x+.07,0,h,z,z+.2);
+       if(kind==='전선'&&!supporting)add('전선 지지대',Math.min(x,(l+r)/2),Math.max(x,(l+r)/2),h-.14,h-.04,z,z+.2);
+     }
+   }
+ }
+ if(!boxes.length)return false;
+ const dx=s.x-previousX,dz=s.z-previousZ,dy=s.y-previousY;
+ for(let pass=0;pass<4;pass++){
+   const hit=rider(boxes);
+   if(!hit)break;
+   const options=[
+     {axis:'left',depth:hit.maxX-hit.l,travel:dx},
+     {axis:'right',depth:hit.r-hit.minX,travel:-dx},
+     {axis:'above',depth:hit.hi-hit.minY,travel:-dy},
+     {axis:'below',depth:hit.maxY-hit.lo,travel:dy}
+   ];
+   const noseDepth=hit.maxZ-hit.a;
+   if(hit.name!=='건물'&&dz>0&&(previousZ<hit.a||noseDepth<=dz+.025))
+     options.push({axis:'front',depth:noseDepth,travel:dz});
+   const entering=options.filter(o=>o.travel>.0001&&o.depth<=o.travel+.006);
+   const side=entering.length?entering.sort((a,b)=>a.depth/a.travel-b.depth/b.travel)[0]:
+     options.sort((a,b)=>a.depth-b.depth)[0];
+   const blockLanding=songCourse?.floor&&hit.name===trapNames.block&&side.axis==='above';
+   if(side.axis==='front'&&dz>0||Object.values(trapNames).includes(hit.name)&&!blockLanding||hit.name==='버스'&&side.axis!=='above'){endRun(hit.name+' 충돌',true);return true}
+   const amount=side.depth+.004;
+   if(side.axis==='above'){
+     s.y+=amount;s.vy=0;s.air=false;s.contactDeck=hit;clearAir();
+   }else if(side.axis==='below'){
+     s.y=Math.max(surface(s.x,s.z),s.y-amount);s.vy=Math.min(0,s.vy);
+     if(!s.air||s.y<=surface(s.x,s.z)+.005)s.tuck=Math.min(.53,(s.tuck||0)+amount);
+   }else{
+     const sign=side.axis==='left'?-1:1;
+     s.x+=sign*amount;
+     if(s.vx*sign<0)s.vx=0;if(s.airVX*sign<0)s.airVX=0;
+   }
+   for(const b of boxes){delete b.minX}
+ }
+ return false;
+}
+let deferredIona=null;
+function paintIona(){if(deferredIona){deferredIona();deferredIona=null;}}
+function rider(colliders){
+ const faces=[];
+ const depthRider=!colliders&&routeReview&&!editorRun&&songCourse?.blocks;
+ const solid=[];
+ const software=depthRider&&!ionaRider?.ready;
+ if(software){
+   riderSoftwareDepth??=new CourseDepthView();
+   riderSoftwareDepth.begin(W,H,reviewCamera.focal,H*.61);
+   for(const face of riderOccluders)riderSoftwareDepth.face(face.map(([x,y,z])=>({x,y,z})),null);
+ }
+ let contact=null;
+ const roadHeight=colliders?reviewSample(s.z).h:0;
+ const elapsed=s.time-(s.landedAt??-1);
+ const phase=clamp(elapsed/.38,0,1);
+ const compression=s.air?0:(s.impact||0)*Math.sin(Math.PI*phase)*(1-phase)*.52;
+ const crouch=Math.min(.65,(s.tuck??.035)+compression);
+ const hips=.80-crouch+Math.sin(s.z*.68)*.012;
+ let lean=s.recover?-.65:s.wall?s.roll:s.rail?-s.balance*.52:-s.vx*.018+compression*(s.landingSide||0)*1.6;
+ if(comboReview&&s.rail&&Math.abs(s.x)>=4.6&&lean*s.x<0)lean*=.25;
+ const yaw=grinding()?s.grindYaw:entryYaw(), pitch=s.air?s.modelPitch||0:0;
+ const trickPhase=clamp(s.trickAge/AIR_TRICK_SECONDS,0,1);
+ const flip=s.trick==='킥플립'?-1:s.trick==='힐플립'?1:0;
+ const tau=Math.PI*2;
+ const impact=mode==='impact'?clamp(s.impactAge/impactDuration,0,1):0;
+ const tumble=1-(1-impact)**3;
+ const palette=songCourse?stageRiderPalette:riderPalette;
+ const shaded=(material,light)=>'rgb('+palette[material].map(v=>Math.round(v*light)).join(',')+')';
+ function rotate(a,b,t){return [a*Math.cos(t)-b*Math.sin(t),a*Math.sin(t)+b*Math.cos(t)]}
+ let upperBody=false,headFacing=false;
+ function vertex(x,y,z,board=false){
+   if(!board){y=BOARD_HEIGHT+(y-BOARD_HEIGHT)*RIDER_SCALE;x*=RIDER_SCALE;z*=RIDER_SCALE}
+   if(upperBody){
+     const twist=(s.chestTurn??.86)*(headFacing?1.28:clamp(((y-BOARD_HEIGHT)/RIDER_SCALE+BOARD_HEIGHT-hips)/.23,0,1));
+     [x,z]=rotate(x,z,twist)
+   }
+   if(board){
+     [y,z]=rotate(y-.09,z,flip*tau*trickPhase);y+=.09;
+     if(s.trick==='팝 셔빗')[x,z]=rotate(x,z,tau*trickPhase);
+     if(s.trick==='노즈 팝')[x,y]=rotate(x,y,.42*Math.sin(Math.PI*trickPhase))
+   }
+   ;[x,z]=rotate(x,z,yaw);
+   ;[y,z]=rotate(y-.64,z,pitch);y+=.64;
+   ;[x,y]=rotate(x,y,lean);
+   if(impact&&!colliders){
+     if(board){z+=.28*tumble;}
+     else{
+       [y,z]=rotate(y-.22,z,1.3*tumble);
+       y+=.22+.36*Math.sin(Math.PI*impact);z+=1.15*tumble;
+     }
+   }
+   if(routeReview){
+     [x,y]=rotate(x,y,s.roadRoll||0);
+     [y,z]=rotate(y,z,s.roadPitch||0);
+   }
+   if(portalEnding()&&!colliders){
+     const age=s.portalAge??0,gate=songCourse?.portal??roadPortal,settle=1-Math.exp(-3*age);
+     x+=(gate.x-s.x)*settle;
+     y+=(reviewSurface(gate.x,FINISH)+gate.bottom+.08-s.y)*settle;
+     z+=age*Math.max(10,s.speed*.72);
+   }
+   if(colliders){
+     const m=s.z+z,side=s.x+x;
+     return {x:side,y:s.y+y+reviewSample(m).h-roadHeight-reviewSurface(side,m),z:m};
+   }
+   if(editorRun){
+     const c=reviewCamera;
+     const down=c.targetY-s.y-y;
+     return {x,y,z,view:{x,y:down*c.tiltCos-z*c.tiltSin,z:c.distance+z*c.tiltCos+down*c.tiltSin}};
+   }
+   const screen=routeReview ? projectReview(s.x+x,s.y+y,z)
+     : point(s.x+x+bend(s.z)-bend(s.z+z),s.y+y+drop(s.z+z)-drop(s.z),s.z+z);
+   return {x,y,z,screen}
+ }
+ function face(vertices,material){
+   if(colliders){
+     let l=Infinity,r=-Infinity,b=Infinity,t=-Infinity,a=Infinity,e=-Infinity;
+     for(const v of vertices){l=Math.min(l,v.x);r=Math.max(r,v.x);b=Math.min(b,v.y);t=Math.max(t,v.y);a=Math.min(a,v.z);e=Math.max(e,v.z)}
+     for(const box of (contact?[contact]:colliders))if(r>=box.l&&l<=box.r&&t>=box.lo&&b<=box.hi&&e>=box.a&&a<=box.b&&faceTouches(vertices,box)){
+       contact=box;
+       if(box.minX===undefined)Object.assign(box,{minX:l,maxX:r,minY:b,maxY:t,maxZ:e});
+       else{box.minX=Math.min(box.minX,l);box.maxX=Math.max(box.maxX,r);box.minY=Math.min(box.minY,b);box.maxY=Math.max(box.maxY,t);box.maxZ=Math.max(box.maxZ,e)}
+       break;
+     }
+     return;
+   }
+   const [a,b,c]=vertices;
+   const ux=b.x-a.x,uy=b.y-a.y,uz=b.z-a.z,vx=c.x-a.x,vy=c.y-a.y,vz=c.z-a.z;
+   let nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;
+   const len=Math.hypot(nx,ny,nz)||1;
+   const light=.80+.20*(-nx*.40+ny*.76-nz*.51)/len;
+   if(depthRider){
+     const cam=reviewCamera;
+     const points=vertices.map(v=>{const down=cam.targetY-s.y-v.y;return {x:s.x+v.x-cam.sideOffset,y:down*cam.tiltCos-v.z*cam.tiltSin,z:cam.distance+v.z*cam.tiltCos+down*cam.tiltSin};});
+     if(software)riderSoftwareDepth.face(points,shaded(material,light));
+     else{
+       const rgb=palette[material].map(channel=>channel*light/255);
+       for(let i=2;i<points.length;i++)for(const p of [points[0],points[i-1],points[i]])solid.push(p.x,p.y,p.z,...rgb);
+     }
+     return;
+   }
+   if(editorRun){depthView.face(vertices.map(v=>v.view),shaded(material,light));return;}
+   // Sort along the camera ray, including its height above the deck.
+   faces.push({depth:vertices.reduce((d,v)=>d+v.z-v.y*.48,0)/vertices.length,
+     points:vertices.map(v=>v.screen),color:shaded(material,light)})
+ }
+ // Closed elliptical cross sections give helmet, clothing and deck separate silhouettes.
+ function shell(rows,material,board=false,count=10){
+   const rings=rows.map(([cx,y,cz,rx,rz])=>Array.from({length:count},(_,i)=>{
+     const t=tau*i/count;return vertex(cx+rx*Math.cos(t),y,cz+rz*Math.sin(t),board)
+   }));
+   face(rings[0],material);
+   for(let j=1;j<rings.length;j++)for(let i=0;i<count;i++){
+     const k=(i+1)%count;
+     face([rings[j-1][i],rings[j][i],rings[j][k],rings[j-1][k]],material)
+   }
+   face([...rings.at(-1)].reverse(),material)
+ }
+ function limb(a,b,ra,rb,material){
+   const axis=unit3(b.map((v,i)=>v-a[i]));
+   const u=unit3(cross3(axis,Math.abs(axis[0])<.8?[1,0,0]:[0,0,1])),v=cross3(axis,u);
+   const ring=(center,r)=>Array.from({length:8},(_,j)=>{
+     const t=j*tau/8;
+     return vertex(...center.map((n,i)=>n+r*(u[i]*Math.cos(t)+v[i]*Math.sin(t))))
+   });
+   const first=ring(a,ra),last=ring(b,rb);
+   for(let i=0;i<8;i++){const j=(i+1)%8;face([first[i],first[j],last[j],last[i]],material)}
+   face(first.slice().reverse(),material);face(last,material)
+ }
+ if(!colliders&&(!diveMission||s.dive.harpoons.some(p=>Math.abs(p.x-s.x)+.32<=harpoonHalfWidth))&&(!editorRun||s.y>=surface(s.x,s.z)-.01)&&(!routeReview||(!openSpan(s.z)&&onRouteDeck(s.x,s.z)))){
+   if(editorRun){
+     const k=kickerAt(s.x,s.z);
+     const shadow=Array.from({length:18},(_,i)=>{
+       const t=i*tau/18,x=s.x+.32*Math.cos(t),m=s.z+.14*Math.sin(t);
+       return [x,m,(diveMission?harpoonTop:k?rampHeight(k,m):0)+.005];
+     });
+     drawEditorFace(shadow,k?'#795e42':'#1e2022');
+   }else{
+   const ground=point(s.x,surface(s.x,s.z),s.z),scale=Math.min(W*.91,H*.61)/4.6;
+   ctx.fillStyle='#22344255';ctx.beginPath();ctx.ellipse(...ground,.32*scale,.075*scale,-.18,0,tau);ctx.fill();
+   }
+ }
+ // Two rear prongs merge into a graphite deck with a chamfered nose.
+ // Build the light strips into the hull so they also rotate with board tricks.
+ for(const side of [-1,1]){
+   const rings=boardSections.map(([inner,outer,gap,width,lift])=>{
+     const y=BOARD_HEIGHT+lift;
+     return [
+       vertex(inner,y,side*gap,true),
+       vertex(outer,y,side*(width-.026),true),
+       vertex(outer,y-.018,side*width,true),
+       vertex(outer,y-.038,side*width,true),
+       vertex(outer*.98,y-.071,side*(width-.018),true),
+       vertex(inner*.98,.004+lift,side*gap,true)
+     ];
+   });
+   for(let i=1;i<rings.length;i++){
+     const first=rings[i-1],last=rings[i];
+     const materials=['deck','armor',i===1?'tailLight':'flux','keel','keel'];
+     for(let j=0;j<materials.length;j++)
+       face(side>0?[first[j+1],last[j+1],last[j],first[j]]:[first[j],last[j],last[j+1],first[j+1]],materials[j]);
+     if(i===1)face([first[5],last[5],last[0],first[0]],'armor');
+   }
+   face(rings[0],'tailLight');face(rings.at(-1),'armor');
+ }
+ if(!colliders&&ionaRider?.ready){
+   faces.sort((a,b)=>b.depth-a.depth);
+   for(const f of faces)poly(f.points,f.color);
+   const lift=s.trick?.095*Math.sin(Math.PI*trickPhase):0;
+   function clip(x,y,z){
+     const tuckDepth=s.air?0:clamp(((s.tuck??.035)-.035)/.615,0,1);
+     const v=vertex(x/RIDER_SCALE,BOARD_HEIGHT+(y*(1-.18*tuckDepth)+lift)/RIDER_SCALE,(-z+.12*y*tuckDepth)/RIDER_SCALE);
+     let depth,screen;
+     if(routeReview){
+       const c=reviewCamera,down=c.targetY-s.y-v.y;
+       depth=c.distance+v.z*c.tiltCos+down*c.tiltSin;
+       screen=v.screen||[W*.5+v.view.x*c.focal/depth,H*.61+v.view.y*c.focal/depth];
+     }else{depth=4.6+v.z*1.45;screen=v.screen;}
+     return [(2*screen[0]/W-1)*depth,(1-2*screen[1]/H)*depth,depth-.5,depth];
+   }
+   const action=portalEnding()?'Ride':s.air?'Air':duck?'Tuck':grinding()?'Grind':compression>.12?'Tuck':'Ride';
+   const paint=()=>ionaRider.draw(ctx,W,H,clip,action,s.time+(s.portalAge??0),depthRider?{faces:riderOccluders,solid,focal:reviewCamera.focal}:null);
+   if(editorRun||diveMission)deferredIona=paint;else paint();
+   return;
+ }
+ const footLift=s.trick?.095*Math.sin(Math.PI*trickPhase):0;
+ for(const sign of [-1,1]){
+   const x=sign*.26,foot=.103+footLift,hip=[sign*.125,hips+.03,.045],ankle=[x,foot+.083,.017];
+   const [knee]=jointChain(hip,ankle,[sign*.25,0,-1],.365,.345);
+   shell([[x,foot,0,.098,.143],[x,foot+.032,0,.102,.146]],'rubber');
+   shell([[x,foot+.032,0,.102,.145],[x,foot+.10,.018,.073,.09]],'shoe');
+   limb([x,foot+.083,.017],knee,.075,.102,'denim');
+   limb(knee,hip,.103,.123,'pants')
+ }
+ shell([[0,hips-.085,.05,.215,.15],[0,hips+.11,.05,.212,.156]],'pants');
+ upperBody=true;
+ const shoulder=hips+.395-crouch*.32,front=-.045-crouch*.50;
+ shell([[0,hips+.01,.04,.226,.158],[0,hips+.09,.018,.234,.167],[0,shoulder-.065,front,.255,.16],[0,shoulder+.019,front,.16,.126]],'jacket');
+ shell([[0,shoulder-.02,front+.04,.173,.13],[0,shoulder+.057,front+.048,.139,.116]],'seam');
+ headFacing=true;
+ const head=[.032,shoulder+.18,front-.03];
+ shell([[head[0],shoulder+.014,head[2],.078,.081],[head[0],head[1]-.07,head[2],.116,.115],[head[0],head[1]+.065,head[2],.126,.126]],'skin');
+ shell([[head[0],head[1]+.023,head[2],.142,.145],[head[0],head[1]+.065,head[2],.15,.152]],'rim');
+ shell([[head[0],head[1]+.055,head[2],.152,.156],[head[0],head[1]+.13,head[2],.14,.145],[head[0],head[1]+.19,head[2],.073,.083]],'helmet');
+ if(songCourse&&!colliders){
+   for(const side of [-1,1]){
+     const cx=head[0]+side*.14;
+     shell([[cx,head[1]-.02,head[2],.021,.048],[cx,head[1]+.018,head[2],.036,.065],[cx,head[1]+.078,head[2],.027,.048]],'seam');
+   }
+ }
+ for(const sign of [-1,1]){
+   headFacing=false;
+   const reach=grinding()?.49:.39;
+   upperBody=false;
+   const twist=s.chestTurn??.86;
+   const chestPoint=(x,y,z)=>{const [tx,tz]=rotate(x,z,twist);return [tx,y,tz]};
+   const socket=chestPoint(sign*.20,shoulder-.025,front);
+   const resting=chestPoint(sign*reach,shoulder-(grinding()?.14:.29)+sign*(grinding()?s.balance:0)*.08,front-.18);
+   const [elbow,hand]=jointChain(socket,resting,chestPoint(sign*.74,-.28,.66),.31,.29);
+   limb(socket,elbow,.104,.076,'jacket');
+   limb(elbow,hand,.064,.043,'skin');
+   shell([[hand[0],hand[1]-.035,hand[2],.043,.044],[hand[0],hand[1]+.04,hand[2],.049,.05]],'skin')
+ }
+ if(colliders)return contact;
+ if(software){riderSoftwareDepth.paint(ctx);return;}
+ faces.sort((a,b)=>b.depth-a.depth);
+ for(const f of faces)poly(f.points,f.color)
+}
+function prompt(){
+ if(diveMission)return diveCue();
+ if(routeReview&&s.edgeFall)return '도로 이탈';
+ if(s.recover)return s.message+' · 재출발 '+Math.ceil(s.recover);
+ if(routeReview)return '';
+ const deck=deckAt(s.x,s.z);
+ if(onBus(s.x,s.z)&&s.y>=bus.h-.1)return '버스 지붕 · 점프로 이탈';
+ if(deck)return deck.name+(deck.name==='도약 옥상'?' · 낮은 지붕 너머로':'');
+ if(grinding())return (s.rail?.name||'벽 모서리')+' · '+s.stance+' 그라인드 / 버튼으로 이탈';if(s.wall)return '벽 끝에서 자동 점프 · ↓ + 버튼으로 킥플립';return ''}
+function drawGrindSparks(){
+   const block=s.rail?.block;
+   const hazard=!!block?.red;
+   const blockInk=block&&!hazard?trackBlockMaterial(block).top:null;
+   const friendly=!diveMission||s.rail?.type==='harpoon';
+   ctx.save();
+   ctx.lineCap='round';
+   const pixelScale=clamp(Math.min(W,H)/480,.75,2)*(1+.55*rideMusic.accent());
+   for(let i=0;i<32;i++){
+     const t=(s.time*(3.8+(i%5)*.35)+i*.618)%1;
+     const side=i%2?1:-1;
+     const x=s.x+side*(.12+t*(.7+(i%7)*.21));
+     const m=s.z-.12-t*(1.1+(i%4)*.48);
+     const h=s.y+.06+t*(1-t)*(1.8+(i%3)*.6);
+     const [sx,sy]=point(x,h,m),[tx,ty]=point(x+side*.22,h+.12,m-.32);
+     ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(tx,ty);
+     const darkEmber=hazard&&(i%4===1||i%4===2);
+     ctx.strokeStyle=hazard?'#ff202a':blockInk??(friendly?'#69cfff':'#ff474c');
+     ctx.globalAlpha=(1-.65*t)*.35;ctx.lineWidth=6*pixelScale;ctx.stroke();
+     if(darkEmber)ctx.strokeStyle='#10090b';
+     ctx.globalAlpha=1-.45*t;ctx.lineWidth=2.5*pixelScale;ctx.stroke();
+     ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo((sx+tx)/2,(sy+ty)/2);
+     ctx.strokeStyle=hazard?(darkEmber?'#080506':'#ff5149'):blockInk??(friendly?'#dcfaff':'#ffddd1');ctx.lineWidth=1.2*pixelScale;ctx.stroke();
+   }
+   ctx.restore();
+ }
+
+function draw(){if(portrait.matches)return;let b=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);W=b.width;H=b.height;if(canvas.width!==Math.round(W*d)||canvas.height!==Math.round(H*d)){canvas.width=Math.round(W*d);canvas.height=Math.round(H*d)}ctx.setTransform(d,0,0,d,0,0);if(mode!=='impact'){camX+=(s.x*.65-camX)*.15;camY+=(Math.max(surface(s.x,s.z),s.y*.72)-camY)*.12;}scene();if(songCourse&&mode==='run')rideMusic.sync(songPosition(songCourse,s.z).time,!!(s.recover||s.balanceDrop));if(mode==='run'&&grinding())drawGrindSparks();drawRideControls();if(editorRun)$('elapsed').textContent=formatRideTime(s.time);if(diveMission)$('gapDistance').textContent=Math.round(s.dive.gap)+' m';$('zone').textContent=routeReview?(diveMission?'빛길 돌파 · ':editorRun?'내 코스 · ':comboReview?'트랙 '+String(selectedStage+1).padStart(2,'0')+' · ':trapReview?'2단계 · ':'1단계 · ')+Math.floor(s.z)+' m':s.z<120?'옥상':s.z<264?'연결 통로':s.z<516?'하역장':s.z<720?'거리':s.z<1008?'고가도로':s.z<1296?'창고 거리':'결승 경사';$('cue').textContent=mode==='run'?prompt():''}
+function frame(now){let dt=(now-frameTime)/1000;frameTime=now;if(portalEnding()){s.portalAge=(s.portalAge??0)+Math.min(dt,.08)}else if(mode==='run'){if(dt>1)pauseGame();else while(dt>0&&mode==='run'){let step=Math.min(dt,1/90);update(step);dt-=step}}else if(mode==='impact'){
+ s.impactAge+=Math.min(dt,.06);
+ if(s.impactAge>=impactDuration)retryRun();
+ }draw();requestAnimationFrame(frame)}
+if(diveMission){
+ $('difficultyLabel').hidden=false;
+ $('tag').textContent='GRINDIVE　/　MISSION 01';$('titleText').textContent='빛길 돌파';
+ $('description').textContent='2,700 m · 기준 주행 1분 30초\n작살을 타고 기지까지 내려가세요. 빈틈은 점프로 건너세요. ← → 이동 · ↓ 숙이기 · 스페이스 점프\n터치 조작은 왼쪽 드래그로 이동·숙이기, 오른쪽 화면을 탭하거나 스페이스를 누르면 점프합니다.';
+ $('gapHud').style.display='grid';$('elapsedHud').style.display='grid';
+}else if(comboReview){
+ showStages();
+ $('description').textContent='곡을 고르면 음악에 맞춰 커브와 장애물이 배치됩니다. 함정을 피해 완주하고 그라인드와 공중 묘기로 점수를 올리세요. 그라인드 중에는 좌우로 균형을 잡고, 블록 안쪽으로 조이스틱을 빠르게 밀거나 해당 방향키를 두 번 눌러 내려서세요. 왼쪽 드래그 또는 방향키로 이동하고, 오른쪽 화면 또는 스페이스로 점프합니다.';
+}else if(editorRun){
+ $('elapsedHud').style.display='grid';
+ $('tag').textContent='GRINDIVE　/　내 코스';$('titleText').textContent='내 코스 테스트';
+ $('description').textContent=FINISH+' m · 방향키로 이동하고 스페이스로 점프하세요.';
+ if(!portrait.matches)$('play').click();
+}
+const mainDescription=$('description').textContent;
+$('nextStage').onclick=()=>{
+ const next=selectedStage+1;
+ if(mode!=='result'||!comboReview||next>=stages.length||!isStageOpen(next))return;
+ selectedStage=next;$('play').click();
+};
+$('mainMenu').onclick=()=>{
+ if(mode!=='paused'&&mode!=='result')return;
+ finishTrail();
+ if(!comboReview){location.assign('index.html');return;}
+ mode='intro';
+ s=fresh();camX=camY=0;
+ panel('스테이지 선택',mainDescription,'출발하기','GRINDIVE');
+ showStages();
+};
+requestAnimationFrame(frame);
+</script><script>
+(() => {
+ let target;
+ try {
+  const raw=new URLSearchParams(location.search).get('returnTo');
+  if(raw){const parsed=new URL(raw);if(parsed.protocol==='https:'&&parsed.origin===location.origin&&!parsed.username&&!parsed.password)target=parsed.href;}
+ } catch {}
+ const button=document.getElementById('siteExit');
+ button.hidden=!target;
+ button.onclick=()=>{if(target){pauseGame();finishTrail();rideMusic.pause();location.replace(target);}};
+})();
+</script></html>

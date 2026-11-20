@@ -38,14 +38,13 @@
     '빛나는 위·왼쪽 숫자 하나를 누르면 해당 구간의 미정 칸을 그려줘요. 오른쪽·아래 최댓값은 선택 대상이 아니에요.':'Tap a highlighted top or left number to draw that run in unknown cells. Maximum values on the right and bottom cannot be selected.',
     '숫자를 선택할 때 힌트 1개를 사용해요. 취소하거나 채울 미정 칸이 없으면 차감하지 않아요. 이미 입력한 값은 오답이어도 바꾸지 않아요.':'One hint is spent when you select a number. Canceling or having no unknown cells costs nothing. Existing entries stay unchanged, including incorrect ones.',
     '처음에는 힌트 3개가 있어요. 획득하기에서 보상 광고를 끝까지 보면 1개를 받아요.':'You start with 3 hints. Use Get more and finish a rewarded ad to earn one hint.',
-    '총 850문제, 17페이지예요. 페이지마다 10×10 15개, 15×15 15개, 20×20 20개가 있어요. 화살표나 좌우 밀기로 이동하며, 마지막 페이지 다음은 1페이지예요.':'There are 850 puzzles across 17 pages. Each page has fifteen 10×10, fifteen 15×15, and twenty 20×20 puzzles. Use arrows or swipe sideways; the last page loops back to page 1.',
     '완성한 문제에는 그림이 나타나요. 처음부터 다시 풀기는 설정에서 선택할 수 있어요.':'Completed puzzles reveal their pictures. Choose Restart puzzle in Settings to start again.',
     '진행과 힌트는 이 기기에 자동 저장해요. 앱 데이터 삭제나 앱 제거 시 기록이 사라질 수 있어요. 언어는 설정에서 한국어·영어로 바꿔요.':'Progress and hints are saved automatically on this device. Clearing app data or uninstalling may remove your records. Choose Korean or English in Settings.',
     '보상 광고는 획득하기를 눌렀을 때 재생돼요. 자동 전면 광고는 하루 첫 문제 완성 뒤 화면을 이동할 때부터, 이후 최소 3시간 간격으로 표시해요. 보상 광고 직후에는 전면 광고가 나오지 않아요. 광고를 불러오지 못해도 게임은 계속할 수 있어요.':'Rewarded ads play when you press Get more. Automatic interstitials may appear when leaving the first completed puzzle of the day, then at least 3 hours apart. They do not appear right after a rewarded ad. Unavailable ads never stop you playing.',
     '1 연한 분홍':'1 pale pink','2 분홍':'2 pink','3 진한 분홍':'3 deep pink','게임 시작 →':'Play puzzles →','5행 5열 분홍 하트 퍼즐':'5 by 5 pink heart puzzle',
     '×는 0, 즉 흰색이에요. 1은 연한 분홍, 2는 분홍, 3은 진한 분홍이에요. 숫자가 커질수록 진해져요.':'× means 0, or white. 1 is pale pink, 2 is pink, and 3 is deep pink. Higher numbers make darker colors.',
     '흰색 → 진한 분홍':'White → deep pink',
-    '분홍색을 쌓아 하트를 완성했어요. 같은 규칙으로 10×10, 15×15, 20×20 그림에 도전해요. 흑백 모드는 설정에서 바꿔요.':'You built a pink heart. Try 10×10, 15×15, and 20×20 pictures with the same rules. Change grayscale mode in Settings.',
+    '분홍색을 쌓아 하트를 완성했어요. 첫 페이지의 5×5 그림부터 직접 풀어봐요. 흑백 모드는 설정에서 바꿔요.':'You built a pink heart. Start with the 5×5 pictures on the first page. Change grayscale mode in Settings.',
     '4단계 명암':'Grayscale','4색 컬러':'4 colors','도안 표현':'Picture colors','스택 입력':'Height input','완성된 그림':'Completed picture','색상':'Color',
     '컬러':'Color','컬러로 전환':'Switch to color','명암으로 전환':'Switch to grayscale',
     '0~3의 값마다 정해진 색으로 그림을 완성해요. ×는 0이에요. 4색 컬러와 4단계 명암은 같은 문제이며, 전환해도 단서와 입력은 그대로예요.':'Each value from 0 to 3 has its own color. × means 0. Color and grayscale show the same puzzle; switching preserves the clues and your entries.',
@@ -83,7 +82,7 @@
     '5×5 완성 예시':'Completed 5×5 example','5×5 완성된 하트와 구간 합·최댓값 힌트':'Completed 5 by 5 heart with run-sum and maximum-value clues',
     '튜토리얼에서 완성하는 하트예요. 칸 안에는 입력한 값을, 바깥에는 힌트 숫자를 표시했어요.':'This is the heart you complete in the tutorial. Numbers inside cells are entered values; numbers outside are clues.',
     '강조한 셋째 줄은 2가 다섯 칸이므로 구간 합은 10, 최댓값은 2예요.':'In the highlighted third row, five cells with a value of 2 give a run sum of 10 and a maximum value of 2.',
-    '지우개':'Eraser','지우개 선택':'Select eraser','되돌리기':'Undo','위로 이동':'Move up','아래로 이동':'Move down','왼쪽으로 이동':'Move left','오른쪽으로 이동':'Move right',
+    '다시 실행':'Redo','십자키 입력':'D-pad input','터치 입력':'Touch input','지우개':'Eraser','지우개 선택':'Select eraser','되돌리기':'Undo','위로 이동':'Move up','아래로 이동':'Move down','왼쪽으로 이동':'Move left','오른쪽으로 이동':'Move right',
     '칸 이동 십자키. 방향키로도 이동할 수 있어요':'D-pad. You can also use the arrow keys.','칸 이동 십자키':'D-pad','높이 입력':'Height controls','입력할 스택 선택':'Select a height',
     '빨강':'Red','녹색':'Green','파랑':'Blue','전체':'All','명암':'Grayscale','명암 입력':'Grayscale input','색상 탭':'Color tabs',
     '흑백 게임 목록':'Grayscale puzzles','컬러 게임 목록':'Color puzzles','문제 페이지':'Puzzle pages','이전 페이지':'Previous page','다음 페이지':'Next page',
@@ -157,7 +156,7 @@
     const text=source.trim();
     if(messages.has(text))return source.replace(text,messages.get(text));
     let match;
-    if((match=text.match(/^(\d+)페이지, 50문제 중 (\d+)개 완료$/)))return `Page ${match[1]}: ${match[2]} of 50 puzzles completed`;
+    if((match=text.match(/^(\d+)페이지, (\d+)문제 중 (\d+)개 완료$/)))return `Page ${match[1]}: ${match[3]} of ${match[2]} puzzles completed`;
     const axis=value=>value==='행'?'Row':'Column';
     if((match=text.match(/^(\d+)(행|열) 숫자 선택$/)))return `${axis(match[2])} ${match[1]}: choose a number`;
     if((match=text.match(/^선택할 힌트: (\d+)(행|열), (\d+)번째 숫자 (\d+)$/)))return `Hint choice: ${axis(match[2])} ${match[1]}, clue ${match[3]}, value ${match[4]}`;

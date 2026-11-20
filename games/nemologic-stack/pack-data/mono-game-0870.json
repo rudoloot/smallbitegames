@@ -1,0 +1,126 @@
+{
+  "id": "0870",
+  "title": "흑백 문제 001",
+  "width": 5,
+  "height": 5,
+  "channels": 1,
+  "maxStack": 3,
+  "paletteSize": 4,
+  "levels": [
+    0,
+    0.3333333333333333,
+    0.6666666666666666,
+    1
+  ],
+  "rule": "height-runs-max",
+  "omitAllZeros": true,
+  "givens": [],
+  "cells": [
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ]
+  ],
+  "storageKey": "nonogram-stack-approved-v1-0870-81cec19d84541be2",
+  "clueCountLimit": 12,
+  "adjustment": {
+    "targetEmptyPercent": 36
+  },
+  "source": {
+    "kind": "human-approved-handoff",
+    "subject": "사다리",
+    "categoryId": "08",
+    "category": "놀이+게임",
+    "rank": 70,
+    "versionId": "21802614-c48b-4557-a63b-66842089c384",
+    "imageSha256": "81cec19d84541be2af51157220bb449d4da376cb165d492c2e135201a735fac0",
+    "folder": "art-handoff/releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/approved/0870",
+    "approvedAt": "2026-11-19T13:30:07.648Z",
+    "artHandoff": {
+      "root": "art-handoff",
+      "schemaVersion": 1,
+      "releaseId": "2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8",
+      "manifest": "releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/manifest.json",
+      "manifestSha256": "a1e84d56ceba93711b1d2bd538c78d10fb0e1cd77cd4de0a4063d02dcf3e0dfa"
+    },
+    "colorPalette": [
+      "#fbf8f4",
+      "#e2caac",
+      "#bd8842",
+      "#533c1d"
+    ],
+    "colorFamily": "wood"
+  },
+  "omitOuterZeros": true
+}

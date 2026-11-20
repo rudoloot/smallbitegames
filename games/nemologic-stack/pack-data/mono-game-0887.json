@@ -1,0 +1,126 @@
+{
+  "id": "0887",
+  "title": "흑백 문제 015",
+  "width": 5,
+  "height": 5,
+  "channels": 1,
+  "maxStack": 3,
+  "paletteSize": 4,
+  "levels": [
+    0,
+    0.3333333333333333,
+    0.6666666666666666,
+    1
+  ],
+  "rule": "height-runs-max",
+  "omitAllZeros": true,
+  "givens": [],
+  "cells": [
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      0
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      0
+    ]
+  ],
+  "storageKey": "nonogram-stack-approved-v1-0887-e6a593ecb6c3c60f",
+  "clueCountLimit": 12,
+  "adjustment": {
+    "targetEmptyPercent": 36
+  },
+  "source": {
+    "kind": "human-approved-handoff",
+    "subject": "블록퍼즐",
+    "categoryId": "08",
+    "category": "놀이+게임",
+    "rank": 87,
+    "versionId": "f325f6c5-d9dd-4a3d-9f90-4acba91e0b94",
+    "imageSha256": "e6a593ecb6c3c60f2ab29c63ef1d6d6e01942abf0646085532b1ba501c37247d",
+    "folder": "art-handoff/releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/approved/0887",
+    "approvedAt": "2026-11-19T13:30:08.126Z",
+    "artHandoff": {
+      "root": "art-handoff",
+      "schemaVersion": 1,
+      "releaseId": "2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8",
+      "manifest": "releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/manifest.json",
+      "manifestSha256": "a1e84d56ceba93711b1d2bd538c78d10fb0e1cd77cd4de0a4063d02dcf3e0dfa"
+    },
+    "colorPalette": [
+      "#fdf7f1",
+      "#f3c39b",
+      "#e3761c",
+      "#64340c"
+    ],
+    "colorFamily": "orange"
+  },
+  "omitOuterZeros": true
+}

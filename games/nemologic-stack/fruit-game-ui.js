@@ -45,7 +45,7 @@
   $('dpad').addEventListener('pointerdown',e=>{if(e.button===0&&!document.querySelector('dialog[open]'))setInputMode('dpad');},{capture:true});
   $('terrain-panel')?.addEventListener('pointerdown',e=>{if(e.isPrimary&&e.button===0)setInputMode('touch');});
   window.stopStackControls=window.installStackDpad({
-    dpad:$('dpad'),buttons:[...$('height-picker').querySelectorAll('button')],
+    dpad:$('dpad'),buttons:[...$('height-picker').querySelectorAll('[data-value],#erase,#undo')],
     move:direction=>{
       setInputMode('dpad');
       finishStroke();terrainSelection=null;

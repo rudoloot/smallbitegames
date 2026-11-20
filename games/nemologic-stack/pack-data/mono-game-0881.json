@@ -1,0 +1,126 @@
+{
+  "id": "0881",
+  "title": "흑백 문제 010",
+  "width": 5,
+  "height": 5,
+  "channels": 1,
+  "maxStack": 3,
+  "paletteSize": 4,
+  "levels": [
+    0,
+    0.3333333333333333,
+    0.6666666666666666,
+    1
+  ],
+  "rule": "height-runs-max",
+  "omitAllZeros": true,
+  "givens": [],
+  "cells": [
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ],
+    [
+      1
+    ]
+  ],
+  "storageKey": "nonogram-stack-approved-v1-0881-c2844c38fea35322",
+  "clueCountLimit": 12,
+  "adjustment": {
+    "targetEmptyPercent": 0
+  },
+  "source": {
+    "kind": "human-approved-handoff",
+    "subject": "해골",
+    "categoryId": "08",
+    "category": "놀이+게임",
+    "rank": 81,
+    "versionId": "79843a5f-f073-48ae-8ed5-dc4aa7a3f5b7",
+    "imageSha256": "c2844c38fea35322b54dae5174e6a0ca0d1d744f06c7f7339af336829238641f",
+    "folder": "art-handoff/releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/approved/0881",
+    "approvedAt": "2026-11-19T13:30:07.962Z",
+    "artHandoff": {
+      "root": "art-handoff",
+      "schemaVersion": 1,
+      "releaseId": "2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8",
+      "manifest": "releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/manifest.json",
+      "manifestSha256": "a1e84d56ceba93711b1d2bd538c78d10fb0e1cd77cd4de0a4063d02dcf3e0dfa"
+    },
+    "colorPalette": [
+      "#f8f8f7",
+      "#cbc9c2",
+      "#8a8575",
+      "#3d3a34"
+    ],
+    "colorFamily": "ivory"
+  },
+  "omitOuterZeros": true
+}

@@ -1,0 +1,126 @@
+{
+  "id": "0873",
+  "title": "흑백 문제 004",
+  "width": 5,
+  "height": 5,
+  "channels": 1,
+  "maxStack": 3,
+  "paletteSize": 4,
+  "levels": [
+    0,
+    0.3333333333333333,
+    0.6666666666666666,
+    1
+  ],
+  "rule": "height-runs-max",
+  "omitAllZeros": true,
+  "givens": [],
+  "cells": [
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      2
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      1
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ],
+    [
+      2
+    ],
+    [
+      3
+    ]
+  ],
+  "storageKey": "nonogram-stack-approved-v1-0873-4047037824871322",
+  "clueCountLimit": 12,
+  "adjustment": {
+    "targetEmptyPercent": 0
+  },
+  "source": {
+    "kind": "human-approved-handoff",
+    "subject": "체스판",
+    "categoryId": "08",
+    "category": "놀이+게임",
+    "rank": 73,
+    "versionId": "1095c63e-b11e-4bf5-9567-63dd7d86fb8d",
+    "imageSha256": "4047037824871322562c367080f34d31b4a5267a5ebd60e9f52dc36149aa4589",
+    "folder": "art-handoff/releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/approved/0873",
+    "approvedAt": "2026-11-19T13:30:07.736Z",
+    "artHandoff": {
+      "root": "art-handoff",
+      "schemaVersion": 1,
+      "releaseId": "2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8",
+      "manifest": "releases/2f5b9a36e2617fdb7e354f3030344533fab523cd111ab14569a41e739f58b7b8/manifest.json",
+      "manifestSha256": "a1e84d56ceba93711b1d2bd538c78d10fb0e1cd77cd4de0a4063d02dcf3e0dfa"
+    },
+    "colorPalette": [
+      "#f7f7f8",
+      "#c1c6cd",
+      "#737d8c",
+      "#32373e"
+    ],
+    "colorFamily": "ink"
+  },
+  "omitOuterZeros": true
+}

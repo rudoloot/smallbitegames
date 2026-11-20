@@ -95,21 +95,19 @@
    await initializeAds();window.stopStackControls?.();window.finishStroke?.();
    const result=await plugin.showRewarded();await drainRewards();return result;
   },
-  async recordCompletion(){if(native){await flush();await plugin.recordCompletion();}},
-  async transition(){if(native){await initializeAds();await plugin.showInterstitial();}},
   async refresh(){if(native){await drainRewards();await initializeAds();}}
  };
- const runtime={isNative:native,ready,flush,ads,recoverRewards:drainRewards,reportStorageFailure:notice,privacyOptionsRequired:false,completion:Promise.resolve(),
+ const runtime={isNative:native,ready,flush,ads,recoverRewards:drainRewards,reportStorageFailure:notice,privacyOptionsRequired:false,
   collectionUrl(){const mode=document.body?.dataset?.presentation||document.body?.dataset?.mode||'color',id=window.StackPuzzle?.id;return 'collection.html'+(id?'?puzzle='+encodeURIComponent(id):'')+'#'+mode;},
   async exit(){
    try{await ready;window.stopStackControls?.();window.finishStroke?.();await flush();if(native)await plugin.exitApp();else{window.close();if(!window.closed){let text=document.getElementById('browser-exit-note');if(!text){text=document.createElement('p');text.id='browser-exit-note';text.className='storage-notice';text.setAttribute('role','status');document.body.append(text);}text.textContent='브라우저 탭을 닫아 나갈 수 있어요.';}}}
    catch(error){notice(error);throw error;}
   },
   async privacyChoices(){if(native){const status=await plugin.privacyOptions();runtime.privacyOptionsRequired=!!status.privacyOptionsRequired;adsReady=null;await initializeAds();window.dispatchEvent(new Event('stack-privacy-change'));}},
-  async navigate(url,completion=false){
+  async navigate(url,startingPuzzle=false){
    if(navigation)return navigation;
    navigation=(async()=>{await ready;await flush();
-    if(completion){try{await runtime.completion;await ads.transition();}catch{/* An unavailable ad never blocks a completed game. */}}
+    if(native&&startingPuzzle){try{await plugin.showInterstitial();}catch{/* Continue to the puzzle when no ad can be shown. */}}
     await flush();location.href=url;
    })();
    try{await navigation;}finally{navigation=null;}
@@ -120,7 +118,7 @@
  document.addEventListener('click',event=>{
   const link=event.target.closest('a[href]');if(!native&&!browserDB||!link||event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||link.target||link.hasAttribute('download'))return;
   const url=new URL(link.href,location.href);if(url.origin!==location.origin)return;
-  event.preventDefault();runtime.navigate(url.href,!!link.closest('#win-dialog')).catch(notice);
+  event.preventDefault();runtime.navigate(url.href,link.matches('.puzzle-card, #next-puzzle')&&url.pathname.endsWith('/game.html')&&url.searchParams.has('puzzle')).catch(notice);
  });
  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&native)ads.refresh().catch(()=>{});else flush().catch(()=>{});});
  window.addEventListener('pagehide',()=>{flush().catch(()=>{});});

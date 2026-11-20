@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f5f5ef">
   <title>NonogramStack</title>
-    <link rel="stylesheet" href="style.css?v=9ca5d727f68e">
-  <link rel="stylesheet" href="terrain.css?v=9ca5d727f68e">
-  <link rel="stylesheet" href="layout.css?v=9ca5d727f68e">
-  <link rel="stylesheet" href="bull-game.css?v=9ca5d727f68e">
-  <link rel="stylesheet" href="fruit-game.css?v=9ca5d727f68e">
-  <link rel="stylesheet" href="board-surface.css?v=9ca5d727f68e">
-  <link rel="stylesheet" href="shared-ui.css?v=9ca5d727f68e">
-  <link rel="stylesheet" href="manual/game-manual.css?v=9ca5d727f68e">
+    <link rel="stylesheet" href="style.css?v=c57091d49c74">
+  <link rel="stylesheet" href="terrain.css?v=c57091d49c74">
+  <link rel="stylesheet" href="layout.css?v=c57091d49c74">
+  <link rel="stylesheet" href="bull-game.css?v=c57091d49c74">
+  <link rel="stylesheet" href="fruit-game.css?v=c57091d49c74">
+  <link rel="stylesheet" href="board-surface.css?v=c57091d49c74">
+  <link rel="stylesheet" href="shared-ui.css?v=c57091d49c74">
+  <link rel="stylesheet" href="manual/game-manual.css?v=c57091d49c74">
 </head>
 <body class="individual-sums stack-sum-game" data-loading>
 <p id="game-loading" role="status">문제를 불러오는 중입니다.</p>
@@ -35,11 +35,13 @@
     <div class="gamepad">
     <div id="dpad-area" class="dpad-area"><div id="dpad" class="dpad" role="group" tabindex="0" aria-label="칸 이동 십자키. 방향키로도 이동할 수 있어요"></div></div>
     <div class="height-picker" id="height-picker" aria-label="입력할 스택 선택">
-      <button id="undo" aria-label="되돌리기"><strong aria-hidden="true">↶</strong><span>undo</span></button>
       <button id="erase" aria-label="지우개 선택"><strong><svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 19-6-6a2 2 0 0 1 0-3l7-7a2 2 0 0 1 3 0l8 8a2 2 0 0 1 0 3l-5 5H9Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m7 6 11 11M8 19h13" stroke="currentColor" stroke-width="1.6"/></svg></strong><span>지우개</span></button>
       <button data-value="0"><strong>×</strong></button>
+      <button id="undo" aria-label="되돌리기"><strong aria-hidden="true">↶</strong><span>Undo</span></button>
       <button data-value="1"><strong>1</strong></button>
+      <button id="redo" aria-label="다시 실행"><strong aria-hidden="true">↷</strong><span>Redo</span></button>
       <button data-value="2"><strong>2</strong></button>
+      <button id="input-mode" aria-label="십자키 입력" aria-pressed="false"><strong aria-hidden="true">✥</strong><span>터치 입력</span></button>
       <button data-value="3"><strong>3</strong></button>
     </div>
     </div>
@@ -49,14 +51,14 @@
 <dialog id="help-dialog"></dialog>
 <dialog id="reset-dialog"><span class="eyebrow">START AGAIN</span><h2>처음부터 다시 풀까요?</h2><p>입력한 높이를 모두 지우고 빈 보드에서 시작해요.</p><div class="dialog-actions"><button data-close="reset-dialog">계속 풀기</button><button class="primary-button" id="confirm-reset">다시 시작</button></div></dialog>
 <dialog id="win-dialog"><span class="eyebrow">PICTURE COMPLETE</span><h2>숨은 그림을 찾았어요!</h2><canvas id="win-art" width="300" height="300"></canvas><p id="win-description"></p><div class="completion-actions"><a id="next-puzzle" class="primary-button">다음문제</a><a id="win-puzzle-list" href="collection.html">목록으로</a></div></dialog>
-<script src="capacitor-core.js?v=9ca5d727f68e"></script>
-<script src="native-runtime.js?v=9ca5d727f68e"></script>
-<script src="subject-names-en.js?v=9ca5d727f68e"></script>
-<script src="manual/game-manual.js?v=9ca5d727f68e"></script>
-<script src="puzzle-core-height-runs.js?v=9ca5d727f68e" defer></script>
-<script src="puzzle-core-stack-sums.js?v=9ca5d727f68e" defer></script>
-<script src="puzzle-core-monochrome.js?v=9ca5d727f68e" defer></script>
-<script src="puzzle-palette.js?v=9ca5d727f68e" defer></script>
-<script src="game-loader.js?v=9ca5d727f68e" defer></script>
-<script src="site-integration.js?v=9ca5d727f68e" defer></script></body>
+<script src="capacitor-core.js?v=c57091d49c74"></script>
+<script src="native-runtime.js?v=c57091d49c74"></script>
+<script src="subject-names-en.js?v=c57091d49c74"></script>
+<script src="manual/game-manual.js?v=c57091d49c74"></script>
+<script src="puzzle-core-height-runs.js?v=c57091d49c74" defer></script>
+<script src="puzzle-core-stack-sums.js?v=c57091d49c74" defer></script>
+<script src="puzzle-core-monochrome.js?v=c57091d49c74" defer></script>
+<script src="puzzle-palette.js?v=c57091d49c74" defer></script>
+<script src="game-loader.js?v=c57091d49c74" defer></script>
+<script src="site-integration.js?v=26ee06975d2a" defer></script></body>
 </html>
